@@ -33,14 +33,14 @@ flowchart LR
     R -->|writes| D
 ```
 
-`plugin_schema_migrations` is a platform-owned table (added in platform migration v011). It records `(plugin_id, revision, applied_at, checksum)`. The runner compares it with the on-disk migrations package and runs anything missing in lexicographic order.
+`plugin_schema_migrations` (Postgres) / `_plugin_migrations` (SQLite) is a platform-managed tracking table. Each row records `(plugin_name, version, name, applied_at, checksum, success, error_message)`. The runner compares it against the on-disk migrations package and runs anything missing, ordered by `version`.
 
 ## Declaring migrations
 
 Three pieces:
 
 1. A migrations package inside your plugin
-2. One module per revision, each containing a `Migration` class
+2. One module per migration, each containing one or more `PluginMigration` subclasses
 3. The plugin overrides `get_migrations_package()` to point at the package
 
 ```
@@ -72,78 +72,96 @@ class MyPlugin(AnalysisPlugin):
 
 ```python
 # my_plugin/migrations/001_initial.py
+import sqlalchemy as sa
 from mint_sdk.migrations import PluginMigration, MigrationOps
 
 
-class Migration(PluginMigration):
-    revision = "001"
-    description = "create panels table"
+class CreatePanelsTable(PluginMigration):
+    version = 1
+    name = "create_panels_table"
 
-    async def upgrade(self, ops: MigrationOps) -> None:
-        await ops.create_table(
+    async def upgrade(self, op: MigrationOps) -> None:
+        await op.create_table(
             "panels",
-            [
-                ops.column("id", "uuid", primary_key=True),
-                ops.column("experiment_id", "integer", nullable=False),
-                ops.column("name", "text", nullable=False),
-                ops.column("design_json", "jsonb", nullable=False),
-                ops.column("created_at", "timestamp", nullable=False),
-            ],
+            sa.Column("id", sa.Integer, primary_key=True),
+            sa.Column("experiment_id", sa.Integer, nullable=False),
+            sa.Column("name", sa.String(200), nullable=False),
+            sa.Column("drugs", sa.JSON, nullable=False),
         )
-        await ops.create_index("idx_panels_experiment", "panels", ["experiment_id"])
+        await op.create_index("idx_panels_experiment", "panels", ["experiment_id"])
 ```
 
-The class **must** be named `Migration` (the runner discovers by class name, not file name). The `revision` is whatever short string makes sense — most plugins use zero-padded numbers (`001`, `002`, …) so file ordering matches revision ordering.
+`PluginMigration` requires two class attributes: `version: int` (used for ordering and tracking) and `name: str` (a short snake_case label that appears in logs and the tracking table). The class name itself is arbitrary; the runner discovers any subclass with an integer `version`.
+
+Use the file-naming convention `NNN_<short_name>.py` so module ordering matches version ordering, but only `version` is authoritative.
 
 ## `MigrationOps`
 
-`MigrationOps` is the portable DDL surface. It emits the right SQL for the active backend (Postgres in production, SQLite for standalone tests).
+`MigrationOps` is the portable DDL surface. It emits idempotent SQL for the active backend (Postgres in production, SQLite for standalone tests).
 
 | Method | Purpose |
 |--------|---------|
-| `column(name, type, *, primary_key=False, nullable=True, default=None, unique=False)` | Build a column definition for `create_table` |
-| `create_table(name, columns)` | Create a new table |
-| `drop_table(name)` | Drop a table |
-| `add_column(table, column_def)` | Add a column to an existing table |
-| `drop_column(table, column_name)` | Drop a column |
-| `rename_column(table, old, new)` | Rename a column |
-| `create_index(name, table, columns, *, unique=False)` | Create an index |
-| `drop_index(name)` | Drop an index |
-| `execute(sql, params=None)` | Run raw SQL when the abstraction isn't enough |
+| `add_column(table, column)` | Add a column. `column` is a `sa.Column` instance. |
+| `drop_column(table, column)` | Drop a column. Requires the migration's `destructive=True`. |
+| `rename_column(table, old, new)` | Rename a column. |
+| `alter_column(table, column_name, ...)` | Alter type / constraints (read source for full signature). |
+| `create_table(name, *columns)` | Create a table. `columns` are positional `sa.Column` args. |
+| `drop_table(name)` | Drop a table. Requires `destructive=True`. |
+| `create_index(name, table, columns, *, unique=False)` | Create an index. |
+| `drop_index(name)` | Drop an index. |
+| `backfill(table, column, default)` | Set `column` to `default` where currently NULL. |
+| `execute(stmt)` | Run a raw SQLAlchemy statement. |
 
-Portable types: `integer`, `bigint`, `text`, `varchar`, `boolean`, `float`, `numeric`, `timestamp`, `date`, `jsonb` (mapped to TEXT on SQLite), `uuid` (mapped to TEXT on SQLite).
+Columns are constructed with `sa.Column(...)` directly — there is no `MigrationOps.column()` factory. Use SQLAlchemy types: `sa.Integer`, `sa.String(N)`, `sa.JSON`, `sa.DateTime`, `sa.Boolean`, etc.
 
-For non-portable backend-specific work (e.g., a Postgres-only `tsvector` column for full-text search), use `ops.execute()` and gate on the backend:
+Postgres-specific types come from `sqlalchemy.dialects.postgresql` (e.g., `JSONB`, `UUID`, `TSVECTOR`); they map to TEXT / JSON on SQLite.
+
+For non-portable work, gate on `op._dialect`:
 
 ```python
+import sqlalchemy as sa
+from sqlalchemy import text
 from mint_sdk.migrations import PluginMigration, MigrationOps
 
-class Migration(PluginMigration):
-    revision = "004"
-    description = "add full-text index (postgres only)"
 
-    async def upgrade(self, ops: MigrationOps) -> None:
-        if ops.backend == "postgresql":
-            await ops.execute(
+class AddPanelSearchVector(PluginMigration):
+    version = 4
+    name = "add_panel_search_vector"
+
+    async def upgrade(self, op: MigrationOps) -> None:
+        if op._dialect == "postgresql":
+            await op.execute(text(
                 "ALTER TABLE panels ADD COLUMN search_vec tsvector "
                 "GENERATED ALWAYS AS (to_tsvector('english', name)) STORED"
-            )
-            await ops.execute(
-                "CREATE INDEX idx_panels_search_vec ON panels USING GIN (search_vec)"
-            )
-        # SQLite plugins can fall through with an alternative or a comment
+            ))
+            await op.create_index("idx_panels_search_vec", "panels", ["search_vec"])
 ```
+
+## Destructive operations
+
+`drop_table`, `drop_column`, and other destructive ops require the migration to opt in:
+
+```python
+class DropLegacyColumn(PluginMigration):
+    version = 7
+    name = "drop_legacy_column"
+    destructive = True   # required for drop_column / drop_table
+
+    async def upgrade(self, op: MigrationOps) -> None:
+        await op.drop_column("panels", "legacy_field")
+```
+
+Without `destructive = True`, calling a drop op raises `DestructiveMigrationError`.
 
 ## Running migrations
 
-You don't run migrations manually in production — the platform calls `MigrationRunner` on every startup before `initialize()`:
+You don't run migrations manually in production — the platform calls `MigrationRunner.run(...)` on every startup before `initialize()`:
 
-1. Acquires Postgres advisory lock keyed by `plugin_id`
-2. Lists revisions on disk
-3. Lists revisions already applied in `plugin_schema_migrations`
-4. Runs each missing revision in order, inside a transaction
-5. Commits the `plugin_schema_migrations` row only after the migration's transaction commits
-6. Releases the advisory lock
+1. Acquires a Postgres advisory lock (or SQLite equivalent) keyed by `plugin_name`
+2. Ensures the tracking table exists
+3. Sorts the discovered migrations by `version`
+4. Validates checksums against any already-applied migrations
+5. Runs each pending migration's `upgrade(ops)` inside the same transaction as a tracking-table insert
 
 For local development:
 
@@ -152,63 +170,53 @@ For local development:
 mint dev --platform
 ```
 
-For a standalone platform start (no plugin attached), the migration runner runs as part of the normal `uvicorn` startup — there is no "migrate only" mode.
-
-For tests:
-
-```python
-# Recipe: see /sdk/recipes/testing-plugins
-from mint_sdk.testing import in_memory_runner
-
-async def test_v002_adds_index(plugin):
-    runner = in_memory_runner(plugin)
-    await runner.upgrade_to("002")
-    # assert against the resulting schema
-```
+For a standalone platform start (no plugin attached), the migration runner runs as part of the normal `uvicorn api.main:app` startup — there is no "migrate only" mode.
 
 ## Append-only discipline
 
-Once a migration has been applied to a deployment, **never edit the file**. The runner stores a checksum; an edited migration triggers `MigrationChecksumError` on the next startup, blocking the plugin until the change is reverted.
+Once a migration has been applied to a deployment, **never edit the file**. The runner stores a SHA-256 checksum of the migration class's source code; an edit triggers `MigrationChecksumError` on the next startup, blocking the plugin until the original source is restored.
 
-To change schema after a migration is shipped, write a new migration that performs the change. Backwards-incompatible changes (drop a column other plugins might depend on) deserve a major version bump.
+To change schema after a migration is shipped, write a new migration. Backwards-incompatible schema changes (drop a column other code might depend on) deserve a major version bump on the plugin.
 
 ## Failure handling
 
-A migration that raises rolls back the transaction and the plugin enters **Failed** state. The admin UI surfaces:
-
-- `schema_version` — last successfully applied revision
-- `pending_migrations` — revisions known to the plugin but not applied
-- `migration_error` — the exception message
+A migration that raises rolls back the transaction and the runner records the failure in the tracking table (`success=False`, `error_message`). The plugin enters a failed state visible to admins via the platform's status endpoints. The `MigrationResult` returned by `run()` exposes `current_version`, `applied`, `stamped`, and `errors`.
 
 Common failure causes:
 
 | Error | Likely cause |
 |-------|--------------|
 | `MigrationChecksumError` | A previously-applied migration file was edited |
-| `SchemaVersionAheadError` | The DB has a revision the plugin doesn't ship — usually a downgrade attempt |
-| `DestructiveMigrationError` | The migration tried `drop_table` / `drop_column` without `--allow-destructive` |
-| Generic SQL error | The migration body raised — inspect the message and fix in a follow-up revision |
+| `SchemaVersionAheadError` | The DB has a version the plugin doesn't ship — usually a downgrade attempt |
+| `DestructiveMigrationError` | The migration called `drop_table`/`drop_column` without setting `destructive = True` |
+| Generic SQL error | The migration body raised — inspect the message and fix in a follow-up migration |
 
 ## Idempotency for backfill data migrations
 
-Migrations sometimes need to backfill data alongside schema changes. Make them idempotent so re-running on a partial application is safe:
+Migrations sometimes need to backfill data alongside schema changes. Use `op.backfill()` for the simple "default a NULL column" case; for complex updates, use `op.execute()` with idempotent SQL:
 
 ```python
-class Migration(PluginMigration):
-    revision = "005"
-    description = "backfill normalized_name"
+import sqlalchemy as sa
+from sqlalchemy import text
+from mint_sdk.migrations import PluginMigration, MigrationOps
 
-    async def upgrade(self, ops: MigrationOps) -> None:
-        await ops.add_column("panels",
-            ops.column("normalized_name", "text", nullable=True)
+
+class BackfillNormalizedName(PluginMigration):
+    version = 5
+    name = "backfill_normalized_name"
+
+    async def upgrade(self, op: MigrationOps) -> None:
+        await op.add_column(
+            "panels",
+            sa.Column("normalized_name", sa.String(200), nullable=True),
         )
-        await ops.execute(
+        await op.execute(text(
             "UPDATE panels SET normalized_name = LOWER(name) "
             "WHERE normalized_name IS NULL"
-        )
+        ))
 ```
 
-For larger backfills, do them in chunks via a recipe — see [Recipes → Backfill migrations](/sdk/recipes/backfill-migration).
+For larger backfills, chunk them — see [Recipes → Backfill migrations](/sdk/recipes/backfill-migration).
 
 ## Next
 
