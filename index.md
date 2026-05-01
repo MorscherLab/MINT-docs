@@ -16,9 +16,6 @@ hero:
       text: For plugin authors
       link: /sdk/concepts/
     - theme: alt
-      text: Quickstart
-      link: /get-started/quickstart
-    - theme: alt
       text: Hosted MINT instance
       link: https://mint.morscherlab.org
 
