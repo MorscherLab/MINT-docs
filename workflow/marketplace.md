@@ -83,4 +83,4 @@ The schema for the registry feed lives in [`api/services/marketplace_service.py`
 ## Next
 
 → [Updates](/workflow/updates) — auto-updates and pin versions
-→ [Plugin development](/cli/plugin-dev) — `mint build` produces installable bundles
+→ [Plugin development → Operations → Packaging](/sdk/operations/packaging) — `mint build` produces installable bundles

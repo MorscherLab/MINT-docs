@@ -98,5 +98,5 @@ For programmatic access from inside a Python script (rather than via the CLI), u
 
 ## Next
 
-→ [Plugin development](/cli/plugin-dev) — `mint init`, `mint dev`, `mint build`
+→ [Plugin development tutorial](/sdk/tutorials/first-analysis-plugin) — `mint init`, `mint dev`, `mint build`
 → [Configuration](/cli/configuration) — config file and env vars

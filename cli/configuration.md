@@ -3,7 +3,7 @@
 MINT reads configuration from four sources, in increasing order of precedence:
 
 1. **Built-in defaults** — used when no other source overrides them.
-2. **`config.json`** — a file alongside `mint serve`, or at `~/.config/mint/config.json`.
+2. **`config.json`** — a file passed to the platform process (typically `/etc/mint/config.json` for system installs or `./config.json` for dev), or at `~/.config/mint/config.json`.
 3. **`.env`** — `dotenv`-style key/value pairs in the working directory.
 4. **Environment variables** — keys prefixed `MINT_`, with nested keys joined by `__` (e.g., `MINT_DATABASE__MODE=postgresql`).
 
@@ -139,5 +139,5 @@ Removing `cache/` is safe; it regenerates on demand. Removing `snapshots/` disca
 
 ## Next
 
-→ [`mint serve`](/cli/serve) — start the platform with a given config
+→ [Install on Linux (direct)](/get-started/install-direct) — start the platform with a given config
 → [Platform commands](/cli/platform) — `mint experiment`, `mint project`, …

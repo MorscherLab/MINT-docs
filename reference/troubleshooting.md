@@ -7,11 +7,11 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Problem | Cause | Fix |
 |---------|-------|-----|
 | `command not found: mint` | Install location not on PATH | `uv tool update-shell` (uv) or add `~/.local/bin` to PATH (pip) |
-| Port 8001 already in use | Another process is on the port | `mint serve --port 8002` |
-| Browser shows "Cannot connect" | Server crashed or terminal closed | Re-run `mint serve`; check the terminal for errors |
+| Port 8001 already in use | Another process is on the port | Stop the conflicting process or change `--port` in the systemd unit |
+| Browser shows "Cannot connect" | Platform process crashed | `journalctl -u mint -n 200` (direct install) or `docker compose logs mint` (Docker); restart |
 | MINT starts but no logo / styles | Browser cached an old build | Hard-refresh with **⌘⇧R** (Mac) or **Ctrl+Shift+R** (Win/Linux) |
 | Migration fails with advisory-lock error | Two MINT processes started simultaneously | Stop one, let the other finish, restart |
-| `mint serve --migrate-only` exits non-zero | A plugin migration failed | Check **Admin → Plugins** for the migration error; fix the migration; reload the plugin |
+| Plugin migration fails on platform startup | A plugin's migration raised | Platform exits non-zero; **Admin → Plugins** (after restart from a known-good plugin set) shows the error. Fix the plugin's migration in a follow-up release. |
 
 ## Authentication
 

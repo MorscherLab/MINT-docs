@@ -1,79 +1,60 @@
 # mint CLI
 
-The `mint` command-line interface is installed alongside the MINT Python package. It serves three audiences:
+The `mint` command-line interface ships with the **`mint-sdk`** package (PyPI). It does **not** start the platform — the platform server is launched directly via `uvicorn api.main:app` (see [Install on Linux](/get-started/install-direct)). `mint` covers two complementary roles:
 
-1. **Lab admins** running the platform itself (`mint serve`, `mint plugin install`)
-2. **Plugin developers** scaffolding, running, and packaging plugins (`mint init`, `mint dev`, `mint build`)
-3. **Power users** scripting against the platform (`mint experiment`, `mint project`)
+| Role | What it does | Detail |
+|------|--------------|--------|
+| **Plugin development** | Scaffold, run, build, and manage plugin projects | [Plugin Development → CLI reference](/sdk/api/cli-reference) |
+| **Platform-data CLI** | Talk to a running platform (auth, list experiments, create projects, check status) | [Platform commands](/cli/platform) |
 
-> [Screenshot: terminal showing `mint --help` output with categorized commands]
-
-## Verifying the installation
-
-After installing the MINT wheel, the `mint` executable should be on `PATH`:
+## Verifying the install
 
 ```bash
 mint --version
+# → mint <version>
+mint --help
 ```
 
-Expected output:
-
-```
-mint 1.0.0
-```
-
-If the command is not found, the install location is not on `PATH`. Resolutions are listed in [Install directly — Troubleshooting](/get-started/install-direct#troubleshooting).
+If the command isn't found, the install location isn't on your `PATH`. With `uv tool install mint-sdk`, run `uv tool update-shell`. With `pip install --user mint-sdk`, add `~/.local/bin` to `PATH`.
 
 ## Command index
 
-::: info Categories
-The CLI groups commands by audience. `mint --help` lists every command; this manual covers the user-facing subset.
-:::
+### Platform-data CLI (User Manual side)
 
-### Run the platform
+| Command | Purpose |
+|---------|---------|
+| `mint auth login / logout / status / refresh` | Acquire and manage a session token |
+| `mint experiment list / get / create / update` | CRUD on experiments via the platform API |
+| `mint project list / get / create / archive` | CRUD on projects |
+| `mint status` | Platform health overview |
 
-| Command | Purpose | Reference |
-|---------|---------|-----------|
-| `mint serve` | Start the MINT backend + bundled frontend | [Detail](/cli/serve) |
-| `mint --version` | Print the installed MINT version | This page |
-| `mint --help` | List every available subcommand | This page |
+Detail: [Platform commands](/cli/platform). Configuration of how `mint` reaches the platform: [Configuration](/cli/configuration).
 
-### Develop a plugin
+### Plugin-development commands
 
-| Command | Purpose | Reference |
-|---------|---------|-----------|
-| `mint init` | Scaffold a new plugin project | [Plugin development](/cli/plugin-dev) |
-| `mint dev` | Run the plugin in dev mode with hot reload | [Plugin development](/cli/plugin-dev) |
-| `mint build` | Package the plugin into a `.mint` bundle | [Plugin development](/cli/plugin-dev) |
-| `mint doctor` | Validate the plugin project structure | [Plugin development](/cli/plugin-dev) |
-| `mint info` | Print the plugin's metadata | [Plugin development](/cli/plugin-dev) |
-| `mint logs` | Tail logs from a running plugin process | [Plugin development](/cli/plugin-dev) |
-| `mint link` / `mint unlink` | Switch between editable and published SDKs | [Plugin development](/cli/plugin-dev) |
-| `mint update` | Refresh SDK pins in the plugin's `pyproject.toml` and `package.json` | [Plugin development](/cli/plugin-dev) |
-| `mint docs` | Open the SDK documentation in a browser | [Plugin development](/cli/plugin-dev) |
+These commands act on a plugin project (cd into the plugin's directory first):
 
-### Scripted platform access
+| Command | Purpose |
+|---------|---------|
+| `mint init` | Scaffold a new plugin project |
+| `mint dev` | Run the plugin (and optionally a local platform) with hot reload |
+| `mint dev logs` | Tail logs from a running plugin process |
+| `mint build` | Package the plugin into a `.mint` bundle |
+| `mint doctor` | Validate the plugin project structure |
+| `mint info` | Print the plugin's metadata |
+| `mint docs` | Open SDK docs in the browser |
+| `mint sdk link / unlink / update` | Manage the plugin's SDK pin |
 
-| Command | Purpose | Reference |
-|---------|---------|-----------|
-| `mint auth` | Log in / log out / inspect tokens | [Platform commands](/cli/platform) |
-| `mint experiment` | List, create, update experiments | [Platform commands](/cli/platform) |
-| `mint project` | List, create, archive projects | [Platform commands](/cli/platform) |
-| `mint status` | Show platform and plugin health | [Platform commands](/cli/platform) |
+Full details — every flag, every subcommand: [Plugin Development → CLI reference](/sdk/api/cli-reference).
 
-::: info
-The full set of `mint` subcommands is enumerated by `mint --help`. If a subcommand isn't described in this manual, it's either unstable or developer-internal; consult the [SDK documentation](https://github.com/MorscherLab/mld/tree/main/sdk) for authoritative reference.
-:::
+## What `mint` is not
 
-## Configuration
-
-Persistent settings — database mode, storage paths, marketplace registry, auth options — live in `config.json` (see [Configuration](/cli/configuration)). Environment variables prefixed `MINT_` override `config.json`.
-
-For client-side commands like `mint experiment`, the active platform URL and JWT are stored in a per-user config file at `~/.config/mint/cli.json` (XDG path) or `%APPDATA%/mint/cli.json` (Windows). Manage it with `mint auth login` / `mint auth logout`.
+- **Not a platform launcher.** `mint serve` doesn't exist. Start the platform with `uvicorn api.main:app`.
+- **Not a `pip install <plugin>` replacement.** Plugins are typically installed through the marketplace UI; `mint` doesn't have a `plugin install` subcommand.
+- **Not a daemon.** `mint dev` runs in the foreground.
 
 ## Next
 
-→ [`mint serve`](/cli/serve) — start the platform
-→ [Plugin development](/cli/plugin-dev) — scaffold and ship a plugin
-→ [Platform commands](/cli/platform) — `mint experiment`, `mint project`, …
-→ [Configuration](/cli/configuration) — config files and environment variables
+→ [Platform commands](/cli/platform)
+→ [Configuration](/cli/configuration)
+→ [Plugin development → CLI reference](/sdk/api/cli-reference)

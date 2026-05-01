@@ -97,10 +97,13 @@ docker compose up -d
 docker compose logs -f mint
 ```
 
-Expected output once startup completes:
+Expected output once startup completes (uvicorn is the platform's process):
 
 ```
-mint  | MINT v1.0.0 ready at http://0.0.0.0:8001
+mint  | INFO:     Started server process [1]
+mint  | INFO:     Waiting for application startup.
+mint  | INFO:     Application startup complete.
+mint  | INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
 ```
 
 The compose file binds the container's port 8001 to `127.0.0.1:8001` on the host — MINT is **not** directly reachable from the network until you put a reverse proxy in front.

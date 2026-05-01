@@ -27,13 +27,11 @@ VitePress reads markdown from the project root recursively, but `srcExclude` in 
 
 - `get-started/` — install paths (Linux direct, Linux Docker, hosted MINT) and the 5-minute quickstart. MINT is supported on Linux servers only — there is intentionally no desktop / macOS / Windows install path.
 - `workflow/` — the platform user guide (projects, experiments, members, auth, plugins, marketplace, updates)
-- `cli/` — `mint` command-line interface (overview, `mint serve`, plugin development commands, platform commands, configuration)
-- `sdk/` — overview pages for plugin authors that link out to the full SDK reference
+- `cli/` — User Manual side of the `mint` CLI: `overview` (orientation), `platform` (auth/experiment/project/status), `configuration` (`config.json` schema). The `mint` CLI is shipped by the `mint-sdk` package and is **not** the platform launcher (the platform runs via `uvicorn api.main:app`).
+- `sdk/` — full Plugin Development track: concepts, tutorials, recipes, frontend, operations, api. Six sub-sections.
 - `reference/` — UI tour, RBAC permission reference, troubleshooting, FAQ, glossary
 
 Plus `index.md` (home), `team.md` (Vue components from `vitepress/theme`), and `changelog.md` (links out to GitHub Releases — release notes themselves are not maintained here).
-
-The `sdk/` pages are intentionally lightweight pointers. Function names, full component catalogs, and version-specific API surfaces belong in the platform repo's SDK site at `mld/sdk/site/`.
 
 `.vitepress/config.ts` is the single source of truth for nav bar, sidebar groups, search, and the GitHub edit-link pattern. **Adding a page requires two edits**: create the `.md` file, then register it in the matching `sidebar` group in `config.ts` — otherwise it won't appear in navigation.
 

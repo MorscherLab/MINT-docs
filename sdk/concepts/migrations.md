@@ -148,12 +148,11 @@ You don't run migrations manually in production — the platform calls `Migratio
 For local development:
 
 ```bash
-# Pre-apply migrations without starting the platform
-mint serve --migrate-only
-
-# Or inside a plugin project
-mint dev --platform   # platform runs the runner on startup
+# Inside a plugin project, the platform runs the runner on startup
+mint dev --platform
 ```
+
+For a standalone platform start (no plugin attached), the migration runner runs as part of the normal `uvicorn` startup — there is no "migrate only" mode.
 
 For tests:
 

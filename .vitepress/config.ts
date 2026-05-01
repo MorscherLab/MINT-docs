@@ -81,8 +81,6 @@ export default defineConfig({
           text: 'mint CLI',
           items: [
             { text: 'Overview', link: '/cli/overview' },
-            { text: 'mint serve', link: '/cli/serve' },
-            { text: 'Plugin development', link: '/cli/plugin-dev' },
             { text: 'Platform commands', link: '/cli/platform' },
             { text: 'Configuration', link: '/cli/configuration' },
           ],

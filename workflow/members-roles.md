@@ -44,15 +44,15 @@ Project members appear immediately on the project. Their effective rights apply 
 
 ## The 18 permissions
 
-Permissions are referenced by `resource.action` strings. Every backend route is guarded by `require_permission("resource.action")`.
+Permissions are referenced by `resource.action` strings. The platform's backend routes check them via FastAPI dependencies; the admin UI surfaces grouped toggles for each.
 
 | Group | Permissions |
 |-------|-------------|
-| **Projects** | `project.read`, `project.write`, `project.delete`, `project.manage_members` |
-| **Experiments** | `experiment.read`, `experiment.write`, `experiment.delete`, `experiment.manage_collaborators` |
-| **Plugins** | `plugin.read`, `plugin.install`, `plugin.uninstall`, `plugin.upgrade` |
-| **Marketplace** | `marketplace.read`, `marketplace.request_install`, `marketplace.approve_install` |
-| **Platform** | `platform.read_settings`, `platform.write_settings`, `platform.manage_users` |
+| **`projects.*`** (5) | `view`, `create`, `edit`, `delete`, `manage_members` |
+| **`experiments.*`** (4) | `view`, `create`, `edit`, `delete` |
+| **`plugins.*`** (4) | `view`, `use`, `configure`, `install` |
+| **`users.*`** (3) | `view`, `invite`, `manage` |
+| **`platform.*`** (2) | `configure`, `view_logs` |
 
 The full mapping of role → permissions lives at [`api/permissions.py`](https://github.com/MorscherLab/mld/blob/main/api/permissions.py) in the platform repo. The reference in this manual is at [Permissions](/reference/permissions).
 
@@ -62,7 +62,7 @@ Admins can compose custom roles from any subset of the 18 permissions:
 
 > [Screenshot: custom-role editor with permissions checkboxes]
 
-Custom roles are useful for narrow scopes — e.g., a "Marketplace approver" role that only has `marketplace.approve_install`, without any project or experiment writes. Once defined, they appear alongside the built-in roles when assigning a system role to a user.
+Custom roles are useful for narrow scopes — e.g., a "Plugin operator" role that has `plugins.view`, `plugins.use`, and `plugins.configure` but not `plugins.install`. Once defined, they appear alongside the built-in roles when assigning a system role to a user.
 
 The role-design rationale (why exactly these 18 permissions, why these groups) is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/mld/blob/main/decisions/2026-04-10-rbac-roles-design.md).
 

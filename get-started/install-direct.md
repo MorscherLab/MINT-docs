@@ -1,6 +1,6 @@
 # Install on Linux (direct)
 
-Install MINT directly on a Linux server using `uv` (recommended) or `pip`. The Python wheel bundles the FastAPI backend, the Vue 3 frontend, and the `mint` CLI in one artifact.
+Install MINT directly on a Linux server using `uv` (recommended) or `pip`. The Python wheel bundles the FastAPI backend and the Vue 3 frontend; the `mint` CLI ships in a separate package (`mint-sdk`) that's pulled in as a dependency.
 
 ::: tip Picking an install method
 MINT is supported on **Linux servers only**, via either this direct install or the [Docker install](/get-started/install-docker). Pick:
@@ -38,12 +38,15 @@ Pick your preferred installer:
 # Install uv if not already present: https://docs.astral.sh/uv/
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install MINT as a tool — uv manages an isolated venv
-uv tool install mint
+# Create a dedicated user and venv for the platform process
+sudo useradd --system --create-home --shell /usr/sbin/nologin mint
+sudo -u mint bash -c '
+  uv venv ~/venv --python 3.12
+  ~/venv/bin/pip install mint
+'
 ```
 
 ```bash [pip]
-# Use a dedicated user and venv to isolate MINT from the system Python
 sudo useradd --system --create-home --shell /usr/sbin/nologin mint
 sudo -u mint bash -c '
   python3.12 -m venv ~/venv
@@ -53,11 +56,21 @@ sudo -u mint bash -c '
 
 :::
 
-The wheel bundles everything MINT needs: the FastAPI backend, the Vue 3 frontend, and the `mint` CLI.
+This installs the platform package (`mint`) plus its dependencies (including `mint-sdk`, which provides the `mint` CLI binary at `~mint/venv/bin/mint`). The platform itself runs as a long-lived `uvicorn` process — see "Run as a systemd service" below.
+
+::: tip Get the `mint` CLI on your shell PATH
+The `mint` CLI is convenient for admins running platform-data commands (`mint auth login`, `mint experiment list`). To make it globally available, install `mint-sdk` separately as a uv tool:
+
+```bash
+uv tool install mint-sdk
+```
+
+This is independent of the platform's own venv and only affects the admin's shell PATH.
+:::
 
 ## Configure
 
-Create `/etc/mint/config.json` (or anywhere `mint serve --config <path>` can find it):
+Create `/etc/mint/config.json` (or any other path the platform process can read; pass via `MINT_CONFIG_PATH` env var):
 
 ```json
 {
@@ -85,13 +98,13 @@ Generate a JWT secret with `python3 -c "import secrets; print(secrets.token_urls
 
 ## Initialize the database
 
-Schema migrations run automatically on first launch. To validate them ahead of starting the service:
+Schema migrations run automatically on platform startup. The first time the platform process launches, it:
 
-```bash
-mint serve --migrate-only --config /etc/mint/config.json
-```
+1. Connects to the configured database
+2. Applies any pending platform migrations
+3. For each plugin discovered via entry points, runs the plugin's pending migrations under a Postgres advisory lock so concurrent replicas don't race
 
-This applies platform migrations (`api/migrations/versions/v001`–`v011`) and any plugin migrations from plugins already installed via entry points. Exits non-zero if any migration fails.
+A migration failure logs the error and exits the process non-zero. Watch the systemd journal (`journalctl -u mint -f`) on first start to confirm a clean migration run.
 
 ## Run as a systemd service
 
@@ -106,8 +119,9 @@ Wants=postgresql.service
 Type=simple
 User=mint
 Group=mint
+WorkingDirectory=/home/mint
 Environment=MINT_CONFIG_PATH=/etc/mint/config.json
-ExecStart=/usr/local/bin/mint serve --host 127.0.0.1 --port 8001
+ExecStart=/home/mint/venv/bin/uvicorn api.main:app --host 127.0.0.1 --port 8001
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true
@@ -126,7 +140,7 @@ sudo systemctl status mint
 ```
 
 ::: warning Bind to 127.0.0.1, not 0.0.0.0
-`mint serve` does not terminate TLS or do aggressive header validation. Always bind to `127.0.0.1` on the host and put a reverse proxy in front.
+The platform's uvicorn process does not terminate TLS or do aggressive header validation. Always bind to `127.0.0.1` on the host and put a reverse proxy in front.
 :::
 
 ## Reverse proxy
@@ -185,11 +199,6 @@ After setup:
 ## Upgrades
 
 ```bash
-# uv
-uv tool upgrade mint
-sudo systemctl restart mint
-
-# pip
 sudo -u mint ~mint/venv/bin/pip install --upgrade mint
 sudo systemctl restart mint
 ```
@@ -202,7 +211,8 @@ See [Updates](/workflow/updates) for the in-app upgrade flow and rollback suppor
 
 | Problem | Fix |
 |---------|-----|
-| `command not found: mint` | The install location isn't on `PATH`. With `uv tool install`, run `uv tool update-shell`. With `pip install`, ensure the venv's `bin/` is on the service's `PATH` (the systemd unit above uses an absolute path). |
+| `command not found: mint` (admin shell) | Install the CLI as a uv tool: `uv tool install mint-sdk`, then `uv tool update-shell`. |
+| Service can't find `uvicorn` | The systemd unit must point at the venv's binary, e.g. `/home/mint/venv/bin/uvicorn`, not a global one. |
 | Port 8001 already in use | Change `--port` in the systemd unit, or `lsof -i :8001` to find the conflicting process. |
 | Migration fails with advisory-lock error | Two MINT processes started simultaneously and both tried to migrate. Stop one, let the other finish, then restart. |
 | 502 from the reverse proxy | MINT failed to start or crashed. Check `journalctl -u mint -n 200` for the trace. |
