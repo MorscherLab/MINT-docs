@@ -4,7 +4,7 @@ Components, composables, and types exported from `@morscherlab/mint-sdk`. Each e
 
 ## Components
 
-~88 Vue 3 single-file components. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/components).
+87 Vue 3 single-file components. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/components).
 
 ### Layout
 
@@ -126,7 +126,7 @@ For full prop signatures, browse the source or the Histoire storybook (`bun run 
 
 ## Composables
 
-29 typed composables. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/composables).
+27 typed composables. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/composables).
 
 | Composable | Returns | Purpose |
 |------------|---------|---------|

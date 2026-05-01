@@ -196,10 +196,23 @@ See [Migrations](/sdk/api/migrations) for full signatures.
 
 | Symbol | Description |
 |--------|-------------|
-| `PluginMigration` | Base class for one revision |
-| `MigrationOps` | Portable DDL helpers |
-| `MigrationRunner` | Applies pending migrations |
-| `MigrationResult` | Result of a runner invocation |
+| `PluginMigration` | Base class — set `version: int` and `name: str` class attrs |
+| `MigrationOps` | Portable DDL helpers (10 methods: add_column, drop_column, rename_column, alter_column, create_table, drop_table, create_index, drop_index, backfill, execute) |
+| `MigrationRunner` | Applies pending migrations via `run()` and `discover()` |
+| `MigrationResult` | Dataclass with `current_version`, `applied`, `stamped`, `errors` |
+
+## Testing harness
+
+```python
+from mint_sdk.testing import (
+    make_test_plugin,           # build a minimal AnalysisPlugin subclass inline
+    build_test_app,             # turn a plugin instance into a FastAPI app
+    RecordingContext,           # in-memory PlatformContext with a working PluginDataRepository
+    write_standalone_plugin_module,  # drop a uvicorn-compatible module into tmp_path
+)
+```
+
+These four are the entire public testing surface. See [Recipes → Testing plugins](/sdk/recipes/testing-plugins) for usage.
 
 ## Export utilities
 
