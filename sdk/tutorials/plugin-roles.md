@@ -169,38 +169,42 @@ The dropdown lists every value your enum exports (the platform reads `metadata.c
 
 ## 5. Test the guard
 
+The SDK's `RecordingContext` provides an in-memory `PlatformContext` but does not (currently) include a fake `PluginRoleRepository`. To exercise the role guard end-to-end, either:
+
+- Mock the role lookup in your test fixture, or
+- Drive the route via `httpx.AsyncClient` with the auth dependency overridden to inject a specific user
+
+For a sketch using the real testing harness as a starting point:
+
 ```python
 # tests/test_role_guard.py
 import pytest
-from mint_sdk.testing import (
-    InMemoryPluginRoleRepository,
-    StandalonePlatformContext,
-)
+from httpx import ASGITransport, AsyncClient
+from mint_sdk.testing import RecordingContext, build_test_app
 
 from panel_designer.plugin import PanelDesignerPlugin
-from panel_designer.roles import PanelDesignerRole
 
 
 @pytest.fixture
-async def plugin_with_roles():
+async def app():
     p = PanelDesignerPlugin()
-    role_repo = InMemoryPluginRoleRepository()
-    # Pre-assign role 17 -> EDITOR
-    await role_repo.set_role("panel-designer", 17, PanelDesignerRole.EDITOR.value)
-    ctx = StandalonePlatformContext(plugin_roles=role_repo)
+    ctx = RecordingContext()
     await p.initialize(ctx)
-    yield p
+    yield build_test_app(p)
     await p.shutdown()
 
 
 @pytest.mark.asyncio
-async def test_editor_can_delete(plugin_with_roles):
-    # Use FastAPI's TestClient with the user dependency overridden;
-    # verify that POSTing as user_id=17 succeeds and as user_id=99 returns 403
-    ...
+async def test_delete_route_exists(app):
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.delete("/api/panel-designer/panels/abc")
+    # In RecordingContext (no real auth), the response surface depends on
+    # how your handler degrades when the auth dependency is absent.
+    assert response.status_code in (401, 403, 404)
 ```
 
-The exact test setup depends on the testing harness shape — see [Recipes → Testing plugins](/sdk/recipes/testing-plugins).
+For role-aware tests, see [Recipes → Testing plugins](/sdk/recipes/testing-plugins) for the patterns the platform uses internally.
 
 ## 6. Platform admin bypass
 

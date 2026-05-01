@@ -13,16 +13,18 @@ mint init hello-mint
 cd hello-mint
 ```
 
-You'll be asked a few questions. Answer:
+`mint init` is interactive — it'll prompt for missing fields. Or pass them as flags up-front:
 
-| Prompt | Answer |
-|--------|--------|
-| Plugin name | `hello-mint` |
-| Plugin type | `analysis` |
-| Routes prefix | `/hello-mint` |
-| AI assistant config | (optional — pick `claude` if you use Claude Code) |
-| Frontend? | No (we'll add one in [Tutorial 3](/sdk/tutorials/adding-a-frontend)) |
-| Migrations? | No (added in [Tutorial 2](/sdk/tutorials/design-plugin-with-tables)) |
+```bash
+mint init hello-mint \
+  --type analysis \
+  --description "Hello world analysis plugin" \
+  --no-frontend \
+  --ai-assistant claude \
+  --yes
+```
+
+For this tutorial, accept the defaults (analysis plugin with frontend scaffolding skipped — we add a frontend in [Tutorial 3](/sdk/tutorials/adding-a-frontend)). The `routes_prefix` is derived from the plugin name (`/hello-mint`), so there's no flag for it.
 
 The result:
 
@@ -240,16 +242,12 @@ curl http://127.0.0.1:8001/api/hello-mint/experiments/1 \
 
 ## 6. Add a unit test
 
-The SDK ships a testing harness with in-memory repositories — no real database needed.
+The SDK ships a small testing harness with four exports: `make_test_plugin`, `build_test_app`, `RecordingContext`, and `write_standalone_plugin_module`. For a plugin you've already written, `RecordingContext` is the most useful — it's an in-memory `PlatformContext` that records every call.
 
 ```python
 # tests/test_plugin.py
 import pytest
-from mint_sdk.testing import (
-    InMemoryExperimentRepository,
-    StandalonePlatformContext,
-    make_experiment,
-)
+from mint_sdk.testing import RecordingContext
 
 from hello_mint.plugin import HelloMintPlugin
 
@@ -257,33 +255,29 @@ from hello_mint.plugin import HelloMintPlugin
 @pytest.fixture
 async def plugin():
     p = HelloMintPlugin()
-    repo = InMemoryExperimentRepository(seed=[
-        make_experiment(id=1, name="TCA pilot", status="ongoing",
-                         experiment_type="lcms_sequence"),
-    ])
-    ctx = StandalonePlatformContext(experiments=repo)
+    ctx = RecordingContext()
     await p.initialize(ctx)
     yield p
     await p.shutdown()
 
 
 @pytest.mark.asyncio
-async def test_summarize_known_experiment(plugin):
-    repo = plugin._context.get_experiment_repository()
-    exp = await repo.get_by_id(1)
-    assert exp.name == "TCA pilot"
+async def test_save_and_load_design(plugin):
+    # save_design works through RecordingContext's in-memory data repo
+    await plugin.save_design(experiment_id=1, data={"params": {"k": 5}})
+    design = await plugin.load_design(experiment_id=1)
+    assert design is not None
+    assert design.data == {"params": {"k": 5}}
 ```
 
 Run:
 
 ```bash
 uv run pytest -v
-# → tests/test_plugin.py::test_summarize_known_experiment PASSED
+# → tests/test_plugin.py::test_save_and_load_design PASSED
 ```
 
-::: info About `mint_sdk.testing`
-The exact testing-harness symbol names may evolve. If `make_experiment` or `InMemoryExperimentRepository` aren't available in your installed `mint-sdk`, browse `packages/sdk-python/src/mint_sdk/testing/` for the current shape — see [Recipes → Testing plugins](/sdk/recipes/testing-plugins).
-:::
+For HTTP-level tests, use `build_test_app(plugin)` to construct a FastAPI app and drive it with `httpx.AsyncClient` — see [Recipes → Testing plugins](/sdk/recipes/testing-plugins).
 
 ## 7. Validate the project structure
 
@@ -301,17 +295,17 @@ Expected: every check passes, ending with:
 → no issues found
 ```
 
-## 8. Build a `.mint` bundle
+## 8. Build a `.mld` bundle
 
 ```bash
 mint build
-# → dist/hello-mint-0.1.0.mint
+# → dist/hello-mint-0.1.0.mld
 ```
 
-The bundle contains the wheel, any frontend assets (none yet), and a manifest. Inspect it:
+The bundle is a zip containing `manifest.json`, the wheel, and (if you didn't pass `--no-frontend`) frontend assets. Inspect it:
 
 ```bash
-unzip -l dist/hello-mint-0.1.0.mint | head -10
+unzip -l dist/hello-mint-0.1.0.mld | head -10
 ```
 
 You'll install this exact bundle later in [Operations → Publishing](/sdk/operations/publishing).
@@ -320,9 +314,9 @@ You'll install this exact bundle later in [Operations → Publishing](/sdk/opera
 
 You have a runnable analysis plugin that:
 
-- Builds and installs cleanly (`mint build` + `.mint` bundle ready)
+- Builds and installs cleanly (`mint build` produces a `.mld` bundle)
 - Reads experiments via `PlatformContext` when integrated, returns a stub when standalone
-- Has a passing unit test using the in-memory test harness
+- Has a passing unit test using `RecordingContext` from `mint_sdk.testing`
 - Validates against `mint doctor`
 
 ## Next

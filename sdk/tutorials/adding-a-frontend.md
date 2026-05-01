@@ -7,12 +7,25 @@ You'll add a Vue 3 frontend to the **hello-mint** plugin from [Tutorial 1](/sdk/
 
 ## 1. Scaffold the frontend
 
+`mint init` scaffolds a frontend by default — frontend setup is **opt-out** via `--no-frontend`, not opt-in via a separate flag. There's no `mint init --add-frontend`. So if your existing plugin was created with `--no-frontend`, you have two choices:
+
+| Option | When |
+|--------|------|
+| Re-scaffold with frontend included | The plugin source is still small — easiest |
+| Manually add a `frontend/` directory | The plugin already has substantial source code |
+
+For Tutorial 1's hello-mint plugin, re-scaffolding is fastest. From the parent directory, with the existing plugin moved aside:
+
 ```bash
-# In hello-mint/
-mint init . --add-frontend
+mv hello-mint hello-mint.backup
+mint init hello-mint \
+  --type analysis \
+  --description "Hello world analysis plugin" \
+  --yes
+# Then port your routes.py changes from hello-mint.backup/src/hello_mint/
 ```
 
-`--add-frontend` adds a `frontend/` directory next to `src/`:
+Alternatively, copy the frontend scaffolding from a fresh `mint init` run into your existing project. Either way, the resulting layout:
 
 ```
 hello-mint/
@@ -43,13 +56,15 @@ bun install
 // frontend/src/main.ts
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import '@morscherlab/mint-sdk/styles/variables.css'
+import '@morscherlab/mint-sdk/styles'
 import './style.css'
 
 import App from './App.vue'
 
 createApp(App).use(createPinia()).mount('#app')
 ```
+
+The SDK exposes only one CSS sub-path — `'@morscherlab/mint-sdk/styles'` — which is the full bundle (variables + base styles). There is no `/styles/variables.css` sub-path.
 
 ```vue
 <!-- frontend/src/App.vue -->
@@ -233,7 +248,7 @@ bun run build
 mint build
 ```
 
-`mint build` picks up `frontend/dist/` and bundles it into the `.mint` artifact. The plugin's `get_frontend_dir()` (default implementation on `AnalysisPlugin`) finds the assets at runtime — first under the installed package, then at `frontend/dist`.
+`mint build` picks up `frontend/dist/` (via `tool.hatch.build.targets.wheel.force-include` in your `pyproject.toml`) and packages it into the `.mld` bundle. The plugin's `get_frontend_dir()` finds the assets at runtime — first under the installed package's directory, then walking upward looking for `frontend/dist` in dev layouts.
 
 ## 7. Style notes
 

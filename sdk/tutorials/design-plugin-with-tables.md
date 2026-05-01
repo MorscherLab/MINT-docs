@@ -12,15 +12,17 @@ mint init panel-designer
 cd panel-designer
 ```
 
-Answer:
+Or non-interactively:
 
-| Prompt | Answer |
-|--------|--------|
-| Plugin name | `panel-designer` |
-| Plugin type | `experiment-design` |
-| Routes prefix | `/panel-designer` |
-| Migrations? | **Yes** |
-| Frontend? | No |
+```bash
+mint init panel-designer \
+  --type experiment-design \
+  --description "Drug-response panel design" \
+  --no-frontend \
+  --yes
+```
+
+Note: `mint init` doesn't have a `--with-migrations` flag — every experiment-design plugin scaffold includes a `migrations/` directory by default, since design plugins typically own database tables.
 
 The scaffolder produces:
 
@@ -82,32 +84,29 @@ Replace the scaffolded `001_initial.py`:
 
 ```python
 # src/panel_designer/migrations/001_initial.py
+import sqlalchemy as sa
 from mint_sdk.migrations import MigrationOps, PluginMigration
 
 
-class Migration(PluginMigration):
-    revision = "001"
-    description = "create panels table"
+class CreatePanelsTable(PluginMigration):
+    version = 1
+    name = "create_panels_table"
 
-    async def upgrade(self, ops: MigrationOps) -> None:
-        await ops.create_table(
+    async def upgrade(self, op: MigrationOps) -> None:
+        await op.create_table(
             "panels",
-            [
-                ops.column("id", "uuid", primary_key=True),
-                ops.column("experiment_id", "integer", nullable=False),
-                ops.column("name", "text", nullable=False),
-                ops.column("drugs", "jsonb", nullable=False),
-                ops.column("notes", "text", nullable=True),
-                ops.column("created_at", "timestamp", nullable=False),
-                ops.column("updated_at", "timestamp", nullable=False),
-            ],
+            sa.Column("id", sa.Integer, primary_key=True),
+            sa.Column("experiment_id", sa.Integer, nullable=False),
+            sa.Column("name", sa.String(200), nullable=False),
+            sa.Column("drugs", sa.JSON, nullable=False),
+            sa.Column("notes", sa.String, nullable=True),
+            sa.Column("created_at", sa.DateTime, nullable=False),
+            sa.Column("updated_at", sa.DateTime, nullable=False),
         )
-        await ops.create_index("idx_panels_experiment", "panels", ["experiment_id"])
+        await op.create_index("idx_panels_experiment", "panels", ["experiment_id"])
 ```
 
-::: tip JSON column type names
-`MigrationOps` accepts `jsonb` and translates to native JSONB on Postgres, TEXT on SQLite. The SDK reads/writes the column as JSON in both cases.
-:::
+`PluginMigration` requires `version: int` and `name: str` class attributes. Columns are constructed with `sa.Column(...)` from SQLAlchemy directly. For Postgres-specific types like `JSONB` or `UUID`, import from `sqlalchemy.dialects.postgresql`; they map to TEXT/JSON on SQLite.
 
 ## 4. Wire the plugin
 
@@ -287,19 +286,20 @@ Suppose later you want a `tags` column on panels.
 
 ```python
 # src/panel_designer/migrations/002_add_tags.py
+import sqlalchemy as sa
 from mint_sdk.migrations import MigrationOps, PluginMigration
 
 
-class Migration(PluginMigration):
-    revision = "002"
-    description = "add tags column to panels"
+class AddPanelTagsColumn(PluginMigration):
+    version = 2
+    name = "add_panel_tags_column"
 
-    async def upgrade(self, ops: MigrationOps) -> None:
-        await ops.add_column(
+    async def upgrade(self, op: MigrationOps) -> None:
+        await op.add_column(
             "panels",
-            ops.column("tags", "jsonb", nullable=True),
+            sa.Column("tags", sa.JSON, nullable=True),
         )
-        await ops.create_index("idx_panels_tags", "panels", ["tags"])
+        await op.create_index("idx_panels_tags", "panels", ["tags"])
 ```
 
 Update the model:
@@ -321,18 +321,13 @@ Restart `mint dev`. The migration runner sees `002` as pending, applies it, and 
 mint doctor
 ```
 
-Expected: every check passes, including:
-
-```
-✓ migrations: 2 revisions found (001, 002)
-✓ entry point: mld.plugins → panel_designer.plugin:PanelDesignerPlugin
-```
+Expected: every check passes. `mint doctor` validates the entry point, plugin metadata, migration discovery, and dependency alignment.
 
 ## 9. Package
 
 ```bash
 mint build
-# → dist/panel-designer-0.1.0.mint
+# → dist/panel-designer-0.1.0.mld
 ```
 
 The bundle includes the migrations package — installs apply them automatically.
