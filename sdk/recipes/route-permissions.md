@@ -2,7 +2,7 @@
 
 ## Goal
 
-Gate plugin routes by who's calling them. Two complementary mechanisms: the platform's RBAC (`require_permission`) and the plugin's own roles (`require_plugin_role`).
+Gate plugin routes by who's calling them. The plugin SDK exposes one primary mechanism: per-plugin roles via `context.require_plugin_role(*roles)`. The platform's broader RBAC permission set is enforced by the platform's own routes — plugin code can't import the platform's `require_permission`.
 
 ## Plugin role guard
 
@@ -56,9 +56,9 @@ async def my_prefs(user = self.current_user):
 
 ## Combining with platform permissions
 
-Plugin role checks happen on top of the platform's auth and route-level permissions. The platform applies its own `require_permission(...)` checks for any path under `/api/<plugin>/...` based on the plugin's `capabilities` — for example, a plugin with `requires_experiments=True` already requires `experiment.read` for routes that hit `ExperimentRepository`.
+The platform RBAC permissions (`projects.view`, `experiments.edit`, `plugins.use`, etc.) are enforced **only** by the platform's own routes — not by plugin code. Plugins **cannot** import `require_permission` from `api.dependencies.permissions`; that module is platform-internal.
 
-If you need a tighter platform-level check, do it explicitly inside the route — but consult the platform's RBAC catalog first to confirm the permission you want exists. See [Reference → Permissions](/reference/permissions).
+When a request reaches your plugin's route, it has already passed the platform's auth check (the user is authenticated). Use `context.require_plugin_role(*roles)` for fine-grained authorization within plugin routes. To check the user's platform role explicitly, inspect `user.role` (the string `"Admin"` / `"Member"` / `"Viewer"` / a custom role name).
 
 ```python
 from fastapi import HTTPException, status

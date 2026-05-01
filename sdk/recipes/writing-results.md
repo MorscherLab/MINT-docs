@@ -118,6 +118,24 @@ class MyPlugin(AnalysisPlugin):
 
 The frontend reads the summary structure and renders cards / tables / metric tiles.
 
+## Referencing produced artifacts
+
+If your analysis produces a file (CSV report, image, raw output blob), embed the **artifact ID** in the result JSON so the frontend can render a download link:
+
+```python
+class MyPlugin(AnalysisPlugin):
+    async def run(self, experiment_id: int):
+        csv_bytes = self._compute_report(experiment_id)
+        artifact_id = await self._upload_via_platform_rest_api(
+            csv_bytes, filename="report.csv"
+        )
+        await self.save_analysis(experiment_id, {
+            "report_artifact_id": artifact_id,
+        })
+```
+
+The artifact upload mechanism is platform-version-specific. The SDK's `MINTClient` does not currently expose a `client.artifacts` resource; uploads go through the platform's REST API directly. Read your installed platform's `/api` schema (browse `/docs` on a running platform) for the current upload endpoint shape.
+
 ## Notes
 
 - `result` is JSON. Serialize complex Python objects yourself (datetimes, dataclasses, NumPy) — the SDK doesn't auto-convert.
@@ -128,4 +146,3 @@ The frontend reads the summary structure and renders cards / tables / metric til
 
 - [Concepts → Data model](/sdk/concepts/data-model) — `PluginAnalysisResult` shape
 - [Recipes → Reading experiments](/sdk/recipes/reading-experiments) — read side
-- [Recipes → Managing artifacts](/sdk/recipes/managing-artifacts) — for binary outputs

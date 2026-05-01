@@ -2,7 +2,20 @@
 
 ## Goal
 
-Write fast unit and integration tests for plugin code without spinning up a full platform. Use in-memory repositories for unit tests; use TestClient for end-to-end route tests.
+Write fast unit and integration tests for plugin code without spinning up a full platform. Use the `mint_sdk.testing` harness — four exports cover most cases.
+
+## The harness
+
+```python
+from mint_sdk.testing import (
+    make_test_plugin,                # build a minimal AnalysisPlugin subclass inline
+    build_test_app,                  # turn a plugin instance into a FastAPI app
+    RecordingContext,                # in-memory PlatformContext with a real PluginDataRepository
+    write_standalone_plugin_module,  # drop a uvicorn-compatible plugin module into tmp_path
+)
+```
+
+That's the complete public testing surface. Older docs referenced helpers like `InMemoryExperimentRepository`, `make_experiment`, `StandalonePlatformContext`, or `in_memory_runner` — none of those exist. The source of truth is `packages/sdk-python/src/mint_sdk/testing/__init__.py`.
 
 ## Project layout
 
@@ -12,71 +25,34 @@ my_plugin/
 │   ├── plugin.py
 │   └── routes.py
 ├── tests/
-│   ├── conftest.py             # ← fixtures
-│   ├── test_routes.py
-│   └── test_repository.py
+│   ├── conftest.py
+│   ├── test_repository.py
+│   └── test_routes.py
 └── pyproject.toml
 ```
 
-## A unit-test fixture
+## Plugin-level fixture with `RecordingContext`
 
-`mint_sdk.testing` ships in-memory implementations of every repository protocol plus a `StandalonePlatformContext` that wires them.
+`RecordingContext` is an in-memory `PlatformContext` whose `PluginDataRepository` actually writes/reads from a Python dict. It's enough to exercise the plugin's convenience methods (`save_design`, `load_design`, `save_analysis`, `load_analysis`).
 
 ```python
 # tests/conftest.py
 import pytest
-from mint_sdk.testing import (
-    InMemoryExperimentRepository,
-    InMemoryPluginDataRepository,
-    InMemoryPluginRoleRepository,
-    InMemoryUserRepository,
-    StandalonePlatformContext,
-    make_experiment,
-    make_user,
-)
+from mint_sdk.testing import RecordingContext
 
 from my_plugin.plugin import MyPlugin
 
 
 @pytest.fixture
-def seed_experiments():
-    return [
-        make_experiment(id=1, name="TCA pilot", status="ongoing",
-                        experiment_type="lcms_sequence"),
-        make_experiment(id=2, name="Drug screen", status="planned",
-                        experiment_type="drug_panel"),
-    ]
-
-
-@pytest.fixture
-def seed_users():
-    return [
-        make_user(id=10, username="alice", role="Member"),
-        make_user(id=99, username="admin",  role="Admin"),
-    ]
-
-
-@pytest.fixture
-async def context(seed_experiments, seed_users):
-    return StandalonePlatformContext(
-        experiments=InMemoryExperimentRepository(seed=seed_experiments),
-        users=InMemoryUserRepository(seed=seed_users),
-        plugin_data=InMemoryPluginDataRepository(),
-        plugin_roles=InMemoryPluginRoleRepository(),
-    )
-
-
-@pytest.fixture
-async def plugin(context):
+async def plugin():
     p = MyPlugin()
-    await p.initialize(context)
+    ctx = RecordingContext()
+    await p.initialize(ctx)
     yield p
     await p.shutdown()
 ```
 
-## Plugin-level tests
-
-Test the plugin's behaviors directly through the convenience methods:
+Tests using this fixture:
 
 ```python
 # tests/test_repository.py
@@ -87,10 +63,8 @@ import pytest
 async def test_save_then_load_design(plugin):
     await plugin.save_design(experiment_id=1, data={"params": {"k": 5}})
     design = await plugin.load_design(experiment_id=1)
-
     assert design is not None
     assert design.data == {"params": {"k": 5}}
-    assert design.plugin_id == plugin.metadata.name
 
 
 @pytest.mark.asyncio
@@ -99,17 +73,15 @@ async def test_load_nonexistent_returns_none(plugin):
     assert design is None
 ```
 
-The in-memory repos honor the same protocol as production — they enforce permission rules (e.g., ANALYSIS plugins can't `create` experiments), so a unit test catches RBAC mistakes before integration.
+## Route-level tests with `build_test_app`
 
-## Route-level tests
-
-Wrap the plugin in a FastAPI app via `mint_sdk.create_standalone_app` and test with `httpx.AsyncClient`:
+For end-to-end HTTP tests, wrap the plugin in a FastAPI app and drive it with `httpx.AsyncClient`:
 
 ```python
 # tests/test_routes.py
 import pytest
-from httpx import AsyncClient, ASGITransport
-from mint_sdk import create_standalone_app
+from httpx import ASGITransport, AsyncClient
+from mint_sdk.testing import RecordingContext, build_test_app
 
 from my_plugin.plugin import MyPlugin
 
@@ -117,7 +89,9 @@ from my_plugin.plugin import MyPlugin
 @pytest.fixture
 async def app():
     plugin = MyPlugin()
-    return create_standalone_app(plugin)
+    await plugin.initialize(RecordingContext())
+    yield build_test_app(plugin)
+    await plugin.shutdown()
 
 
 @pytest.fixture
@@ -131,80 +105,69 @@ async def client(app):
 async def test_health_endpoint(client):
     response = await client.get("/api/my-plugin/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
-
-
-@pytest.mark.asyncio
-async def test_404_on_missing_resource(client):
-    response = await client.get("/api/my-plugin/items/9999")
-    assert response.status_code == 404
-    body = response.json()
-    assert body["error"] == "NOT_FOUND"
-    assert "not found" in body["message"].lower()
 ```
 
-## Testing the role guard
+`build_test_app` is the same code path the platform uses to mount plugins — what works under test mirrors production mounting.
 
-To exercise `require_plugin_role`, override the FastAPI auth dependency to return the user you want to simulate:
+## Synthetic plugins with `make_test_plugin`
+
+When you want to test the platform's behavior with an arbitrary plugin (for plugin-loader, marketplace, or migration tests), build a minimal one inline:
 
 ```python
-import pytest
-from my_plugin.plugin import MyPlugin
+from mint_sdk.testing import make_test_plugin
+from mint_sdk.models import PluginType
 
 
-@pytest.fixture
-async def authed_app(seed_users):
-    plugin = MyPlugin()
-    app = create_standalone_app(plugin)
-
-    # Override the auth dependency to "log in as Alice"
-    async def _alice():
-        return seed_users[0]   # alice, Member
-
-    app.dependency_overrides[plugin._context.get_current_user_dependency()] = _alice
-    yield plugin, app
-
-
-@pytest.mark.asyncio
-async def test_member_blocked_from_admin_route(authed_app):
-    plugin, app = authed_app
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.delete("/api/my-plugin/items/1")
-    assert response.status_code == 403
+def test_loader_handles_minimal_analysis_plugin():
+    PluginCls = make_test_plugin(
+        name="loader-test",
+        plugin_type=PluginType.ANALYSIS,
+        routes_prefix="/loader-test",
+    )
+    plugin = PluginCls()
+    # ... feed plugin into platform's loader and assert ...
 ```
 
-Switch the override to `seed_users[1]` (admin) and the same test asserts a 204 — admins bypass plugin role checks.
+`make_test_plugin` returns a *class*; instantiate it before passing to anything that takes an `AnalysisPlugin` instance. Optional kwargs include `route_builder`, `before_save`, `after_save`, `status_change`, `health_status`, `health_message`.
+
+## Subprocess-style tests with `write_standalone_plugin_module`
+
+For tests that need a real Python module on disk (e.g., to test the platform's subprocess plugin manager):
+
+```python
+from pathlib import Path
+from mint_sdk.testing import write_standalone_plugin_module
+
+
+def test_subprocess_starts(tmp_path: Path):
+    module_path = write_standalone_plugin_module(tmp_path, name="my-test-plugin")
+    # platform.subprocess_manager.start_plugin(module_path)
+    # assert it bound a port and serves /api/my-test-plugin/health
+```
 
 ## Testing migrations
 
-Apply migrations against a fresh in-memory SQLite to verify they run cleanly:
+Use a temporary SQLite database and run migrations through `MigrationRunner.run(...)` directly:
 
 ```python
-# tests/test_migrations.py
 import pytest
-from mint_sdk.testing import in_memory_runner
+from sqlalchemy.ext.asyncio import create_async_engine
+from mint_sdk.migrations import MigrationRunner
+
+from my_plugin.migrations.001_initial import CreatePanelsTable
+from my_plugin.migrations.002_add_tags import AddPanelTagsColumn
 
 
 @pytest.mark.asyncio
-async def test_migrations_apply_clean(plugin):
-    runner = in_memory_runner(plugin)
-    result = await runner.upgrade_to_latest()
-    assert result.applied == ["001", "002"]
-    assert result.error is None
-
-
-@pytest.mark.asyncio
-async def test_re_run_is_no_op(plugin):
-    runner = in_memory_runner(plugin)
-    await runner.upgrade_to_latest()
-    second = await runner.upgrade_to_latest()
-    assert second.applied == []   # nothing to do
+async def test_migrations_apply_clean(tmp_path):
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'test.db'}")
+    runner = MigrationRunner(engine, plugin_name="my_plugin", dialect="sqlite")
+    result = await runner.run([CreatePanelsTable(), AddPanelTagsColumn()])
+    assert result.applied == [1, 2]
+    assert not result.errors
 ```
 
-::: info Testing-harness shape
-The exact symbol names of the testing harness (`InMemoryExperimentRepository`, `make_experiment`, `in_memory_runner`, …) depend on your installed `mint-sdk` version. Browse `packages/sdk-python/src/mint_sdk/testing/` to confirm what's exported in your version. Older versions may name them differently or expose a thinner surface — check the testing module's `__init__.py`.
-:::
+`MigrationResult.applied` is a list of integer `version`s.
 
 ## Coverage targets
 
@@ -216,16 +179,17 @@ Aim to cover:
 - Each migration applies cleanly to an empty database
 - Each migration applies cleanly when run on top of the previous
 
-The platform doesn't require any specific coverage threshold; pick what your team finds useful.
+The platform doesn't require any specific coverage threshold — pick what your team finds useful.
 
 ## Notes
 
 - `pytest-asyncio` is the conventional async test runner. Add it via `uv add --dev pytest-asyncio` and set `asyncio_mode = "auto"` in `pyproject.toml`.
-- Async fixtures need `@pytest.fixture` (not `@pytest.fixture(scope="function")` plus async — the default scope is fine).
-- The in-memory repos persist within one test session by default; use `autouse=True` cleanup fixtures or fresh instances per test if state leaks across tests.
+- `RecordingContext` is request-scoped per fixture; if you need state to persist across multiple route calls within one test, share the same context instance (move it out of the fixture or pass it explicitly).
+- The harness intentionally doesn't simulate auth — `RecordingContext.is_authenticated` returns `True`; there's no real JWT verification. Tests that need to verify auth dependencies should override the FastAPI dependency directly.
 
 ## Related
 
-- [Tutorials → First analysis plugin](/sdk/tutorials/first-analysis-plugin) — smaller test example
+- [Tutorials → First analysis plugin](/sdk/tutorials/first-analysis-plugin) — basic test setup
 - [Recipes → Backfill migrations](/sdk/recipes/backfill-migration) — testing complex migrations
 - [Operations → CI patterns](/sdk/operations/ci-patterns) — running tests in CI
+- [API → Python SDK](/sdk/api/python#testing-harness) — what each helper exports
