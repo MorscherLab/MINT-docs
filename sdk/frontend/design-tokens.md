@@ -10,11 +10,11 @@ Tokens also make light/dark/density work universally. The dark theme just change
 
 ## Setup
 
-Both steps happen automatically with `mint init --add-frontend`. Manually:
+Frontend scaffolding is included by default with `mint init` (skipped when `--no-frontend` is passed). Manual setup:
 
 ```ts
 // src/main.ts
-import '@morscherlab/mint-sdk/styles/variables.css'
+import '@morscherlab/mint-sdk/styles'
 ```
 
 ```ts

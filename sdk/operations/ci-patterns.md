@@ -74,8 +74,8 @@ jobs:
           uv sync
           [ -f frontend/package.json ] && cd frontend && bun install --frozen-lockfile
 
-      - name: Build (--check, no artifact)
-        run: uv run mint build --check
+      - name: Build bundle to a temp dir
+        run: uv run mint build --output-dir _ci_build
 ```
 
 Key choices:
@@ -83,7 +83,7 @@ Key choices:
 - **`--frozen-lockfile`** for both `uv sync` and `bun install` — fails the build if the lockfile drifted
 - **Matrix on Python 3.12 and 3.13** — match the platform's supported range
 - **`mint doctor` runs in CI** — catches structural mistakes (missing entry point, malformed migrations) before merge
-- **`mint build --check`** — verifies the full build pipeline without producing an artifact
+- **Build into `_ci_build/`** — exercises the full pipeline; the artifact is discarded after the run
 
 ## Publish on tag
 

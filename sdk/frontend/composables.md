@@ -54,9 +54,20 @@ const created = await api.post<Panel>('/api/my-plugin/panels', {
   experiment_id: 1, name: 'Cisplatin', drugs: [...]
 })
 
-// PATCH, PUT, DELETE work analogously
+// Other methods on the returned object:
+await api.put<Panel>('/api/my-plugin/panels/1', { ... })
+await api.patch('/api/my-plugin/panels/1', { name: 'Renamed' })
 await api.delete(`/api/my-plugin/panels/${id}`)
+
+// File operations
+const result = await api.upload('/api/my-plugin/files', file)
+const blob = await api.download(`/api/my-plugin/files/${id}`)
+
+// URL builders for WebSocket / SSE endpoints
+const wsUrl = api.buildWsUrl('/api/my-plugin/stream')
 ```
+
+The full return shape is `{ client, get, post, put, patch, delete, upload, download, buildUrl, buildWsUrl }`. `client` is the underlying typed-fetch instance — use it for advanced cases (custom headers, response streaming).
 
 `api` automatically:
 
@@ -136,14 +147,33 @@ Inline picker — fetches the user's accessible experiments and surfaces a react
 ```ts
 import { useExperimentSelector } from '@morscherlab/mint-sdk'
 
-const { experiments, selected, search, isLoading, refresh } = useExperimentSelector({
-  pageSize: 20,
-  filterStatus: ['ongoing', 'completed'],
-})
+const {
+  experiments,        // Ref<Experiment[]>
+  total,              // Ref<number>
+  selectedExperiment, // Ref<Experiment | null>
+  filters,            // Ref<{ search, status, type, project, ... }>
+  isLoading,
+  error,
+  page,
+  hasMore,
+  sortKey,
+  experimentTypes,    // available faceted values
+  projects,
+  groupedByProject,
+  fetch,              // re-fetch with current filters
+  loadMore,
+  reset,
+  select,             // (experiment: Experiment) => void
+  clear,
+  fetchFilterOptions,
+} = useExperimentSelector({ /* options */ })
 
-// `selected` is a Ref<Experiment | null>. Pair with the `ExperimentSelectorModal`
-// component for the picker UI, or render `experiments` yourself.
+// To search, mutate filters.value.search and call fetch():
+filters.value.search = 'TCA'
+await fetch()
 ```
+
+The selected experiment is `selectedExperiment` (not `selected`); the search input is `filters.search`; re-fetch is `fetch()` (not `refresh`). Pair with the `ExperimentSelectorModal` component for a picker UI, or render `experiments` yourself.
 
 For plugins that expect an experiment to *always* be active (because they're mounted on the experiment **Analyze** tab), use `usePlatformContext` instead — it reads the active experiment from the URL.
 

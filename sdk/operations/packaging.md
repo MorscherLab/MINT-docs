@@ -13,45 +13,39 @@ mint build
 What happens:
 
 1. Read `pyproject.toml` to determine the wheel name and version
-2. If `frontend/` exists, run `bun run build` (or whatever package manager you use) to produce `frontend/dist/`
-3. Build the Python wheel via `python -m build` / `hatch build`
-4. Resolve dependencies and download wheels for any pure-Python deps not already in the platform's lock
-5. Assemble: wheel + frontend assets + dependency wheels + manifest into a zip
-6. Rename the zip to `.mint`
+2. If `frontend/` exists (and `--no-frontend` isn't set), run `bun run build` (auto-detected: bun or npm) to produce `frontend/dist/`
+3. Build the Python wheel via `uv build --wheel`
+4. (If `--vendor-deps`) Resolve and download dependency wheels alongside the main wheel
+5. Assemble: wheel + dependency wheels + manifest into a zip
+6. Rename the zip to `.mld`
 
 ## Flags
 
 | Flag | Effect |
 |------|--------|
+| `PATH` (positional) | Plugin project directory (default `.`) |
 | `--no-frontend` | Skip the frontend build step. Use for backend-only plugins or fast iteration on the Python side. |
-| `--output <dir>` | Override the default `dist/` directory. |
-| `--check` | Build into a temp directory just to verify it succeeds; don't keep the artifact. Useful in CI. |
-| `--include-deps` | Include dependency wheels in the bundle (default; turn off with `--no-deps` for tiny bundles when the platform already has every dep). |
+| `--output-dir` | Override the default `dist/` directory. |
+| `--vendor-deps` | Include dependency wheels in the bundle (opt-in). Without it, the marketplace expects the platform to install dependencies from PyPI. |
 
 ## Bundle structure
 
-A `.mint` is a renamed ZIP:
+A `.mld` is a renamed ZIP:
 
 ```
-my-plugin-1.0.0.mint/
-├── manifest.json           # plugin name, version, SDK range, deps list
-├── wheel/
-│   └── my_plugin-1.0.0-py3-none-any.whl
-├── frontend/               # optional, present if frontend/ existed
-│   └── dist/
-│       ├── index.html
-│       ├── assets/...
-│       └── ...
-└── deps/                   # dependency wheels, present if --include-deps
-    ├── some_dep-1.2.3-py3-none-any.whl
-    └── ...
+my-plugin-1.0.0.mld
+├── manifest.json                            # name, version, has_frontend, wheels
+├── my_plugin-1.0.0-py3-none-any.whl         # the main wheel (frontend assets are inside it via force-include)
+└── <dep-wheels>...                          # only present if --vendor-deps
 ```
 
 Inspect contents:
 
 ```bash
-unzip -l dist/my-plugin-1.0.0.mint
+unzip -l dist/my-plugin-1.0.0.mld
 ```
+
+The frontend's `dist/` is *not* a separate top-level directory in the bundle — instead, `pyproject.toml` declares `tool.hatch.build.targets.wheel.force-include` for `frontend/dist/` so the assets travel inside the wheel. `mint build` warns if that force-include is missing.
 
 ## Manifest
 
@@ -164,13 +158,13 @@ Validates the bundle: manifest schema, wheel installs cleanly into a temp venv, 
 For very large plugins, consider:
 
 - Splitting into multiple smaller plugins
-- Using `--no-deps` and relying on the platform / OS package manager for system deps (R, native binaries)
+- Skipping `--vendor-deps` (the default) so the platform pulls deps from PyPI instead of bundling them
 - Lazy-loading frontend chunks via Vite's dynamic imports
 
 ## Notes
 
 - `mint build` is hermetic — it works in a clean checkout without prior installations, useful for CI.
-- Bundles are versioned by their internal manifest, not by filename. Renaming a `.mint` doesn't change what's installed.
+- Bundles are versioned by their internal manifest, not by filename. Renaming a `.mld` doesn't change what's installed.
 - Don't ship secrets in bundles. They're public artifacts. Use the platform's plugin settings (`apply_settings()`) for runtime credentials.
 
 ## Related

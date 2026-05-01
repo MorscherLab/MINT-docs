@@ -24,7 +24,7 @@ If you scaffolded with `mint init --add-frontend`, all of this is already done. 
 2. **Import design tokens** in your app entry:
    ```ts
    // src/main.ts
-   import '@morscherlab/mint-sdk/styles/variables.css'
+   import '@morscherlab/mint-sdk/styles'
    ```
 
 3. **Wire the Tailwind preset**:
