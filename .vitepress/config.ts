@@ -19,17 +19,26 @@ export default defineConfig({
     siteTitle: 'MINT',
 
     nav: [
-      { text: 'Get Started', link: '/get-started/install-direct' },
-      { text: 'Guide', link: '/workflow/projects' },
-      { text: 'Reference', link: '/reference/ui-tour' },
       {
-        text: 'For Developers',
+        text: 'User Manual',
         items: [
-          { text: 'mint CLI', link: '/cli/overview' },
-          { text: 'SDK overview', link: '/sdk/overview' },
-          { text: 'SDK reference', link: 'https://github.com/MorscherLab/mld/tree/main/sdk' },
+          { text: 'Get Started', link: '/get-started/install-direct' },
+          { text: 'Guide', link: '/workflow/projects' },
+          { text: 'CLI', link: '/cli/overview' },
         ],
       },
+      {
+        text: 'Plugin Development',
+        items: [
+          { text: 'Concepts', link: '/sdk/concepts/' },
+          { text: 'Tutorials', link: '/sdk/tutorials/' },
+          { text: 'Recipes', link: '/sdk/recipes/' },
+          { text: 'Frontend', link: '/sdk/frontend/' },
+          { text: 'Operations', link: '/sdk/operations/' },
+          { text: 'API Reference', link: '/sdk/api/' },
+        ],
+      },
+      { text: 'Reference', link: '/reference/ui-tour' },
       {
         text: 'More',
         items: [
@@ -81,11 +90,76 @@ export default defineConfig({
       ],
       '/sdk/': [
         {
-          text: 'SDK',
+          text: 'Concepts',
           items: [
-            { text: 'Overview', link: '/sdk/overview' },
-            { text: 'Python SDK', link: '/sdk/python' },
-            { text: 'Frontend SDK', link: '/sdk/frontend' },
+            { text: 'Overview', link: '/sdk/concepts/' },
+            { text: 'Plugin types', link: '/sdk/concepts/plugin-types' },
+            { text: 'Plugin lifecycle', link: '/sdk/concepts/lifecycle' },
+            { text: 'Isolation', link: '/sdk/concepts/isolation' },
+            { text: 'PlatformContext', link: '/sdk/concepts/platform-context' },
+            { text: 'Data model', link: '/sdk/concepts/data-model' },
+            { text: 'Migrations', link: '/sdk/concepts/migrations' },
+          ],
+        },
+        {
+          text: 'Tutorials',
+          items: [
+            { text: 'Overview', link: '/sdk/tutorials/' },
+            { text: 'First analysis plugin', link: '/sdk/tutorials/first-analysis-plugin' },
+            { text: 'Design plugin with tables', link: '/sdk/tutorials/design-plugin-with-tables' },
+            { text: 'Adding a frontend', link: '/sdk/tutorials/adding-a-frontend' },
+            { text: 'Plugin roles', link: '/sdk/tutorials/plugin-roles' },
+          ],
+        },
+        {
+          text: 'Recipes',
+          items: [
+            { text: 'Overview', link: '/sdk/recipes/' },
+            { text: 'Reading experiments', link: '/sdk/recipes/reading-experiments' },
+            { text: 'Writing results', link: '/sdk/recipes/writing-results' },
+            { text: 'Managing artifacts', link: '/sdk/recipes/managing-artifacts' },
+            { text: 'Querying plugin data', link: '/sdk/recipes/querying-plugin-data' },
+            { text: 'Route permissions', link: '/sdk/recipes/route-permissions' },
+            { text: 'Error handling', link: '/sdk/recipes/error-handling' },
+            { text: 'Logging & tracing', link: '/sdk/recipes/logging-tracing' },
+            { text: 'Testing plugins', link: '/sdk/recipes/testing-plugins' },
+            { text: 'Backfill migrations', link: '/sdk/recipes/backfill-migration' },
+            { text: 'R integration', link: '/sdk/recipes/r-integration' },
+          ],
+        },
+        {
+          text: 'Frontend',
+          items: [
+            { text: 'Overview', link: '/sdk/frontend/' },
+            { text: 'Components', link: '/sdk/frontend/components' },
+            { text: 'Composables', link: '/sdk/frontend/composables' },
+            { text: 'Design tokens', link: '/sdk/frontend/design-tokens' },
+            { text: 'Theming', link: '/sdk/frontend/theming' },
+            { text: 'FormBuilder', link: '/sdk/frontend/form-builder' },
+          ],
+        },
+        {
+          text: 'Operations',
+          items: [
+            { text: 'Overview', link: '/sdk/operations/' },
+            { text: 'Packaging', link: '/sdk/operations/packaging' },
+            { text: 'Publishing', link: '/sdk/operations/publishing' },
+            { text: 'CI patterns', link: '/sdk/operations/ci-patterns' },
+            { text: 'Versioning', link: '/sdk/operations/versioning' },
+            { text: 'Deploying', link: '/sdk/operations/deploying' },
+            { text: 'Upgrading the SDK', link: '/sdk/operations/upgrading-sdk' },
+          ],
+        },
+        {
+          text: 'API Reference',
+          items: [
+            { text: 'Overview', link: '/sdk/api/' },
+            { text: 'Python SDK', link: '/sdk/api/python' },
+            { text: 'Frontend SDK', link: '/sdk/api/frontend' },
+            { text: 'Migrations', link: '/sdk/api/migrations' },
+            { text: 'REST client', link: '/sdk/api/client' },
+            { text: 'Exceptions', link: '/sdk/api/exceptions' },
+            { text: 'CLI reference', link: '/sdk/api/cli-reference' },
           ],
         },
       ],
