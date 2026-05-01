@@ -111,7 +111,7 @@ Each installed plugin renders inside the platform shell. The action bar and proj
 | Right sidebar (optional) | Per-plugin parameters or details |
 | Bottom action bar (optional) | Run / Save / Export |
 
-Plugins should use the `AppLayout`, `AppTopBar`, and `AppSidebar` components from `@morscherlab/mint-sdk` — see [Frontend SDK](/sdk/frontend).
+Plugins should use the `AppLayout`, `AppTopBar`, and `AppSidebar` components from `@morscherlab/mint-sdk` — see [Frontend SDK](/sdk/frontend/).
 
 ## Keyboard shortcuts
 

@@ -93,7 +93,7 @@ Authentication tokens are short-lived (24 hours by default); long-running script
 | `mint --help` | Full enumerated subcommand list |
 
 ::: info
-For programmatic access from inside a Python script (rather than via the CLI), use `mint-sdk` — it ships a typed client. See [Python SDK](/sdk/python).
+For programmatic access from inside a Python script (rather than via the CLI), use `mint-sdk` — it ships a typed client. See [REST client](/sdk/api/client).
 :::
 
 ## Next

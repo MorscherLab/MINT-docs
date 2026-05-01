@@ -13,6 +13,9 @@ hero:
       text: Get Started
       link: /get-started/install-direct
     - theme: alt
+      text: For plugin authors
+      link: /sdk/concepts/
+    - theme: alt
       text: Quickstart
       link: /get-started/quickstart
     - theme: alt
@@ -46,9 +49,9 @@ features:
 
   - icon: 🧰
     title: SDK for plugin authors
-    details: mint-sdk (Python) provides AnalysisPlugin, PlatformContext, repositories, and per-plugin schema migrations. @morscherlab/mint-sdk (npm) ships ~96 Vue 3 components and ~27 composables for plugin frontends.
-    link: /sdk/overview
-    linkText: SDK overview
+    details: mint-sdk (Python) provides AnalysisPlugin, PlatformContext, repositories, and per-plugin schema migrations. @morscherlab/mint-sdk (npm) ships ~88 Vue 3 components and ~29 composables for plugin frontends.
+    link: /sdk/concepts/
+    linkText: Plugin Development
 
   - icon: 📡
     title: Observability and updates

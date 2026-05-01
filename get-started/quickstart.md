@@ -70,7 +70,7 @@ Switch the experiment status to **completed** to lock it. Completed experiments 
 - **Invite collaborators** — see [Members & roles](/workflow/members-roles)
 - **Install another plugin** — see [Marketplace](/workflow/marketplace)
 - **Use the CLI** — see [`mint` overview](/cli/overview) for scripted experiment + project access
-- **Build your own plugin** — see [SDK overview](/sdk/overview)
+- **Build your own plugin** — see [Plugin Development](/sdk/concepts/) and the [First analysis plugin tutorial](/sdk/tutorials/first-analysis-plugin)
 
 ## Troubleshooting
 
