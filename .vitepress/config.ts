@@ -6,7 +6,12 @@ export default defineConfig({
   lang: 'en-US',
 
   cleanUrls: true,
-  ignoreDeadLinks: false,
+  // Temporarily allow forward-references to /sdk/ sections still being written.
+  // Reset to `false` (strict) once all sections are written — see Task 9 of
+  // docs/superpowers/plans/2026-05-01-mint-docs-sdk-deepening.md
+  ignoreDeadLinks: [
+    /^\/sdk\/(tutorials|recipes|frontend|operations|api)/,
+  ],
   srcExclude: ['README.md', 'CLAUDE.md', 'docs/**', 'node_modules/**'],
 
   head: [
