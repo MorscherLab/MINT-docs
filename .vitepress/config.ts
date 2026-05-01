@@ -115,7 +115,6 @@ export default defineConfig({
             { text: 'Overview', link: '/sdk/recipes/' },
             { text: 'Reading experiments', link: '/sdk/recipes/reading-experiments' },
             { text: 'Writing results', link: '/sdk/recipes/writing-results' },
-            { text: 'Managing artifacts', link: '/sdk/recipes/managing-artifacts' },
             { text: 'Querying plugin data', link: '/sdk/recipes/querying-plugin-data' },
             { text: 'Route permissions', link: '/sdk/recipes/route-permissions' },
             { text: 'Error handling', link: '/sdk/recipes/error-handling' },
