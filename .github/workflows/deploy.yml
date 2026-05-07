@@ -23,13 +23,6 @@ jobs:
         with:
           fetch-depth: 0  # needed for VitePress lastUpdated git timestamps
 
-      - name: Checkout MINT source
-        uses: actions/checkout@v6
-        with:
-          repository: MorscherLab/mld
-          path: mint-source
-          fetch-depth: 1
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -38,48 +31,8 @@ jobs:
       - name: Install docs dependencies
         run: bun install --frozen-lockfile
 
-      - name: Install SDK frontend dependencies
-        run: bun install --frozen-lockfile
-        working-directory: mint-source
-
       - name: Build VitePress site
         run: bun run build
-
-      - name: Write docs Histoire config
-        run: |
-          cat > histoire.docs.config.ts <<'EOF'
-          import { defineConfig } from 'histoire'
-          import { mergeConfig, type UserConfig } from 'vite'
-          import baseConfig from './histoire.config'
-
-          export default defineConfig({
-            ...baseConfig,
-            outDir: '.histoire/docs-dist',
-            routerMode: 'hash',
-            vite: async (config, env) => {
-              const baseVite =
-                typeof baseConfig.vite === 'function'
-                  ? await baseConfig.vite(config, env)
-                  : baseConfig.vite ?? {}
-
-              return mergeConfig(baseVite as UserConfig, {
-                base: '/sdk/frontend/histoire/',
-              })
-            },
-          })
-          EOF
-        working-directory: mint-source/packages/sdk-frontend
-
-      - name: Build component Histoire playground
-        run: bun run story:build -- --config histoire.docs.config.ts
-        working-directory: mint-source/packages/sdk-frontend
-        env:
-          SKIP_DTS: '1'
-
-      - name: Add component playground to docs artifact
-        run: |
-          mkdir -p .vitepress/dist/sdk/frontend/histoire
-          cp -R mint-source/packages/sdk-frontend/.histoire/docs-dist/. .vitepress/dist/sdk/frontend/histoire/
 
       - name: Setup Pages
         uses: actions/configure-pages@v6

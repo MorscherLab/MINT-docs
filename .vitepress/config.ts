@@ -6,7 +6,7 @@ export default defineConfig({
   lang: 'en-US',
 
   cleanUrls: true,
-  ignoreDeadLinks: [/^\/sdk\/frontend\/histoire(?:\/|$)/],
+  ignoreDeadLinks: false,
   srcExclude: ['README.md', 'CLAUDE.md', 'docs/**', 'node_modules/**'],
 
   head: [

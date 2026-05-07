@@ -41,14 +41,13 @@ If you scaffolded with `mint init` and did not pass `--no-frontend`, all of this
 
 4. **Wrap your app in `AppLayout`** (when running inside the platform shell). For standalone pages, use `AppContainer` instead.
 
-## Histoire storybook
+## Component playground
 
-The frontend SDK has a public component showcase and the full Histoire lab:
+The frontend SDK has a public component showcase and a local Histoire storybook:
 
-- [Component playground](/sdk/frontend/playground) — curated live examples and searchable component index
-- [Full Histoire lab](/sdk/frontend/histoire/) — every story, prop playground, variant, and review background
+- [Component playground](/sdk/frontend/playground) — live package-backed examples and a searchable component index
 
-The same Histoire stories run locally during SDK development:
+The full Histoire lab runs locally during SDK development:
 
 ```bash
 cd packages/sdk-frontend
@@ -63,7 +62,7 @@ Stories include:
 - Light, dark, and white backgrounds for visual review
 - Common variant grids
 
-Treat the showcase as the public component reference. The pages here cover patterns and the most-used parts of the API; Histoire covers every component and every prop.
+Treat the showcase as the public component reference. The pages here cover patterns and the most-used parts of the API; local Histoire covers every component and every prop.
 
 ## Conventions
 
