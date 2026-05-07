@@ -6,7 +6,7 @@
 
 | Category | Surface | Detail |
 |----------|---------|--------|
-| Components | About 90 component exports | [Components catalog](/sdk/frontend/components) covers the most-used surface; the remainder is browseable in the source and Histoire storybook |
+| Components | About 90 component exports | [Component playground](/sdk/frontend/playground) showcases common workflows; [Components catalog](/sdk/frontend/components) documents the most-used surface |
 | Composables | 35 typed composables | [Composables](/sdk/frontend/composables) — `useApi`, `useAuth`, `useExperimentSelector`, `useFormBuilder`, … |
 | Design tokens | 500+ CSS custom properties | [Design tokens](/sdk/frontend/design-tokens) — colors, spacing, motion, focus rings |
 | Theming | Light/dark/density support | [Theming](/sdk/frontend/theming) — `prefers-reduced-motion`, palette overrides, accessibility |
@@ -43,7 +43,12 @@ If you scaffolded with `mint init` and did not pass `--no-frontend`, all of this
 
 ## Histoire storybook
 
-The frontend SDK ships a Histoire storybook with one story file per component:
+The frontend SDK has a public component showcase and the full Histoire lab:
+
+- [Component playground](/sdk/frontend/playground) — curated live examples and searchable component index
+- [Full Histoire lab](/sdk/frontend/histoire/) — every story, prop playground, variant, and review background
+
+The same Histoire stories run locally during SDK development:
 
 ```bash
 cd packages/sdk-frontend
@@ -58,7 +63,7 @@ Stories include:
 - Light, dark, and white backgrounds for visual review
 - Common variant grids
 
-Treat the storybook as the live component reference. The pages here cover patterns and the most-used parts of the API; the storybook covers every component and every prop.
+Treat the showcase as the public component reference. The pages here cover patterns and the most-used parts of the API; Histoire covers every component and every prop.
 
 ## Conventions
 

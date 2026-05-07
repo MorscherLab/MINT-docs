@@ -122,7 +122,7 @@ About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components
 | `DropdownButton` | Button with attached menu |
 | `FitPanel` | Fit-to-container panel |
 
-For full prop signatures, browse the source or the Histoire storybook (`bun run story:dev`, port 6006).
+For full prop signatures, browse the source or the [Histoire lab](/sdk/frontend/histoire/). For curated live examples, use the [component playground](/sdk/frontend/playground).
 
 ## Composables
 

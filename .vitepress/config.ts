@@ -6,7 +6,7 @@ export default defineConfig({
   lang: 'en-US',
 
   cleanUrls: true,
-  ignoreDeadLinks: false,
+  ignoreDeadLinks: [/^\/sdk\/frontend\/histoire(?:\/|$)/],
   srcExclude: ['README.md', 'CLAUDE.md', 'docs/**', 'node_modules/**'],
 
   head: [
@@ -128,6 +128,7 @@ export default defineConfig({
           text: 'Frontend',
           items: [
             { text: 'Overview', link: '/sdk/frontend/' },
+            { text: 'Component playground', link: '/sdk/frontend/playground' },
             { text: 'Components', link: '/sdk/frontend/components' },
             { text: 'Composables', link: '/sdk/frontend/composables' },
             { text: 'Design tokens', link: '/sdk/frontend/design-tokens' },

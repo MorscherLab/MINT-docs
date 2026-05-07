@@ -1,6 +1,6 @@
 # Components catalog
 
-The frontend SDK ships about 90 Vue component exports. This page documents the most-used surface for plugin frontends — layout primitives, form basics, dialogs, data displays, and domain widgets. For the rest, browse the [Histoire storybook](/sdk/frontend/) or [source](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/components).
+The frontend SDK ships about 90 Vue component exports. This page documents the most-used surface for plugin frontends — layout primitives, form basics, dialogs, data displays, and domain widgets. For live previews, browse the [component playground](/sdk/frontend/playground); for exhaustive props and variants, open the [Histoire lab](/sdk/frontend/histoire/) or [source](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/components).
 
 ::: tip Imports
 Every component is exported from the package root:
@@ -308,7 +308,8 @@ Hover-triggered tooltip with smart positioning.
 
 | Need | Destination |
 |------|-------------|
-| The full component catalog | [Histoire storybook](/sdk/frontend/) — browse with full props + variants |
+| Live component examples | [Component playground](/sdk/frontend/playground) — curated previews and searchable index |
+| The full component catalog | [Histoire lab](/sdk/frontend/histoire/) — browse with full props + variants |
 | A typed reactive helper for one of these | [Composables](/sdk/frontend/composables) |
 | Override the brand palette | [Design tokens](/sdk/frontend/design-tokens), [Theming](/sdk/frontend/theming) |
 | Schema-driven forms | [FormBuilder](/sdk/frontend/form-builder) |
