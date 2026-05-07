@@ -2,7 +2,7 @@
 
 The user-facing documentation site for [MINT](https://github.com/MorscherLab/mld) — Mass-spec INtegrated Toolkit (formerly MLD). Built with [VitePress](https://vitepress.dev/), deployed to **mint-docs.morscherlab.org** via GitHub Pages.
 
-This repository contains only the user manual (install, guide walkthroughs, UI tour, FAQ, glossary, plus user-level CLI usage and an SDK overview that links out). The full SDK reference, plugin internals, and contributor guides live in the platform repository at [`MorscherLab/mld/sdk`](https://github.com/MorscherLab/mld/tree/main/sdk).
+This repository contains the user manual and the Plugin Development documentation track: install guides, workflow walkthroughs, UI tour, FAQ, glossary, user-level CLI usage, SDK concepts, tutorials, recipes, frontend SDK guidance, operations, and API reference. The platform repository remains the implementation source of truth.
 
 ## Layout
 
@@ -28,14 +28,15 @@ MINT-docs/
     updates.md
   cli/
     overview.md
-    serve.md
-    plugin-dev.md
     platform.md
     configuration.md
   sdk/
-    overview.md
-    python.md
-    frontend.md
+    concepts/
+    tutorials/
+    recipes/
+    frontend/
+    operations/
+    api/
   reference/
     ui-tour.md
     permissions.md

@@ -100,26 +100,30 @@ In the frontend, fetch the current user's plugin role and conditionally render:
 ```vue
 <!-- frontend/src/views/PanelList.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useApi, useAuth } from '@morscherlab/mint-sdk'
+import { computed, ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useApi, useAuth, useAuthStore } from '@morscherlab/mint-sdk'
 
 const api = useApi()
-const { user } = useAuth()
+const { getCurrentUser } = useAuth()
+const authStore = useAuthStore()
+const { userInfo } = storeToRefs(authStore)
 const myRole = ref<string | null>(null)
 
 onMounted(async () => {
+  await getCurrentUser()
   // The platform exposes the current user's plugin role at this endpoint
-  myRole.value = await api.get<string | null>('/api/panel-designer/me/role')
+  myRole.value = await api.get<string | null>('/panel-designer/me/role')
 })
 
 const canDelete = computed(() =>
-  user.value?.role === 'Admin' ||
+  userInfo.value?.role === 'admin' ||
   myRole.value === 'editor' ||
   myRole.value === 'admin'
 )
 
 async function deletePanel(panelId: string) {
-  await api.delete(`/api/panel-designer/panels/${panelId}`)
+  await api.delete(`/panel-designer/panels/${panelId}`)
   // refresh list...
 }
 </script>

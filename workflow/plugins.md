@@ -28,7 +28,7 @@ register ──▶ install ──▶ initialize ──▶ ready
 
 | Phase | What happens |
 |-------|--------------|
-| **register** | The plugin's wheel is installable from PyPI / a private index, declares an entry point in the `mld.plugins` group |
+| **register** | The plugin's wheel is installable from PyPI / a private index, declares an entry point in the `mint.plugins` group |
 | **install** | `mint` resolves the plugin, places it in an isolated venv (or shared, if no conflicts), runs `MigrationRunner` to apply pending migrations |
 | **initialize** | `AnalysisPlugin.initialize(context)` is called once, the plugin returns its routers, the platform mounts them under `routes_prefix` |
 | **ready** | Plugin handles requests; UI tile is visible to users with the appropriate role |

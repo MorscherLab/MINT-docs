@@ -46,7 +46,7 @@ features:
 
   - icon: 🧰
     title: SDK for plugin authors
-    details: mint-sdk (Python) provides AnalysisPlugin, PlatformContext, repositories, and per-plugin schema migrations. @morscherlab/mint-sdk (npm) ships ~88 Vue 3 components and ~29 composables for plugin frontends.
+    details: mint-sdk (Python) provides AnalysisPlugin, PlatformContext, repositories, and per-plugin schema migrations. @morscherlab/mint-sdk (npm) ships about 90 Vue 3 component exports and 35 composables for plugin frontends.
     link: /sdk/concepts/
     linkText: Plugin Development
 
@@ -68,5 +68,5 @@ MINT is the new name for what was formerly called MLD. The rebrand landed alongs
 :::
 
 ::: info Developer documentation
-This site is the user manual. For full SDK reference, plugin internals, and contributor guides, see the [SDK documentation](https://github.com/MorscherLab/mld/tree/main/sdk) in the platform repository.
+This site includes both the user manual and the Plugin Development track: SDK concepts, tutorials, recipes, frontend components/composables, operations, and API reference. The platform repository remains the source of truth for implementation details.
 :::

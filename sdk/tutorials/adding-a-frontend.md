@@ -1,6 +1,6 @@
 # Tutorial 3 — Adding a frontend
 
-You'll add a Vue 3 frontend to the **hello-mint** plugin from [Tutorial 1](/sdk/tutorials/first-analysis-plugin). It uses `@morscherlab/mint-sdk` components — `AppLayout`, `Card`, the `useApi` composable — and runs side-by-side with the backend with hot reload.
+You'll add a Vue 3 frontend to the **hello-mint** plugin from [Tutorial 1](/sdk/tutorials/first-analysis-plugin). It uses `@morscherlab/mint-sdk` components — `AppLayout`, `AppContainer`, and the `useApi` composable — and runs side-by-side with the backend with hot reload.
 
 **Time:** ~45 minutes
 **Prereqs:** Tutorial 1 completed; bun installed
@@ -98,7 +98,7 @@ Replace `frontend/src/views/Home.vue`:
 <!-- frontend/src/views/Home.vue -->
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { AppLayout, Card, BaseInput, BaseButton, useApi } from '@morscherlab/mint-sdk'
+import { AppLayout, AppContainer, BaseInput, BaseButton, useApi } from '@morscherlab/mint-sdk'
 
 interface ExperimentSummary {
   experiment_id: number
@@ -119,7 +119,7 @@ async function fetchSummary() {
   summary.value = null
   try {
     summary.value = await api.get<ExperimentSummary>(
-      `/api/hello-mint/experiments/${experimentId.value}`
+      `/hello-mint/experiments/${experimentId.value}`
     )
   } catch (err) {
     error.value = err instanceof Error ? err.message : String(err)
@@ -132,8 +132,8 @@ onMounted(fetchSummary)
 </script>
 
 <template>
-  <AppLayout title="hello-mint">
-    <Card class="mb-4">
+  <AppLayout>
+    <AppContainer>
       <h2 class="text-lg font-semibold mb-2">Experiment summary</h2>
       <div class="flex items-end gap-2 mb-4">
         <BaseInput
@@ -163,7 +163,7 @@ onMounted(fetchSummary)
       </dl>
 
       <div v-else class="text-text-secondary">Loading…</div>
-    </Card>
+    </AppContainer>
   </AppLayout>
 </template>
 ```
@@ -173,7 +173,7 @@ What's used:
 | Symbol | From | What it does |
 |--------|------|--------------|
 | `AppLayout` | `@morscherlab/mint-sdk` | Page shell with the platform's top bar / sidebar shape |
-| `Card` | `@morscherlab/mint-sdk` | Standard card surface — picks up bg / border / shadow tokens |
+| `AppContainer` | `@morscherlab/mint-sdk` | Standard content card surface — picks up bg / border / shadow tokens |
 | `BaseInput` | `@morscherlab/mint-sdk` | Themed input with label, focus ring, and the optical-centering rule |
 | `BaseButton` | `@morscherlab/mint-sdk` | Themed button with loading state |
 | `useApi` | `@morscherlab/mint-sdk` | Typed fetch wrapper that auto-applies auth + tracing |
@@ -210,32 +210,39 @@ The SDK ships a composable that gives you a project-aware experiment picker. Swa
 <!-- frontend/src/views/Home.vue — replace the input section -->
 <script setup lang="ts">
 // ... imports as before, plus:
-import { ExperimentSelector, useExperimentSelector } from '@morscherlab/mint-sdk'
+import { ExperimentSelectorModal, useExperimentSelector, type ExperimentSummary } from '@morscherlab/mint-sdk'
 
-const { selected } = useExperimentSelector()
+const showPicker = ref(false)
+const { selectedExperiment } = useExperimentSelector()
 
-// Sync selected → experimentId
+// Sync selectedExperiment → experimentId
 import { watch } from 'vue'
-watch(selected, (e) => {
+watch(selectedExperiment, (e) => {
   if (e) {
     experimentId.value = e.id
     fetchSummary()
   }
 })
+
+function selectExperiment(experiment: ExperimentSummary) {
+  selectedExperiment.value = experiment
+  showPicker.value = false
+}
 </script>
 
 <template>
-  <AppLayout title="hello-mint">
-    <Card class="mb-4">
+  <AppLayout>
+    <AppContainer>
       <h2 class="text-lg font-semibold mb-2">Pick an experiment</h2>
-      <ExperimentSelector class="mb-4" />
+      <BaseButton class="mb-4" @click="showPicker = true">Choose experiment</BaseButton>
+      <ExperimentSelectorModal v-model="showPicker" @select="selectExperiment" />
       <!-- summary block as before -->
-    </Card>
+    </AppContainer>
   </AppLayout>
 </template>
 ```
 
-`useExperimentSelector` reads from the platform's experiments API and surfaces the user's accessible ones. The `selected` ref is reactive; we watch it and re-fetch.
+`useExperimentSelector` reads from the platform's experiments API and surfaces the user's accessible ones. The selected experiment is exposed as `selectedExperiment`; pair it with `ExperimentSelectorModal` when you want a ready-made picker UI.
 
 ## 6. Build for production
 
@@ -248,7 +255,7 @@ bun run build
 mint build
 ```
 
-`mint build` picks up `frontend/dist/` (via `tool.hatch.build.targets.wheel.force-include` in your `pyproject.toml`) and packages it into the `.mld` bundle. The plugin's `get_frontend_dir()` finds the assets at runtime — first under the installed package's directory, then walking upward looking for `frontend/dist` in dev layouts.
+`mint build` picks up `frontend/dist/` (via `tool.hatch.build.targets.wheel.force-include` in your `pyproject.toml`) and packages it into the `.mint` bundle. The plugin's `get_frontend_dir()` finds the assets at runtime — first under the installed package's directory, then walking upward looking for `frontend/dist` in dev layouts.
 
 ## 7. Style notes
 

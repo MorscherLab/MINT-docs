@@ -19,7 +19,7 @@ with MINTClient(base_url="https://mint.example.org",
     me = client.whoami()
 
 # 3. Env-aware (no arguments) — reads MINT_URL and MINT_TOKEN, falling back
-#    to credentials stored by `mint auth login` at ~/.config/mld/credentials.json
+#    to credentials stored by `mint auth login` at ~/.config/mint/credentials.json
 with MINTClient() as client:
     ...
 ```
@@ -39,7 +39,7 @@ MINTClient(
 When `base_url` is `None`, the resolution order is:
 
 1. `MINT_URL` env var
-2. Stored credentials at `~/.config/mld/credentials.json` (written by `mint auth login`)
+2. Stored credentials at `~/.config/mint/credentials.json` (written by `mint auth login`; honors `XDG_CONFIG_HOME`)
 3. Otherwise raise `MINTAPIError`
 
 When `token` is `None`, the same fallback chain runs for the JWT (env: `MINT_TOKEN`).
@@ -60,10 +60,10 @@ These are thin wrappers over `client.auth`.
 
 | Property | Type | Purpose |
 |----------|------|---------|
-| `client.auth` | `AuthAPI` | Login / logout / refresh / whoami |
+| `client.auth` | `AuthAPI` | Login / logout / verify / refresh / whoami |
 | `client.experiments` | `ExperimentsAPI` | List, get, create, update, get_data |
-| `client.projects` | `ProjectsAPI` | List, get, create, update, archive |
-| `client.plugins` | `PluginsAPI` | List installed plugins; install / uninstall (admin) |
+| `client.projects` | `ProjectsAPI` | List, get, create, update, delete, experiments, members |
+| `client.plugins` | `PluginsAPI` | List loaded plugins |
 
 Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-python/src/mint_sdk/client/resources).
 
@@ -96,13 +96,18 @@ For genuinely long jobs (CI runs that span days), prefer service-account tokens 
 
 ## Pagination
 
-The `list` methods return iterables (consult each `*API.py` file for exact shape). The most common pattern:
+The `list` methods return plain Python lists after unwrapping the platform response. For page-by-page pulls, pass `skip` and `limit` yourself:
 
 ```python
 with MINTClient() as client:
     all_experiments = []
-    for batch in client.experiments.list(status="completed", limit=200):
+    skip = 0
+    while True:
+        batch = client.experiments.list(status="completed", skip=skip, limit=200)
+        if not batch:
+            break
         all_experiments.extend(batch)
+        skip += len(batch)
 ```
 
 For very large result sets, prefer querying only what you need — full pulls hit memory limits and lock the platform's connection pool.
@@ -111,7 +116,7 @@ For very large result sets, prefer querying only what you need — full pulls hi
 
 - `MINTClient` instances are not thread-safe. Use one per thread.
 - Inside a plugin, prefer `PlatformContext` accessors over `MINTClient` — they share the platform's connection pool, avoid the network hop in shared mode, and short-circuit auth checks for the plugin's user.
-- The credentials file (`~/.config/mld/credentials.json`) is the user's responsibility to secure (`chmod 600`); `mint auth login` sets that automatically.
+- The credentials file (`~/.config/mint/credentials.json`, or `$XDG_CONFIG_HOME/mint/credentials.json`) is the user's responsibility to secure (`chmod 600`); `mint auth login` sets that automatically.
 
 ## Related
 

@@ -155,7 +155,7 @@ The platform middleware logs unhandled exceptions automatically; suppressing the
 
 ## Auto-issue reports
 
-When `observability.autoIssue` is enabled, unhandled exceptions become deduplicated GitHub issues with stack trace + request context. To opt a route out (e.g., a known-flaky external integration), catch the exception explicitly:
+When `errorReporting.enabled` is enabled, unhandled exceptions become deduplicated GitHub issues with stack trace + request context. To opt a route out (e.g., a known-flaky external integration), catch the exception explicitly:
 
 ```python
 import logging

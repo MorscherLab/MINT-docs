@@ -15,20 +15,22 @@ Plugin authors don't deploy the platform — that's the lab admin's job. But wha
 When a plugin is installed via the marketplace:
 
 ```
-/var/lib/mint/                   # plugins.dataDir (configurable)
-├── plugin-data/
-│   ├── my-plugin/
-│   │   ├── artifacts/           # uploaded files
-│   │   ├── cache/               # plugin-managed cache
-│   │   └── snapshots/           # pre-upgrade snapshots
-│   └── ...
-└── _uploads/                    # temporary upload buffer
+/var/lib/mint/                   # server.dataPath (configurable)
+├── mint.db                      # when database.mode = sqlite
+├── plugin_registry.json
+├── marketplace/                 # registry cache
+└── plugins/
+    ├── uploads/                 # uploaded .mint bundles and extracted payloads
+    ├── snapshots/               # Python environment snapshots
+    └── my-plugin/
+        ├── venv/                # isolated mode only
+        └── config.json          # legacy per-plugin settings fallback
 ```
 
 Plugin Python code lives in:
 
 - **Shared mode**: alongside platform code in the platform's venv (`/opt/mint/.venv` or wherever)
-- **Isolated mode**: in a per-plugin venv at `/var/lib/mint/venvs/my-plugin/`
+- **Isolated mode**: in a per-plugin venv under `<server.dataPath>/plugins/<plugin>/venv/`
 
 Frontend assets:
 
@@ -57,7 +59,7 @@ When the platform runs as multiple replicas (e.g., Kubernetes with `replicas: 3`
 | Plugin install | Coordinated through the platform; no plugin-author concern |
 | In-process state | Each replica has its own — don't cache request-scoped data in module globals (see [Recipes → Logging & tracing](/sdk/recipes/logging-tracing)) |
 | Scheduled jobs | Use the platform's job-runner abstraction; running cron in-process across replicas duplicates the work |
-| Filesystem writes | Use `plugins.dataDir` which is shared (NFS, etc.) — never write to local disk paths assuming a single replica |
+| Filesystem writes | Use platform/plugin storage under `server.dataPath` on shared storage (NFS, etc.) — never write to local disk paths assuming a single replica |
 
 Plugins that need request-affinity (e.g., session-bound state in WebSocket connections) should declare it; the platform's reverse proxy can route to a stable replica via session affinity but not by default.
 
@@ -78,7 +80,7 @@ The platform doesn't enforce per-plugin resource quotas (CPU, RAM, disk). Plugin
 
 - **CPU**: long-running endpoints should be cancellation-aware (`asyncio.CancelledError` handling). Don't hog the event loop with CPU-bound work — spawn a subprocess or use a thread-pool for that.
 - **RAM**: stream large responses rather than buffering. Read DataFrames in chunks.
-- **Disk**: clean up old artifacts, cache files. The platform doesn't auto-prune `plugins.dataDir/<your-plugin>/`.
+- **Disk**: clean up old artifacts and cache files. The platform doesn't auto-prune plugin-owned files under `server.dataPath`.
 
 For heavy compute (multi-minute analyses), use the platform's job system rather than blocking the request:
 
@@ -114,7 +116,7 @@ Plugins inherit the platform's observability automatically:
 
 - Structured logs via `get_plugin_logger`
 - OTel traces via `tracer.start_as_current_span`
-- Auto-issued GitHub bug reports for unhandled exceptions (when `observability.autoIssue` is on)
+- Auto-issued GitHub bug reports for unhandled exceptions (when `errorReporting.enabled` is on)
 
 For per-plugin metrics dashboards (Grafana), publish via OTel's metrics SDK — the platform's exporter forwards them. Define a few key metrics rather than instrumenting every line.
 
@@ -123,14 +125,14 @@ For per-plugin metrics dashboards (Grafana), publish via OTel's metrics SDK — 
 The platform owns:
 
 - Postgres database backups (lab-managed, e.g., `pg_dump` on a schedule)
-- `plugins.dataDir` backups (if the volume isn't already on a backed-up filesystem)
+- `server.dataPath` backups (if the volume isn't already on a backed-up filesystem)
 
-Plugin authors don't need to implement backup logic. Document any plugin-specific recovery steps (e.g., "if you restore the database from before a 2.0 schema change, run `mint plugin reset --revision 1` to roll back the plugin to a compatible version").
+Plugin authors don't need to implement backup logic. Document any plugin-specific recovery steps, such as which plugin bundle version is compatible with a restored database snapshot and whether any plugin-owned artifact directories must be restored together.
 
 ## Notes
 
 - Plugin Docker images are not a thing — the platform itself is the container, plugins install into it. Don't try to ship a separate Dockerfile for your plugin.
-- For air-gapped deployments, the registry should be self-hosted on the same network. The platform supports `marketplace.registries[]` with multiple URLs (private + public).
+- For air-gapped deployments, the registry should be self-hosted on the same network. The platform reads one `marketplace.registryUrl`; use an aggregate registry file when you need to combine private and public entries.
 - Don't rely on outbound network from a plugin — many lab deployments restrict it. Document any required outbound calls in your README.
 
 ## Related

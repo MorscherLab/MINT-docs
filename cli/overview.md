@@ -23,9 +23,9 @@ If the command isn't found, the install location isn't on your `PATH`. With `uv 
 
 | Command | Purpose |
 |---------|---------|
-| `mint auth login / logout / status / refresh` | Acquire and manage a session token |
+| `mint auth login / logout / status` | Acquire and manage a session token |
 | `mint experiment list / get / create / update` | CRUD on experiments via the platform API |
-| `mint project list / get / create / archive` | CRUD on projects |
+| `mint project list / get / create / update / delete` | CRUD on projects |
 | `mint status` | Platform health overview |
 
 Detail: [Platform commands](/cli/platform). Configuration of how `mint` reaches the platform: [Configuration](/cli/configuration).
@@ -45,7 +45,7 @@ These commands act on a plugin project (cd into the plugin's directory first):
 | `mint docs` | Open SDK docs in the browser |
 | `mint sdk link / unlink / update` | Manage the plugin's SDK pin |
 
-Full details — every flag, every subcommand: [Plugin Development → CLI reference](/sdk/api/cli-reference).
+Full details — subcommands and primary flags: [Plugin Development → CLI reference](/sdk/api/cli-reference).
 
 ## What `mint` is not
 

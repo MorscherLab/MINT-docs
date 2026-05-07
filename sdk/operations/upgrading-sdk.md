@@ -116,11 +116,11 @@ dependencies = [
 ```
 
 ```bash
-mint sdk update --pre
+uv sync
 uv run pytest -v
 ```
 
-Run your full test suite. File any issues against [`MorscherLab/mld`](https://github.com/MorscherLab/mld). Once 2.0 stable lands, drop the `b1` from your range.
+`mint sdk update` only selects stable semver releases, so beta testing starts by editing the dependency range explicitly. Run your full test suite. File any issues against [`MorscherLab/mld`](https://github.com/MorscherLab/mld). Once 2.0 stable lands, drop the `b1` from your range.
 
 ::: warning Don't ship plugin releases against SDK betas
 A plugin built against `mint-sdk==2.0.0b1` may not work against `mint-sdk==2.0.0` if a beta-only API changes. Test against beta, ship against stable.

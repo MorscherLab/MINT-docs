@@ -22,7 +22,7 @@ MLD was the original name (Morscher Laboratory Database). It was rebranded to **
 
 ## Where does my data go?
 
-**Self-managed install (direct or Docker, on a Linux server):** Data lives on your server — relational data in Postgres (recommended) or SQLite, files under `plugins.dataDir`. MINT itself makes outbound network requests only to the marketplace registry and (optionally) the GitHub release feed for updates.
+**Self-managed install (direct or Docker, on a Linux server):** Data lives on your server — relational data in Postgres (recommended) or SQLite, files under the configured `server.dataPath`. MINT itself makes outbound network requests only to the marketplace registry and (optionally) the GitHub release feed for updates.
 
 **Hosted (`mint.morscherlab.org`):** Data resides on the lab server. Access is governed by the same RBAC controls as any other deployment.
 
@@ -53,13 +53,13 @@ Single-process MINT comfortably serves dozens of concurrent users with a handful
 Two layers:
 
 1. **Database** — standard `pg_dump` / `pg_dumpall` (Postgres) or file copy (SQLite, when MINT is stopped).
-2. **Filesystem** — `plugins.dataDir` for plugin artifacts. The platform doesn't store anything outside the database and that directory.
+2. **Filesystem** — `server.dataPath` for SQLite/passkey files, plugin registry state, uploaded `.mint` bundles, plugin environment snapshots, and plugin-owned files.
 
 `snapshot.py` keeps short-lived rollback snapshots for plugin upgrades, but those aren't a backup substitute — they're a local rollback aid.
 
 ## Can I write a plugin in something other than Python?
 
-The plugin contract is a FastAPI app + entry point in the `mld.plugins` group, so the plugin process itself must be Python. The plugin can shell out to native binaries, call other languages over IPC, or do anything else inside that process — but the platform-facing surface is Python + FastAPI.
+The plugin contract is a FastAPI app + entry point in the `mint.plugins` group, so the plugin process itself must be Python. The plugin can shell out to native binaries, call other languages over IPC, or do anything else inside that process — but the platform-facing surface is Python + FastAPI.
 
 The frontend half is Vue 3, but it's optional: a backend-only plugin (e.g., a webhook receiver) doesn't need a frontend.
 
@@ -76,7 +76,7 @@ pip install --user --upgrade mint
 pipx upgrade mint
 ```
 
-For self-hosted deployments, use `Admin → Updates` to run the upgrade in-place with rollback support. See [Updates](/workflow/updates).
+For self-hosted deployments, use `Admin → Updates` to check and apply available releases. Take a normal deployment/database backup before upgrading. See [Updates](/workflow/updates).
 
 ## Is MINT open source?
 

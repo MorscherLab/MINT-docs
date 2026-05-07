@@ -1,6 +1,6 @@
 # CLI reference
 
-The `mint` CLI ships with `mint-sdk`. This page enumerates every subcommand and flag, derived from `mint_sdk/cli.py`. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
+The `mint` CLI ships with `mint-sdk`. This page summarizes the subcommands and primary flags from `mint_sdk/cli.py`. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
 
 Source: [`mint_sdk/cli.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/cli.py) and [`mint_sdk/cli_commands/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-python/src/mint_sdk/cli_commands).
 
@@ -29,14 +29,13 @@ mint status
 
 ### `mint auth`
 
-Manage authentication tokens. Tokens are stored at `~/.config/mld/credentials.json`.
+Manage authentication tokens. Tokens are stored at `~/.config/mint/credentials.json` unless `XDG_CONFIG_HOME` is set, in which case the file is `$XDG_CONFIG_HOME/mint/credentials.json`.
 
 | Subcommand | Purpose |
 |------------|---------|
 | `mint auth login [--url URL] [--username USER]` | Interactive login; stores JWT |
 | `mint auth logout` | Discard the stored JWT |
 | `mint auth status` | Print current host + user |
-| `mint auth refresh` | Refresh the stored JWT |
 
 (Read `mint_sdk/cli_commands/auth_cmd.py` for the exact flag list.)
 
@@ -46,10 +45,14 @@ CRUD on experiments via the REST API.
 
 | Subcommand | Purpose |
 |------------|---------|
-| `mint experiment list [--status S] [--type T] [--project P] [--limit N] [--json]` | List experiments |
-| `mint experiment get <id>` | Show one experiment |
-| `mint experiment create --type T --name N [--project P]` | Create an experiment |
-| `mint experiment update <id> [--status S] [--name N]` | Update an experiment |
+| `mint experiment list [--status S] [--type T] [--project-id ID] [--search Q] [--mine] [--since YYYY-MM-DD] [--before YYYY-MM-DD] [--limit N] [--json]` | List experiments |
+| `mint experiment get <id> [--json]` | Show one experiment |
+| `mint experiment create <name> [--type T] [--project-id ID] [--notes TEXT] [--json]` | Create an experiment |
+| `mint experiment update <id> [--name N] [--status S] [--type T] [--project-id ID] [--notes TEXT] [--json]` | Update an experiment |
+| `mint experiment data <id> [--format json\|csv] [--view raw\|tree\|summary]` | Print experiment design data |
+| `mint experiment results <id> [--plugin ID] [--json]` | Print analysis results |
+| `mint experiment delete <id> [--yes]` | Delete an experiment |
+| `mint experiment types [--json]` | List experiment types |
 
 (Read `experiment_cmd.py` for the exact flag list — flags evolve.)
 
@@ -59,10 +62,13 @@ CRUD on projects.
 
 | Subcommand | Purpose |
 |------------|---------|
-| `mint project list [--limit N] [--json]` | List projects |
-| `mint project get <id>` | Show one project |
-| `mint project create --name N [--description D]` | Create a project |
-| `mint project archive <id>` | Archive (reversible) |
+| `mint project list [--search Q] [--status active\|archived\|completed] [--mine] [--limit N] [--json]` | List projects |
+| `mint project get <id> [--json]` | Show one project |
+| `mint project create <name> [--description D] [--json]` | Create a project |
+| `mint project update <id> [--name N] [--description D] [--status active\|archived\|completed] [--json]` | Update project metadata |
+| `mint project delete <id> [--yes]` | Delete a project |
+| `mint project experiments <id> [--limit N] [--json]` | List experiments in a project |
+| `mint project members <id> [--json]` | List project members |
 
 (Read `project_cmd.py` for the exact flag list.)
 
@@ -84,6 +90,9 @@ mint init [DIRECTORY] [flags]
 | `--name`, `-n` | Plugin name (human-readable) |
 | `--description`, `-d` | One-line description |
 | `--type`, `-t` | Plugin type: `analysis` or `experiment-design` |
+| `--template` | Plugin starter template (see `--list-templates`) |
+| `--list-templates` | List starter templates and exit |
+| `--json` | Output starter-template catalog as JSON when listing |
 | `--no-frontend` | Skip frontend scaffolding |
 | `--no-install` | Skip `uv sync` and `bun install` |
 | `--no-git` | Skip `git init` |
@@ -128,7 +137,7 @@ Tail logs from a running plugin process.
 
 ### `mint build`
 
-Package the plugin into a `.mld` bundle.
+Package the plugin into a `.mint` bundle.
 
 ```bash
 mint build [PATH] [flags]
@@ -141,7 +150,7 @@ mint build [PATH] [flags]
 | `--vendor-deps` | Include dependency wheels in the bundle (opt-in) |
 | `--output-dir` | Output directory (default `dist`) |
 
-Output: `dist/<name>-<version>.mld`. Note the `.mld` extension.
+Output: `dist/<name>-<version>.mint`. Note the `.mint` extension.
 
 ### `mint doctor`
 
@@ -155,7 +164,10 @@ mint doctor [PATH] [flags]
 |------|--------|
 | `PATH` (positional) | Plugin project directory (default `.`) |
 | `--deps` | Check platform-core dependency alignment |
+| `--r` | Check the R bridge environment |
 | `--fix` | Fix misaligned deps (requires `--deps`) |
+| `--explain` | Show why each failed check matters |
+| `--json` | Output machine-readable check results |
 
 ### `mint info`
 
@@ -173,7 +185,29 @@ Browse SDK reference documentation.
 mint docs [path...] [--json] [--no-cache] [--clear-cache]
 ```
 
-`path...` is a series of positional segments: `[python|frontend] [category] [item]`. With no path, opens the docs index.
+`path...` is a series of positional segments such as `frontend components`, `contract .`, `template plate-map`, or `search "<concept>"`. With no path, prints the docs index.
+
+### `mint add`
+
+Add common plugin pieces to an existing project.
+
+| Subcommand | Purpose |
+|------------|---------|
+| `mint add setting <name> [--type string\|number\|integer\|boolean] [--default VALUE] [--description TEXT] [--required] [--generate] [--path PATH]` | Add a typed plugin setting |
+| `mint add endpoint <name> [--route PATH] [--method get\|post\|put\|patch\|delete] [--router NAME] [--create-router] [--request-model NAME] [--response-model NAME] [--generate] [--path PATH]` | Add a FastAPI endpoint |
+| `mint add router <name> [--prefix PATH] [--tag TAG] [--path PATH]` | Add and register a router |
+| `mint add migration <name> [--path PATH]` | Add a plugin schema migration |
+| `mint add schema <name> [--file requests\|responses] [--field name:type] [--generate] [--path PATH]` | Add a Pydantic schema |
+| `mint add service <name> [--method NAME] [--path PATH]` | Add a service module |
+| `mint add job [name] [--path PATH]` | Add a job service and `/jobs` router |
+| `mint add artifact [--path PATH]` | Add a local artifact helper and `/artifacts` router |
+| `mint add hook <before-save\|after-save\|status-change> [--path PATH]` | Add a lifecycle hook |
+| `mint add frontend-page <name> [--path PATH]` | Add and register a Vue view |
+| `mint add frontend-composable <name> [--endpoint PATH] [--path PATH]` | Add a Vue composable wired to plugin API |
+| `mint add r-analysis <name> [--script PATH] [--generate] [--page] [--path PATH]` | Add an R-backed analysis endpoint scaffold |
+| `mint add data-template [template] [--list] [--json] [--generate] [--page] [--path PATH]` | Add biology data-template helpers |
+| `mint add data-template-pack [pack] [--list] [--json] [--generate] [--page] [--path PATH]` | Add a curated data-template pack |
+| `mint add data-template-preset [preset] [--list] [--json] [--page] [--path PATH]` | Add a ready-to-save data-template preset |
 
 ## Develop / SDK sub-app
 
@@ -205,11 +239,21 @@ mint sdk update [--scope patch|minor|major] [--dry-run] [--no-sync]
 
 `--scope` controls the maximum version-bump kind allowed; `--dry-run` previews; `--no-sync` skips the post-update lockfile sync.
 
+### `mint sdk generate`
+
+Generate the frontend plugin contract and typed client from backend routes and Pydantic schemas.
+
+```bash
+mint sdk generate [PATH] [--check] [--json] [--output DIR]
+```
+
+`--check` reports drift without writing files, useful in CI. `--output` is relative to the plugin root.
+
 ## Configuration files
 
 | Path | Purpose |
 |------|---------|
-| `~/.config/mld/credentials.json` | Per-user JWT storage (written by `mint auth login`) |
+| `~/.config/mint/credentials.json` | Per-user JWT storage (written by `mint auth login`; honors `XDG_CONFIG_HOME`) |
 | `<plugin>/pyproject.toml` | Plugin dependencies, entry points, build config |
 | `<workspace>/MINT/config.dev.toml` | Dev proxy mapping (created by `mint dev --platform`) |
 
@@ -217,7 +261,7 @@ mint sdk update [--scope patch|minor|major] [--dry-run] [--no-sync]
 
 - The `mint` CLI is the user-facing binary; `mint_sdk.cli:main` is the entry point. Don't import the CLI module from your plugin code.
 - For programmatic platform access, use `MINTClient` — the CLI itself uses it under the hood.
-- The CLI's `name` field in Typer help may still display "mld" during the rebrand transition; the binary name and behavior are `mint`.
+- Plugin discovery uses the `mint.plugins` entry-point group.
 
 ## Related
 

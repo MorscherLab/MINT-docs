@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 User-facing documentation site for [MINT](https://github.com/MorscherLab/mld) — Mass-spec INtegrated Toolkit (formerly MLD). Built with VitePress, deployed to **mint-docs.morscherlab.org** via GitHub Pages on every push to `main`.
 
-This repo contains the **user-facing manual**: install, guide walkthroughs, UI tour, FAQ, glossary, plus user-level `mint` CLI usage (`/cli/`) and a thin SDK overview (`/sdk/`) that links out. Developer-internal material (full SDK API reference, plugin internals, frontend component catalog, extension points) lives in `MorscherLab/mld/sdk` — do not duplicate it here. When in doubt, link out.
+This repo contains the **user-facing manual** and the **Plugin Development** documentation track: install, workflow walkthroughs, UI tour, FAQ, glossary, user-level `mint` CLI usage (`/cli/`), SDK concepts, tutorials, recipes, frontend component/composable guidance, operations, and API reference. The platform repository is still the source of truth for implementation, so verify SDK signatures and schema details against `../MINT-platform/MINT` before changing reference pages.
 
 ## Commands
 
@@ -46,5 +46,5 @@ Edit links in the footer point to `MorscherLab/MINT-docs` on GitHub. The dev ser
 - Internal links use VitePress clean URLs (no `.md` extension, since `cleanUrls: true`).
 - `ignoreDeadLinks: false` — broken internal links fail the build, so verify links resolve before committing.
 - The home page (`index.md`) uses VitePress's `layout: home` frontmatter with `hero` + `features`; don't convert it to a regular markdown page.
-- For anything related to platform internals (SDK function signatures, schema details, plugin loader internals, RBAC model code), link out to the mld repository rather than restating it here.
+- For SDK function signatures, schema details, plugin loader internals, and RBAC model code, check the MINT platform source before editing. Keep reference pages concise and link to source files for details that are likely to churn.
 - The MINT name is canonical post-`v1.0.0`. Use `mint-sdk` / `@morscherlab/mint-sdk` / `mint` CLI / `MINT_` env vars when referring to current versions; only mention the legacy `mld` / `MLD_` names when explicitly documenting migration from older versions.

@@ -73,7 +73,7 @@ Plugin code is identical in both modes.
 In development, plugins are typically run as standalone subprocesses with `mint dev --platform` so the developer can hot-reload either side independently. `api/plugins/dev_proxy.py` consumes a `config.dev.toml` that maps route prefixes to localhost URLs:
 
 ```toml
-# mld/config.dev.toml
+# MINT/config.dev.toml
 [proxy]
 "/lcms-sequence" = "http://localhost:8004"
 "/peak-picking"  = "http://localhost:8005"

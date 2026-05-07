@@ -14,7 +14,7 @@ A plugin that reads experiment data and produces results. Doesn't own a database
 The output of an analysis-plugin run, accumulated under the experiment's `analysis_results`. Multiple runs over time accumulate; the platform doesn't replace previous runs.
 
 **Approval queue**
-The list of pending plugin install requests, visible to admins under **Admin → Marketplace**. Required when `marketplace.requireApproval` is true.
+The list of pending plugin install requests, visible to admins under **Admin → Marketplace**. Users without `plugins.install` can submit requests; admins approve or deny them.
 
 **Archive (project)**
 Hides a project from default dashboards without deleting any data. Reversible.
@@ -23,7 +23,7 @@ Hides a project from default dashboards without deleting any data. Reversible.
 Renames a plugin's tables with an `archived_*` prefix on uninstall. Data is unreachable but recoverable.
 
 **Artifact**
-A user-uploaded file attached to an experiment — RAW data, plate maps, sequence sheets, and so on. Stored under `plugins.dataDir`.
+A user-uploaded file attached to an experiment — RAW data, plate maps, sequence sheets, and so on. Plugin-owned files live under the platform's configured `server.dataPath`.
 
 **Authenticator**
 The device or method that proves a user's identity in WebAuthn / passkey login — a hardware key, Touch ID, Windows Hello, etc.
@@ -33,8 +33,8 @@ The device or method that proves a user's identity in WebAuthn / passkey login �
 **Capability**
 A flag in `PluginMetadata` declaring that a plugin needs read or write access to a specific resource family (experiments, projects, …). The `PlatformContext` enforces capabilities at runtime.
 
-**Channel (updates)**
-`stable` or `beta`. Switches whether the platform polls for stable releases or pre-release tags.
+**Prerelease updates**
+When `updates.includePrereleases` is true, the platform update checker includes GitHub prereleases in addition to stable releases.
 
 **Collaborator**
 A per-experiment role override stored on the experiment itself. Survives project membership changes.
@@ -80,7 +80,7 @@ The auth token MINT issues after a successful password or passkey login. Stored 
 The catalog of plugins available for install. Sourced from `marketplace.registryUrl`. Admins approve install requests when approval is enforced.
 
 **Marketplace registry**
-A static JSON feed plus the wheel files it points at. Hostable on any HTTPS endpoint. Default is `marketplace.morscherlab.org`.
+A static JSON feed plus the `.mint` bundle files it points at. Hostable on any HTTPS endpoint. The default registry is `MorscherLab/mint-registry`.
 
 **Member (system role)**
 A user with read + write rights for projects and experiments they belong to, but no platform-admin rights. Most lab users are Members.
@@ -105,11 +105,11 @@ A WebAuthn credential — a public/private key pair stored on a device. Replaces
 **Permission**
 A `resource.action` string (e.g., `experiment.write`) that backend routes check. 18 permissions total, in 5 groups.
 
-**Pin (plugin)**
-Locks a plugin at a specific version, opting it out of auto-update. Configured under `plugins.pin` in `config.json`.
+**Plugin auto-update**
+A per-plugin marketplace setting stored in `marketplace.autoUpdatePlugins`. When enabled, compatible registry updates can be installed automatically by the marketplace sync task.
 
 **Plugin**
-A self-contained extension to the platform. Implements `AnalysisPlugin` from `mint-sdk`. Discovered via the `mld.plugins` entry-point group.
+A self-contained extension to the platform. Implements `AnalysisPlugin` from `mint-sdk`. Discovered via the `mint.plugins` entry-point group.
 
 **`PlatformContext`**
 The runtime object the platform hands a plugin. Provides repository accessors, the current user, and an OpenTelemetry tracer.

@@ -1,6 +1,6 @@
 # Updates
 
-MINT's update story has two layers: the **platform** itself (the FastAPI backend + bundled frontend + `mint` CLI) and the **plugins** installed on top of it. Each layer updates independently and can be configured to auto-check, auto-install, or remain on a pinned version.
+MINT's update story has two layers: the **platform** itself (the FastAPI backend + bundled frontend + `mint` CLI) and the **plugins** installed on top of it. Each layer updates independently: platform updates are checked from GitHub releases, while marketplace plugin updates are checked from the configured registry.
 
 > [Screenshot: Admin → Updates page showing platform and plugin update statuses]
 
@@ -11,22 +11,21 @@ Configured under `updates` in `config.json`:
 ```json
 {
   "updates": {
-    "enabled": true,
-    "channel": "stable",
+    "autoCheckEnabled": true,
     "checkIntervalHours": 24,
-    "githubRepo": "MorscherLab/mld",
-    "autoInstall": false
+    "platformRepo": "MorscherLab/MINT",
+    "includePrereleases": false
   }
 }
 ```
 
 | Field | Effect |
 |-------|--------|
-| `enabled` | Master on/off switch |
-| `channel` | `stable` (default) or `beta` |
+| `autoCheckEnabled` | Master on/off switch for background update checks |
 | `checkIntervalHours` | How often `update_service` polls the GitHub release feed |
-| `githubRepo` | Where to pull releases from — usually unchanged |
-| `autoInstall` | If `true`, installs new releases as they appear; otherwise admins click **Install** manually |
+| `platformRepo` | Where to pull platform releases from — usually unchanged |
+| `includePrereleases` | Include GitHub prereleases in the update list |
+| `pluginSources` | Optional per-plugin GitHub release sources used outside the marketplace registry |
 
 Update notifications appear in **Admin → Updates** with the diff of the changelog and a single **Install** button. Installation:
 
@@ -39,7 +38,7 @@ There is a brief outage during the swap. For zero-downtime upgrades, run two MIN
 
 ## Plugin updates
 
-Plugin updates are surfaced in **Admin → Plugins**, with a per-plugin **Upgrade** button when the registry advertises a newer compatible version. Each plugin has its own auto-update preference (defaults to off):
+Plugin updates are surfaced in **Admin → Plugins** and **Admin → Marketplace**, with a per-plugin **Upgrade** button when the registry advertises a newer compatible version. Each plugin has its own marketplace auto-update preference in `marketplace.autoUpdatePlugins` (defaults to off):
 
 > [Screenshot: per-plugin upgrade card with Auto-update toggle and version picker]
 
@@ -47,51 +46,33 @@ Plugin updates are surfaced in **Admin → Plugins**, with a per-plugin **Upgrad
 |--------|----------|
 | **Auto-update off** (default) | Admin upgrades manually |
 | **Auto-update enabled** | Platform installs newer compatible versions automatically during the daily check |
-| **Pin version** | Locks the plugin at a specific version even if newer ones appear |
 
 The marketplace's compatibility check matches the plugin's declared SDK range against the platform's bundled `mint-sdk` version — if a plugin needs a newer SDK than the current platform offers, it's hidden from the upgrade button until the platform itself is updated.
 
-## Beta channel
+## Prereleases
 
-Setting the platform `channel` to `beta` opts you in to pre-release builds tagged `*-beta.*`. Useful for:
+Setting `updates.includePrereleases` to `true` opts the platform update checker into GitHub prereleases. Useful for:
 
 - Testing forthcoming releases against your real plugins before stable lands
 - Reproducing bugs against a candidate fix
 - Plugin authors who need a new SDK feature ahead of stable
 
-Beta releases follow the same migration discipline as stable — migrations are forward-only and tested — but the API surface or UI may change between betas. Don't run beta on a production lab instance without a rollback plan.
-
-## Pinning
-
-Pin a plugin's version to opt out of auto-updates without disabling the global feature:
-
-```json
-{
-  "plugins": {
-    "pin": {
-      "mint-ms-designer": "1.4.0",
-      "mint-plugin-drp": "0.9.2"
-    }
-  }
-}
-```
-
-Pinned plugins still show "Update available" in the UI, but the upgrade button is replaced with a notice saying the plugin is pinned.
+Prereleases follow the same migration discipline as stable — migrations are forward-only and tested — but the API surface or UI may change between prereleases. Don't run prereleases on a production lab instance without a rollback plan.
 
 ## Rollback
 
-Both platform and plugin upgrades take pre-upgrade snapshots:
+MINT update checks do not replace deployment backups. Before platform upgrades, take a normal database and deployment backup using your lab's operating procedure.
 
 | Layer | Rollback mechanism |
 |-------|--------------------|
-| Platform | `update_service` keeps the previous wheel for 7 days; click **Roll back** under **Admin → Updates** |
-| Plugin | `snapshot.py` captures the database + filesystem state before the upgrade; the **Roll back** button restores from snapshot |
+| Platform | Restore the previous deployment artifact and database backup |
+| Plugin | `snapshot.py` captures the Python environment before install / upgrade / uninstall; rollback restores package versions best-effort |
 
-After the retention window, the snapshot is purged. For longer retention, do a separate database backup before any major upgrade.
+Plugin environment snapshots are useful for Python package recovery, but they are not a substitute for database backups before major schema changes.
 
 ## Auto-issued bug reports
 
-When the platform or a plugin raises an unhandled exception, `github_issue_service` can automatically open a deduplicated GitHub issue with the stack trace and request context (no PII). It's enabled per-plugin via the plugin's marketplace metadata; for the platform itself, it's controlled by `observability.autoIssue`. Disabled by default.
+When the platform or a plugin raises an unhandled exception, `github_issue_service` can automatically open a deduplicated GitHub issue with the stack trace and request context (no PII). For the platform itself, it's controlled by the `errorReporting` config section. Disabled by default.
 
 ## Next
 

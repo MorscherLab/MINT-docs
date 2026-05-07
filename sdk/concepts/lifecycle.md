@@ -7,7 +7,7 @@ A plugin moves through a small fixed set of phases. Knowing them helps you decid
 ```mermaid
 stateDiagram-v2
     [*] --> Registered: declare entry point in pyproject.toml
-    Registered --> Installing: marketplace install / mint plugin install
+    Registered --> Installing: marketplace install
     Installing --> Migrating: pre-init migrations
     Migrating --> Initializing: AnalysisPlugin.initialize(context)
     Initializing --> Ready: routers mounted
@@ -24,11 +24,11 @@ stateDiagram-v2
 
 ### Registered
 
-Your plugin's wheel is published (PyPI, internal index, or a `.mint` bundle) and declares an entry point in the `mld.plugins` group:
+Your plugin's wheel is published (PyPI, internal index, or a `.mint` bundle) and declares an entry point in the `mint.plugins` group:
 
 ```toml
 # pyproject.toml
-[project.entry-points."mld.plugins"]
+[project.entry-points."mint.plugins"]
 my-plugin = "my_plugin.plugin:MyPlugin"
 ```
 
@@ -38,7 +38,7 @@ The platform discovers entry points on every startup when `plugins.loadFromEntry
 
 ### Installing
 
-Triggered by **Admin → Marketplace → Install** or `mint plugin install <wheel-or-pypi-name>`. The platform:
+Triggered by **Admin → Marketplace → Install** or an admin install request through the platform API. The platform:
 
 1. Resolves the wheel and downloads it
 2. Checks dependency conflicts via `conflict.py`

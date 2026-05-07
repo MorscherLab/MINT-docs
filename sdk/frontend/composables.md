@@ -1,18 +1,18 @@
 # Composables
 
-The frontend SDK ships ~29 typed composables. This page lists every one with a one-line summary, then deep-dives on the 7 you'll use most often: `useApi`, `useAuth`, `useToast`, `usePlatformContext`, `useExperimentSelector`, `useExperimentData`, `useFormBuilder`.
+The frontend SDK ships 35 typed composables. This page lists the commonly used ones with a one-line summary, then deep-dives on the 7 you'll use most often: `useApi`, `useAuth`, `useToast`, `usePlatformContext`, `useExperimentSelector`, `useExperimentData`, `useFormBuilder`.
 
 ## Full list
 
-::: details All 29 composables (click to expand)
+::: details Common composables (click to expand)
 | Composable | What it returns | When to reach for it |
 |------------|-----------------|----------------------|
 | `useApi` | Typed fetch wrapper | Any API call from the frontend |
-| `useAuth` | Current user, login/logout actions | Reading user identity, role checks |
+| `useAuth` | Login/logout/register/token helpers | Authentication flows |
 | `usePasskey` | WebAuthn registration / login flows | Building passkey UX |
 | `useTheme` | Theme state + toggle | Light/dark switcher |
 | `useToast` | Toast dispatcher | User feedback |
-| `usePlatformContext` | Active project / experiment context | Plugins mounted inside the platform shell |
+| `usePlatformContext` | Integration, plugin, user, theme, feature flags | Plugins mounted inside the platform shell |
 | `useForm` | Reactive form state with validation rules | Manual form management |
 | `useFormBuilder` | Schema-driven form runtime | The `FormBuilder` component (rare to use directly) |
 | `useAsync`, `useAsyncBatch` | Async-state helpers (loading/data/error) | Wrap any async operation |
@@ -30,8 +30,8 @@ The frontend SDK ships ~29 typed composables. This page lists every one with a o
 | `usePluginConfig` | Plugin settings reactive object | Reading plugin config from the frontend |
 | `usePluginApi` | Plugin-scoped API client | Calls scoped to the plugin's prefix |
 | `useExperimentSelector` | Picker UI + reactive selected experiment | Experiment dropdowns |
-| `useExperimentData` | Reactive experiment design + analysis | Live experiment view |
-| `useExperimentSave` | Save flow with conflict detection | Forms that save back to an experiment |
+| `useExperimentData` | Reactive exported experiment data payload | Live experiment view |
+| `useExperimentSave` | Save/load design data and analysis results | Forms that save back to an experiment |
 | `useAppExperiment` | App-level experiment provide/inject | Plugin pages that need the active experiment |
 :::
 
@@ -39,7 +39,7 @@ The frontend SDK ships ~29 typed composables. This page lists every one with a o
 
 ### `useApi`
 
-A typed fetch wrapper that reads the platform's auth state and prepends `/api` to relative paths.
+An Axios wrapper that reads the SDK settings store for the API base URL and adds the stored bearer token when one is available. The default API base is `/api`, so request paths are relative to that base.
 
 ```ts
 import { useApi } from '@morscherlab/mint-sdk'
@@ -47,56 +47,61 @@ import { useApi } from '@morscherlab/mint-sdk'
 const api = useApi()
 
 // Plain GET — auto-typed by the type parameter
-const summary = await api.get<ExperimentSummary>('/api/my-plugin/experiments/1')
+const summary = await api.get<ExperimentSummary>('/my-plugin/experiments/1')
 
 // POST with a body
-const created = await api.post<Panel>('/api/my-plugin/panels', {
+const created = await api.post<Panel>('/my-plugin/panels', {
   experiment_id: 1, name: 'Cisplatin', drugs: [...]
 })
 
 // Other methods on the returned object:
-await api.put<Panel>('/api/my-plugin/panels/1', { ... })
-await api.patch('/api/my-plugin/panels/1', { name: 'Renamed' })
-await api.delete(`/api/my-plugin/panels/${id}`)
+await api.put<Panel>('/my-plugin/panels/1', { ... })
+await api.patch('/my-plugin/panels/1', { name: 'Renamed' })
+await api.delete(`/my-plugin/panels/${id}`)
 
 // File operations
-const result = await api.upload('/api/my-plugin/files', file)
-const blob = await api.download(`/api/my-plugin/files/${id}`)
+const result = await api.upload('/my-plugin/files', file)
+const blob = await api.download(`/my-plugin/files/${id}`)
 
 // URL builders for WebSocket / SSE endpoints
-const wsUrl = api.buildWsUrl('/api/my-plugin/stream')
+const wsUrl = api.buildWsUrl('/my-plugin/stream')
 ```
 
-The full return shape is `{ client, get, post, put, patch, delete, upload, download, buildUrl, buildWsUrl }`. `client` is the underlying typed-fetch instance — use it for advanced cases (custom headers, response streaming).
+The full return shape is `{ client, get, post, put, patch, delete, upload, download, buildUrl, buildWsUrl }`. `client` is the underlying Axios instance.
 
 `api` automatically:
 
-- Sends the platform's auth cookie (or bearer token) — no manual header
-- Adds `Content-Type: application/json` for JSON bodies, `multipart/form-data` for `FormData`
-- Throws on non-2xx — the rejection is an `Error` with `status`, `code`, and `details` fields populated from the platform's structured error response
-- Propagates the OpenTelemetry trace context
+- Adds the stored bearer token unless `withAuth: false` is set
+- Uses the configured API base URL and request timeout from `useSettingsStore`
+- Sets JSON headers by default and lets Axios set multipart boundaries for `upload()`
 
-For plugin-scoped calls (auto-prepending `/api/<plugin-prefix>`), use `usePluginApi` instead.
+For plugin-scoped calls with a plugin-specific base URL, use `usePluginApi({ fallbackPrefix: '/api/<plugin-prefix>' })` and call paths like `/sessions`.
 
 ### `useAuth`
 
-Reactive access to the current user and authentication actions.
+Authentication actions and token helpers. Reactive auth state lives in the Pinia auth store.
 
 ```ts
-import { useAuth } from '@morscherlab/mint-sdk'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useAuth, useAuthStore } from '@morscherlab/mint-sdk'
 
-const { user, isAuthenticated, login, logout } = useAuth()
+const { login, logout, initializeAuth, updateProfile } = useAuth()
+const authStore = useAuthStore()
+const { userInfo, isAuthenticated, isLoading, error } = storeToRefs(authStore)
 
 // Reactively gate UI
-const canEdit = computed(() => user.value?.role === 'Admin' || user.value?.role === 'Member')
+const canEdit = computed(() =>
+  userInfo.value?.role === 'admin' || userInfo.value?.role === 'member'
+)
 
 // Programmatic logout
-async function signOut() {
-  await logout()
+function signOut() {
+  logout()
 }
 ```
 
-`user` is a `Ref<User | null>`. The user object includes `id`, `username`, `email`, `role`, and the platform-managed audit fields. Plugin roles are separate — fetch via your plugin's own `/me/role` endpoint as needed.
+`useAuth()` returns methods such as `login`, `logout`, `register`, `verifyToken`, `refreshToken`, `initializeAuth`, `getCurrentUser`, `getAuthHeader`, and `updateProfile`. `useAuthStore()` exposes `userInfo`, `isAuthenticated`, `isAdmin`, `needsAuth`, `isLoading`, and `error` as reactive store state. Plugin roles are separate; fetch them from your plugin's own `/me/role` endpoint as needed.
 
 ### `useToast`
 
@@ -112,33 +117,29 @@ toast.warning('Detected 3 duplicates — review before saving')
 toast.error('Failed to save: network error')
 toast.info('Tip: use Cmd+K to open the command palette')
 
-// With more options
-toast.success({
-  title: 'Panel saved',
-  description: 'View in the panels list',
-  duration: 5000,
-  action: {
-    label: 'View',
-    onClick: () => router.push('/panels'),
-  },
-})
+// Generic dispatcher: message, type, duration
+toast.show('Panel saved', 'success', 5000)
+toast.clear()
 ```
 
 ### `usePlatformContext`
 
-When your plugin is mounted inside the platform shell (under `/<plugin-prefix>`), the platform provides context about the active project and experiment. `usePlatformContext` reads it reactively.
+When your plugin is mounted inside the platform shell, the platform can inject plugin metadata, user context, theme, feature flags, and API origin information. `usePlatformContext` reads that context and exposes postMessage helpers.
 
 ```ts
+import { watch } from 'vue'
 import { usePlatformContext } from '@morscherlab/mint-sdk'
 
-const { project, experiment } = usePlatformContext()
+const { isIntegrated, plugin, user, theme, features, navigate, notify } = usePlatformContext()
 
-watch(experiment, (e) => {
-  if (e) loadDataFor(e.id)
+watch(theme, (mode) => {
+  document.documentElement.dataset.theme = mode
 })
+
+notify('Panel saved', 'success')
 ```
 
-Both `project` and `experiment` are `Ref<… | null>`. They're `null` when the plugin is rendered outside an experiment (e.g., at the top-level plugin home).
+The return shape is `{ context, isIntegrated, plugin, user, theme, features, navigate, notify, sendToPlatform }`. For the current experiment in integrated plugin views, use `useCurrentExperiment()` or the `currentExperimentId` helper returned by `useExperimentSave()`.
 
 ### `useExperimentSelector`
 
@@ -151,7 +152,7 @@ const {
   experiments,        // Ref<Experiment[]>
   total,              // Ref<number>
   selectedExperiment, // Ref<Experiment | null>
-  filters,            // Ref<{ search, status, type, project, ... }>
+  filters,            // reactive { search, status, project, experimentType, ... }
   isLoading,
   error,
   page,
@@ -168,29 +169,30 @@ const {
   fetchFilterOptions,
 } = useExperimentSelector({ /* options */ })
 
-// To search, mutate filters.value.search and call fetch():
-filters.value.search = 'TCA'
+// To search, mutate filters.search and call fetch():
+filters.search = 'TCA'
 await fetch()
 ```
 
 The selected experiment is `selectedExperiment` (not `selected`); the search input is `filters.search`; re-fetch is `fetch()` (not `refresh`). Pair with the `ExperimentSelectorModal` component for a picker UI, or render `experiments` yourself.
 
-For plugins that expect an experiment to *always* be active (because they're mounted on the experiment **Analyze** tab), use `usePlatformContext` instead — it reads the active experiment from the URL.
+For plugins mounted on an experiment-specific view, use `useCurrentExperiment()` when you need the experiment payload or `useExperimentSave().currentExperimentId` when you only need the current id for persistence.
 
 ### `useExperimentData`
 
-Reactive view of a single experiment's design data and analysis results. Keeps the values in sync as other plugins write.
+Reactive view of one experiment's exported design/analysis display payload.
 
 ```ts
 import { useExperimentData } from '@morscherlab/mint-sdk'
 
-const { design, analysis, isLoading, refresh } = useExperimentData({
-  experimentId: 1,
-  pluginId: 'my-plugin',   // which analysis plugin's results to read
+const { data, treeData, tableData, summaryData, isLoading, error, fetch, refresh } = useExperimentData({
+  immediate: false,
 })
 
-// design = Ref<DesignData | null>
-// analysis = Ref<PluginAnalysisResult | null>
+await fetch(1)
+
+// data = Ref<Record<string, unknown> | null>
+// treeData/tableData/summaryData are computed display shapes
 ```
 
 Pair with `useExperimentSave` for the save side.
@@ -200,15 +202,17 @@ Pair with `useExperimentSave` for the save side.
 Powers the `FormBuilder` component — schema in, model out. You rarely call it directly; you pass a schema to `<FormBuilder>` and it handles the wiring. If you need programmatic control (e.g., custom validation hooks), reach for `useFormBuilder` directly.
 
 ```ts
-import { useFormBuilder, evaluateCondition } from '@morscherlab/mint-sdk'
+import { useFormBuilder, evaluateCondition } from '@morscherlab/mint-sdk/composables'
+import type { FormSchema } from '@morscherlab/mint-sdk/types'
 
-const { fields, model, errors, validate, reset } = useFormBuilder({
-  schema: panelSchema,
-  initial: { name: '', drugs: [] },
-})
+const panelSchema: FormSchema = { sections: [/* ... */] }
+const builder = useFormBuilder(panelSchema, { name: '', drugs: [] })
 
 // Conditional fields driven by the schema
-const showAdvanced = evaluateCondition(model.value, panelSchema.advancedCondition)
+const showAdvanced = evaluateCondition(
+  { field: 'expert_mode', eq: true },
+  builder.form.data,
+)
 ```
 
 See [FormBuilder deep dive](/sdk/frontend/form-builder).

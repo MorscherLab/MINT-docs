@@ -10,14 +10,14 @@ develop ──▶ test ──▶ build ──▶ publish ──▶ install ─�
                        │           │           │           └─▶ deploying.md
                        │           │           └─▶ marketplace registry submission
                        │           └─▶ publishing.md (PyPI / npm / registry)
-                       └─▶ packaging.md (.mld bundle)
+                       └─▶ packaging.md (.mint bundle)
 ```
 
 ## Pages
 
 | Page | Covers |
 |------|--------|
-| [Packaging](/sdk/operations/packaging) | `mint build`, the `.mld` bundle structure, what gets included |
+| [Packaging](/sdk/operations/packaging) | `mint build`, the `.mint` bundle structure, what gets included |
 | [Publishing](/sdk/operations/publishing) | PyPI publish for the wheel, marketplace registry submission |
 | [CI patterns](/sdk/operations/ci-patterns) | GitHub Actions templates: build-on-PR, publish-on-tag, matrix tests |
 | [Versioning](/sdk/operations/versioning) | SemVer, `hatch-vcs`, SDK compat ranges, compatibility checks |
@@ -32,4 +32,4 @@ The marketplace registry compares the plugin's declared SDK range with the deplo
 
 ## Next
 
-→ [Packaging](/sdk/operations/packaging) — `mint build` and the `.mld` artifact
+→ [Packaging](/sdk/operations/packaging) — `mint build` and the `.mint` artifact

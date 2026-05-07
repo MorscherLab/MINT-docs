@@ -4,13 +4,13 @@ Components, composables, and types exported from `@morscherlab/mint-sdk`. Each e
 
 ## Components
 
-87 Vue 3 single-file components. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/components).
+About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/components).
 
 ### Layout
 
 | Component | Use |
 |-----------|-----|
-| `AppLayout` | Page shell with top bar + sidebar slots |
+| `AppLayout` | Page shell with optional topbar/sidebar slots |
 | `AppContainer` | Standalone container without top bar (login, setup) |
 | `AppTopBar` | Platform top bar component |
 | `AppSidebar` | Sectioned sidebar |
@@ -60,7 +60,7 @@ Components, composables, and types exported from `@morscherlab/mint-sdk`. Each e
 | Component | Use |
 |-----------|-----|
 | `DataFrame` | Sortable / sticky table |
-| `Card`, `CollapsibleCard`, `ResourceCard` | Card surfaces |
+| `AppContainer`, `CollapsibleCard`, `ResourceCard` | Card and panel surfaces |
 | `Breadcrumb` | Breadcrumb trail |
 | `ScientificNumber` | Formatted scientific number |
 | `ChartContainer` | Wrapper around chart libraries (Plotly etc.) |
@@ -78,7 +78,7 @@ Components, composables, and types exported from `@morscherlab/mint-sdk`. Each e
 
 | Component | Use |
 |-----------|-----|
-| `WellPlate`, `WellEditPopup`, `PlateMapEditor` | Well-plate editing |
+| `WellPlate`, `PlateMapEditor` | Well-plate editing |
 | `RackEditor`, `ReagentEditor`, `ReagentList` | Rack / reagent editing |
 | `FormBuilder`, `FormField`, `FormFieldRenderer`, `FormSection`, `FormActions` | Schema-driven forms |
 | `ChemicalFormula`, `FormulaInput` | Chemical formula display / input |
@@ -126,16 +126,16 @@ For full prop signatures, browse the source or the Histoire storybook (`bun run 
 
 ## Composables
 
-27 typed composables. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/composables).
+35 typed composables. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/composables).
 
 | Composable | Returns | Purpose |
 |------------|---------|---------|
 | `useApi` | typed fetch helper | Auth-aware API calls |
-| `useAuth` | `{ user, isAuthenticated, login, logout }` | Reactive auth state |
+| `useAuth` | auth actions and token helpers | Login/logout/register flows |
 | `usePasskey` | passkey registration / login | WebAuthn flows |
 | `useTheme` | theme state + setter | Theme switcher |
 | `useToast` | toast dispatcher | User feedback |
-| `usePlatformContext` | `{ project, experiment }` | Active project / experiment |
+| `usePlatformContext` | integration, plugin, user, theme, features | Platform shell context |
 | `useForm` | reactive form state | Manual form management |
 | `useFormBuilder` | schema-driven form runtime | `FormBuilder` component |
 | `useAsync`, `useAsyncBatch` | async state helpers | Wrap async operations |
@@ -154,7 +154,7 @@ For full prop signatures, browse the source or the Histoire storybook (`bun run 
 | `usePluginApi` | plugin-scoped API client | Calls scoped to `/api/<plugin>/` |
 | `useExperimentSelector` | reactive experiment picker | Experiment dropdowns |
 | `useExperimentData` | reactive experiment view | Live design + analysis |
-| `useExperimentSave` | save flow with conflict detection | Save back to experiment |
+| `useExperimentSave` | save/load design data and analysis results | Save back to experiment |
 | `useAppExperiment` | provide / inject pattern | Plugin-tree-wide active experiment |
 
 ## Exported types

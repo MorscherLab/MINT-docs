@@ -1,6 +1,6 @@
 # Components catalog
 
-The frontend SDK ships ~88 Vue 3 components. This page documents the top 20 by likely usage in plugin frontends — layout primitives, form basics, dialogs, data displays, and domain widgets. For the rest, browse the [Histoire storybook](/sdk/frontend/) or [source](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/components).
+The frontend SDK ships about 90 Vue component exports. This page documents the most-used surface for plugin frontends — layout primitives, form basics, dialogs, data displays, and domain widgets. For the rest, browse the [Histoire storybook](/sdk/frontend/) or [source](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/components).
 
 ::: tip Imports
 Every component is exported from the package root:
@@ -14,7 +14,7 @@ import { AppLayout, BaseButton, FormBuilder } from '@morscherlab/mint-sdk'
 
 ### `AppLayout`
 
-Page shell with the platform's top bar, sidebar slot, and content slot. Use as the root of every plugin page rendered inside the platform.
+Page shell with optional topbar and sidebar slots plus a content slot. Use as the root of every plugin page rendered inside the platform.
 
 ```vue
 <script setup lang="ts">
@@ -22,7 +22,7 @@ import { AppLayout } from '@morscherlab/mint-sdk'
 </script>
 
 <template>
-  <AppLayout title="My plugin">
+  <AppLayout>
     <template #sidebar>
       <!-- optional plugin-specific sidebar -->
     </template>
@@ -39,7 +39,7 @@ Lighter shell for standalone screens (login, setup, error pages). No top bar; ju
 
 ### `AppTopBar`
 
-The platform's top bar component. Plugins normally don't render this directly — `AppLayout` includes one already.
+The platform's top bar component. Plugins normally don't render this directly unless they are providing an explicit `#topbar` slot to `AppLayout`.
 
 ### `AppSidebar`
 
@@ -308,7 +308,7 @@ Hover-triggered tooltip with smart positioning.
 
 | Need | Destination |
 |------|-------------|
-| The full ~88 component catalog | [Histoire storybook](/sdk/frontend/) — browse with full props + variants |
+| The full component catalog | [Histoire storybook](/sdk/frontend/) — browse with full props + variants |
 | A typed reactive helper for one of these | [Composables](/sdk/frontend/composables) |
 | Override the brand palette | [Design tokens](/sdk/frontend/design-tokens), [Theming](/sdk/frontend/theming) |
 | Schema-driven forms | [FormBuilder](/sdk/frontend/form-builder) |

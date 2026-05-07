@@ -162,12 +162,13 @@ Extend the release workflow to PR a registry update:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: MorscherLab/mld-registry
+          repository: MorscherLab/mint-registry
           token: ${{ secrets.REGISTRY_PR_TOKEN }}
 
-      - name: Update index.json
+      - name: Update registry.json
         run: |
-          # Add a new version entry; details depend on the registry's update tooling
+          # Add/update the plugin entry with github_repo, asset_pattern, and latest_version.
+          # Details depend on the registry's update tooling.
 
       - name: Open PR
         uses: peter-evans/create-pull-request@v6

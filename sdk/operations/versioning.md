@@ -54,10 +54,10 @@ Between tags, `hatch-vcs` produces dev versions like `1.0.1.dev3+gabc123` — di
 | `v1.0.0-rc.1` | Final candidate before stable; only bug fixes between rc and stable |
 | `v1.0.0-alpha.1` | Internal testing; not for public consumption (rare) |
 
-The platform's update channel filters these:
+The platform update checker can include or exclude GitHub prereleases:
 
-- `updates.channel: stable` — only `1.0.0`, `1.0.1`, `1.1.0`, ...
-- `updates.channel: beta` — also `1.0.0-beta.*`, `1.0.0-rc.*`
+- `updates.includePrereleases: false` — only stable releases such as `1.0.0`, `1.0.1`, `1.1.0`
+- `updates.includePrereleases: true` — also includes prereleases such as `1.0.0-beta.1` and `1.0.0-rc.1`
 
 ## SDK compatibility ranges
 
@@ -88,7 +88,7 @@ Set the floor at the lowest SDK version where every symbol you use exists. Set t
 develop on dev branch
     ▼
 beta tag (v1.1.0-beta.1)
-    ▼ test in beta-channel platforms
+    ▼ test in a prerelease-enabled platform or private registry
 beta tag bump if bugs (v1.1.0-beta.2)
     ▼
 graduate to stable (v1.1.0 — same commit as last beta)
@@ -183,7 +183,7 @@ For the format, [Keep a Changelog](https://keepachangelog.com/) is conventional.
 
 ## Notes
 
-- A plugin's marketplace listing shows the latest stable + the latest beta separately. Users on the stable channel see only stable.
+- A marketplace registry advertises one `latest_version` per plugin. Use a private/testing registry if you need to advertise prerelease plugins separately from stable users.
 - When in doubt about whether a change is breaking, default to "yes, breaking" — bump major. Users can pin to the older major if needed.
 - Yanking a release on PyPI is best-effort — old wheels may be cached locally. Don't rely on yanks for security fixes; ship a new version.
 

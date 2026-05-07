@@ -8,49 +8,52 @@ The `mint` CLI also includes commands for scripted access to a running MINT inst
 mint auth login --url https://mint.morscherlab.org
 ```
 
-Prompts for credentials (or initiates a passkey flow, if configured) and stores the resulting JWT in `~/.config/mint/cli.json`. Subsequent commands use it automatically.
+Prompts for username and password, then stores the resulting JWT in `~/.config/mint/credentials.json` (or `$XDG_CONFIG_HOME/mint/credentials.json`). Subsequent commands use it automatically.
 
 | Subcommand | Purpose |
 |------------|---------|
 | `mint auth login` | Acquire a JWT for the given platform URL |
 | `mint auth logout` | Discard the stored JWT |
 | `mint auth status` | Print the active platform URL, user, expiration |
-| `mint auth refresh` | Refresh the JWT before it expires |
 
-If you have multiple instances, pass `--profile <name>` to keep them separate; without `--profile` the CLI uses a `default` profile.
+The credential file tracks one default host plus per-host tokens. To switch instances, run `mint auth login --url <other-url>`.
 
 ## Experiments
 
 ```bash
 mint experiment list                              # all visible experiments
-mint experiment list --project EXP-PROJ-Q1       # filter by project
+mint experiment list --project-id 12             # filter by project ID
 mint experiment list --status ongoing             # filter by status
-mint experiment get EXP-042                       # show a single experiment
-mint experiment create --type lcms_sequence \
-                        --project "TCA flux" \
-                        --title "Run 17"          # create
-mint experiment update EXP-042 --status completed  # status flip
+mint experiment get 42                            # show a single experiment
+mint experiment create "Run 17" \
+  --type lcms_sequence \
+  --project-id 12 \
+  --notes "TCA flux batch"                        # create
+mint experiment update 42 --status completed      # status flip
 ```
 
 | Flag (across subcommands) | Effect |
 |---|---|
 | `--json` | Emit machine-readable JSON |
-| `--csv` | Emit CSV (for `list`) |
-| `--profile <name>` | Use a non-default auth profile |
 | `--limit <N>` | Cap the result count for `list` |
+| `--status <status>` | Filter `list` or update a single experiment's status |
+| `--type <type>` | Filter `list` or set an experiment type |
+| `--project-id <id>` | Filter `list`, create in a project, or move an experiment |
 
-Experiment design data (the `design_data` JSON) can be passed via `--design-file design.json` for `create` or `update`.
+Design data and analysis results have dedicated read commands: `mint experiment data <id>` and `mint experiment results <id>`.
 
 ## Projects
 
 ```bash
 mint project list                                 # all visible projects
-mint project create --name "TCA flux" \
-                    --description "..."           # create
-mint project archive <project-id>                 # archive
+mint project create "TCA flux" \
+  --description "..."                             # create
+mint project update 12 --status archived          # archive
+mint project experiments 12                       # list project experiments
+mint project members 12                           # list project members
 ```
 
-Same `--json` / `--csv` / `--profile` flags as experiments.
+Project status values are `active`, `archived`, and `completed`.
 
 ## Status
 
@@ -60,14 +63,13 @@ mint status
 
 Prints a one-screen health overview:
 
-- Platform version + uptime
-- Database mode + migration state
-- Installed plugins with version and migration state
-- Last marketplace check
-- Outstanding install requests
-- Update channel + pending updates
+- Configured host
+- Stored username
+- Platform reachability
+- Loaded plugins returned by `/health`
+- Token validity / expiry when the server can verify it
 
-For machine-readable output add `--json`. The endpoint is the same one used by **Admin → Status** in the UI.
+For deeper operational status, use **Admin → Status** in the browser UI.
 
 ## Scripting tips
 
@@ -75,12 +77,12 @@ Combine commands with `--json` and `jq`:
 
 ```bash
 # Find every ongoing experiment in the active project, mark completed
-mint experiment list --project "TCA flux" --status ongoing --json \
-  | jq -r '.[].code' \
-  | xargs -n1 mint experiment update --status completed
+mint experiment list --project-id 12 --status ongoing --json \
+  | jq -r '.[].id' \
+  | xargs -n1 -I{} mint experiment update {} --status completed
 ```
 
-Authentication tokens are short-lived (24 hours by default); long-running scripts should run `mint auth refresh` before lengthy loops or catch the 401 and refresh on demand.
+Authentication tokens are short-lived (24 hours by default). For long-running scripts, catch 401s and re-run `mint auth login`; the Python `MINTClient` can attempt token refresh automatically during requests.
 
 ## Reference
 

@@ -6,7 +6,7 @@ The marketplace is MINT's plugin discovery and install surface. Users browse ava
 
 ## What's a marketplace registry
 
-A registry is a JSON feed of available plugins, hosted at `marketplace.registryUrl` (set in `config.json`). The default Morscher Lab registry is `https://marketplace.morscherlab.org`; private labs can host their own.
+A registry is a JSON feed of available plugins, hosted at `marketplace.registryUrl` (set in `config.json`). The default registry is `https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json`; private labs can host their own.
 
 The feed for each plugin contains:
 
@@ -19,7 +19,7 @@ The feed for each plugin contains:
 | Author + repo + license | Provenance |
 | Long description, screenshots | Marketplace UI |
 
-A plugin can be in the registry without yet being installed. Conversely, plugins installed manually via `mint plugin install <git-url>` won't appear in the registry — they show up under **Installed** but not **Marketplace**.
+A plugin can be in the registry without yet being installed. Conversely, plugins installed outside the registry through **Admin → Plugins** or the platform API won't appear in Marketplace — they show up under **Installed** but not **Marketplace**.
 
 ## Browsing
 
@@ -36,12 +36,12 @@ Open **Admin → Marketplace** (admins) or **Plugins → Marketplace** (members,
 
 ## Install vs request install
 
-`marketplace.requireApproval` controls whether non-admins can install directly:
+Install permissions decide whether a user installs directly or submits a request:
 
 | Mode | Member action | Admin action |
 |------|---------------|--------------|
-| `requireApproval: false` | Member clicks **Install** | None — self-service |
-| `requireApproval: true` (default) | Member clicks **Request install**; the request lands in **Admin → Plugin requests** | Admin reviews and either **Approve** (install proceeds) or **Reject** (with optional reason) |
+| User has `plugins.install` | User clicks **Install** | None |
+| User has `plugins.view` but not `plugins.install` | User clicks **Request install**; the request lands in **Admin → Plugin requests** | Admin reviews and either **Approve** (install proceeds) or **Deny** |
 
 Approval requests retain their context — who requested, when, why — so an admin can audit them later.
 
@@ -50,11 +50,11 @@ Approval requests retain their context — who requested, when, why — so an ad
 1. The plugin manager downloads the requested version
 2. `conflict.py` checks the plugin's dependency tree against everything already installed
 3. If conflicts exist, `isolation.py` provisions a per-plugin venv via `uv`
-4. `snapshot.py` captures the pre-install database state for rollback
+4. `snapshot.py` captures the pre-install Python environment for package rollback
 5. `MigrationRunner` applies the plugin's migrations
 6. The plugin's `initialize(context)` runs; its routers mount
 
-If any step fails, the snapshot is restored and the plugin is left uninstalled.
+If install fails, the operation reports the failing step and leaves the plugin uninstalled or requiring administrator cleanup, depending on where the failure occurred.
 
 > [Screenshot: install progress dialog with each step ticking through]
 
@@ -76,9 +76,9 @@ See [Plugins → Uninstall modes](/workflow/plugins#uninstall-modes) for the ful
 
 ## Hosting a private registry
 
-A registry is a static JSON document plus the wheel files it points at. Any HTTPS host works (S3, GitHub Pages, an internal HTTP server). Set `marketplace.registryUrl` to the JSON's URL and restart MINT.
+A registry is a static JSON document plus the `.mint` bundle files it points at. Any HTTPS host works (S3, GitHub Pages, an internal HTTP server). Set `marketplace.registryUrl` to the JSON's URL and restart MINT.
 
-The schema for the registry feed lives in [`api/services/marketplace_service.py`](https://github.com/MorscherLab/mld/blob/main/api/services/marketplace_service.py). A reference implementation is at [`MorscherLab/mld-registry`](https://github.com/MorscherLab/mld-registry).
+The schema for the registry feed lives in [`api/models/marketplace_schemas.py`](https://github.com/MorscherLab/mld/blob/main/api/models/marketplace_schemas.py). A reference implementation is at [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry).
 
 ## Next
 

@@ -39,8 +39,8 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Plugin install fails with a dependency conflict | Plugin requires a clashing dep | The platform retries with an isolated venv automatically; if that also fails, the plugin's deps are inconsistent — open an issue against the plugin |
 | Plugin tile not visible to a user | User lacks the plugin role | **Admin → Plugins → \<plugin> → Users** — grant the appropriate plugin role |
 | Plugin upgrade fails partway | New migration crashed | Platform rolls back to the previous version; **Admin → Plugins** shows the error; fix the migration in a new plugin release |
-| Plugin process keeps crashing | Plugin error in `initialize()` or a request handler | `mint logs --plugin <slug>` for the trace; or open the experiment that triggered it and check the Jobs panel |
-| `mint dev` can't find the plugin | Working directory has no `pyproject.toml` with `mld.plugins` entry point | `cd` into the plugin root, or `mint init` to scaffold |
+| Plugin process keeps crashing | Plugin error in `initialize()` or a request handler | In development, run `mint dev logs backend --lines 100`; in production, use **Admin → Status** or the platform service logs, then open the experiment that triggered it and check the Jobs panel |
+| `mint dev` can't find the plugin | Working directory has no `pyproject.toml` with `mint.plugins` entry point | `cd` into the plugin root, or `mint init` to scaffold |
 | Plugin appears installed but routes return 404 | Plugin failed `initialize()` and the loader skipped mounting | **Admin → Plugins** shows the failure reason; fix and reload |
 
 ## Marketplace
@@ -48,25 +48,25 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Problem | Cause | Fix |
 |---------|-------|-----|
 | Marketplace shows zero plugins | Registry URL unreachable, or registry returns malformed JSON | Check `marketplace.registryUrl`; visit the URL manually to validate |
-| "Install request" never gets approved | No admin has the `marketplace.approve_install` permission | Ensure at least one user holds that permission |
+| "Install request" never gets approved | No admin with `plugins.install` has reviewed it | Ask an admin with plugin-install permission to approve or deny the request |
 | Plugin shows "incompatible" | The plugin's required SDK is newer than the platform's | Upgrade the platform first; only then can you install / upgrade the plugin |
 
 ## Updates
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| "Update available" notification keeps coming back | Auto-install disabled and you closed the dialog | Either install (Admin → Updates) or set `updates.enabled: false` |
-| Platform update breaks a plugin | Plugin needs a fix for the new SDK | Roll back the platform update (Admin → Updates → Roll back) until the plugin is updated |
-| Beta channel shows no updates | You're already on the newest tag | Switch to `stable` if you intended that |
+| "Update available" notification keeps coming back | Background update checks are enabled and a newer release exists | Install the update or set `updates.autoCheckEnabled: false` |
+| Platform update breaks a plugin | Plugin needs a fix for the new SDK | Restore the previous platform deployment/database backup until the plugin is updated |
+| Prereleases do not show up | Prerelease checks are disabled, or you're already on the newest tag | Set `updates.includePrereleases: true` if you intentionally want prereleases |
 
 ## Database / observability
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| Disk full | Plugin artifact uploads fill `plugins.dataDir` | Move `dataDir` to a larger volume, or purge unused plugin caches |
+| Disk full | Plugin artifact uploads fill `server.dataPath` | Move `server.dataPath` to a larger volume, or purge unused plugin caches |
 | Slow queries on Postgres | Missing index on a plugin-owned table | Add the index in a new plugin migration |
 | OpenTelemetry exporter errors in logs | OTLP endpoint unreachable | Set `observability.tracing.enabled: false` until fixed; the rest of the platform keeps working |
-| Auto-issued GitHub bug reports flooding | A recurring bug spams unique stack traces | Disable `observability.autoIssue` until the bug is fixed |
+| Auto-issued GitHub bug reports flooding | A recurring bug spams unique stack traces | Disable `errorReporting.enabled` until the bug is fixed |
 
 ## Hosted (lab) mode
 

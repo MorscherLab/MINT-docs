@@ -327,7 +327,7 @@ Expected: every check passes. `mint doctor` validates the entry point, plugin me
 
 ```bash
 mint build
-# → dist/panel-designer-0.1.0.mld
+# → dist/panel-designer-0.1.0.mint
 ```
 
 The bundle includes the migrations package — installs apply them automatically.

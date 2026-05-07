@@ -19,33 +19,41 @@ Most experiment-design plugins use FormBuilder for their design view; analysis p
 <script setup lang="ts">
 import { ref } from 'vue'
 import { FormBuilder } from '@morscherlab/mint-sdk'
-import type { FormSchema } from '@morscherlab/mint-sdk'
+import type { FormSchema } from '@morscherlab/mint-sdk/types'
 
 const schema: FormSchema = {
-  fields: [
+  sections: [
     {
-      key: 'name',
-      type: 'text',
-      label: 'Panel name',
-      required: true,
-      placeholder: 'e.g. Cisplatin dose-response',
-    },
-    {
-      key: 'category',
-      type: 'select',
-      label: 'Category',
-      options: [
-        { value: 'tox', label: 'Toxicology' },
-        { value: 'eff', label: 'Efficacy' },
+      id: 'main',
+      title: 'Panel',
+      fields: [
+        {
+          name: 'name',
+          type: 'text',
+          label: 'Panel name',
+          placeholder: 'e.g. Cisplatin dose-response',
+          validation: { required: true },
+        },
+        {
+          name: 'category',
+          type: 'select',
+          label: 'Category',
+          props: {
+            options: [
+              { value: 'tox', label: 'Toxicology' },
+              { value: 'eff', label: 'Efficacy' },
+            ],
+          },
+          defaultValue: 'eff',
+        },
+        {
+          name: 'replicates',
+          type: 'number',
+          label: 'Replicates',
+          props: { min: 1, max: 12, step: 1 },
+          defaultValue: 3,
+        },
       ],
-      default: 'eff',
-    },
-    {
-      key: 'replicates',
-      type: 'number',
-      label: 'Replicates',
-      min: 1, max: 12, step: 1,
-      default: 3,
     },
   ],
 }
@@ -67,20 +75,24 @@ const data = ref({})
 | `text` | `BaseInput` | Single-line text |
 | `textarea` | `BaseTextarea` | Auto-grow multi-line |
 | `number` | `NumberInput` | Numeric with min/max/step |
-| `boolean` | `BaseCheckbox` or `BaseToggle` | Distinguished by `style` field |
+| `checkbox` | `BaseCheckbox` | Boolean checkbox |
+| `toggle` | `BaseToggle` | Boolean switch |
 | `select` | `BaseSelect` | Single choice from `options` |
-| `multi-select` | `MultiSelect` | Multiple choices |
+| `multiselect` | `MultiSelect` | Multiple choices |
 | `radio` | `BaseRadioGroup` | Compact single choice |
+| `slider` | `BaseSlider` | Range-style numeric input |
+| `tags` | `TagsInput` | Free-text tags |
 | `date` | `DatePicker` | ISO date string |
 | `datetime` | `DateTimePicker` | ISO timestamp |
 | `time` | `TimePicker` | `HH:MM` string |
 | `formula` | `FormulaInput` + `useChemicalFormula` | Chemical formula with parsing |
+| `sequence` | `SequenceInput` | DNA / protein sequence input |
+| `molecule` | `MoleculeInput` | Molecule structure input |
 | `concentration` | `ConcentrationInput` + `useConcentrationUnits` | Value + unit picker |
-| `well-plate` | `WellPlate` + `useWellPlateEditor` | Plate-design field |
+| `unit` | `UnitInput` | Value + unit picker |
 | `file` | `FileUploader` | Single or multi-file |
-| `section` | `FormSection` | Collapsible group of fields |
 
-The full list is exported from the SDK's `formBuilderRegistry`.
+The canonical list is `FormFieldType` in `packages/sdk-frontend/src/types/form-builder.ts`. The internal registry is readable through `getFieldRegistryEntry(type)` from `@morscherlab/mint-sdk/composables`.
 
 ## Validation
 
@@ -88,135 +100,143 @@ Validation rules attached to fields:
 
 ```ts
 const schema: FormSchema = {
-  fields: [
+  sections: [
     {
-      key: 'name', type: 'text', label: 'Name',
-      required: true,
-      minLength: 3,
-      maxLength: 200,
-    },
-    {
-      key: 'doi', type: 'text', label: 'DOI',
-      pattern: /^10\.\d{4,9}\/.+$/,
-      patternMessage: 'Must look like 10.NNNN/...',
-    },
-    {
-      key: 'replicates', type: 'number',
-      required: true, min: 1, max: 12,
+      id: 'main',
+      title: 'Main',
+      fields: [
+        {
+          name: 'name',
+          type: 'text',
+          label: 'Name',
+          validation: { required: true, minLength: 3, maxLength: 200 },
+        },
+        {
+          name: 'doi',
+          type: 'text',
+          label: 'DOI',
+          validation: {
+            pattern: { value: '^10\\.\\d{4,9}/.+$', message: 'Must look like 10.NNNN/...' },
+          },
+        },
+        {
+          name: 'replicates',
+          type: 'number',
+          validation: { required: true, min: 1, max: 12 },
+        },
+      ],
     },
   ],
 }
 ```
 
-Errors render below each field automatically. The aggregated error state is exposed via the `errors` event on `FormBuilder`:
+Errors render below each field automatically. Use a template ref when you need imperative validation:
 
 ```vue
-<FormBuilder :schema="schema" v-model="data" @errors="onErrors" />
+<script setup lang="ts">
+import { ref } from 'vue'
+import { FormBuilder } from '@morscherlab/mint-sdk'
+
+const formRef = ref<InstanceType<typeof FormBuilder> | null>(null)
+
+function submit() {
+  if (!formRef.value?.validate()) return
+  // safe to submit
+}
+</script>
+
+<template>
+  <FormBuilder ref="formRef" :schema="schema" v-model="data" @submit="submit" />
+</template>
 ```
 
-For custom rules, declare a `validate` function that returns an error message or `null`:
+For custom rules, pass TypeScript-only `enhancements`:
 
 ```ts
-{
-  key: 'name', type: 'text', label: 'Name',
-  validate: async (value, ctx) => {
-    if (await isDuplicate(value)) return 'Name already exists'
-    return null
-  }
+const enhancements = {
+  fields: {
+    name: {
+      validate: (value) => isDuplicate(value) ? 'Name already exists' : null,
+    },
+  },
 }
 ```
 
 ## Conditional fields
 
-Fields can declare `showIf` to render only when other fields meet a condition:
+Fields and sections can declare `condition` to render only when other fields meet a condition:
 
 ```ts
 {
-  key: 'subcategory',
+  name: 'subcategory',
   type: 'select',
   label: 'Subcategory',
-  options: [...],
-  showIf: { field: 'category', equals: 'tox' },
+  condition: { field: 'category', eq: 'tox' },
 }
 ```
 
-More complex conditions use the `evaluateCondition` helper:
+More complex conditions use `and`, `or`, and `not`:
 
 ```ts
 {
-  key: 'advanced',
-  type: 'section',
-  label: 'Advanced',
-  showIf: {
+  id: 'advanced',
+  title: 'Advanced',
+  condition: {
     or: [
-      { field: 'expert_mode', equals: true },
+      { field: 'expert_mode', eq: true },
       { and: [
-        { field: 'category', equals: 'eff' },
-        { field: 'replicates', greaterThan: 6 },
+        { field: 'category', eq: 'eff' },
+        { field: 'replicates', gt: 6 },
       ]},
     ],
   },
 }
 ```
 
-Available operators: `equals`, `notEquals`, `greaterThan`, `lessThan`, `in`, `notIn`, `truthy`, `and`, `or`.
+Available operators: `eq`, `neq`, `gt`, `lt`, `gte`, `lte`, `in`, `notIn`, `truthy`, `falsy`, `contains`, `and`, `or`, `not`.
 
 ## Programmatic control with `useFormBuilder`
 
 For pages that need to drive the form imperatively (custom validation step, multi-step wizards):
 
 ```ts
-import { useFormBuilder } from '@morscherlab/mint-sdk'
+import { useFormBuilder } from '@morscherlab/mint-sdk/composables'
 
-const { fields, model, errors, validate, reset } = useFormBuilder({
-  schema,
-  initial: { replicates: 3 },
-})
+const builder = useFormBuilder(schema, { replicates: 3 })
 
 async function submit() {
-  const ok = await validate()
-  if (!ok) return
-  await api.post('/api/my-plugin/panels', model.value)
-  reset()
+  if (!builder.validate()) return
+  await api.post('/my-plugin/panels', builder.form.data)
+  builder.reset()
 }
 ```
 
-The composable returns reactive `model` and `errors`; `validate()` returns `true` when all fields pass.
+The composable returns `form.data`, `form.errors`, visibility helpers, wizard navigation helpers, and `validate()` / `reset()` methods.
 
-## Custom field types
+## Custom rendering
 
-To add a field type not covered by the registry:
+The registry is not a public mutable API. To render a field with custom UI, use the `field:<name>` slot and keep the field in the schema so validation, visibility, and submission still work:
 
-```ts
-import { getFieldRegistryEntry } from '@morscherlab/mint-sdk'
-import { defineComponent } from 'vue'
-
-import MyCustomField from './MyCustomField.vue'
-
-// Register at app startup, before any FormBuilder mounts
-import { fieldRegistry } from '@morscherlab/mint-sdk'
-
-fieldRegistry.register('my-custom', {
-  component: MyCustomField,
-  defaultValue: '',
-  validate: (value) => /* return error or null */,
-})
+```vue
+<FormBuilder :schema="schema" v-model="data">
+  <template #field:dose="{ form }">
+    <MyDosePicker
+      :model-value="form.data.dose"
+      @update:model-value="form.setFieldValue('dose', $event)"
+    />
+  </template>
+</FormBuilder>
 ```
-
-Then use `type: 'my-custom'` in your schema.
 
 ## Default values
 
-Each field can declare a `default`. When `model` is initialized empty, defaults populate. To override the platform's defaults from existing experiment data:
+Each field can declare a `defaultValue`. When the model is initialized empty, defaults populate. To override the platform's defaults from existing experiment data:
 
 ```ts
-const { model } = useFormBuilder({
-  schema,
-  initial: existingDesignData ?? {},   // pre-populate from server
-})
+const builder = useFormBuilder(schema, existingDesignData ?? {})
 ```
 
-Note that `initial` overrides per-field defaults — that's intentional for editing flows.
+Initial data overrides per-field defaults — that's intentional for editing flows. Read and write values through `builder.form.data`.
 
 ## Saving back to the experiment
 
@@ -224,25 +244,26 @@ For experiment-design plugins, pair FormBuilder with `useExperimentSave`:
 
 ```ts
 import { useExperimentSave } from '@morscherlab/mint-sdk'
+import { useFormBuilder } from '@morscherlab/mint-sdk/composables'
 
-const { save, isSaving, lastSaved, conflict } = useExperimentSave({
-  experimentId: 1,
+const builder = useFormBuilder(schema, existingDesignData ?? {})
+const { save, isSaving, lastSavedAt, error } = useExperimentSave({
   pluginId: 'my-plugin',
 })
 
 async function handleSave() {
-  if (!await validate()) return
-  await save(model.value)
+  if (!builder.validate()) return
+  await save(1, { design: builder.form.data })
 }
 ```
 
-`useExperimentSave` handles conflict detection (someone else edited the same experiment), surface the conflict via `conflict.value`.
+`useExperimentSave` exposes `isSaving`, `isLoading`, `error`, `lastLoadedAt`, and `lastSavedAt` refs, plus explicit helpers for design data, analysis results, and current-experiment saves.
 
 ## Notes
 
 - The schema is JSON-serializable — you can fetch it from your plugin's backend at runtime if it varies per experiment type or per tenant.
 - For very large schemas (50+ fields), use `<FormSection>` to group fields and lazy-render — the form rendering is `O(visible fields)`.
-- `multi-select` and `well-plate` fields can hold non-trivial state. Keep them in their own sections so re-renders are scoped.
+- `multiselect`, `molecule`, and `concentration` fields can hold non-trivial state. Keep them in their own sections so re-renders are scoped.
 - For wizards, prefer the `StepWizard` component wrapping multiple smaller `FormBuilder` instances over one giant schema.
 
 ## Related

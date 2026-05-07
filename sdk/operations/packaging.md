@@ -1,6 +1,6 @@
 # Packaging
 
-`mint build` produces a single `.mint` bundle containing your plugin's wheel, frontend assets, and a manifest. The bundle is what the marketplace serves and what `mint plugin install` consumes.
+`mint build` produces a single `.mint` bundle containing your plugin's wheel, frontend assets, and a manifest. The bundle is what the marketplace serves and what the platform's admin/API install flow consumes.
 
 ## Build
 
@@ -17,7 +17,7 @@ What happens:
 3. Build the Python wheel via `uv build --wheel`
 4. (If `--vendor-deps`) Resolve and download dependency wheels alongside the main wheel
 5. Assemble: wheel + dependency wheels + manifest into a zip
-6. Rename the zip to `.mld`
+6. Rename the zip to `.mint`
 
 ## Flags
 
@@ -30,10 +30,10 @@ What happens:
 
 ## Bundle structure
 
-A `.mld` is a renamed ZIP:
+A `.mint` is a renamed ZIP:
 
 ```
-my-plugin-1.0.0.mld
+my-plugin-1.0.0.mint
 ├── manifest.json                            # name, version, has_frontend, wheels
 ├── my_plugin-1.0.0-py3-none-any.whl         # the main wheel (frontend assets are inside it via force-include)
 └── <dep-wheels>...                          # only present if --vendor-deps
@@ -42,7 +42,7 @@ my-plugin-1.0.0.mld
 Inspect contents:
 
 ```bash
-unzip -l dist/my-plugin-1.0.0.mld
+unzip -l dist/my-plugin-1.0.0.mint
 ```
 
 The frontend's `dist/` is *not* a separate top-level directory in the bundle — instead, `pyproject.toml` declares `tool.hatch.build.targets.wheel.force-include` for `frontend/dist/` so the assets travel inside the wheel. `mint build` warns if that force-include is missing.
@@ -53,38 +53,22 @@ The frontend's `dist/` is *not* a separate top-level directory in the bundle —
 
 ```json
 {
-  "name": "my-plugin",
-  "version": "1.0.0",
-  "description": "Drug-response panel design",
-  "author": "Lab Foo",
-  "homepage": "https://github.com/example/my-plugin",
-  "license": "MIT",
-  "plugin_type": "experiment_design",
-  "analysis_type": "oncology",
-  "routes_prefix": "/my-plugin",
-  "icon": "...",
-  "capabilities": {
-    "requires_auth": true,
-    "requires_experiments": true,
-    "requires_database": true,
-    "requires_shared_database": true
+  "format_version": 1,
+  "plugin": {
+    "name": "my-plugin",
+    "version": "1.0.0",
+    "description": "Drug-response panel design",
+    "requires_mint": ">=1.0.0",
+    "has_frontend": true
   },
-  "sdk": {
-    "python": ">=1.0.0,<2.0.0",
-    "frontend": "^1.0.0"
-  },
-  "dependencies": {
-    "python": ["pydantic>=2.0", "rpy2>=3.5"],
-    "frontend": ["@morscherlab/mint-sdk"]
-  },
-  "files": {
-    "wheel": "wheel/my_plugin-1.0.0-py3-none-any.whl",
-    "frontend": "frontend/dist/"
+  "wheels": {
+    "main": "my_plugin-1.0.0-py3-none-any.whl",
+    "dependencies": []
   }
 }
 ```
 
-The schema is owned by the platform — see `api/services/marketplace_service.py` for the canonical definition. `mint build` generates the manifest from `pyproject.toml`, `package.json` (frontend), and your `PluginMetadata`.
+The schema is owned by the SDK builder and consumed by the platform bundle installer. `mint build` generates it from `pyproject.toml`, the built wheel filename, optional vendored wheels, and whether `frontend/` was built.
 
 ## What gets included
 
@@ -164,7 +148,7 @@ For very large plugins, consider:
 ## Notes
 
 - `mint build` is hermetic — it works in a clean checkout without prior installations, useful for CI.
-- Bundles are versioned by their internal manifest, not by filename. Renaming a `.mld` doesn't change what's installed.
+- Bundles are versioned by their internal manifest, not by filename. Renaming a `.mint` doesn't change what's installed.
 - Don't ship secrets in bundles. They're public artifacts. Use the platform's plugin settings (`apply_settings()`) for runtime credentials.
 
 ## Related

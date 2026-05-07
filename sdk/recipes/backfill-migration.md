@@ -10,21 +10,25 @@ When the table is small (< 100k rows), a one-shot `UPDATE` is fine:
 
 ```python
 # my_plugin/migrations/005_normalize_panel_names.py
+import sqlalchemy as sa
+
 from mint_sdk.migrations import MigrationOps, PluginMigration
 
 
-class Migration(PluginMigration):
-    revision = "005"
-    description = "add normalized_name and backfill from name"
+class NormalizePanelNames(PluginMigration):
+    version = 5
+    name = "normalize_panel_names"
 
     async def upgrade(self, ops: MigrationOps) -> None:
         await ops.add_column(
             "panels",
-            ops.column("normalized_name", "text", nullable=True),
+            sa.Column("normalized_name", sa.String, nullable=True),
         )
         await ops.execute(
-            "UPDATE panels SET normalized_name = LOWER(name) "
-            "WHERE normalized_name IS NULL"
+            sa.text(
+                "UPDATE panels SET normalized_name = LOWER(name) "
+                "WHERE normalized_name IS NULL"
+            )
         )
         await ops.create_index("idx_panels_normalized", "panels", ["normalized_name"])
 ```
@@ -37,55 +41,58 @@ The `WHERE normalized_name IS NULL` makes it idempotent — re-running on a part
 
 ```python
 # my_plugin/migrations/006_backfill_panel_dose_units.py
+import sqlalchemy as sa
+
 from mint_sdk.migrations import MigrationOps, PluginMigration
 
 
 CHUNK_SIZE = 5_000
 
 
-class Migration(PluginMigration):
-    revision = "006"
-    description = "backfill dose_units = 'uM' on legacy panels"
+class BackfillDoseUnits(PluginMigration):
+    version = 6
+    name = "backfill_panel_dose_units"
 
     async def upgrade(self, ops: MigrationOps) -> None:
         # Schema change first
         await ops.add_column(
             "panels",
-            ops.column("dose_units", "text", nullable=True),
+            sa.Column("dose_units", sa.String, nullable=True),
         )
 
         # Chunked backfill
         while True:
             result = await ops.execute(
-                """
+                sa.text(
+                    """
                 WITH batch AS (
                     SELECT id FROM panels
                     WHERE dose_units IS NULL
                     LIMIT :limit
-                    FOR UPDATE SKIP LOCKED
                 )
                 UPDATE panels
                 SET dose_units = 'uM'
                 WHERE id IN (SELECT id FROM batch)
                 RETURNING id
-                """,
-                params={"limit": CHUNK_SIZE},
+                """
+                ).bindparams(limit=CHUNK_SIZE),
             )
             rows = result.fetchall() if hasattr(result, "fetchall") else result
             if not rows:
                 break
 
-        # Now that every row has dose_units, enforce NOT NULL + index
-        await ops.execute("ALTER TABLE panels ALTER COLUMN dose_units SET NOT NULL")
+        # Now that every row has dose_units, add the read-side index.
+        # Enforce NOT NULL in a follow-up migration once every deployment has backfilled.
         await ops.create_index("idx_panels_dose_units", "panels", ["dose_units"])
 ```
 
 Key techniques:
 
-- **`FOR UPDATE SKIP LOCKED`** — never blocks on rows another transaction is touching. Postgres-only; SQLite skips the lock keyword harmlessly.
 - **`LIMIT :limit`** — bounds each transaction's row count.
 - **`RETURNING id`** — lets the loop know whether it did any work this iteration.
-- **Tighten constraints last** — `NOT NULL` and indexes after the data is correct, otherwise you risk failing on the first inconsistent row.
+- **Tighten constraints later** — add `NOT NULL` only after the data is correct everywhere, otherwise you risk failing on the first inconsistent row.
+
+For a high-contention Postgres deployment, you can add `FOR UPDATE SKIP LOCKED` to the batch selector after testing against Postgres. Do not put that clause in migrations you expect to run under SQLite.
 
 ## Splitting schema and data into separate revisions
 
@@ -120,12 +127,19 @@ Use a temporary SQLite engine and drive `MigrationRunner` directly:
 ```python
 # tests/test_migrations.py
 import pytest
+from importlib import import_module
 from sqlalchemy.ext.asyncio import create_async_engine
 from mint_sdk.migrations import MigrationRunner
 
-from my_plugin.migrations.001_initial import CreatePanelsTable
-from my_plugin.migrations.005_normalize_panel_names import NormalizePanelNames
-from my_plugin.migrations.006_backfill_dose_units import BackfillDoseUnits
+CreatePanelsTable = import_module(
+    "my_plugin.migrations.001_initial"
+).CreatePanelsTable
+NormalizePanelNames = import_module(
+    "my_plugin.migrations.005_normalize_panel_names"
+).NormalizePanelNames
+BackfillDoseUnits = import_module(
+    "my_plugin.migrations.006_backfill_panel_dose_units"
+).BackfillDoseUnits
 
 
 @pytest.mark.asyncio
@@ -150,11 +164,11 @@ async def test_006_handles_partial_application(tmp_path):
     assert not result.errors
 ```
 
-For SQLite-backed tests, `FOR UPDATE SKIP LOCKED` is silently ignored — the test still verifies correctness, just without proving the locking semantics under contention.
+SQLite-backed tests verify correctness and idempotency. If you add Postgres-specific locking clauses, cover that migration with a Postgres integration test too.
 
 ## Notes
 
-- Backfills inside a single `PluginMigration.upgrade` run inside one transaction by default. Long-running ones can blow the lock timeout — consider opening a fresh session per chunk via `await ops.execute("COMMIT; BEGIN;")` if your pattern allows it.
+- Backfills inside a single `PluginMigration.upgrade` hold the migration lock until the method returns. For very large datasets, split the work across separate migrations/releases or move the heavy data rewrite into an application background job.
 - `ops.execute` returns whatever SQLAlchemy returns — `Result` for queries, `CursorResult` for DML. Check the docs of the Result API for the version of SQLAlchemy `mint-sdk` ships against.
 - For backfills that depend on application-level logic (e.g., complex computed values), consider a separate background task instead of an in-migration loop. Migrations should focus on schema; complex data work belongs in the application.
 

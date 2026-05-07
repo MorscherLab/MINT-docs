@@ -1,6 +1,6 @@
 # Python SDK reference
 
-Every public symbol exported from `mint_sdk`. Grouped by area; each entry has a one-line description and links to the source on GitHub.
+Core public symbols exported from `mint_sdk`, grouped by area. Each entry has a one-line description and links to the source on GitHub; check `mint_sdk/__init__.py` in your installed version for the exact export list.
 
 ## Plugin classes
 
@@ -51,6 +51,9 @@ Convenience methods:
 | `delete_design(experiment_id)` | Delete design |
 | `delete_analysis(experiment_id)` | Delete analysis result |
 | `get_plugin_db_session()` (async ctx) | Mode-portable session for plugin tables |
+| `save_template(...)`, `load_template(...)` | Save/load one typed biology template |
+| `save_template_collection(...)`, `load_template_collection(...)` | Save/load multiple biology templates |
+| `save_template_preset(...)` | Save one built-in template preset collection |
 
 Settings:
 
@@ -86,6 +89,7 @@ author: str = ""
 homepage: str = ""
 license: str = ""
 icon: str = ""                # SVG path data
+color: str = ""               # Optional brand color hex
 schema_version: str = "1.0"
 dependencies: list[str] = []  # plugin slugs that must load first
 ```

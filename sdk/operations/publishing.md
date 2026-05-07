@@ -19,11 +19,11 @@ Publish per release (manually or via CI):
 ```bash
 # After mint build produces dist/my-plugin-1.0.0.mint and a wheel
 # Extract the wheel for PyPI:
-unzip -j dist/my-plugin-1.0.0.mint "wheel/*.whl" -d dist/wheel/
+unzip -j dist/my-plugin-1.0.0.mint "*.whl" -d dist/wheel/
 twine upload dist/wheel/*.whl
 ```
 
-The PyPI publish is just a wheel — without the `.mint` wrapper. Users who install directly from PyPI miss the frontend assets unless your plugin is backend-only or you bundle frontend assets inside the wheel via `MANIFEST.in`.
+The PyPI publish is just the wheel — without the `.mint` wrapper. If your `pyproject.toml` force-includes `frontend/dist/`, the wheel still contains the frontend assets; backend-only plugins can skip that step.
 
 ::: tip Backend-only on PyPI is fine
 A common pattern: ship a backend-only PyPI release for users who don't need the UI (CI consumers, automated jobs), AND a full `.mint` to the marketplace for browser-based installs. Both can build from the same source on the same tag.
@@ -35,16 +35,16 @@ The marketplace registry is a JSON feed plus the bundle URLs it points at. Hosti
 
 | Approach | When |
 |----------|------|
-| **Morscher Lab registry** (`marketplace.morscherlab.org`) | First-party plugins; lab plugins shared publicly |
+| **Morscher Lab registry** (`MorscherLab/mint-registry`) | First-party plugins; lab plugins shared publicly |
 | **Self-hosted on GitHub Pages** | Internal lab registries; private or org-only plugins |
 | **Self-hosted on S3 / nginx / any HTTPS host** | Any of the above |
 
-The platform polls the registry's `index.json` and fetches per-plugin metadata + bundle URLs. There's no central authority — point `marketplace.registryUrl` at whichever registry you trust.
+The platform polls the registry's `registry.json`. Each entry points to a GitHub release source (`github_repo` + `asset_pattern`), and the platform downloads the matching `.mint` asset from that release. There's no central authority — point `marketplace.registryUrl` at whichever registry you trust.
 
 ### Submission to the Morscher Lab registry
 
-1. Open a PR against [`MorscherLab/mld-registry`](https://github.com/MorscherLab/mld-registry) adding your plugin to `index.json`
-2. Include a stable bundle URL (GitHub Releases is fine) and a checksum
+1. Open a PR against [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry) adding your plugin to `registry.json`
+2. Include the plugin's GitHub release source and asset pattern (for example `*.mint`)
 3. Maintainers review; on merge, the registry updates automatically
 
 ### Self-hosted registry
@@ -53,46 +53,34 @@ A registry is just a static directory:
 
 ```
 my-registry/
-├── index.json              # list of plugins
-├── my-plugin/
-│   ├── 1.0.0/
-│   │   ├── manifest.json
-│   │   └── my-plugin-1.0.0.mint
-│   └── 1.1.0/
-│       ├── manifest.json
-│       └── my-plugin-1.1.0.mint
-└── another-plugin/
-    └── ...
+└── registry.json              # list of plugins and release sources
 ```
 
 ```json
-// index.json
+// registry.json
 {
-  "version": "1",
+  "schema_version": 1,
+  "generated_at": "2026-05-07T12:00:00Z",
   "plugins": [
     {
       "name": "my-plugin",
-      "latest": "1.1.0",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "manifest_url": "/my-plugin/1.0.0/manifest.json",
-          "bundle_url": "/my-plugin/1.0.0/my-plugin-1.0.0.mint",
-          "sha256": "..."
-        },
-        {
-          "version": "1.1.0",
-          "manifest_url": "/my-plugin/1.1.0/manifest.json",
-          "bundle_url": "/my-plugin/1.1.0/my-plugin-1.1.0.mint",
-          "sha256": "..."
-        }
-      ]
+      "display_name": "My Plugin",
+      "description": "Short description",
+      "plugin_type": "analysis",
+      "author": { "name": "Your Lab", "github": "your-org" },
+      "source": {
+        "github_repo": "your-org/my-plugin",
+        "asset_pattern": "*.mint"
+      },
+      "latest_version": "1.1.0",
+      "min_platform_version": "1.0.0",
+      "tags": ["lcms"]
     }
   ]
 }
 ```
 
-Reference implementation: [`MorscherLab/mld-registry`](https://github.com/MorscherLab/mld-registry). Use it as a starting point for self-hosted registries.
+Reference implementation: [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry). Use it as a starting point for self-hosted registries.
 
 ## GitHub Releases as the bundle host
 
@@ -130,13 +118,13 @@ The `.mint` bundle's version comes from the manifest. The wheel inside has its o
 
 Beta releases follow Python's PEP 440 + npm's SemVer:
 
-| Tag (git) | Wheel version | Marketplace channel |
-|-----------|---------------|---------------------|
-| `v1.0.0-beta.1` | `1.0.0b1` | `beta` |
-| `v1.0.0-rc.1` | `1.0.0rc1` | `beta` (or `rc` if your registry distinguishes) |
-| `v1.0.0` | `1.0.0` | `stable` |
+| Tag (git) | Wheel version | Registry behavior |
+|-----------|---------------|-------------------|
+| `v1.0.0-beta.1` | `1.0.0b1` | Only advertise deliberately, usually from a test registry |
+| `v1.0.0-rc.1` | `1.0.0rc1` | Only advertise deliberately, usually from a test registry |
+| `v1.0.0` | `1.0.0` | Normal stable release |
 
-The platform's update channel (`updates.channel: beta` or `stable`) decides which versions appear in the upgrade UI. Plugins with no recent stable release stay invisible to `stable`-channel installations.
+For platform and GitHub-source plugin checks, prerelease inclusion is controlled by `includePrereleases`. Marketplace registries should only set `latest_version` to a prerelease when that registry is meant for testing.
 
 ## Checklist before publishing
 
@@ -152,8 +140,7 @@ The platform's update channel (`updates.channel: beta` or `stable`) decides whic
 ## Notes
 
 - Publishing is one-way; PyPI yanks an old version, but most users have it cached. Don't rely on yanks for security fixes — release a new version.
-- The marketplace registry uses checksums (`sha256`) to verify bundles. Publish the checksum alongside the bundle.
-- Some labs run a private registry that mirrors the public one with extra plugins. The platform supports multiple registries via `marketplace.registries[]` (a list of URLs).
+- Some labs run a private registry that mirrors the public one with extra plugins. The current platform reads one `marketplace.registryUrl`; host an aggregate registry if you need to combine sources.
 
 ## Related
 

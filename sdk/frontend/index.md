@@ -1,20 +1,20 @@
 # Frontend SDK
 
-`@morscherlab/mint-sdk` is the Vue 3 component library and composable set used by every plugin frontend. It ships ~88 components, ~29 composables, a Tailwind preset, and a comprehensive design-token system — all tuned to the platform's design language so plugin frontends feel native without per-plugin theming.
+`@morscherlab/mint-sdk` is the Vue 3 component library and composable set used by every plugin frontend. It ships about 90 component exports, 35 composables, a Tailwind preset, and a comprehensive design-token system — all tuned to the platform's design language so plugin frontends feel native without per-plugin theming.
 
 ## What's in the package
 
 | Category | Surface | Detail |
 |----------|---------|--------|
-| Components | ~88 Vue 3 SFCs | [Components catalog](/sdk/frontend/components) covers the top 20 with usage; the remainder is browseable in the source and Histoire storybook |
-| Composables | ~29 typed composables | [Composables](/sdk/frontend/composables) — `useApi`, `useAuth`, `useExperimentSelector`, `useFormBuilder`, … |
+| Components | About 90 component exports | [Components catalog](/sdk/frontend/components) covers the most-used surface; the remainder is browseable in the source and Histoire storybook |
+| Composables | 35 typed composables | [Composables](/sdk/frontend/composables) — `useApi`, `useAuth`, `useExperimentSelector`, `useFormBuilder`, … |
 | Design tokens | 500+ CSS custom properties | [Design tokens](/sdk/frontend/design-tokens) — colors, spacing, motion, focus rings |
 | Theming | Light/dark/density support | [Theming](/sdk/frontend/theming) — `prefers-reduced-motion`, palette overrides, accessibility |
 | FormBuilder | Schema-driven form engine | [FormBuilder](/sdk/frontend/form-builder) — used by experiment-design plugins |
 
 ## Setup checklist
 
-If you scaffolded with `mint init --add-frontend`, all of this is already done. For a manual setup:
+If you scaffolded with `mint init` and did not pass `--no-frontend`, all of this is already done. For a manual setup:
 
 1. **Install**
    ```bash
@@ -71,7 +71,7 @@ Treat the storybook as the live component reference. The pages here cover patter
 
 | # | Page | What you'll learn |
 |---|------|-------------------|
-| 1 | [Components](/sdk/frontend/components) | Catalog of the top 20 components with usage examples |
+| 1 | [Components](/sdk/frontend/components) | Catalog of the most-used components with usage examples |
 | 2 | [Composables](/sdk/frontend/composables) | Full list with deep dives on the 7 most-used |
 | 3 | [Design tokens](/sdk/frontend/design-tokens) | The CSS variable families and the Tailwind preset |
 | 4 | [Theming](/sdk/frontend/theming) | Light/dark, density, palette override, accessibility |

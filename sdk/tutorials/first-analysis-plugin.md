@@ -103,7 +103,7 @@ async def health():
 
 ```toml
 # pyproject.toml — relevant entry
-[project.entry-points."mld.plugins"]
+[project.entry-points."mint.plugins"]
 hello-mint = "hello_mint.plugin:HelloMintPlugin"
 ```
 
@@ -226,7 +226,7 @@ This starts the platform on port 8001 with your plugin proxied via `config.dev.t
 ```
 → platform: http://127.0.0.1:8001
 → plugin:   http://127.0.0.1:8005 (proxied to /api/hello-mint)
-→ creating mld/config.dev.toml
+→ creating MINT/config.dev.toml
 → both processes running; Ctrl+C to stop
 ```
 
@@ -289,23 +289,23 @@ Expected: every check passes, ending with:
 
 ```
 ✓ pyproject.toml: project name + version
-✓ entry point: mld.plugins → hello_mint.plugin:HelloMintPlugin
+✓ entry point: mint.plugins → hello_mint.plugin:HelloMintPlugin
 ✓ AnalysisPlugin: metadata + routers + lifecycle implemented
 ✓ tests: 1 file, 1 test, 1 passed
 → no issues found
 ```
 
-## 8. Build a `.mld` bundle
+## 8. Build a `.mint` bundle
 
 ```bash
 mint build
-# → dist/hello-mint-0.1.0.mld
+# → dist/hello-mint-0.1.0.mint
 ```
 
 The bundle is a zip containing `manifest.json`, the wheel, and (if you didn't pass `--no-frontend`) frontend assets. Inspect it:
 
 ```bash
-unzip -l dist/hello-mint-0.1.0.mld | head -10
+unzip -l dist/hello-mint-0.1.0.mint | head -10
 ```
 
 You'll install this exact bundle later in [Operations → Publishing](/sdk/operations/publishing).
@@ -314,7 +314,7 @@ You'll install this exact bundle later in [Operations → Publishing](/sdk/opera
 
 You have a runnable analysis plugin that:
 
-- Builds and installs cleanly (`mint build` produces a `.mld` bundle)
+- Builds and installs cleanly (`mint build` produces a `.mint` bundle)
 - Reads experiments via `PlatformContext` when integrated, returns a stub when standalone
 - Has a passing unit test using `RecordingContext` from `mint_sdk.testing`
 - Validates against `mint doctor`
