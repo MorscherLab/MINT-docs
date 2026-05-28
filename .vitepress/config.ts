@@ -14,6 +14,25 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#4F46E5' }],
   ],
 
+  markdown: {
+    config(md) {
+      const defaultFence = md.renderer.rules.fence?.bind(md.renderer.rules)
+
+      md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+        const token = tokens[idx]
+        const language = token.info.trim().split(/\s+/)[0]
+
+        if (language === 'mermaid') {
+          return `<MermaidDiagram encoded="${encodeURIComponent(token.content)}"></MermaidDiagram>`
+        }
+
+        return defaultFence
+          ? defaultFence(tokens, idx, options, env, self)
+          : self.renderToken(tokens, idx, options)
+      }
+    },
+  },
+
   themeConfig: {
     logo: '/mint-icon.png',
     siteTitle: 'MINT',
