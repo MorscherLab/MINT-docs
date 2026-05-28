@@ -2,7 +2,7 @@
 
 `MINTClient` is the synchronous Python client for the MINT platform REST API. Use it from external scripts, CI jobs, or notebooks; from inside a plugin process, prefer `PlatformContext` accessors which avoid the network round-trip.
 
-Source: [`mint_sdk/client/client.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/client/client.py).
+Source: [`mint_sdk/client/client.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/client/client.py).
 
 ## Construction
 
@@ -61,15 +61,80 @@ These are thin wrappers over `client.auth`.
 | Property | Type | Purpose |
 |----------|------|---------|
 | `client.auth` | `AuthAPI` | Login / logout / verify / refresh / whoami |
-| `client.experiments` | `ExperimentsAPI` | List, get, create, update, get_data |
+| `client.experiments` | `ExperimentsAPI` | Experiment CRUD, design data, analysis results, experiment types |
 | `client.projects` | `ProjectsAPI` | List, get, create, update, delete, experiments, members |
 | `client.plugins` | `PluginsAPI` | List loaded plugins |
+| `client.admin` | `AdminAPI` | Admin diagnostics, users, roles, plugin-role assignments |
+| `client.updates` | `UpdatesAPI` | Platform/plugin update checks, GitHub release installs |
 
-Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-python/src/mint_sdk/client/resources).
+Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk/client/resources).
 
 ::: warning Not exposed
 Earlier docs claimed `client.users` and `client.artifacts` — those don't exist. There is no `MINTClient.from_env()` factory; use the env-aware constructor (option 3 above).
 :::
+
+## Experiments
+
+`client.experiments.list()` unwraps the platform response and returns a plain `list[dict]`:
+
+```python
+with MINTClient() as client:
+    experiments = client.experiments.list(
+        status="completed",
+        experiment_type="lcms_batch",
+        project_id=12,
+        search="TCA",
+        mine=True,
+        created_after="2026-05-01",
+        created_before="2026-06-01",
+        skip=0,
+        limit=100,
+        sort_by="created_at",
+        sort_order="desc",
+    )
+```
+
+CRUD methods mirror the REST API:
+
+| Method | Purpose |
+|--------|---------|
+| `list(...)` | Filter visible experiments by status, type, project, owner, date window, or search text |
+| `get(experiment_id)` | Fetch one experiment detail record |
+| `create(name=..., experiment_type="custom", project_id=None, notes=None, tags=None)` | Create an experiment; MINT assigns the type-scoped code |
+| `update(experiment_id, **fields)` | Patch metadata such as name, status, type, project, notes, tags, or dates |
+| `delete(experiment_id)` | Delete the experiment row |
+| `list_types()` | List enabled experiment types |
+| `next_seq(experiment_type)` | Preview the next code sequence for a type |
+
+Deletion is immediate in the current backend. Take a normal database backup before running bulk delete scripts.
+
+## Experiment data
+
+Design data is one JSON payload per experiment. Analysis results are JSON entries keyed by `plugin_id`.
+
+```python
+with MINTClient() as client:
+    design = client.experiments.design_data.get(42)
+    client.experiments.design_data.save(
+        42,
+        plugin_id="panel-designer",
+        data={"wells": []},
+        schema_version="1.0",
+    )
+
+    client.experiments.analysis.save(
+        42,
+        plugin_id="dose-response",
+        result={"ic50": 0.42},
+    )
+```
+
+| Namespace | Methods |
+|-----------|---------|
+| `client.experiments.design_data` | `get`, `save`, `delete`, `tree`, `summary`, `export` |
+| `client.experiments.analysis` | `list`, `get`, `save`, `delete` |
+
+Backward-compatible flat methods still exist: `get_data`, `save_data`, `delete_data`, `get_data_tree`, `get_data_summary`, `export_data`, `get_results`, `get_result`, `save_result`, and `delete_result`.
 
 ## Errors
 

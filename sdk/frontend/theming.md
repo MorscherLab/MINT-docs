@@ -1,12 +1,12 @@
 # Theming
 
-The SDK ships with light, dark, and a denser-spacing variant out of the box. Plugin frontends adopt all three automatically by using design tokens. This page covers what theming options exist, how to override them, and the accessibility guarantees you inherit.
+The SDK ships with light/dark theme support, table-density settings, and palette tokens out of the box. Plugin frontends adopt the active look automatically when they use the SDK style bundle and design tokens. This page covers what theming options exist, how to override them, and the accessibility guarantees you inherit.
 
 ## Light, dark, system
 
 The platform exposes a theme switcher in the user's avatar menu — Light / Dark / System. Plugins:
 
-- **Inherit automatically** when they use the SDK's `<AppLayout>` and design tokens
+- **Inherit automatically** when they use the current scaffold's `<PluginWorkspaceView>` / `<AppContainer>` wrapper, or another SDK shell such as `<AppLayout>`, together with design tokens
 - **Should not maintain a separate theme switcher** — the platform owns it
 
 Programmatic access via `useTheme`:
@@ -14,19 +14,19 @@ Programmatic access via `useTheme`:
 ```ts
 import { useTheme } from '@morscherlab/mint-sdk'
 
-const { theme, setTheme, resolvedTheme } = useTheme()
-// theme: Ref<'light' | 'dark' | 'system'>  — user's preference
-// resolvedTheme: ComputedRef<'light' | 'dark'>  — what's actually applied right now
+const { isDark, toggleTheme, setTheme } = useTheme()
+// isDark: ComputedRef<boolean> — current resolved light/dark state
 
 setTheme('dark')
+toggleTheme()
 ```
 
 The dark class lives on `<html>` — `html.dark { ... }`. The SDK's `variables.css` defines both light defaults and dark overrides:
 
 ```css
 :root {
-  --bg-primary: #FFFFFF;
-  --text-primary: #0F172A;
+  --bg-primary: #F8FAFC;
+  --text-primary: #1E293B;
 }
 
 .dark {
@@ -44,25 +44,13 @@ Custom CSS in your plugin can do the same — wrap dark-specific overrides in `.
 
 .dark .my-special-card {
   /* darker accent only on dark theme */
-  border-color: var(--border-strong);
+  border-color: var(--border-light);
 }
 ```
 
 ## Density
 
-Some tokens have density variants. The platform may set `html[data-density="compact"]` to tighten spacing for power users:
-
-```css
-:root {
-  --space-card-padding: 1.5rem;
-}
-
-[data-density="compact"] :root {
-  --space-card-padding: 1rem;
-}
-```
-
-Plugins inherit the density automatically when they use tokenized spacing.
+The SDK settings store tracks `tableDensity` (`compact`, `normal`, `comfortable`) for table-heavy views and settings panels. Prefer SDK table/list components such as `DataFrame`, `ExperimentDataViewer`, and generated workspace shells when density should follow the user's preference. For custom tables, read the settings store or expose a local density prop instead of hardcoding row height globally.
 
 ## Palette overrides
 
@@ -73,7 +61,7 @@ A deployment can re-skin the platform by overriding brand variables in its own s
 :root {
   --color-primary: #16A34A;        /* override default indigo with green */
   --color-primary-hover: #15803D;
-  --color-primary-active: #166534;
+  --color-primary-soft: rgba(22, 163, 74, 0.12);
 }
 ```
 
@@ -96,8 +84,8 @@ When you build custom components, follow the same patterns:
 ```vue
 <button
   :disabled="loading"
-  class="bg-color-primary text-text-inverse rounded-default px-4 py-2
-         focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2
+  class="bg-mint-primary text-white rounded-mint px-4 py-2
+         focus:outline-none focus:ring-2 focus:ring-mint-primary focus:ring-offset-2
          disabled:opacity-50 disabled:cursor-not-allowed">
   <span v-if="loading" class="i-mdi-loading animate-spin"></span>
   {{ label }}
@@ -112,10 +100,6 @@ The SDK honors `prefers-reduced-motion: reduce` globally:
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  :root {
-    --motion-disabled: 0;
-  }
-
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -128,11 +112,17 @@ For a plugin's custom animations:
 
 ```css
 .fade-in {
-  animation: fade-in calc(300ms * var(--motion-disabled, 1));
+  animation: fade-in 300ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in {
+    animation: none;
+  }
 }
 ```
 
-The fallback in `var(--motion-disabled, 1)` keeps animation enabled by default, killed when reduced-motion is requested.
+Keep motion non-essential; reduced-motion users should get the same information without animation.
 
 ## RTL support
 

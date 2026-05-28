@@ -13,7 +13,7 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 
 | Recipe | When |
 |--------|------|
-| [Writing results](/sdk/recipes/writing-results) | Save / append `PluginAnalysisResult`, preserve run history, reference produced artifacts by ID |
+| [Writing results](/sdk/recipes/writing-results) | Upsert `PluginAnalysisResult`, preserve run history inside the payload, reference produced artifacts by ID |
 
 ## Permissions and identity
 
@@ -25,7 +25,7 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 
 | Recipe | When |
 |--------|------|
-| [Error handling](/sdk/recipes/error-handling) | Map `PluginException` subclasses to HTTP responses; user-facing vs developer-facing |
+| [Error handling](/sdk/recipes/error-handling) | Use `HTTPException` at route boundaries; keep SDK exceptions in service code |
 | [Logging & tracing](/sdk/recipes/logging-tracing) | Structured logs via `get_plugin_logger`; request-scoped fields |
 | [Testing plugins](/sdk/recipes/testing-plugins) | In-memory repos, fixtures, end-to-end tests with TestClient |
 

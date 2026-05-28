@@ -36,7 +36,7 @@ Four tabs:
 |-----|----------|
 | **Overview** | Description, member count, experiment counts by status, recent activity |
 | **Experiments** | Sortable, filterable list — click a row to drill in |
-| **Members** | Per-project membership, with role overrides |
+| **Members** | Project membership, lead/creator context, and stored member labels |
 | **Settings** | Rename, archive, delete (admin only) |
 
 > [Screenshot: project page with the Experiments tab selected]

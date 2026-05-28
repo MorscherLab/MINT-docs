@@ -1,6 +1,6 @@
 # MINT Docs
 
-The user-facing documentation site for [MINT](https://github.com/MorscherLab/mld) — Mass-spec INtegrated Toolkit (formerly MLD). Built with [VitePress](https://vitepress.dev/), deployed to **mint-docs.morscherlab.org** via GitHub Pages.
+The user-facing documentation site for [MINT](https://github.com/MorscherLab/MINT) — Mass-spec INtegrated Toolkit (formerly MLD). Built with [VitePress](https://vitepress.dev/), deployed to **mint-docs.morscherlab.org** via GitHub Pages.
 
 This repository contains the user manual and the Plugin Development documentation track: install guides, workflow walkthroughs, UI tour, FAQ, glossary, user-level CLI usage, SDK concepts, tutorials, recipes, frontend SDK guidance, operations, and API reference. The platform repository remains the implementation source of truth.
 
@@ -19,6 +19,7 @@ MINT-docs/
     install-hosted.md
     quickstart.md
   workflow/
+    data-model.md
     projects.md
     experiments.md
     members-roles.md
@@ -48,7 +49,7 @@ MINT-docs/
     theme/              # MINT brand color overrides
     public/
       CNAME             # mint-docs.morscherlab.org
-      mint-icon.png     # site icon (master in MorscherLab/mld/assets/)
+      mint-icon.png     # site icon (master in MorscherLab/MINT/assets/)
   .github/workflows/
     deploy.yml          # build + GitHub Pages on push to main
 ```
@@ -83,4 +84,4 @@ Edits welcome — every page has an "Edit on GitHub" link in the footer that tak
 
 ## License
 
-Documentation under the same license as the platform (see the [mld repository](https://github.com/MorscherLab/mld)).
+Documentation under the same license as the platform (see the [MINT repository](https://github.com/MorscherLab/MINT)).

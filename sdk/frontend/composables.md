@@ -1,6 +1,6 @@
 # Composables
 
-The frontend SDK ships 35 typed composables. This page lists the commonly used ones with a one-line summary, then deep-dives on the 7 you'll use most often: `useApi`, `useAuth`, `useToast`, `usePlatformContext`, `useExperimentSelector`, `useExperimentData`, `useFormBuilder`.
+The frontend SDK ships 35+ typed composables. This page lists the commonly used ones with a one-line summary, then deep-dives on the 7 you'll use most often: `useApi`, `useAuth`, `useToast`, `usePlatformContext`, `useExperimentSelector`, `useExperimentData`, `useFormBuilder`.
 
 ## Full list
 
@@ -28,7 +28,9 @@ The frontend SDK ships 35 typed composables. This page lists the commonly used o
 | `useProtocolTemplates` | Lab-protocol template engine | Step-by-step protocol UIs |
 | `useAutoGroup` | Auto-group samples by name prefix | Sample grouping helpers |
 | `usePluginConfig` | Plugin settings reactive object | Reading plugin config from the frontend |
-| `usePluginApi` | Plugin-scoped API client | Calls scoped to the plugin's prefix |
+| `usePluginClient` | Stable identity for generated plugin clients | Typed calls from `frontend/src/generated/mint-plugin.ts` |
+| `usePluginSettings` | Plugin settings from platform context | Reading installed plugin settings |
+| `useCurrentExperiment` | Current platform experiment | Integrated plugin pages tied to an experiment |
 | `useExperimentSelector` | Picker UI + reactive selected experiment | Experiment dropdowns |
 | `useExperimentData` | Reactive exported experiment data payload | Live experiment view |
 | `useExperimentSave` | Save/load design data and analysis results | Forms that save back to an experiment |
@@ -61,7 +63,7 @@ await api.delete(`/my-plugin/panels/${id}`)
 
 // File operations
 const result = await api.upload('/my-plugin/files', file)
-const blob = await api.download(`/my-plugin/files/${id}`)
+const blobUrl = await api.download(`/my-plugin/files/${id}`)
 
 // URL builders for WebSocket / SSE endpoints
 const wsUrl = api.buildWsUrl('/my-plugin/stream')
@@ -75,7 +77,7 @@ The full return shape is `{ client, get, post, put, patch, delete, upload, downl
 - Uses the configured API base URL and request timeout from `useSettingsStore`
 - Sets JSON headers by default and lets Axios set multipart boundaries for `upload()`
 
-For plugin-scoped calls with a plugin-specific base URL, use `usePluginApi({ fallbackPrefix: '/api/<plugin-prefix>' })` and call paths like `/sessions`.
+For plugin-scoped calls, prefer the generated client from `frontend/src/generated/mint-plugin.ts` after running `mint sdk generate`. It uses the plugin contract, route prefix, and platform context to build the right URLs.
 
 ### `useAuth`
 

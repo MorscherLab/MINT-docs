@@ -27,10 +27,10 @@ class Experiment:
 
 | Field | Notes |
 |-------|-------|
-| `id` | Numeric primary key. The user-facing `experiment_code` (`EXP-001`, …) is **not** on the SDK dataclass — it's a platform-side convenience exposed via the REST API |
+| `id` | Numeric primary key. The user-facing `experiment_code` (`LCM-EXP-001`, `DR-EXP-001`, …) is **not** on the SDK dataclass — it's a platform-side field exposed via the REST API |
 | `experiment_type` | The string registered by an `EXPERIMENT_DESIGN` plugin |
-| `status` | One of `planned`, `ongoing`, `completed` |
-| `tags`, `custom_metadata` | Free-form JSON columns plugins can read but generally shouldn't mutate (use `update_metadata()` helpers if your repo exposes them) |
+| `status` | Usually `planned`, `ongoing`, `completed`, or `cancelled` |
+| `tags`, `custom_metadata` | Free-form JSON columns plugins can read but generally should not mutate unless their plugin type owns the experiment update path |
 | `parent_experiment_id` | For nested experiments / sub-runs |
 
 ### `DesignData`
@@ -68,7 +68,7 @@ class PluginAnalysisResult:
     updated_at: datetime
 ```
 
-`(experiment_id, plugin_id)` is unique — saving a new result for the same pair updates the row, it doesn't create a second one. To preserve history, embed a per-run sub-key inside `result`:
+The current platform stores analysis results as JSON entries keyed by `plugin_id` on the experiment row. Saving a new result for the same `(experiment_id, plugin_id)` updates that entry; it does not append a separate run row. To preserve history, embed a per-run sub-key inside `result`:
 
 ```python
 await plugin.save_analysis(experiment_id, {
@@ -116,16 +116,16 @@ class UserPluginRole:
 ## Relationships
 
 ```
-Project ────< Experiment ────────< DesignData          (one design per experiment)
+Project ────< Experiment ──────── DesignData          (one design payload per experiment)
                   │
-                  └────────────────< PluginAnalysisResult  (one per (experiment, plugin))
+                  └──────────────── PluginAnalysisResult  (one entry per plugin id)
                   │
                   └────────────────< (plugin-owned tables, via shared_db_session)
 
 User ──────< UserPluginRole              (one per (user, plugin))
 ```
 
-The platform owns `Project`, `Experiment`, `User`, `DesignData`, `PluginAnalysisResult`, `UserPluginRole`. Plugin-owned tables live in the plugin's own Postgres schema (integrated mode) or its own SQLite database (standalone mode).
+The platform owns `Project`, `Experiment`, `User`, `DesignData`, `PluginAnalysisResult`, and `UserPluginRole`. In the current backend, design data and analysis results are JSON columns on the experiment row and the SDK adapter returns SDK-shaped objects for plugin code. Plugin-owned tables live in the plugin's own Postgres schema (integrated mode) or its own SQLite database (standalone mode).
 
 ## JSONB portability
 
@@ -137,7 +137,7 @@ For complex queries (e.g., "find experiments where `result.method == 'v4'`"), pr
 
 | Repository | Returns | Writes |
 |------------|---------|--------|
-| `ExperimentRepository` | `Experiment` | `Experiment` (only EXPERIMENT_DESIGN plugins) |
+| `ExperimentRepository` | `Experiment` | `Experiment` (`EXPERIMENT_DESIGN` and `FULL` plugins) |
 | `PluginDataRepository.save_experiment_data` | `DesignData` | `DesignData` |
 | `PluginDataRepository.save_analysis_result` | `PluginAnalysisResult` | `PluginAnalysisResult` |
 | `PluginDataRepository.get_analysis_results` | `list[PluginAnalysisResult]` (every plugin's results for one experiment) | — |

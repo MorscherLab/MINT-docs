@@ -1,20 +1,24 @@
 # Exceptions reference
 
-Every SDK exception inherits from `PluginException`. The platform's middleware catches them and emits structured error responses with the exception's `code`, `message`, and `details`.
+Every SDK exception inherits from `PluginException` and carries a machine-readable `code`, a human-readable `message`, and optional `details`.
 
-Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/exceptions.py).
+::: warning Current HTTP behavior
+Current plugin route handling does not automatically map uncaught SDK exceptions to HTTP status codes. In user-facing FastAPI routes, raise `fastapi.HTTPException` when you need a specific status such as 400, 403, 404, or 409, or catch `PluginException` and translate it yourself. Use the SDK exception classes for service/repository boundaries where structured Python errors are useful.
+:::
+
+Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/exceptions.py).
 
 ## Hierarchy
 
 ```
 PluginException
-├── ValidationException     — 400 Bad Request
-├── PermissionException     — 403 Forbidden
-├── ConfigurationException  — 500 Internal Server Error
-├── RepositoryException     — 500 Internal Server Error
-│   ├── NotFoundException   — 404 Not Found
-│   └── ConflictException   — 409 Conflict
-└── PluginLifecycleException — 500 Internal Server Error
+├── ValidationException
+├── PermissionException
+├── ConfigurationException
+├── RepositoryException
+│   ├── NotFoundException
+│   └── ConflictException
+└── PluginLifecycleException
 ```
 
 ## `PluginException`
@@ -37,9 +41,9 @@ class PluginException(Exception):
     def to_dict(self) -> dict: ...
 ```
 
-`to_dict()` produces the JSON the platform serves to clients.
+`to_dict()` produces a JSON-friendly shape if you catch and serialize the exception.
 
-## `ValidationException` (400)
+## `ValidationException`
 
 Use for invalid input that Pydantic doesn't catch — business rules, custom validators.
 
@@ -64,7 +68,7 @@ raise ValidationException(
 
 `code = "VALIDATION_ERROR"`. `value` is truncated to 100 chars in `details["value"]`.
 
-## `PermissionException` (403)
+## `PermissionException`
 
 Use for runtime ownership / authorization checks on top of the role guards.
 
@@ -88,7 +92,7 @@ if user.id != panel.owner_id:
 
 `code = "PERMISSION_DENIED"`.
 
-## `ConfigurationException` (500)
+## `ConfigurationException`
 
 Use for plugin-side misconfiguration (missing required setting, malformed config).
 
@@ -112,9 +116,9 @@ if not self.settings.api_endpoint:
 
 `code = "CONFIGURATION_ERROR"`.
 
-## `RepositoryException` (500)
+## `RepositoryException`
 
-Base class for storage / database errors. Use the subclasses (`NotFoundException`, `ConflictException`) when applicable; raise `RepositoryException` directly only for generic DB failures.
+Base class for storage / database errors. Use the subclasses (`NotFoundException`, `ConflictException`) when useful inside your service layer; raise `RepositoryException` directly only for generic DB failures.
 
 ```python
 class RepositoryException(PluginException):
@@ -140,9 +144,9 @@ except DatabaseError as exc:
 
 `code = "REPOSITORY_ERROR"`.
 
-## `NotFoundException` (404)
+## `NotFoundException`
 
-Subclass of `RepositoryException`. Maps to 404, not 500.
+Subclass of `RepositoryException`. Use it when a repository or service lookup misses. If this crosses a FastAPI route boundary, translate it to `HTTPException(status_code=404, ...)`.
 
 ```python
 class NotFoundException(RepositoryException):
@@ -167,7 +171,7 @@ if panel is None:
 
 `code = "NOT_FOUND"`.
 
-## `ConflictException` (409)
+## `ConflictException`
 
 Subclass of `RepositoryException`. Use for duplicate-key, optimistic-concurrency, and state conflicts.
 
@@ -194,7 +198,7 @@ if existing:
 
 `code = "CONFLICT"`.
 
-## `PluginLifecycleException` (500)
+## `PluginLifecycleException`
 
 Use during `initialize()`, `shutdown()`, or `check_health()` when the plugin hits an unrecoverable startup / lifecycle error.
 
@@ -234,9 +238,9 @@ Defined in `mint_sdk.migrations.errors`:
 
 These don't currently inherit from `PluginException` — they're caught by the migration runner specifically. See [Migrations reference](/sdk/api/migrations#errors).
 
-## Response shape
+## Serializing errors
 
-The platform middleware catches `PluginException` and emits:
+If you catch a `PluginException`, `to_dict()` gives you:
 
 ```json
 {
@@ -249,12 +253,10 @@ The platform middleware catches `PluginException` and emits:
 }
 ```
 
-The HTTP status code is determined by the exception class (table at the top of this page).
-
 ## Notes
 
-- Always raise from your code; don't return error dicts. The middleware can't enrich responses you build manually.
-- Use `from exc` (PEP 3134) when wrapping an underlying exception to preserve the chain in logs.
+- In FastAPI route handlers, use `HTTPException` for user-facing HTTP statuses unless you have registered your own `PluginException` handler.
+- Use `raise ... from exc` for low-level failures so the logs keep the original traceback.
 - Don't put secrets or PII in `details` — it ends up in client-visible JSON.
 - For non-`PluginException` errors that escape, the middleware returns 500 and the platform's auto-issue feature decides whether to file a GitHub bug.
 

@@ -22,10 +22,10 @@ mint sdk update
 
 This:
 
-1. Reads `pyproject.toml` and updates `mint-sdk` to the latest version satisfying your range
-2. Reads `package.json` and updates `@morscherlab/mint-sdk` similarly
+1. Reads `pyproject.toml` and bumps the first `mint-sdk` version in the dependency spec to the latest stable patch by default
+2. Reads `frontend/package.json` and updates `@morscherlab/mint-sdk` similarly
 3. Runs `uv sync` and `bun install` to apply the changes
-4. Prints a diff of what changed
+4. Re-renders generated AI-assistant instructions when the project has one of the scaffolded files
 
 After running:
 
@@ -36,6 +36,8 @@ mint dev    # smoke test
 ```
 
 Commit the lockfile changes. The next CI run validates the new version against your test suite.
+
+Use `mint sdk update --scope minor` when you want the newest SDK minor in the same major, or `--dry-run` to preview. For SDK-major upgrades, edit the full dependency range manually; if your spec has an upper bound such as `<2.0.0`, a mechanical version replacement is not enough.
 
 ## Bumping the ceiling for a new SDK major
 
@@ -94,8 +96,8 @@ This trades plugin code complexity for compatibility breadth. Worthwhile only wh
 
 Each SDK release publishes its changelog at:
 
-- [`MINT/packages/sdk-python/CHANGELOG.md`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/CHANGELOG.md) — Python SDK
-- [`MINT/packages/sdk-frontend/CHANGELOG.md`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-frontend/CHANGELOG.md) — Frontend SDK
+- [`MINT/packages/sdk-python/CHANGELOG.md`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/CHANGELOG.md) — Python SDK
+- [`MINT/packages/sdk-frontend/CHANGELOG.md`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-frontend/CHANGELOG.md) — Frontend SDK
 
 For breaking changes, the changelog entries follow the pattern:
 
@@ -120,7 +122,7 @@ uv sync
 uv run pytest -v
 ```
 
-`mint sdk update` only selects stable semver releases, so beta testing starts by editing the dependency range explicitly. Run your full test suite. File any issues against [`MorscherLab/mld`](https://github.com/MorscherLab/mld). Once 2.0 stable lands, drop the `b1` from your range.
+`mint sdk update` only selects stable semver releases, so beta testing starts by editing the dependency range explicitly. Run your full test suite. File any issues against [`MorscherLab/MINT`](https://github.com/MorscherLab/MINT). Once 2.0 stable lands, drop the `b1` from your range.
 
 ::: warning Don't ship plugin releases against SDK betas
 A plugin built against `mint-sdk==2.0.0b1` may not work against `mint-sdk==2.0.0` if a beta-only API changes. Test against beta, ship against stable.
@@ -167,12 +169,12 @@ The frontend SDK ships on the same tag stream, with the same major-version caden
 
 - Component renames or removed components → search-and-replace + storybook visual review
 - Composable signature changes → TypeScript catches them at build time
-- Token renames → grep for the old variable name in `.css` / Tailwind config
+- Token renames → grep for the old variable name in `.css` and Vue templates
 
 ```bash
 cd frontend
 bun update @morscherlab/mint-sdk
-bun run typecheck    # surfaces breaks immediately
+bun run type-check   # surfaces breaks immediately
 bun run build
 ```
 
@@ -193,7 +195,7 @@ Your plugin can jump from `mint-sdk>=1.0.0,<2.0.0` directly to `>=3.0.0,<4.0.0`.
 ## Notes
 
 - The SDK's internal modules (`mint_sdk._discover`, `mint_sdk._version`, etc.) are private. Don't import them — they break without notice. Stick to the symbols documented in `mint_sdk/__init__.py`.
-- A plugin pinned to `mint-sdk==1.5.3` blocks the platform from upgrading the SDK. The marketplace UI flags this; admins know to either bump the plugin or hold the platform back.
+- A plugin pinned to `mint-sdk==1.5.3` is fragile. The marketplace registry does not infer compatibility from `pyproject.toml`, so test the plugin against supported platform releases and set `min_platform_version` deliberately in the registry entry.
 - For long-lived plugins, schedule a quarterly "upgrade SDK" task — the longer you wait, the bigger the diff and the harder the migration.
 
 ## Related

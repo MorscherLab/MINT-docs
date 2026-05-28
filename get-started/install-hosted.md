@@ -51,7 +51,7 @@ The day-to-day workflow (creating experiments, running plugins, viewing results)
 | "Plugin not visible after login" | Your account may not have access to that plugin. Ask your admin to grant the plugin role. |
 | Login loops back to the page | Cookies (or third-party cookies) may be blocked for the lab domain. Allow them and reload. |
 | Passkey prompt fails | Make sure you're using a browser and OS that support WebAuthn — recent Chrome, Safari, Firefox, or Edge. |
-| "Permission denied" on a project | You're not a member, or your project role is read-only. Ask the project owner to invite you. |
+| "Permission denied" on a project | You may not have the system permission or project membership needed for that action. Ask the project lead or an admin to check your access. |
 
 ## Next step
 

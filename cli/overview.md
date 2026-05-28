@@ -26,6 +26,10 @@ If the command isn't found, the install location isn't on your `PATH`. With `uv 
 | `mint auth login / logout / status` | Acquire and manage a session token |
 | `mint experiment list / get / create / update` | CRUD on experiments via the platform API |
 | `mint project list / get / create / update / delete` | CRUD on projects |
+| `mint plugin list / upload / install / upgrade` | Admin plugin operations against a running platform |
+| `mint admin user / role / plugin-role` | User, RBAC role, and per-plugin role administration |
+| `mint debug summary / health / system / config / logs / updates` | Read-only platform diagnostics |
+| `mint update check / apply` | Platform, SDK, and plugin update checks and platform update application |
 | `mint status` | Platform health overview |
 
 Detail: [Platform commands](/cli/platform). Configuration of how `mint` reaches the platform: [Configuration](/cli/configuration).
@@ -42,7 +46,7 @@ These commands act on a plugin project (cd into the plugin's directory first):
 | `mint build` | Package the plugin into a `.mint` bundle |
 | `mint doctor` | Validate the plugin project structure |
 | `mint info` | Print the plugin's metadata |
-| `mint docs` | Open SDK docs in the browser |
+| `mint docs` | Browse SDK reference documentation from the CLI |
 | `mint sdk link / unlink / update` | Manage the plugin's SDK pin |
 
 Full details — subcommands and primary flags: [Plugin Development → CLI reference](/sdk/api/cli-reference).
@@ -50,7 +54,7 @@ Full details — subcommands and primary flags: [Plugin Development → CLI refe
 ## What `mint` is not
 
 - **Not a platform launcher.** `mint serve` doesn't exist. Start the platform with `uvicorn api.main:app`.
-- **Not a `pip install <plugin>` replacement.** Plugins are typically installed through the marketplace UI; `mint` doesn't have a `plugin install` subcommand.
+- **Not a local `pip install <plugin>` replacement.** `mint plugin install` asks the running platform server to install a package or server-visible source, and `mint plugin upload` sends a `.mint` bundle to that server. For day-to-day use, admins usually use the Marketplace or Admin UI.
 - **Not a daemon.** `mint dev` runs in the foreground.
 
 ## Next

@@ -8,9 +8,9 @@ MINT follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Platfor
 
 ## Latest releases
 
-→ [GitHub Releases](https://github.com/MorscherLab/mld/releases) — every released version, with binaries and full notes.
+→ [GitHub Releases](https://github.com/MorscherLab/MINT/releases) — every released version, with binaries and full notes.
 
-→ [Full CHANGELOG](https://github.com/MorscherLab/mld/blob/main/CHANGELOG.md) — every change, every version.
+→ [Full CHANGELOG](https://github.com/MorscherLab/MINT/blob/main/CHANGELOG.md) — every change, every version.
 
 ## How MINT versions work
 
@@ -28,8 +28,8 @@ Plugin migrations are versioned independently per plugin via `mint_sdk.migration
 
 ## Release flow
 
-The platform and SDK both follow a beta-then-graduate flow on a `*-dev` branch, with stable tags landing on the same commit as the last passing beta. See [`scripts/release.sh`](https://github.com/MorscherLab/mld/blob/main/scripts/release.sh) for the canonical script.
+The platform and SDK both follow a beta-then-graduate flow on a `*-dev` branch, with stable tags landing on the same commit as the last passing beta. See [`scripts/release.sh`](https://github.com/MorscherLab/MINT/blob/main/scripts/release.sh) for the canonical script.
 
 ## Need help upgrading?
 
-If a release breaks something you depend on, please [open an issue](https://github.com/MorscherLab/mld/issues) — we treat regressions as bugs, including for plugin authors who consume `mint-sdk`.
+If a release breaks something you depend on, please [open an issue](https://github.com/MorscherLab/MINT/issues) — we treat regressions as bugs, including for plugin authors who consume `mint-sdk`.

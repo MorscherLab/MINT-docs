@@ -2,7 +2,7 @@
 
 The `mint` CLI ships with `mint-sdk`. This page summarizes the subcommands and primary flags from `mint_sdk/cli.py`. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
 
-Source: [`mint_sdk/cli.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/cli.py) and [`mint_sdk/cli_commands/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-python/src/mint_sdk/cli_commands).
+Source: [`mint_sdk/cli.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/cli.py) and [`mint_sdk/cli_commands/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk/cli_commands).
 
 ## Top-level
 
@@ -13,6 +13,8 @@ mint [--version] [--help] <command>
 | Flag | Effect |
 |------|--------|
 | `--version` | Print the SDK version and exit |
+| `--install-completion` | Install shell completion for the current shell |
+| `--show-completion` | Print the shell completion script |
 | `--help` | Show top-level help |
 
 ## Platform commands
@@ -72,6 +74,61 @@ CRUD on projects.
 
 (Read `project_cmd.py` for the exact flag list.)
 
+### `mint plugin`
+
+Administer plugins on a running platform. These commands call platform APIs and require the matching server-side plugin permissions.
+
+| Subcommand | Purpose |
+|------------|---------|
+| `mint plugin list [--json]` | List loaded plugins and installed plugin packages |
+| `mint plugin install <source> [--force] [--json]` | Install a package name, Git URL, or server-visible local path |
+| `mint plugin upload <bundle.mint> [--force] [--json]` | Upload and install a `.mint` bundle from the local machine |
+| `mint plugin upgrade <package-name> [--force] [--json]` | Upgrade through the platform plugin manager |
+| `mint plugin update <package-name> [--force] [--json]` | Update from the package's registered GitHub source |
+| `mint plugin uninstall <package-name> [--yes] [--json]` | Uninstall a plugin package |
+| `mint plugin github install <repo-or-url> [--tag TAG] [--asset-pattern GLOB] [--force] [--json]` | Install a GitHub release asset |
+| `mint plugin github releases <repo-or-url> [--asset-pattern GLOB] [--json]` | List releases and matching plugin assets |
+| `mint plugin config get <plugin-name>` | Print plugin settings |
+| `mint plugin config set <plugin-name> --json-config JSON` | Replace plugin settings |
+| `mint plugin config set <plugin-name> --file settings.json` | Replace plugin settings from a file |
+| `mint plugin config update <plugin-name> --json-config JSON` | Patch plugin settings |
+| `mint plugin index list [--json]` | List extra package index URLs |
+| `mint plugin index set <url> [<url> ...] [--json]` | Replace extra package index URLs |
+
+(Read `plugin_cmd.py` for the exact flag list.)
+
+### `mint admin`
+
+Administrative platform commands. They are also available as `mint platform admin ...`.
+
+| Subcommand | Purpose |
+|------------|---------|
+| `mint admin user ...` | Manage platform users; requires `users.*` permissions |
+| `mint admin role ...` | Manage RBAC roles; requires `users.manage` |
+| `mint admin plugin-role ...` | Manage per-plugin user roles; requires `plugins.configure` |
+
+### `mint debug`
+
+Read-only diagnostics. They are also available as `mint platform debug ...`.
+
+| Subcommand | Purpose |
+|------------|---------|
+| `mint debug summary` | Run a read-only platform diagnostics summary |
+| `mint debug health` | Read the public platform health endpoint |
+| `mint debug system` | Read the admin system snapshot |
+| `mint debug config` | Show safe admin configuration |
+| `mint debug logs` | Read parsed platform logs |
+| `mint debug updates` | Show update diagnostics and optionally run update checks |
+
+### `mint update`
+
+Platform update checks and application. Also available as `mint platform update ...`.
+
+| Subcommand | Purpose |
+|------------|---------|
+| `mint update check [--json]` | Check platform, SDK, and plugin update sources |
+| `mint update apply [--yes] [--json]` | Apply the latest platform update |
+
 ## Develop commands
 
 These act on a plugin project (run from the plugin's directory).
@@ -89,7 +146,7 @@ mint init [DIRECTORY] [flags]
 | `DIRECTORY` (positional) | Target directory (default `.`) |
 | `--name`, `-n` | Plugin name (human-readable) |
 | `--description`, `-d` | One-line description |
-| `--type`, `-t` | Plugin type: `analysis` or `experiment-design` |
+| `--type`, `-t` | Plugin type: `analysis`, `experiment-design`, `static`, or `full` |
 | `--template` | Plugin starter template (see `--list-templates`) |
 | `--list-templates` | List starter templates and exit |
 | `--json` | Output starter-template catalog as JSON when listing |
@@ -102,7 +159,7 @@ mint init [DIRECTORY] [flags]
 | `--author` | Override `git config user.name` |
 | `--email` | Override `git config user.email` |
 
-Without `--yes`, missing fields are prompted interactively.
+Without `--yes`, missing fields are prompted interactively. With `--yes`, the AI-assistant file defaults to `claude`, which creates `CLAUDE.md`. If `mint doctor` says that file is missing current SDK guidance, run `mint doctor --fix` once to refresh it. `--ai-assistant none` skips assistant files, but the current `mint doctor` check still expects one of those files; run `mint doctor --fix` if you later want a passing doctor report.
 
 ### `mint dev`
 
@@ -165,7 +222,7 @@ mint doctor [PATH] [flags]
 | `PATH` (positional) | Plugin project directory (default `.`) |
 | `--deps` | Check platform-core dependency alignment |
 | `--r` | Check the R bridge environment |
-| `--fix` | Fix misaligned deps (requires `--deps`) |
+| `--fix` | Apply safe automatic fixes; with `--deps`, also fix platform-core dependency alignment |
 | `--explain` | Show why each failed check matters |
 | `--json` | Output machine-readable check results |
 

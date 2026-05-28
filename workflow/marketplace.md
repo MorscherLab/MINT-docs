@@ -12,27 +12,28 @@ The feed for each plugin contains:
 
 | Field | Purpose |
 |-------|---------|
-| Name + slug | Identity and URL routing |
-| Versions | Ordered list with download URLs and SDK compatibility ranges |
-| Plugin type | `EXPERIMENT_DESIGN` / `ANALYSIS` / `TOOL` |
-| Capabilities | What `PlatformContext` permissions the plugin asks for |
+| `name` + `display_name` | Stable plugin identity and readable label |
+| `source.github_repo` + `source.asset_pattern` | GitHub release source and `.mint` asset glob |
+| `latest_version` + `min_platform_version` | Advertised version and minimum platform version |
+| `plugin_type` | `static`, `analysis`, `experiment_design`, or `full` |
+| `capabilities` | Whether the plugin requires auth, database access, and/or a frontend |
 | Author + repo + license | Provenance |
-| Long description, screenshots | Marketplace UI |
+| Description, tags, icon URL | Marketplace UI |
 
 A plugin can be in the registry without yet being installed. Conversely, plugins installed outside the registry through **Admin → Plugins** or the platform API won't appear in Marketplace — they show up under **Installed** but not **Marketplace**.
 
 ## Browsing
 
-Open **Admin → Marketplace** (admins) or **Plugins → Marketplace** (members, if your platform allows self-service). Cards show name, type, latest version, and a one-line summary.
+Open **Admin → Plugins**, then **Browse Registry**. Cards show name, type, latest version, tags, author, and a one-line summary.
 
 > [Screenshot: marketplace card with Install / Request install buttons]
 
 | Filter | Notes |
 |--------|-------|
-| **Type** | Design / Analysis / Tool |
-| **Installed?** | Hide already-installed plugins |
-| **Compatible** | Hide plugins whose latest version requires an SDK newer than what your MINT supports |
-| **Search** | Free text against name and description |
+| **Type** | Static / Analysis / Experiment Design / Full |
+| **Installed** | Show already-installed plugins |
+| **Updates** | Show installed plugins with a newer registry version |
+| **Search** | Free text against display name, description, and tags |
 
 ## Install vs request install
 
@@ -52,25 +53,22 @@ Approval requests retain their context — who requested, when, why — so an ad
 3. If conflicts exist, `isolation.py` provisions a per-plugin venv via `uv`
 4. `snapshot.py` captures the pre-install Python environment for package rollback
 5. `MigrationRunner` applies the plugin's migrations
-6. The plugin's `initialize(context)` runs; its routers mount
+6. The platform reports whether a restart is required before the plugin is loaded
+7. On startup, the plugin's `initialize(context)` runs and its routers mount
 
-If install fails, the operation reports the failing step and leaves the plugin uninstalled or requiring administrator cleanup, depending on where the failure occurred.
+If install fails, the operation reports the failing step and leaves the plugin uninstalled or requiring administrator cleanup, depending on where the failure occurred. Dependency conflicts surface as a retry-with-force dialog; use that only when you understand the dependency change.
 
 > [Screenshot: install progress dialog with each step ticking through]
 
 ## Upgrade
 
-Marketplace cards show a badge when a newer version is available. Click **Upgrade**; the platform repeats the install flow against the new version, runs any pending migrations, and swaps the active plugin process atomically.
+Marketplace cards show an **Update** badge when a newer version is available. Click **Update**; the platform repeats the install flow against the new version, records the updated package, and reports whether a server restart is required before the new code is active.
 
-If the upgrade fails (e.g., a new migration errors), the platform rolls back to the previous version and surfaces the failure on the plugin's admin row.
+If the update fails before activation, the platform reports the failing step. If a migration fails during startup, the plugin stays in an error state and the admin surfaces show the failure.
 
 ## Uninstall
 
-From **Admin → Plugins**, click the plugin and choose **Uninstall**. The dialog asks how to handle owned data:
-
-- **Keep** — leave tables in place
-- **Archive** — rename tables with an `archived_*` prefix
-- **Purge** — drop everything (with a typed confirmation)
+From **Admin → Plugins**, click **Uninstall** on the plugin. The current Admin UI and `mint plugin uninstall` use the safe default: remove the package and keep plugin-owned database tables in place.
 
 See [Plugins → Uninstall modes](/workflow/plugins#uninstall-modes) for the full discussion.
 
@@ -78,7 +76,7 @@ See [Plugins → Uninstall modes](/workflow/plugins#uninstall-modes) for the ful
 
 A registry is a static JSON document plus the `.mint` bundle files it points at. Any HTTPS host works (S3, GitHub Pages, an internal HTTP server). Set `marketplace.registryUrl` to the JSON's URL and restart MINT.
 
-The schema for the registry feed lives in [`api/models/marketplace_schemas.py`](https://github.com/MorscherLab/mld/blob/main/api/models/marketplace_schemas.py). A reference implementation is at [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry).
+The schema for the registry feed lives in [`api/models/marketplace_schemas.py`](https://github.com/MorscherLab/MINT/blob/main/api/models/marketplace_schemas.py). A reference implementation is at [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry).
 
 ## Next
 

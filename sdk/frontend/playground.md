@@ -23,6 +23,7 @@ const selectedWells = ref(['B2', 'C3'])
 const currentStep = ref(1)
 
 const components = [
+  { name: 'PluginWorkspaceView', category: 'Layout', description: 'Current scaffold shell for plugin pages, page selectors, settings, and platform-aligned spacing.', href: '/sdk/frontend/components#pluginworkspaceview' },
   { name: 'AppLayout', category: 'Layout', description: 'Plugin shell with topbar, sidebars, content regions, and platform spacing.', href: '/sdk/frontend/components#applayout' },
   { name: 'AppTopBar', category: 'Layout', description: 'Platform navigation bar with project context, tabs, avatar menu, and plugin state.', href: '/sdk/frontend/components#apptopbar' },
   { name: 'BaseButton', category: 'Forms', description: 'Action button variants, sizes, disabled states, and loading treatment.', href: '/sdk/frontend/components#basebutton' },

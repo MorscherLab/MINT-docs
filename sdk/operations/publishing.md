@@ -12,18 +12,20 @@ Most plugins publish to **PyPI + Marketplace**; the npm channel is only relevant
 
 ## PyPI
 
-Set up once: register on PyPI, generate a project-scoped token, store it as the `PYPI_TOKEN` GitHub secret on your plugin's repository.
+Set up once: register on PyPI and configure either Trusted Publishing for your GitHub repository or a project-scoped token stored as `PYPI_TOKEN`.
 
 Publish per release (manually or via CI):
 
 ```bash
-# After mint build produces dist/my-plugin-1.0.0.mint and a wheel
-# Extract the wheel for PyPI:
-unzip -j dist/my-plugin-1.0.0.mint "*.whl" -d dist/wheel/
+# If the plugin has frontend/, build frontend/dist before the PyPI wheel
+cd frontend && bun install && bun run build && cd ..
+
+# Build the PyPI wheel separately from the .mint bundle
+uv build --wheel --out-dir dist/wheel
 twine upload dist/wheel/*.whl
 ```
 
-The PyPI publish is just the wheel — without the `.mint` wrapper. If your `pyproject.toml` force-includes `frontend/dist/`, the wheel still contains the frontend assets; backend-only plugins can skip that step.
+The PyPI publish is just the wheel — without the `.mint` wrapper. `mint build` also builds a wheel internally, but that wheel is packed inside the `.mint` file; build a separate wheel output for PyPI so upload tools do not see the `.mint` artifact. If your `pyproject.toml` force-includes `frontend/dist/`, the wheel still contains the frontend assets; backend-only plugins can skip that step.
 
 ::: tip Backend-only on PyPI is fine
 A common pattern: ship a backend-only PyPI release for users who don't need the UI (CI consumers, automated jobs), AND a full `.mint` to the marketplace for browser-based installs. Both can build from the same source on the same tag.
@@ -128,13 +130,15 @@ For platform and GitHub-source plugin checks, prerelease inclusion is controlled
 
 ## Checklist before publishing
 
-- [ ] CI's `mint doctor` passes on the bundle
+- [ ] `uv run mint doctor .` passes on the plugin project
+- [ ] `uv run mint sdk generate --check` passes if the plugin has a generated frontend client
 - [ ] Tests pass on the supported Python versions (matrix in CI)
 - [ ] Migrations apply cleanly to a fresh DB AND to a DB on the previous version
 - [ ] Frontend builds without warnings (`bun run build`)
 - [ ] Changelog updated (`CHANGELOG.md`)
 - [ ] Version tag matches the wheel and the manifest
-- [ ] `pyproject.toml`'s `mint-sdk` range covers the platform versions you support
+- [ ] Registry `min_platform_version` is the lowest platform you support
+- [ ] `pyproject.toml`'s `mint-sdk` range covers the SDK versions you build against
 - [ ] Bundle size is reasonable (see [Packaging](/sdk/operations/packaging#sizes))
 
 ## Notes

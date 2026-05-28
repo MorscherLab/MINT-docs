@@ -14,7 +14,7 @@ It's especially well-suited to wet-lab teams that want a single browser-based ho
 
 ## What was MLD?
 
-MLD was the original name (Morscher Laboratory Database). It was rebranded to **MINT** — Mass-spec INtegrated Toolkit — alongside the `v1.0.0` release. The legacy `mld-sdk` and `@morscherlab/mld-sdk` packages are frozen on their respective registries; new releases ship as `mint-sdk` and `@morscherlab/mint-sdk`. The CLI binary is `mint`, env vars use the `MINT_` prefix. See the [rebrand decision](https://github.com/MorscherLab/mld/blob/main/decisions/2026-04-30-mld-to-mint-rebrand.md).
+MLD was the original name (Morscher Laboratory Database). It was rebranded to **MINT** — Mass-spec INtegrated Toolkit — alongside the `v1.0.0` release. The legacy `mld-sdk` and `@morscherlab/mld-sdk` packages are frozen on their respective registries; new releases ship as `mint-sdk` and `@morscherlab/mint-sdk`. The CLI binary is `mint`, env vars use the `MINT_` prefix. See the [rebrand decision](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-30-mld-to-mint-rebrand.md).
 
 ## How does MINT relate to LEAF?
 
@@ -34,14 +34,14 @@ Yes — when needed. The plugin loader checks each plugin's dependencies against
 
 ## Can I migrate from MLD to MINT?
 
-Yes — the rebrand is name-only at the data level. Existing MLD installations upgrade in place: the database schema is identical, plugins built against `mld-sdk` continue to work during a grace period, and `MLD_*` environment variables remain honored alongside the new `MINT_*` ones. Plugin authors are encouraged to re-publish against `mint-sdk` at their next release. The migration plan is at [`decisions/2026-04-30-mld-to-mint-rebrand.md`](https://github.com/MorscherLab/mld/blob/main/decisions/2026-04-30-mld-to-mint-rebrand.md).
+Yes — the rebrand is name-only at the data level. Existing MLD installations upgrade in place: the database schema is identical, plugins built against `mld-sdk` continue to work during a grace period, and `MLD_*` environment variables remain honored alongside the new `MINT_*` ones. Plugin authors are encouraged to re-publish against `mint-sdk` at their next release. The migration plan is at [`decisions/2026-04-30-mld-to-mint-rebrand.md`](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-30-mld-to-mint-rebrand.md).
 
 ## What database backends are supported?
 
 | Mode | When |
 |------|------|
-| `none` (file-based) | Single-user, no concurrency, evaluation only |
-| `sqlite` | Single-server, modest team |
+| `none` | Auth/passkeys and setup only; experiments/projects/plugins that need SQL storage are disabled |
+| `sqlite` | Single-server evaluation installs; no horizontal scaling |
 | `postgresql` | Recommended for shared deployments. Required for HA / multi-replica because plugin migrations rely on Postgres advisory locks. |
 
 ## How big a deployment can MINT handle?
@@ -80,7 +80,7 @@ For self-hosted deployments, use `Admin → Updates` to check and apply availabl
 
 ## Is MINT open source?
 
-Yes. The source lives at [github.com/MorscherLab/mld](https://github.com/MorscherLab/mld) (the repo retains the historical name; the package and CLI are now `mint`). Issues, pull requests, and questions are welcome.
+Yes. The source lives at [github.com/MorscherLab/MINT](https://github.com/MorscherLab/MINT). Issues, pull requests, and questions are welcome.
 
 ## How do I cite MINT in a paper?
 
@@ -88,4 +88,4 @@ A citable preprint / DOI is forthcoming. For now, please cite the GitHub reposit
 
 ## Where can I report bugs or request features?
 
-[GitHub issues](https://github.com/MorscherLab/mld/issues) — include your MINT version, OS, the affected plugin (if any), and steps to reproduce. The structured-log request ID from the failing response, if available, is especially helpful.
+[GitHub issues](https://github.com/MorscherLab/MINT/issues) — include your MINT version, OS, the affected plugin (if any), and steps to reproduce. The structured-log request ID from the failing response, if available, is especially helpful.

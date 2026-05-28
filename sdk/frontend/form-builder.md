@@ -262,7 +262,7 @@ async function handleSave() {
 ## Notes
 
 - The schema is JSON-serializable — you can fetch it from your plugin's backend at runtime if it varies per experiment type or per tenant.
-- For very large schemas (50+ fields), use `<FormSection>` to group fields and lazy-render — the form rendering is `O(visible fields)`.
+- For very large schemas (50+ fields), split the schema into smaller `sections` or use a wizard with `steps` so only the relevant fields are visible at once.
 - `multiselect`, `molecule`, and `concentration` fields can hold non-trivial state. Keep them in their own sections so re-renders are scoped.
 - For wizards, prefer the `StepWizard` component wrapping multiple smaller `FormBuilder` instances over one giant schema.
 

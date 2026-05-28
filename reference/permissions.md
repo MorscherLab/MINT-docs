@@ -4,9 +4,9 @@ MINT's RBAC has three pieces:
 
 1. **18 permissions** in 5 resource families
 2. **3 system roles** (Admin / Member / Viewer) plus admin-defined custom roles
-3. **Per-project role overrides** layered on top
+3. **Project membership and experiment collaborators** layered around visibility
 
-The authoritative list lives at [`api/permissions.py`](https://github.com/MorscherLab/mld/blob/main/api/permissions.py); this page mirrors it.
+The authoritative list lives at [`api/permissions.py`](https://github.com/MorscherLab/MINT/blob/main/api/permissions.py); this page mirrors it.
 
 ## Permission catalog
 
@@ -97,23 +97,19 @@ Common custom-role recipes:
 | **Plugin admin** | The Plugin operator set plus `plugins.install` |
 | **Project lead** | All `projects.*` plus all `experiments.*` |
 
-The role-design rationale (why exactly these 18 permissions) is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/mld/blob/main/decisions/2026-04-10-rbac-roles-design.md).
+The role-design rationale (why exactly these 18 permissions) is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-10-rbac-roles-design.md).
 
-## Project role overrides
+## Project membership
 
-A user's project role applies inside that project; outside it, only their system role matters.
+Route-level write access is checked against the user's system role. Project membership is stored separately and is used for project membership lists and restricted experiment visibility. Each project also has a creator / lead; only the creator, lead, or an Admin can update/delete the project or manage members, and the route still requires the matching system permission.
 
-| | Project Owner | Project Editor | Project Viewer |
-|---|---|---|---|
-| Read project | ✓ | ✓ | ✓ |
-| Edit project metadata | ✓ | | |
-| Archive / delete project | ✓ | | |
-| Add / remove members | ✓ | | |
-| Read experiments | ✓ | ✓ | ✓ |
-| Create / edit experiments | ✓ | ✓ | |
-| Delete experiments | ✓ | (own only) | |
+| Relationship | Current effect |
+|--------------|----------------|
+| Project creator / lead | May administer the project when their system role has the required permission |
+| Project member `editor` | Stored membership label; contributes to restricted experiment visibility |
+| Project member `viewer` | Stored membership label; contributes to restricted experiment visibility |
 
-Effective rights merge with the system role: a system Viewer who is Project Editor can edit experiments inside that project, but still cannot install plugins or change platform settings.
+`access.experimentVisibilityMode` controls how broad experiment visibility is. In `open` mode, users with `experiments.view` can list experiments broadly. In `restricted` mode, non-admin visibility is limited to experiments the user created, collaborates on, or can access through project membership.
 
 ## Experiment collaborator overrides
 
@@ -121,9 +117,8 @@ Collaborators stored on an experiment grant a third tier of access for that expe
 
 | Collaborator role | Effect |
 |-------------------|--------|
-| **Viewer** | Can read this experiment even if not a project member |
-| **Editor** | Can edit design data and run analyses on this experiment |
-| **Owner** | Same as the original owner, including delete |
+| **collaborator** | Can read this experiment even if not a project member |
+| **owner** | Can manage collaborators and delete the experiment; MINT keeps at least one owner |
 
 Collaborator entries survive even if the user is later removed from the project — useful for cross-team work where a colleague needs to see one experiment without joining the whole project.
 

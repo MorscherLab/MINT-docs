@@ -7,22 +7,21 @@ Read experiments from inside a plugin: fetch one by ID, list with filters, pagin
 ## Get one by ID
 
 ```python
-from mint_sdk import NotFoundException
+from fastapi import HTTPException, status
 
 class MyPlugin(AnalysisPlugin):
     async def get_experiment(self, experiment_id: int):
         repo = self._context.get_experiment_repository()
         experiment = await repo.get_by_id(experiment_id)
         if experiment is None:
-            raise NotFoundException(
-                f"Experiment {experiment_id} not found",
-                entity="experiment",
-                entity_id=str(experiment_id),
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Experiment {experiment_id} not found",
             )
         return experiment
 ```
 
-`get_by_id` returns an `Experiment` dataclass or `None`. Map the `None` to `NotFoundException` so the platform's middleware turns it into a 404 with a structured body.
+`get_by_id` returns an `Experiment` dataclass or `None`. At the route boundary, map `None` to `HTTPException` so the client gets a real 404.
 
 ## List with filters
 
@@ -44,12 +43,14 @@ class MyPlugin(AnalysisPlugin):
 | Param | Effect |
 |-------|--------|
 | `skip`, `limit` | Pagination — default 0 / 100 |
-| `status` | `"planned"` / `"ongoing"` / `"completed"` |
+| `status` | `"planned"` / `"ongoing"` / `"completed"` / `"cancelled"` |
 | `experiment_type` | Match the design plugin's type string |
 | `project` | Project name (string match) |
 | `created_by` | User ID |
 | `parent_experiment_id` | For nested experiments |
 | `search` | Free-text against name and notes |
+
+The platform repository also accepts `project_id`, `sort_by`, `sort_order`, `created_after`, and `created_before`; those are not part of the public SDK protocol yet, so use them only after checking your installed platform version.
 
 ## Paginate cleanly
 
@@ -86,8 +87,8 @@ class MyPlugin(AnalysisPlugin):
 
 ## Notes
 
-- `ExperimentRepository.create / update / delete` raise `PermissionException` for `ANALYSIS` plugins. They're available only to `EXPERIMENT_DESIGN` plugins.
-- `Experiment.experiment_code` (the user-facing `EXP-001` string) is **not** on the SDK dataclass. The repo exposes it only via the REST API. If you need to display it, query the platform's `/api/experiments/{id}` from the plugin's frontend instead.
+- `ExperimentRepository.create / update / delete` raise `PermissionException` for `STATIC` and `ANALYSIS` plugins. They are available to `EXPERIMENT_DESIGN` plugins through the design-scoped wrapper and to `FULL` plugins through the full repository.
+- `Experiment.experiment_code` (the user-facing `LCM-EXP-001` / `DR-EXP-001` string) is **not** on the SDK dataclass. The repository exposes it only via the REST API. If you need to display it, query the platform's `/api/experiments/{id}` from the plugin's frontend instead.
 - `tags` and `custom_metadata` are JSON columns. They're read-only here; for write access, use a recipe that modifies the experiment via the `EXPERIMENT_DESIGN` plugin that owns the type.
 
 ## Related

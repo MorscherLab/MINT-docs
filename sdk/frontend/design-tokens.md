@@ -1,6 +1,6 @@
 # Design tokens
 
-Every visual aspect of the platform — color, spacing, radius, motion, shadows — is parameterized as a CSS custom property. The frontend SDK ships 500+ tokens in `styles/variables.css`, plus a Tailwind preset that exposes them as utilities. **Plugin frontends should reference tokens, never hex codes.**
+Every visual aspect of the platform — color, radius, focus rings, shadows, and common component states — is parameterized as a CSS custom property. The frontend SDK ships the tokens in `styles/variables.css`, plus Tailwind v4 compatibility utilities for the classes used by SDK components. **Plugin frontends should reference tokens, never hex codes.**
 
 ## Why tokens
 
@@ -12,18 +12,10 @@ Tokens also make light/dark/density work universally. The dark theme just change
 
 Frontend scaffolding is included by default with `mint init` (skipped when `--no-frontend` is passed). Manual setup:
 
-```ts
-// src/main.ts
-import '@morscherlab/mint-sdk/styles'
-```
-
-```ts
-// tailwind.config.ts
-import preset from '@morscherlab/mint-sdk/tailwind.preset'
-export default {
-  content: ['./index.html', './src/**/*.{vue,ts}'],
-  presets: [preset],
-}
+```css
+/* frontend/src/style.css */
+@import "tailwindcss";
+@import "@morscherlab/mint-sdk/styles" layer(mint-sdk);
 ```
 
 ## Token families
@@ -32,12 +24,13 @@ export default {
 
 | Variable | Meaning | Default light |
 |----------|---------|---------------|
-| `--color-primary` | Indigo brand color | `#4F46E5` |
-| `--color-primary-hover` | Hover state | `#4338CA` |
-| `--color-primary-active` | Active/pressed | `#3730A3` |
-| `--color-primary-soft` | Soft tint for backgrounds | `rgba(79, 70, 229, 0.14)` |
+| `--color-primary` | Indigo brand color | `#6366F1` |
+| `--color-primary-hover` | Hover state | `#4F46E5` |
+| `--color-primary-light` | Light accent | `#93C5FD` |
+| `--color-primary-soft` | Soft tint for backgrounds | `rgba(99, 102, 241, 0.12)` |
 | `--color-cta` | Orange CTA | `#F97316` |
 | `--color-cta-hover` | CTA hover | `#EA580C` |
+| `--mint-brand` | MINT brand mark color | `#7BD0B5` |
 
 Use brand tokens for: links, primary buttons, focused inputs, the most-prominent action on a screen.
 
@@ -59,10 +52,10 @@ Each ships variants: `--mint-{name}-bg`, `--mint-{name}-border`, `--mint-{name}-
 | `--bg-primary` | The main page background |
 | `--bg-secondary` | Card / panel surface |
 | `--bg-tertiary` | Recessed surface (e.g., inside a card) |
-| `--bg-overlay` | Modal / popover backdrop |
-| `--border-default` | Default 1px border color |
-| `--border-strong` | Higher-contrast border |
-| `--border-subtle` | Lower-contrast border |
+| `--bg-card` | Card surface alias |
+| `--bg-hover` | Hover background |
+| `--border-color` | Default 1px border color |
+| `--border-light` | Low-contrast border |
 
 ### Text
 
@@ -71,61 +64,72 @@ Each ships variants: `--mint-{name}-bg`, `--mint-{name}-border`, `--mint-{name}-
 | `--text-primary` | Main text color |
 | `--text-secondary` | Less-emphasized text (labels, captions) |
 | `--text-muted` | Even more recessed (helper text) |
-| `--text-inverse` | Text on dark backgrounds |
+| `--mint-text-inverse` | Legacy alias for text on dark backgrounds |
 
 ### Focus
 
 | Variable | Use |
 |----------|-----|
-| `--focus-ring` | Color of the focus ring |
-| `--focus-ring-offset` | Background outside the ring |
-| `--focus-ring-width` | Ring thickness |
+| `--focus-ring` | Full box-shadow value for a solid focus ring |
+| `--focus-ring-offset` | Full box-shadow value with an offset ring |
+| `--focus-ring-error` | Error focus ring |
+| `--focus-ring-soft` | Softer translucent focus ring |
+| `--focus-ring-soft-error` | Softer translucent error focus ring |
 
 Every interactive component honors these. Custom components should follow the same pattern.
 
 ### Spacing and radius
 
-Tailwind's standard scale (`p-2`, `p-4`, `rounded-lg`) backed by CSS variables. The SDK preset also exposes:
+Tailwind's standard scale (`p-2`, `p-4`, `gap-3`) works as usual. SDK-specific radius, shadow, form-height, and transition tokens are:
 
 | Variable | Use |
 |----------|-----|
-| `--radius-default` | Component-level corner radius (`0.5rem`) |
-| `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-xl` | Standard scale |
-| `--shadow-sm`, `--shadow-md`, `--shadow-lg` | Elevation |
-| `--transition-fast` | `150ms` |
-| `--transition-default` | `200ms` |
+| `--radius` | Default radius (`0.375rem`) |
+| `--radius-sm`, `--radius-md`, `--radius-lg` | Standard radius scale |
+| `--shadow-sm`, `--shadow`, `--shadow-md`, `--shadow-lg` | Elevation |
+| `--form-height-sm`, `--form-height-md`, `--form-height-lg` | Input/control heights |
+| `--mint-transition` | Shared component transition (`150ms ease`) |
 
 ### Motion
 
 | Variable | Use |
 |----------|-----|
-| `--ease-default` | Standard easing curve |
-| `--ease-in-out` | Symmetric easing |
-| `--motion-disabled` | `0ms` — set when `prefers-reduced-motion: reduce` |
+| Rule | Use |
+|------|-----|
+| `@media (prefers-reduced-motion: reduce)` | The SDK globally shortens animation and transition durations |
+| `--mint-transition` | Use for simple custom hover/focus transitions |
 
-The SDK respects `prefers-reduced-motion` globally. Custom animations should multiply their duration by `var(--motion-disabled, 1)` or check the media query.
+The SDK respects `prefers-reduced-motion` globally. Custom animations should either use the same media query or keep motion non-essential.
 
 ## Tailwind utilities
 
-The preset maps every token to a utility. Use these in templates:
+Use the SDK compatibility utilities or Tailwind v4 arbitrary values in templates:
 
 ```vue
-<div class="bg-bg-primary text-text-primary border border-border-default p-4 rounded-default">
+<div class="bg-bg-secondary text-text-primary border border-border p-4 rounded-mint">
   <h2 class="text-text-primary font-semibold">Title</h2>
   <p class="text-text-secondary text-sm">Subtitle</p>
-  <div class="bg-bg-secondary p-3 rounded-md mt-2">Recessed content</div>
+  <div class="bg-bg-hover p-3 rounded-mint-sm mt-2">Recessed content</div>
 </div>
 ```
 
 | Utility prefix | Maps to |
 |----------------|---------|
-| `bg-bg-*` | `var(--bg-*)` |
-| `text-text-*` | `var(--text-*)` |
-| `border-border-*` | `var(--border-*)` |
-| `bg-mint-{success,error,warning,info}` / `bg-mint-{name}-bg` | Semantic backgrounds |
+| `bg-bg-secondary`, `bg-bg-hover`, `bg-bg-input` | Background tokens |
+| `text-text-primary`, `text-text-secondary`, `text-text-muted` | Text tokens |
+| `border-border` | `var(--border-color)` |
+| `bg-mint-{primary,cta,success,error,warning,info,danger}` | Brand / semantic backgrounds |
 | `text-mint-{success,error,warning,info}` | Semantic text |
-| `text-color-primary`, `bg-color-primary*` | Brand color |
-| `rounded-default`, `rounded-sm`, `rounded-md`, … | Token-backed radii |
+| `text-mint-primary`, `bg-mint-primary`, `border-mint-primary` | Brand color |
+| `rounded-mint`, `rounded-mint-sm`, `rounded-mint-lg` | SDK radius utilities |
+
+For tokens without a named utility, use Tailwind's arbitrary value syntax:
+
+```vue
+<p class="text-[var(--text-muted)] border-[color:var(--border-light)]">
+  Helper text
+</p>
+```
 
 ## Custom CSS
 
@@ -135,10 +139,10 @@ When utility classes aren't enough:
 <style scoped>
 .my-card {
   background: var(--bg-secondary);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-default);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
-  transition: box-shadow var(--transition-default) var(--ease-default);
+  transition: box-shadow var(--mint-transition);
 }
 
 .my-card:hover {
@@ -146,8 +150,7 @@ When utility classes aren't enough:
 }
 
 .my-card:focus-within {
-  outline: var(--focus-ring-width) solid var(--focus-ring);
-  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 </style>
 ```
@@ -157,7 +160,7 @@ When utility classes aren't enough:
 - **Don't hardcode hex codes** — `color: #4F46E5;` won't re-theme. Use `var(--color-primary)` or the Tailwind utility.
 - **Don't reach into the platform's frontend** — your plugin is its own bundle and shouldn't import platform code. Tokens are the contract.
 - **Don't reinvent semantic colors** — `--mint-success` already exists. A different green from yours will look out of place.
-- **Don't bake in `transition-duration: 150ms;`** — use `var(--transition-fast)` so reduced-motion users get the right behavior.
+- **Don't bake in repeated transition values** — use `var(--mint-transition)` or the SDK's components/utilities where possible.
 
 ## Auditing your plugin
 

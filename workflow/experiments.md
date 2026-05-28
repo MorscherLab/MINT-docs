@@ -1,6 +1,6 @@
 # Experiments
 
-An **experiment** is the central unit of work in MINT. It has a unique code, a type (which determines the design fields and which plugins can act on it), a status that progresses through a lifecycle, optional collaborators, and accumulated analysis results.
+An **experiment** is the central unit of work in MINT. It has a unique type-scoped code, a type, a status, optional dates, optional collaborators, one design-data payload, and analysis results keyed by plugin.
 
 > [Screenshot: experiment detail page with header, design panel, analyze tab, and results tab]
 
@@ -8,14 +8,14 @@ An **experiment** is the central unit of work in MINT. It has a unique code, a t
 
 | Field | Description |
 |-------|-------------|
-| **Code** | Auto-assigned, globally unique (`EXP-001`, `EXP-002`, …). Not editable. |
+| **Code** | Auto-assigned, globally unique, and derived from the experiment type (`LCM-EXP-001`, `DR-EXP-001`, …). |
 | **Title** | Human-readable label. Editable any time. |
-| **Type** | Selected at creation; determines design schema (an experiment-design plugin owns this). Not editable after creation. |
-| **Status** | `planned` → `ongoing` → `completed`. See [Lifecycle](#lifecycle). |
+| **Type** | Selected at creation; determines the design schema and plugin allowlists. |
+| **Status** | `planned`, `ongoing`, `completed`, or `cancelled`. See [Lifecycle](#lifecycle). |
 | **Owner** | The user who created it. |
 | **Collaborators** | Per-experiment role overrides on top of project membership. |
-| **Design data** | JSON validated against the experiment type's schema. |
-| **Analysis results** | Accumulated outputs from analysis-plugin runs, indexed by run ID. |
+| **Design data** | One JSON payload owned by the experiment-design or full plugin. |
+| **Analysis results** | JSON outputs keyed by plugin ID. A plugin can keep its own run history inside its result payload. |
 | **Artifacts** | Uploaded files (RAW data, plates, sequence sheets, etc.). |
 
 ## Create an experiment
@@ -27,9 +27,9 @@ From a project page, click **New experiment** on the **Experiments** tab.
 | Field | Notes |
 |-------|-------|
 | **Title** | Required. |
-| **Type** | Required. Populated from installed experiment-design plugins (e.g., LCMS sequence, drug-response panel). If empty, ask your admin to install a relevant plugin. |
-| **Design data** | The form here is rendered by the type's plugin — it's whatever the plugin author defined. |
-| **Collaborators** (optional) | Add now or later. |
+| **Type** | Required. Populated from installed `EXPERIMENT_DESIGN` and `FULL` plugins (e.g., LC-MS sequence, drug-response panel). If empty, ask your admin to install a relevant plugin. |
+| **Design data** | The form here is rendered by the type's plugin; it's whatever the plugin author defined. |
+| **Collaborators** (optional) | Add now or later. New collaborators are added with the `collaborator` role; the creator is stored as `owner`. |
 
 Click **Create**. You land on the new experiment in `planned` status.
 
@@ -37,45 +37,53 @@ Click **Create**. You land on the new experiment in `planned` status.
 
 ```
    planned ──▶ ongoing ──▶ completed
-      ▲                       │
-      └──────── (admin) ──────┘
+      │          │
+      └──────────┴──▶ cancelled ──▶ planned
 ```
 
 | Status | Meaning | Who can write |
 |--------|---------|---------------|
-| **planned** | Design is being filled in. No data uploaded yet. | Owner, collaborators with edit role, project members per role |
-| **ongoing** | Data is being collected; analysis can run. | Same as planned |
-| **completed** | Final state. Read-only by default. | Owner and admins only — and only after re-opening |
+| **planned** | Design is being filled in. No data uploaded yet. | Users with `experiments.edit` and visibility |
+| **ongoing** | Data is being collected; analysis can run. Moving here auto-fills `start_date` if empty. | Same as planned |
+| **completed** | Final state. Moving here auto-fills `end_date` if empty. | Same as planned unless a plugin blocks writes |
+| **cancelled** | Terminal off-ramp for planned/ongoing work. Can be reactivated only to `planned`. | Same as planned |
 
-Most plugins gate writes on `ongoing` or `completed`; some require `completed` before they'll publish results downstream. Each plugin documents its own status requirements.
+Core MINT validates only the `cancelled` rules above. Plugins can be stricter: many gate writes on `ongoing` or `completed`, and some require `completed` before publishing downstream results.
 
 > [Screenshot: status pill control showing the three states]
 
-## Design plugins vs analysis plugins
+## Plugin interaction
 
-Two plugin types interact with experiments differently:
+Plugin types interact with experiments differently:
 
-| | Experiment-design plugin | Analysis plugin |
-|---|---|---|
-| Owns | An experiment type, with its own database schema and CRUD | None — reads existing experiments |
-| Writes | The experiment's `design_data` and any owned tables | The experiment's `analysis_results` and produced artifacts |
-| Visible at | Experiment creation form, design tab | Experiment **Analyze** tab |
+| Type | Experiment role |
+|------|-----------------|
+| `STATIC` | Can read experiment context for viewers or reference tools, but cannot write design data or analysis results. |
+| `ANALYSIS` | Reads existing experiments and writes its own entry under `analysis_results` plus produced artifacts. |
+| `EXPERIMENT_DESIGN` | Owns an experiment type and writes that experiment's `design_data`. |
+| `FULL` | Owns design data and can also write analysis results/artifacts. |
 
-A given experiment has exactly one design plugin (selected by its type) but can be analyzed by many analysis plugins over time.
+A given experiment has exactly one design-owning plugin, selected by its type, but it can be analyzed by many `ANALYSIS` or `FULL` plugins over time.
 
 See [Plugins](/workflow/plugins) for the full plugin model.
 
 ## Collaborators
 
-By default, every project member can view every experiment in the project, with edit rights determined by their project role. To override that for a specific experiment, add **collaborators**:
+Experiment visibility depends on `access.experimentVisibilityMode`:
+
+| Mode | Behavior |
+|------|----------|
+| `open` (default) | Users with `experiments.view` can list/read experiments broadly. |
+| `restricted` | Non-admin users see experiments they created, collaborate on, or can access through project membership. |
+
+Write actions are still gated by system permissions such as `experiments.edit` and `experiments.delete`. To grant visibility on a single experiment, add **collaborators**:
 
 | Collaborator role | Effect |
 |-------------------|--------|
-| **Viewer** | Can read the experiment even if they're not a project member |
-| **Editor** | Can edit design data and run analyses |
-| **Owner** | Same as the original owner — including delete |
+| **collaborator** | Can see the experiment even if they are not a project member |
+| **owner** | Can manage collaborators and delete the experiment; MINT keeps at least one owner |
 
-Collaborators are stored on the experiment itself (in `collaborators`), not on the project — they survive even if the user is later removed from the project. See [Members & roles](/workflow/members-roles) for the underlying RBAC.
+Collaborators are stored on the experiment itself (in `collaborators`), not on the project. They survive even if the user is later removed from the project. See [Members & roles](/workflow/members-roles) for the underlying RBAC.
 
 ## Search and filters
 
@@ -83,20 +91,20 @@ The experiments list inside a project supports:
 
 | Filter | Notes |
 |--------|-------|
-| **Status** | planned / ongoing / completed |
+| **Status** | planned / ongoing / completed / cancelled |
 | **Type** | Faceted by installed experiment types |
 | **Owner** | Anyone in the project |
 | **Created in** | Date range |
-| **Free text** | Searches title, code, design fields, and notes |
+| **Free text** | Searches name and notes |
 
 > [Screenshot: experiments list with multiple filters applied]
 
-## Soft delete vs hard delete
+## Deleting experiments
 
-Deleting an experiment marks it as removed but keeps the row, the artifacts, and any plugin-owned data for 30 days. After 30 days the row is purged. Admins can restore within the grace window. After purge, the data is gone — there is no extra backup beyond what your platform admin separately runs.
+Deleting an experiment currently removes the experiment row. Treat it as irreversible from the UI and make sure your platform database backups cover the recovery window your lab needs. Plugin-owned tables and external artifacts should define their own cleanup or retention policy.
 
 ## Next
 
-→ [Plugins](/workflow/plugins) — design vs analysis plugins
+→ [Plugins](/workflow/plugins) — the full plugin model
 → [Marketplace](/workflow/marketplace) — install and request plugins
 → [Members & roles](/workflow/members-roles) — collaborators and overrides

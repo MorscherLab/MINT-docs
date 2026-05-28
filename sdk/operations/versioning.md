@@ -1,6 +1,6 @@
 # Versioning
 
-Plugin versions follow [Semantic Versioning](https://semver.org/). The platform's marketplace and the SDK's compatibility checks both rely on accurate SemVer; getting the numbers wrong breaks installs.
+Plugin versions follow [Semantic Versioning](https://semver.org/). The marketplace registry advertises the latest plugin release, and SDK update checks rely on accurate SemVer; getting the numbers wrong breaks installs.
 
 ## SemVer rules
 
@@ -59,9 +59,21 @@ The platform update checker can include or exclude GitHub prereleases:
 - `updates.includePrereleases: false` — only stable releases such as `1.0.0`, `1.0.1`, `1.1.0`
 - `updates.includePrereleases: true` — also includes prereleases such as `1.0.0-beta.1` and `1.0.0-rc.1`
 
-## SDK compatibility ranges
+## Platform and SDK compatibility
 
-Every plugin declares the `mint-sdk` versions it supports. The marketplace honors this — plugins with incompatible SDK ranges are hidden from upgrade.
+Marketplace compatibility is declared in the registry entry. Set `min_platform_version` to the first MINT platform release that can install and run your plugin:
+
+```json
+{
+  "name": "my-plugin",
+  "latest_version": "1.2.0",
+  "min_platform_version": "1.0.0"
+}
+```
+
+The platform compares `min_platform_version` with the running platform version. If the plugin requires a newer platform, install and update actions are disabled until the platform is upgraded.
+
+Your plugin also declares the `mint-sdk` versions it can build and run against:
 
 ```toml
 # pyproject.toml
@@ -80,7 +92,7 @@ dependencies = [
 | `==1.0.*` | Requires SDK 1.0.x specifically — too strict for most cases |
 | `>=1.0.0` | Open-ended — discouraged; you'll break on 2.0 |
 
-Set the floor at the lowest SDK version where every symbol you use exists. Set the ceiling at the next major. When the SDK ships its next major, bump your plugin's compatibility range deliberately, after testing.
+Set the SDK floor at the lowest SDK version where every symbol you use exists. Set the ceiling at the next major. When the SDK ships its next major, bump your plugin's dependency range deliberately, after testing.
 
 ## Release flow
 
@@ -153,10 +165,10 @@ Old `DesignData` rows keep their original `schema_version`. New rows get the cur
 Database migration revisions are independent of plugin versions:
 
 ```
-plugin v1.0.0 — migrations 001
-plugin v1.1.0 — migrations 001, 002 (added in 1.1)
-plugin v1.1.1 — migrations 001, 002 (no schema change in patch)
-plugin v2.0.0 — migrations 001, 002, 003, 004
+plugin v1.0.0 — migrations v001
+plugin v1.1.0 — migrations v001, v002 (added in 1.1)
+plugin v1.1.1 — migrations v001, v002 (no schema change in patch)
+plugin v2.0.0 — migrations v001, v002, v003, v004
 ```
 
 Migration revisions are append-only — don't reset numbering at major bumps.
@@ -170,7 +182,7 @@ Every release should update `CHANGELOG.md`:
 
 ### Added
 - New `/api/my-plugin/panels/import` route for CSV import
-- `tags` column on panels (migration 002)
+- `tags` column on panels (migration v002)
 
 ### Changed
 - `useApi` calls now propagate the request ID
@@ -191,4 +203,4 @@ For the format, [Keep a Changelog](https://keepachangelog.com/) is conventional.
 
 - [Publishing](/sdk/operations/publishing) — where versions get propagated
 - [CI patterns](/sdk/operations/ci-patterns) — automating tag-driven releases
-- [Upgrading the SDK](/sdk/operations/upgrading-sdk) — bumping the SDK compat range
+- [Upgrading the SDK](/sdk/operations/upgrading-sdk) — bumping the SDK dependency range

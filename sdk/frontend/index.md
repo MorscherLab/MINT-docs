@@ -1,13 +1,13 @@
 # Frontend SDK
 
-`@morscherlab/mint-sdk` is the Vue 3 component library and composable set used by every plugin frontend. It ships about 90 component exports, 35 composables, a Tailwind preset, and a comprehensive design-token system — all tuned to the platform's design language so plugin frontends feel native without per-plugin theming.
+`@morscherlab/mint-sdk` is the Vue 3 component library and composable set used by every plugin frontend. It ships about 90 component exports, 35+ composables, a Vue install plugin, generated-contract helpers, and a comprehensive design-token system — all tuned to the platform's design language so plugin frontends feel native without per-plugin theming.
 
 ## What's in the package
 
 | Category | Surface | Detail |
 |----------|---------|--------|
 | Components | About 90 component exports | [Component playground](/sdk/frontend/playground) showcases common workflows; [Components catalog](/sdk/frontend/components) documents the most-used surface |
-| Composables | 35 typed composables | [Composables](/sdk/frontend/composables) — `useApi`, `useAuth`, `useExperimentSelector`, `useFormBuilder`, … |
+| Composables | 35+ typed composables | [Composables](/sdk/frontend/composables) — `useApi`, `useAuth`, `useExperimentSelector`, `usePluginClient`, `useFormBuilder`, … |
 | Design tokens | 500+ CSS custom properties | [Design tokens](/sdk/frontend/design-tokens) — colors, spacing, motion, focus rings |
 | Theming | Light/dark/density support | [Theming](/sdk/frontend/theming) — `prefers-reduced-motion`, palette overrides, accessibility |
 | FormBuilder | Schema-driven form engine | [FormBuilder](/sdk/frontend/form-builder) — used by experiment-design plugins |
@@ -22,24 +22,30 @@ If you scaffolded with `mint init` and did not pass `--no-frontend`, all of this
    ```
 
 2. **Import design tokens** in your app entry:
+   ```css
+   /* src/style.css */
+   @import "tailwindcss";
+   @import "@morscherlab/mint-sdk/styles" layer(mint-sdk);
+   ```
+
+3. **Install the Vue plugin** before Pinia/router:
    ```ts
    // src/main.ts
-   import '@morscherlab/mint-sdk/styles'
+   import { createApp } from 'vue'
+   import { createPinia } from 'pinia'
+   import { MINTSdk } from '@morscherlab/mint-sdk'
+   import App from './App.vue'
+   import './style.css'
+
+   createApp(App).use(MINTSdk).use(createPinia()).mount('#app')
    ```
 
-3. **Wire the Tailwind preset**:
-   ```ts
-   // tailwind.config.ts
-   import type { Config } from 'tailwindcss'
-   import preset from '@morscherlab/mint-sdk/tailwind.preset'
+4. **Use the plugin workspace shell** in your root component. The current scaffold wraps route content in `PluginWorkspaceView` and `AppContainer`, and reads page-selector data from `frontend/src/generated/mint-plugin.ts`.
 
-   export default {
-     content: ['./index.html', './src/**/*.{vue,ts}'],
-     presets: [preset],
-   } satisfies Config
+5. **Regenerate the typed contract** after backend route or metadata changes:
+   ```bash
+   mint sdk generate
    ```
-
-4. **Wrap your app in `AppLayout`** (when running inside the platform shell). For standalone pages, use `AppContainer` instead.
 
 ## Component playground
 
@@ -68,7 +74,7 @@ Treat the showcase as the public component reference. The pages here cover patte
 
 - **Vue 3 Composition API only** — `<script setup lang="ts">` everywhere
 - **TypeScript** — every component has typed props
-- **Tailwind utilities, not inline styles** — prefer `class="bg-bg-primary text-text-secondary"` over `:style="{ ... }"`
+- **Tokenized utilities or CSS, not inline styles** — prefer `class="text-[var(--text-secondary)]"` or component CSS using `var(--text-secondary)` over hardcoded colors
 - **CSS variables, not hex codes** — your plugin's UI should re-theme automatically when the platform's palette is overridden
 
 ## Reading order
@@ -77,13 +83,13 @@ Treat the showcase as the public component reference. The pages here cover patte
 |---|------|-------------------|
 | 1 | [Components](/sdk/frontend/components) | Catalog of the most-used components with usage examples |
 | 2 | [Composables](/sdk/frontend/composables) | Full list with deep dives on the 7 most-used |
-| 3 | [Design tokens](/sdk/frontend/design-tokens) | The CSS variable families and the Tailwind preset |
+| 3 | [Design tokens](/sdk/frontend/design-tokens) | The CSS variable families and Tailwind v4 usage |
 | 4 | [Theming](/sdk/frontend/theming) | Light/dark, density, palette override, accessibility |
 | 5 | [FormBuilder](/sdk/frontend/form-builder) | Schema-driven form engine for experiment design |
 
 ## Source
 
-[`MINT/packages/sdk-frontend`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend) — the full source. When this manual seems out of date, the source is authoritative.
+[`MINT/packages/sdk-frontend`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend) — the full source. When this manual seems out of date, the source is authoritative.
 
 ## Next
 

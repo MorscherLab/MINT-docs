@@ -1,10 +1,10 @@
 # CI patterns
 
-Three GitHub Actions workflows cover the common plugin lifecycle: PR validation, release publishing, and a periodic SDK-compatibility check.
+Three GitHub Actions workflows cover the common plugin lifecycle: PR validation, release publishing, and a periodic SDK-compatibility check. The current `mint init` scaffold creates lighter `ci.yml` and `release.yml` files; use these examples when you want stricter gates around `mint doctor`, generated frontend contracts, frontend builds, and `.mint` bundle creation.
 
 ## Build on PR
 
-Validate every PR against a Python matrix and the latest SDK.
+Validate every PR against the plugin project exactly as a contributor would run it locally.
 
 ```yaml
 # .github/workflows/ci.yml
@@ -16,78 +16,76 @@ on:
     branches: [main]
 
 jobs:
-  python:
+  test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python: ['3.12', '3.13']
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v5
 
       - name: Set up Python
-        run: uv python install ${{ matrix.python }}
+        run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: uv sync
 
-      - name: Run tests
-        run: uv run pytest -v --tb=short
+      - name: Lint
+        run: uv run ruff check .
 
-      - name: Validate plugin
-        run: uv run mint doctor
+      - name: Test
+        run: uv run pytest -v
 
-  frontend:
-    runs-on: ubuntu-latest
-    if: hashFiles('frontend/package.json') != ''
-    steps:
-      - uses: actions/checkout@v4
+      - name: Check for frontend
+        id: frontend
+        run: |
+          if [[ -f frontend/package.json ]]; then
+            echo "HAS_FRONTEND=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "HAS_FRONTEND=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+      - name: Verify generated frontend contract
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: uv run mint sdk generate --check
 
-      - name: Install
-        run: cd frontend && bun install --frozen-lockfile
+      - name: Setup Bun
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        uses: oven-sh/setup-bun@v2
 
-      - name: Type check
-        run: cd frontend && bun run typecheck
+      - name: Frontend install
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: cd frontend && bun install
 
-      - name: Build
+      - name: Frontend type check
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: cd frontend && bun run type-check
+
+      - name: Frontend build
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         run: cd frontend && bun run build
 
-  build-bundle:
-    runs-on: ubuntu-latest
-    needs: [python, frontend]
-    steps:
-      - uses: actions/checkout@v4
+      - name: Validate plugin structure
+        run: uv run mint doctor
 
-      - uses: astral-sh/setup-uv@v3
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: |
-          uv sync
-          [ -f frontend/package.json ] && cd frontend && bun install --frozen-lockfile
-
-      - name: Build bundle to a temp dir
-        run: uv run mint build --output-dir _ci_build
+      - name: Build .mint bundle
+        run: uv run mint build . --output-dir _ci_build
 ```
 
 Key choices:
 
-- **`--frozen-lockfile`** for both `uv sync` and `bun install` — fails the build if the lockfile drifted
-- **Matrix on Python 3.12 and 3.13** — match the platform's supported range
-- **`mint doctor` runs in CI** — catches structural mistakes (missing entry point, malformed migrations) before merge
-- **Build into `_ci_build/`** — exercises the full pipeline; the artifact is discarded after the run
+- **One job with conditional frontend steps** keeps backend-only plugins simple and avoids skipped-job dependency surprises.
+- **`mint sdk generate --check`** catches frontend client drift after backend route or schema changes.
+- **`mint doctor`** catches structural mistakes such as missing entry points, stale generated contracts, frontend SDK misuse, and missing navigation metadata.
+- **`mint build` runs `uv run pytest` again** before packaging. The duplicate test run is intentional: it verifies the release command itself.
+
+If your team commits `uv.lock` and `frontend/bun.lock`, change install steps to `uv sync --locked` and `bun install --frozen-lockfile`. The generated scaffold does not require committed lockfiles by default. For backend-only plugins, keep the frontend detection step but the Bun steps will skip.
 
 ## Publish on tag
 
-Tag a release, the workflow builds the bundle and pushes to PyPI + GitHub Releases.
+Tag a release, then build the PyPI wheel and `.mint` bundle as separate artifacts.
 
 ```yaml
 # .github/workflows/release.yml
@@ -98,8 +96,8 @@ on:
     tags: ['v*']
 
 permissions:
-  contents: write       # for creating releases
-  id-token: write       # for PyPI trusted publishing
+  contents: write       # GitHub Release
+  id-token: write       # PyPI Trusted Publishing
 
 jobs:
   build-and-publish:
@@ -107,48 +105,72 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0     # for hatch-vcs
+          fetch-depth: 0
 
-      - uses: astral-sh/setup-uv@v3
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Install
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Check for frontend
+        id: frontend
         run: |
-          uv sync
-          [ -f frontend/package.json ] && cd frontend && bun install --frozen-lockfile
+          if [[ -f frontend/package.json ]]; then
+            echo "HAS_FRONTEND=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "HAS_FRONTEND=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Build wheel
-        run: uv run python -m build --wheel
+      - name: Setup Bun
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        uses: oven-sh/setup-bun@v2
 
-      - name: Build bundle
-        run: uv run mint build
+      - name: Frontend install
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: cd frontend && bun install
+
+      - name: Frontend type check
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: cd frontend && bun run type-check
+
+      - name: Frontend build for PyPI wheel assets
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: cd frontend && bun run build
+
+      - name: Build PyPI wheel
+        run: uv build --wheel --out-dir dist/wheel
+
+      - name: Build .mint bundle
+        run: uv run mint build . --output-dir dist
 
       - name: Publish wheel to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        # No password — uses Trusted Publishing via OIDC
         with:
-          packages-dir: dist/
+          packages-dir: dist/wheel/
 
       - name: Compute checksum
         run: |
           cd dist
-          sha256sum *.mint > my-plugin.sha256
+          sha256sum *.mint > plugin-bundle.sha256
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.mint
-            dist/my-plugin.sha256
+            dist/plugin-bundle.sha256
           generate_release_notes: true
 ```
 
 Setup:
 
-- Configure [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/) for your repo so no `PYPI_TOKEN` is required
-- For older PyPI accounts without trusted publishing: store `PYPI_TOKEN` as a repo secret and reference it in the publish step's `password` input via the standard GitHub Actions `secrets` expression syntax
+- Configure [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/) for your repo so no `PYPI_TOKEN` is required.
+- If you use a PyPI token instead, store it as `PYPI_TOKEN` and pass it to the PyPI publish action's `password` input.
+- Keep the PyPI wheel in `dist/wheel/`; do not point PyPI upload tools at the directory containing `.mint` files.
 
 ## Submit to a registry on release
 
@@ -167,8 +189,8 @@ Extend the release workflow to PR a registry update:
 
       - name: Update registry.json
         run: |
-          # Add/update the plugin entry with github_repo, asset_pattern, and latest_version.
-          # Details depend on the registry's update tooling.
+          # Add/update the plugin entry with github_repo, asset_pattern,
+          # latest_version, min_platform_version, and capabilities.
 
       - name: Open PR
         uses: peter-evans/create-pull-request@v6
@@ -178,11 +200,11 @@ Extend the release workflow to PR a registry update:
           title: "Add my-plugin ${{ github.ref_name }}"
 ```
 
-Skip the registry update for pre-release tags (`v1.0.0-beta.1`) — pre-releases stay on the GitHub Release URL only.
+Skip registry updates for pre-release tags such as `v1.0.0-beta.1` unless the registry is explicitly for testing.
 
 ## SDK-compatibility check
 
-Daily (or weekly) verify that your plugin still builds against the latest stable `mint-sdk`:
+Daily or weekly, verify that your plugin still builds against the newest stable SDK version you are willing to adopt:
 
 ```yaml
 # .github/workflows/sdk-compat.yml
@@ -198,12 +220,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v5
 
-      - name: Force latest mint-sdk
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Check for frontend
+        id: frontend
         run: |
-          uv add 'mint-sdk@latest'
-          uv sync
+          if [[ -f frontend/package.json ]]; then
+            echo "HAS_FRONTEND=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "HAS_FRONTEND=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Bun
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        uses: oven-sh/setup-bun@v2
+
+      - name: Upgrade mint-sdk within the declared range
+        run: uv run mint sdk update --scope minor
 
       - name: Run tests
         run: uv run pytest -v
@@ -211,19 +247,36 @@ jobs:
       - name: mint doctor
         run: uv run mint doctor
 
+      - name: Frontend type check
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: cd frontend && bun run type-check
+
+      - name: Frontend build
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: cd frontend && bun run build
+
+      - name: Write failure report
+        if: failure()
+        run: |
+          {
+            echo "SDK compatibility failed."
+            echo
+            echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } > sdk-compat-failure.md
+
       - name: Open issue on failure
         if: failure()
         uses: peter-evans/create-issue-from-file@v5
         with:
-          title: 'SDK compatibility broken (week of ${{ github.run_id }})'
-          content-filepath: ${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}
+          title: 'SDK compatibility broken'
+          content-filepath: sdk-compat-failure.md
 ```
 
-This catches breaking SDK changes early, before users hit them.
+`mint sdk update` ignores prereleases and defaults to patch updates. Use `--scope minor` for routine forward-compatibility checks. The command runs `uv sync` and, when a frontend SDK update is needed, the detected JS package manager's install command; set up Bun before the command in Bun-based projects. For new SDK majors, edit dependency ranges deliberately and run a separate migration branch.
 
 ## Caching
 
-Both `uv` and `bun` caches significantly speed up CI:
+Both `uv` and `bun` caches speed up CI:
 
 ```yaml
 - uses: actions/cache@v4
@@ -231,12 +284,12 @@ Both `uv` and `bun` caches significantly speed up CI:
     path: |
       ~/.cache/uv
       ~/.bun/install/cache
-    key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock', '**/bun.lock') }}
+    key: ${{ runner.os }}-mint-${{ hashFiles('**/uv.lock', '**/bun.lock', '**/bun.lockb') }}
     restore-keys: |
-      ${{ runner.os }}-uv-
+      ${{ runner.os }}-mint-
 ```
 
-Aim for sub-minute CI on PRs. Slow CI is the most common reason teams stop running it.
+If your project does not commit lockfiles, key the cache on `pyproject.toml` and `frontend/package.json` instead.
 
 ## Pre-commit hooks
 
@@ -265,12 +318,12 @@ repos:
 
 ## Notes
 
-- Don't gate CI on the SDK's beta channel by default — beta builds may break and shouldn't fail your PRs. The compatibility-check workflow above is the right place to test against beta.
-- For plugins that ship to a private registry, the registry's webhook can re-trigger your release workflow when the SDK ships a new patch — opt-in to that for tight coupling.
+- Do not gate normal PR CI on SDK beta releases. Beta checks belong in an opt-in workflow or branch.
+- For plugins that ship to a private registry, a registry webhook can trigger your release workflow when the SDK ships a patch.
 - Keep secrets out of forks: gate publish jobs on `if: github.repository_owner == '<your-org>'`.
 
 ## Related
 
 - [Packaging](/sdk/operations/packaging) — what `mint build` produces
 - [Publishing](/sdk/operations/publishing) — where to push the artifact
-- [Versioning](/sdk/operations/versioning) — what `--pre` means and when to bump majors
+- [Versioning](/sdk/operations/versioning) — release and compatibility policy

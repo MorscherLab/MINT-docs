@@ -4,19 +4,18 @@ Components, composables, and types exported from `@morscherlab/mint-sdk`. Each e
 
 ## Components
 
-About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/components).
+About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src/components).
 
 ### Layout
 
 | Component | Use |
 |-----------|-----|
 | `AppLayout` | Page shell with optional topbar/sidebar slots |
+| `PluginWorkspaceView` | Plugin page shell used by the current `mint init` frontend scaffold |
 | `AppContainer` | Standalone container without top bar (login, setup) |
 | `AppTopBar` | Platform top bar component |
 | `AppSidebar` | Sectioned sidebar |
 | `AppAvatarMenu` | User avatar + menu |
-| `AppPageSelector` | Multi-page selector for plugins with multiple views |
-| `AppPillNav` | Pill-style navigation row |
 | `AppPluginSwitcher` | Inter-plugin switcher widget |
 
 ### Forms
@@ -24,8 +23,8 @@ About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components
 | Component | Use |
 |-----------|-----|
 | `BaseButton` | Primary button — `variant`, `size`, `loading`, `disabled` |
-| `BaseInput` | Text input with label / helper / error |
-| `BaseSelect` | Themed `<select>` with options array |
+| `BaseInput` | Text / number input; pair with `FormField` for label / hint / error text |
+| `BaseSelect` | Themed `<select>` with options array; pair with `FormField` for label |
 | `BaseCheckbox` | Single checkbox |
 | `BaseRadioGroup` | Grouped radio buttons |
 | `BaseSlider` | Range slider |
@@ -44,9 +43,9 @@ About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components
 |-----------|-----|
 | `BaseModal` | Standard modal dialog |
 | `BaseTabs` | Tab strip + panels |
-| `ConfirmDialog` | Confirm-or-cancel dialog with imperative API |
+| `ConfirmDialog` | Confirm-or-cancel dialog controlled with `v-model` |
 | `AlertBox` | Inline banner (info / warning / error / success) |
-| `ToastNotification` | Toast component used by `useToast` |
+| `AppToastContainer` | Toast host component registered by the SDK install plugin |
 | `Tooltip` | Hover-triggered tooltip |
 | `EmptyState` | Empty-list placeholder |
 | `LoadingSpinner` | Spinner |
@@ -80,7 +79,7 @@ About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components
 |-----------|-----|
 | `WellPlate`, `PlateMapEditor` | Well-plate editing |
 | `RackEditor`, `ReagentEditor`, `ReagentList` | Rack / reagent editing |
-| `FormBuilder`, `FormField`, `FormFieldRenderer`, `FormSection`, `FormActions` | Schema-driven forms |
+| `FormBuilder`, `FormField`, `FormActions` | Schema-driven forms and form chrome |
 | `ChemicalFormula`, `FormulaInput` | Chemical formula display / input |
 | `MoleculeInput` | Molecule structure input |
 | `ConcentrationInput`, `UnitInput` | Concentration with units |
@@ -94,7 +93,7 @@ About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components
 
 | Component | Use |
 |-----------|-----|
-| `ExperimentCodeBadge` | Formatted experiment code (`EXP-001`) |
+| `ExperimentCodeBadge` | Formatted experiment code (`LCM-EXP-001`, `DR-EXP-001`, ...) |
 | `ExperimentDataViewer` | Pretty-print experiment design + analysis |
 | `ExperimentPopover` | Hover info for an experiment |
 | `ExperimentSelectorModal` | Modal picker for experiments |
@@ -107,7 +106,6 @@ About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components
 | `SampleLegend` | Legend for sample groups |
 | `SampleSelector` | Multi-sample selector |
 | `GroupAssigner` | Manual group assignment UI |
-| `GroupingModal` | Group creation modal |
 | `AutoGroupModal` | Auto-grouping modal (driven by `useAutoGroup`) |
 | `BatchProgressList` | Progress for batch operations |
 
@@ -117,8 +115,8 @@ About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components
 |-----------|-----|
 | `ThemeToggle` | Theme switcher (Light / Dark / System) |
 | `ColorSlider` | Color picker slider |
-| `SettingsButton`, `SettingsModal` | Settings UI primitives |
-| `FileUploader` | Drag-and-drop file upload |
+| `SettingsModal` | Settings UI primitive |
+| `FileUploader` | Drag-and-drop file picker that emits selected `File[]` |
 | `DropdownButton` | Button with attached menu |
 | `FitPanel` | Fit-to-container panel |
 
@@ -126,7 +124,7 @@ For full prop signatures, browse the source or run the local Histoire storybook.
 
 ## Composables
 
-35 typed composables. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/composables).
+35+ typed composables. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src/composables).
 
 | Composable | Returns | Purpose |
 |------------|---------|---------|
@@ -151,7 +149,9 @@ For full prop signatures, browse the source or run the local Histoire storybook.
 | `useProtocolTemplates` | protocol step engine | Protocol UIs |
 | `useAutoGroup` | sample auto-grouping | Group by name prefix |
 | `usePluginConfig` | plugin settings | Read plugin config |
-| `usePluginApi` | plugin-scoped API client | Calls scoped to `/api/<plugin>/` |
+| `usePluginClient` | contract-aware plugin API client | Calls generated plugin endpoints |
+| `usePluginSettings` | plugin settings helpers | Load/save plugin configuration |
+| `useCurrentExperiment` | active experiment helper | Read the experiment selected by the platform shell |
 | `useExperimentSelector` | reactive experiment picker | Experiment dropdowns |
 | `useExperimentData` | reactive experiment view | Live design + analysis |
 | `useExperimentSave` | save/load design data and analysis results | Save back to experiment |
@@ -197,13 +197,13 @@ import {
 } from '@morscherlab/mint-sdk'
 ```
 
-For the full list, the TypeScript source is the canonical reference: [`packages/sdk-frontend/src/composables/index.ts`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-frontend/src/composables/index.ts).
+For the full list, the TypeScript source is the canonical reference: [`packages/sdk-frontend/src/composables/index.ts`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-frontend/src/composables/index.ts).
 
 ## Notes
 
 - All components and composables target Vue 3 with the Composition API. They don't work with Options API.
 - Tree-shaking is supported — importing one component pulls only that component into the bundle.
-- The `tailwind.preset` and `styles/variables.css` are required for the components to render correctly. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
+- Current plugin scaffolds import Tailwind v4 and the SDK style bundle from `frontend/src/style.css`: `@import "tailwindcss";` then `@import "@morscherlab/mint-sdk/styles" layer(mint-sdk);`. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
 
 ## Related
 

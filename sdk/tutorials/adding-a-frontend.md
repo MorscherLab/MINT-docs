@@ -1,283 +1,330 @@
-# Tutorial 3 — Adding a frontend
+# Tutorial 2 - Adding a frontend
 
-You'll add a Vue 3 frontend to the **hello-mint** plugin from [Tutorial 1](/sdk/tutorials/first-analysis-plugin). It uses `@morscherlab/mint-sdk` components — `AppLayout`, `AppContainer`, and the `useApi` composable — and runs side-by-side with the backend with hot reload.
+You'll add a Vue 3 frontend to the **hello-mint** plugin from [Tutorial 1](/sdk/tutorials/first-analysis-plugin). The current scaffold uses `@morscherlab/mint-sdk`, `PluginWorkspaceView`, Vite, and a generated typed client in `frontend/src/generated/mint-plugin.ts`.
 
 **Time:** ~45 minutes
-**Prereqs:** Tutorial 1 completed; bun installed
+**Prereqs:** Tutorial 1 completed; Bun installed
 
-## 1. Scaffold the frontend
+## 1. Add the scaffold
 
-`mint init` scaffolds a frontend by default — frontend setup is **opt-out** via `--no-frontend`, not opt-in via a separate flag. There's no `mint init --add-frontend`. So if your existing plugin was created with `--no-frontend`, you have two choices:
-
-| Option | When |
-|--------|------|
-| Re-scaffold with frontend included | The plugin source is still small — easiest |
-| Manually add a `frontend/` directory | The plugin already has substantial source code |
-
-For Tutorial 1's hello-mint plugin, re-scaffolding is fastest. From the parent directory, with the existing plugin moved aside:
+`mint init` includes a frontend by default. If you are starting a new plugin, omit `--no-frontend`:
 
 ```bash
-mv hello-mint hello-mint.backup
 mint init hello-mint \
-  --type analysis \
+  --name "Hello MINT" \
   --description "Hello world analysis plugin" \
+  --type analysis \
+  --template analysis-basic \
   --yes
-# Then port your routes.py changes from hello-mint.backup/src/hello_mint/
 ```
 
-Alternatively, copy the frontend scaffolding from a fresh `mint init` run into your existing project. Either way, the resulting layout:
-
-```
-hello-mint/
-├── src/
-│   └── hello_mint/
-├── frontend/
-│   ├── index.html
-│   ├── package.json
-│   ├── tailwind.config.ts
-│   ├── tsconfig.json
-│   ├── vite.config.ts
-│   └── src/
-│       ├── main.ts
-│       ├── App.vue
-│       └── views/
-│           └── Home.vue
-└── pyproject.toml
-```
+If you already followed Tutorial 1 and created a backend-only plugin, create a temporary frontend-enabled scaffold and copy its `frontend/` directory into your existing plugin:
 
 ```bash
+mint init /tmp/hello-mint-with-frontend \
+  --name "Hello MINT" \
+  --description "Hello world analysis plugin" \
+  --type analysis \
+  --template analysis-basic \
+  --no-install \
+  --no-git \
+  --yes
+
+cp -R /tmp/hello-mint-with-frontend/frontend ./frontend
+mint sdk generate
 cd frontend
 bun install
+cd ..
 ```
 
-## 2. Inspect the scaffolded entry
+Because Tutorial 1 created a backend-only package, also add the frontend asset include block to `pyproject.toml`:
+
+```toml
+[tool.hatch.build.targets.wheel.force-include]
+"frontend/dist" = "mint_plugin_hello_mint/frontend"
+```
+
+Fresh plugins scaffolded with the frontend already have this block. Without it, `mint build` may warn that `frontend/dist` is not included in the wheel.
+
+After `mint sdk generate`, the project has:
+
+```text
+hello-mint/
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── postcss.config.js
+│   └── src/
+│       ├── App.vue
+│       ├── main.ts
+│       ├── style.css
+│       ├── generated/
+│       │   ├── mint-plugin.contract.json
+│       │   └── mint-plugin.ts
+│       └── views/
+│           ├── DashboardView.vue
+│           └── AnalysisView.vue
+└── src/mint_plugin_hello_mint/
+```
+
+Checkpoint:
+
+```bash
+mint sdk generate --check
+```
+
+If this reports drift, run `mint sdk generate` again. The generated client must match the backend routes and Pydantic schemas.
+
+## 2. Inspect the generated app shell
+
+The scaffold installs the SDK plugin before Pinia and Vue Router:
 
 ```ts
 // frontend/src/main.ts
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import '@morscherlab/mint-sdk/styles'
-import './style.css'
+import { createRouter, createWebHistory } from 'vue-router'
+import { MINTSdk } from '@morscherlab/mint-sdk'
 
+import './style.css'
 import App from './App.vue'
 
-createApp(App).use(createPinia()).mount('#app')
+const routes = [
+  { path: '/', name: 'dashboard', component: () => import('./views/DashboardView.vue') },
+  { path: '/analysis', name: 'analysis', component: () => import('./views/AnalysisView.vue') },
+]
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes,
+})
+
+createApp(App).use(MINTSdk).use(createPinia()).use(router).mount('#app')
 ```
 
-The SDK exposes only one CSS sub-path — `'@morscherlab/mint-sdk/styles'` — which is the full bundle (variables + base styles). There is no `/styles/variables.css` sub-path.
+`App.vue` wraps routes in the standard plugin workspace:
 
 ```vue
 <!-- frontend/src/App.vue -->
 <script setup lang="ts">
-import Home from './views/Home.vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { AppContainer, PluginWorkspaceView } from '@morscherlab/mint-sdk'
+import { pluginPageSelectorItems } from './generated/mint-plugin'
+
+const route = useRoute()
+
+function normalizeNavPath(path: string): string {
+  const raw = path.trim() || '/'
+  const prefixed = raw.startsWith('/') ? raw : `/${raw}`
+  return prefixed.replace(/\/+$/, '') || '/'
+}
+
+function pageId(path: string): string {
+  const normalized = normalizeNavPath(path)
+  return normalized === '/' ? 'dashboard' : normalized.replace(/^\/+/, '').replace(/\/+/g, '-') || 'dashboard'
+}
+
+const pageSelector = pluginPageSelectorItems
+const currentPageSelectorId = computed(() => {
+  const path = normalizeNavPath(route.path)
+  return pageSelector.find(p => p.to === path)?.id ?? pageSelector[0]?.id ?? pageId(path)
+})
+
+const currentPageTitle = computed(() => {
+  return pageSelector.find(p => p.id === currentPageSelectorId.value)?.label ?? 'Dashboard'
+})
 </script>
 
 <template>
-  <Home />
+  <PluginWorkspaceView
+    title="Hello MINT"
+    :subtitle="currentPageTitle"
+    :page-selector="pageSelector"
+    :current-page-selector-id="currentPageSelectorId"
+    show-theme-toggle
+    show-settings
+    :show-sidebar="false"
+  >
+    <AppContainer scrollable>
+      <router-view />
+    </AppContainer>
+  </PluginWorkspaceView>
 </template>
 ```
 
-```ts
-// frontend/tailwind.config.ts
-import type { Config } from 'tailwindcss'
-import preset from '@morscherlab/mint-sdk/tailwind.preset'
+The CSS entry is intentionally small:
 
-export default {
-  content: ['./index.html', './src/**/*.{vue,ts}'],
-  presets: [preset],
-} satisfies Config
+```css
+/* frontend/src/style.css */
+@import "tailwindcss";
+@import "@morscherlab/mint-sdk/styles" layer(mint-sdk);
 ```
 
-The CSS variables import + Tailwind preset are how plugin frontends inherit the platform's design language without hand-rolling tokens.
+## 3. Use the generated client
 
-## 3. Build a Home view
+After Tutorial 1's backend changes, run:
 
-Replace `frontend/src/views/Home.vue`:
+```bash
+mint sdk generate
+```
+
+The generated client exposes the backend route:
+
+```ts
+// frontend/src/generated/mint-plugin.ts
+export type GeneratedPluginClient = {
+  health: () => Promise<unknown>
+  analyze: (params: {
+    pathParams?: { experimentId?: number }
+    body: AnalyzeRequest
+  }) => Promise<AnalyzeResponse>
+}
+```
+
+Do not edit `frontend/src/generated/*` by hand. Regenerate it whenever backend routes or response schemas change. If fields you just added to a Pydantic model do not appear in `AnalyzeResponse`, you are probably running an older `mint-sdk`; update the SDK and run `mint sdk generate` again.
+
+## 4. Replace the analysis view
+
+Replace the generated placeholder view with a small form that calls `/api/hello-mint/analyze/{experiment_id}` through the typed client:
 
 ```vue
-<!-- frontend/src/views/Home.vue -->
+<!-- frontend/src/views/AnalysisView.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { AppLayout, AppContainer, BaseInput, BaseButton, useApi } from '@morscherlab/mint-sdk'
+import { ref } from 'vue'
+import {
+  AlertBox,
+  BaseButton,
+  BaseInput,
+  FormField,
+  Skeleton,
+  useRequestSyncState,
+} from '@morscherlab/mint-sdk'
+import { useGeneratedPluginClient, type AnalyzeResponse } from '../generated/mint-plugin'
 
-interface ExperimentSummary {
-  experiment_id: number
-  name: string
-  status: string
-  experiment_type: string
+const pluginClient = useGeneratedPluginClient()
+const request = useRequestSyncState('Analysis request failed')
+
+const experimentId = ref(1)
+const threshold = ref('0.5')
+const result = ref<AnalyzeResponse | null>(null)
+
+async function runAnalysis() {
+  result.value = null
+  await request.run(async () => {
+    const response = await pluginClient.analyze({
+      pathParams: { experimentId: experimentId.value },
+      body: { parameters: { threshold: threshold.value } },
+    })
+    result.value = response
+    return response
+  }).catch(() => undefined)
 }
-
-const api = useApi()
-const experimentId = ref<number>(1)
-const summary = ref<ExperimentSummary | null>(null)
-const error = ref<string | null>(null)
-const loading = ref(false)
-
-async function fetchSummary() {
-  loading.value = true
-  error.value = null
-  summary.value = null
-  try {
-    summary.value = await api.get<ExperimentSummary>(
-      `/hello-mint/experiments/${experimentId.value}`
-    )
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(fetchSummary)
 </script>
 
 <template>
-  <AppLayout>
-    <AppContainer>
-      <h2 class="text-lg font-semibold mb-2">Experiment summary</h2>
-      <div class="flex items-end gap-2 mb-4">
+  <div class="flex flex-col gap-4">
+    <div class="grid gap-3 sm:grid-cols-[160px_160px_auto] sm:items-end">
+      <FormField label="Experiment ID">
         <BaseInput
           v-model.number="experimentId"
           type="number"
-          label="Experiment ID"
-          class="w-32"
+          :min="1"
         />
-        <BaseButton @click="fetchSummary" :loading="loading">
-          Fetch
-        </BaseButton>
-      </div>
+      </FormField>
+      <FormField label="Threshold">
+        <BaseInput v-model="threshold" />
+      </FormField>
+      <BaseButton :loading="request.loading.value" @click="runAnalysis">
+        Run
+      </BaseButton>
+    </div>
 
-      <div v-if="error" class="text-text-error">
-        Error: {{ error }}
-      </div>
+    <Skeleton v-if="request.loading.value" variant="rounded" height="72px" />
 
-      <dl v-else-if="summary" class="grid grid-cols-2 gap-2 text-sm">
-        <dt class="text-text-secondary">ID</dt>
-        <dd class="font-mono">{{ summary.experiment_id }}</dd>
-        <dt class="text-text-secondary">Name</dt>
-        <dd>{{ summary.name }}</dd>
-        <dt class="text-text-secondary">Type</dt>
-        <dd>{{ summary.experiment_type }}</dd>
-        <dt class="text-text-secondary">Status</dt>
-        <dd>{{ summary.status }}</dd>
-      </dl>
+    <AlertBox v-else-if="request.error.value" type="error">
+      {{ request.error.value }}
+    </AlertBox>
 
-      <div v-else class="text-text-secondary">Loading…</div>
-    </AppContainer>
-  </AppLayout>
+    <AlertBox
+      v-else-if="result"
+      :type="result.status === 'ok' ? 'success' : 'info'"
+    >
+      {{ result.status }} - {{ result.experiment_name ?? 'standalone mode' }}
+      ({{ result.parameter_count ?? 0 }} parameter)
+    </AlertBox>
+  </div>
 </template>
 ```
 
-What's used:
+This page works in both modes:
 
-| Symbol | From | What it does |
-|--------|------|--------------|
-| `AppLayout` | `@morscherlab/mint-sdk` | Page shell with the platform's top bar / sidebar shape |
-| `AppContainer` | `@morscherlab/mint-sdk` | Standard content card surface — picks up bg / border / shadow tokens |
-| `BaseInput` | `@morscherlab/mint-sdk` | Themed input with label, focus ring, and the optical-centering rule |
-| `BaseButton` | `@morscherlab/mint-sdk` | Themed button with loading state |
-| `useApi` | `@morscherlab/mint-sdk` | Typed fetch wrapper that auto-applies auth + tracing |
+- `mint dev` returns the standalone fallback from Tutorial 1.
+- `mint dev --platform` lets you open the plugin through the platform route, but the plugin backend is still the standalone dev server. Install the plugin in MINT to exercise the full `PlatformContext` path.
 
-The Tailwind utilities (`bg-bg-primary`, `text-text-secondary`, …) come from the SDK's preset.
+## 5. Run the frontend
 
-## 4. Run with the platform
+From the plugin root:
 
-From `hello-mint/`:
+```bash
+mint dev
+```
+
+Default ports:
+
+```text
+Backend   http://127.0.0.1:8003/api/hello-mint
+Frontend  http://localhost:5175
+```
+
+Open:
+
+```text
+http://localhost:5175/hello-mint/analysis
+```
+
+The Vite dev server proxies `/api` to the backend on `8003`, so the frontend can call the plugin API without hard-coding a host.
+
+![hello-mint analysis page with Experiment ID, Threshold, and Run controls](/screenshots/hello-mint-analysis.png)
+
+## 6. Run through the platform dev proxy
+
+From the plugin root:
 
 ```bash
 mint dev --platform
 ```
 
-Expected output:
+Default routing:
 
-```
-→ platform:        http://127.0.0.1:8001
-→ plugin backend:  http://127.0.0.1:8005
-→ plugin frontend: http://127.0.0.1:5173 (Vite dev)
-→ proxy: /api/hello-mint/* → :8005
-→ proxy: /hello-mint/*     → :5173
-```
-
-Open `http://127.0.0.1:8001/hello-mint` in the browser. You should see the **Experiment summary** card. Type an ID, click **Fetch**, see the response.
-
-The Vite dev server hot-reloads on Vue changes; the backend hot-reloads on Python changes. No restart needed for either.
-
-## 5. Add a useExperimentSelector
-
-The SDK ships a composable that gives you a project-aware experiment picker. Swap the bare number input for it:
-
-```vue
-<!-- frontend/src/views/Home.vue — replace the input section -->
-<script setup lang="ts">
-// ... imports as before, plus:
-import { ExperimentSelectorModal, useExperimentSelector, type ExperimentSummary } from '@morscherlab/mint-sdk'
-
-const showPicker = ref(false)
-const { selectedExperiment } = useExperimentSelector()
-
-// Sync selectedExperiment → experimentId
-import { watch } from 'vue'
-watch(selectedExperiment, (e) => {
-  if (e) {
-    experimentId.value = e.id
-    fetchSummary()
-  }
-})
-
-function selectExperiment(experiment: ExperimentSummary) {
-  selectedExperiment.value = experiment
-  showPicker.value = false
-}
-</script>
-
-<template>
-  <AppLayout>
-    <AppContainer>
-      <h2 class="text-lg font-semibold mb-2">Pick an experiment</h2>
-      <BaseButton class="mb-4" @click="showPicker = true">Choose experiment</BaseButton>
-      <ExperimentSelectorModal v-model="showPicker" @select="selectExperiment" />
-      <!-- summary block as before -->
-    </AppContainer>
-  </AppLayout>
-</template>
+```text
+Platform backend   http://localhost:8001
+Plugin backend     http://127.0.0.1:8003/api/hello-mint
+Plugin frontend    http://localhost:5175
+Proxy              /hello-mint -> http://localhost:8003
 ```
 
-`useExperimentSelector` reads from the platform's experiments API and surfaces the user's accessible ones. The selected experiment is exposed as `selectedExperiment`; pair it with `ExperimentSelectorModal` when you want a ready-made picker UI.
+Open the platform and navigate to the plugin route:
 
-## 6. Build for production
+```text
+http://localhost:8001/hello-mint/analysis
+```
+
+This is useful for checking platform routing, navigation metadata, and auth header forwarding. It is not the same as an installed plugin with a full `PlatformContext`.
+
+## 7. Build for production
 
 ```bash
-# In hello-mint/frontend
+cd frontend
 bun run build
-# → dist/ — static assets
-
-# In hello-mint/
+cd ..
 mint build
 ```
 
-`mint build` picks up `frontend/dist/` (via `tool.hatch.build.targets.wheel.force-include` in your `pyproject.toml`) and packages it into the `.mint` bundle. The plugin's `get_frontend_dir()` finds the assets at runtime — first under the installed package's directory, then walking upward looking for `frontend/dist` in dev layouts.
-
-## 7. Style notes
-
-The SDK's design tokens are CSS variables. **Don't hardcode hex colors in your plugin frontend.** Instead use:
-
-- The Tailwind utilities the SDK preset exposes (`bg-bg-primary`, `text-text-muted`, `border-border-default`, …)
-- The `--color-primary*`, `--mint-{success,error,warning,info}`, and surface variables for raw CSS
-- The `--focus-ring` variable for any custom interactive element
-
-This is how a plugin's UI stays in sync when a deployment overrides the platform's palette. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
-
-## Where you've landed
-
-The hello-mint plugin now has:
-
-- A Vue 3 frontend mounted at `/hello-mint` in the platform
-- A live experiment lookup using `useApi` and `useExperimentSelector`
-- Tailwind utilities pointing at SDK design tokens
-- A production build wired into `mint build`
+`mint build` detects `frontend/dist/` and includes it in the plugin wheel through the `tool.hatch.build.targets.wheel.force-include` block in `pyproject.toml`.
 
 ## Next
 
-→ [Tutorial 4 — Plugin roles](/sdk/tutorials/plugin-roles) — gate UI by user role
-→ [Frontend → Components](/sdk/frontend/components) — the catalog of available components
-→ [Frontend → Composables](/sdk/frontend/composables) — `useApi`, `useExperimentSelector`, `useFormBuilder`, …
+- [Frontend → Components](/sdk/frontend/components) - choose SDK UI pieces before writing custom Vue
+- [Frontend → Composables](/sdk/frontend/composables) - platform-aware state and API helpers
+- [Operations → Packaging](/sdk/operations/packaging) - how frontend assets enter the `.mint` bundle

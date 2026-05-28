@@ -19,9 +19,9 @@ This section is intentionally **not** the front door for plugin development. Sta
 
 The SDK source is the canonical reference:
 
-- [`MINT/packages/sdk-python/src/mint_sdk/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-python/src/mint_sdk) — every Python module
-- [`MINT/packages/sdk-frontend/src/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src) — every component, composable, and type
-- [`MINT/packages/sdk-python/src/mint_sdk/__init__.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/__init__.py) — the canonical Python export list
-- [`MINT/packages/sdk-frontend/src/composables/index.ts`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-frontend/src/composables/index.ts) — the canonical frontend composable list
+- [`MINT/packages/sdk-python/src/mint_sdk/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk) — every Python module
+- [`MINT/packages/sdk-frontend/src/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src) — every component, composable, and type
+- [`MINT/packages/sdk-python/src/mint_sdk/__init__.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/__init__.py) — the canonical Python export list
+- [`MINT/packages/sdk-frontend/src/composables/index.ts`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-frontend/src/composables/index.ts) — the canonical frontend composable list
 
 When this manual disagrees with the source, the source wins. Open a docs issue if you spot a divergence.

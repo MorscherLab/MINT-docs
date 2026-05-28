@@ -2,7 +2,7 @@
 
 ## Goal
 
-Emit structured logs and OpenTelemetry spans from plugin code that automatically carry request ID, user ID, and plugin name — so log queries and traces correlate cleanly with platform-side records.
+Emit structured logs and OpenTelemetry spans from plugin code that carry plugin name and, in platform request contexts, request IDs - so log queries and traces correlate cleanly with platform-side records.
 
 ## Get a logger
 
@@ -14,9 +14,10 @@ log = get_plugin_logger(__name__)
 
 `get_plugin_logger` returns a standard Python `logging.Logger` configured to:
 
-- Emit JSON lines (one log record per line)
-- Auto-attach `plugin_name`, `request_id`, `user_id`, `experiment_id` (when available from the request scope)
-- Honor the platform's log-level configuration
+- Use the platform's JSON formatter in production or readable dev formatter in development
+- Auto-attach `plugin=<name>` to each log record
+- Include `request_id` when the platform request middleware has set one
+- Honor the platform's root log-level configuration
 
 Use it everywhere — module top-level, inside route handlers, inside `initialize`.
 
@@ -47,7 +48,7 @@ log.info(
 )
 ```
 
-The auto-attached fields (`plugin_name`, `request_id`, `user_id`) are added by the SDK's logger configuration; you don't repeat them.
+The SDK logger adapter adds the `plugin` field. The platform formatter also includes `request_id` from request context, plus selected fields such as `user_id` and `experiment_id` when you provide them via `extra`.
 
 ## Logging exceptions
 
@@ -62,27 +63,27 @@ except SomeError:
     raise
 ```
 
-`log.exception` includes the traceback in the log record (under a `traceback` field). Don't `log.exception` and then swallow the error — it conflates "I logged this" with "I handled this".
+`log.exception` includes the traceback in the log record. Don't `log.exception` and then swallow the error - it conflates "I logged this" with "I handled this".
 
 ## Request correlation
 
-The platform's `middleware/request_context.py` injects a `request_id` into a context variable that the SDK's logger reads. Every log line emitted during the request gets the same ID.
+The platform's `middleware/request_context.py` injects a `request_id` into a context variable. Every in-process log line emitted during the request gets the same ID, and the response includes it as `X-Request-ID`.
 
-To propagate the request ID into something the SDK can't auto-inject (e.g., an outbound HTTP call, a queued job), read it explicitly:
+To propagate the request ID into something the platform cannot auto-inject, such as an outbound HTTP call or a queued job, accept it as an explicit route dependency or read it from the request:
 
 ```python
-from mint_sdk.logging import current_request_id
+from fastapi import Request
 
-async def queue_job(payload):
-    rid = current_request_id() or "no-request"
-    await queue.enqueue({**payload, "parent_request_id": rid})
+async def queue_job(request: Request, payload: dict):
+    request_id = request.headers.get("X-Request-ID") or "no-request"
+    await queue.enqueue({**payload, "parent_request_id": request_id})
 ```
 
-When the worker picks up the job, set the request ID in its own context so its logs correlate back.
+When the worker picks up the job, include the parent ID in `extra={"request_id": parent_request_id}` so the platform formatter can include it.
 
 ## Tracing
 
-OpenTelemetry tracing is wired by the platform's `observability/tracing.py`. When `observability.tracing.enabled` is `true`, every request automatically becomes a span, plugin route handlers are nested under it, and SDK repository calls get their own child spans.
+OpenTelemetry tracing is wired by the platform's `observability/tracing.py`. When `observability.enabled` is `true`, FastAPI requests become spans, SQLAlchemy calls can be instrumented, and logging can include trace/span IDs.
 
 For custom spans inside your plugin:
 
@@ -105,7 +106,7 @@ class MyPlugin(AnalysisPlugin):
             return result
 ```
 
-When tracing is disabled, the tracer is a no-op — zero overhead. Don't gate the spans yourself with an `if enabled:` check.
+When tracing is disabled, the tracer is a no-op. Don't gate the spans yourself with an `if enabled:` check.
 
 ## Span attribute conventions
 
@@ -129,7 +130,7 @@ Match field names with what the platform's middleware emits so dashboards work u
 
 - The SDK's logger is process-local; in isolated mode each plugin subprocess has its own logger writing to stdout. The platform's log aggregator (or your container runtime) captures and forwards.
 - For hot paths, prefer DEBUG over INFO — keeps the production stream clean while still being readable in dev.
-- The `print()` builtin still works but bypasses the structured logger — its output goes to stdout without JSON wrapping or auto-fields. Don't use it from production paths.
+- The `print()` builtin still works but bypasses the structured logger. Its output goes to stdout without JSON wrapping or auto-fields. Don't use it from production paths.
 
 ## Related
 

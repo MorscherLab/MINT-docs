@@ -8,11 +8,12 @@ Core public symbols exported from `mint_sdk`, grouped by area. Each entry has a 
 |--------|-------------|
 | `AnalysisPlugin` | Abstract base class every plugin subclasses |
 | `PluginMetadata` | Identity + capabilities declaration |
+| `PluginNavItem` | One route/page entry shown in generated contracts and plugin navigation |
 | `PluginCapabilities` | What platform features the plugin needs |
-| `PluginType` | Enum: `ANALYSIS` or `EXPERIMENT_DESIGN` |
+| `PluginType` | Enum: `STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, or `FULL` |
 | `PlatformContext` | The runtime object the platform hands to plugins |
 
-Source: [`mint_sdk/plugin.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/plugin.py), [`mint_sdk/models.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/models.py), [`mint_sdk/context.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/context.py).
+Source: [`mint_sdk/plugin.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/plugin.py), [`mint_sdk/models.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/models.py), [`mint_sdk/context.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/context.py).
 
 ### `AnalysisPlugin`
 
@@ -90,8 +91,25 @@ homepage: str = ""
 license: str = ""
 icon: str = ""                # SVG path data
 color: str = ""               # Optional brand color hex
+nav_items: list[PluginNavItem] = []
+analysis_result_readers: list[str] = []
 schema_version: str = "1.0"
 dependencies: list[str] = []  # plugin slugs that must load first
+```
+
+### `PluginNavItem`
+
+Dataclass fields:
+
+```python
+path: str
+label: str
+icon: str = ""                # SVG path data, data URL, or https:// URL
+description: str = ""
+requires_auth: bool = False
+requires_admin: bool = False
+requires_feature: str | None = None
+id: str = ""                  # Stable page id for generated contracts/navigation
 ```
 
 ### `PluginCapabilities`
@@ -110,9 +128,13 @@ supports_experiment_linking: bool = False
 
 ```python
 class PluginType(str, Enum):
+    STATIC = "static"
     ANALYSIS = "analysis"
     EXPERIMENT_DESIGN = "experiment_design"
+    FULL = "full"
 ```
+
+Use `ANALYSIS` for plugins that read experiments and write analysis results, `EXPERIMENT_DESIGN` for plugins that own experiment design data, `FULL` only when one plugin must write both design data and analysis results, and `STATIC` for UI/reporting plugins that should not write either.
 
 ### `PlatformContext`
 
@@ -141,18 +163,18 @@ class PluginType(str, Enum):
 | `UserPluginRole` | Dataclass — per-(user, plugin) role row |
 | `PlatformConfig` | Type alias `dict[str, Any]` for platform config view |
 
-Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/repositories.py).
+Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/repositories.py).
 
 ## Repository protocols
 
 | Symbol | Description |
 |--------|-------------|
 | `ExperimentRepository` | `get_by_id`, `list_all`, `create`, `update`, `delete`, `has_design_data` |
-| `PluginDataRepository` | `save_experiment_data`, `get_experiment_data`, `save_analysis_result`, `get_analysis_result`, `get_analysis_results`, `delete_*` |
+| `PluginDataRepository` | `save_experiment_data`, `get_experiment_data`, `delete_experiment_data`, `save_analysis_result`, `get_analysis_result`, `get_analysis_results`, `delete_analysis_result` |
 | `UserRepository` | `get_by_id`, `get_by_username`, `list_all` |
 | `PluginRoleRepository` | `get_role`, `set_role`, `remove_role`, `list_plugin_roles`, `list_user_roles` |
 
-All repository methods are async. `ANALYSIS` plugins receive a read-only `ExperimentRepository`; `create` / `update` / `delete` raise `PermissionException` for them.
+All repository methods are async. `ANALYSIS` and `STATIC` plugins receive a read-only `ExperimentRepository`; `EXPERIMENT_DESIGN` plugins can create/update/delete through the design-scoped wrapper; `FULL` receives the unrestricted platform repository. Data writes are also type-gated: `ANALYSIS` can save analysis results, `EXPERIMENT_DESIGN` can save design data, `FULL` can save both, and `STATIC` can save neither.
 
 ## Local database (standalone)
 
@@ -161,7 +183,7 @@ All repository methods are async. `ANALYSIS` plugins receive a read-only `Experi
 | `LocalDatabase` | Local SQLite database used by standalone plugins |
 | `LocalDatabaseConfig` | `storage_dir` and other configuration |
 
-Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/local_database.py).
+Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/local_database.py).
 
 ## Lifecycle types
 
@@ -177,22 +199,24 @@ Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/mld/blob/m
 |--------|-------------|
 | `get_plugin_logger(name)` | Structured logger with auto-attached fields |
 
-Source: [`mint_sdk/logging.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/logging.py).
+Source: [`mint_sdk/logging.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/logging.py).
 
 ## Exceptions
 
 See [Exceptions](/sdk/api/exceptions) for the full taxonomy with constructor signatures.
 
-| Symbol | HTTP status when uncaught |
-|--------|---------------------------|
-| `PluginException` | 500 (base) |
-| `ValidationException` | 400 |
-| `PermissionException` | 403 |
-| `ConfigurationException` | 500 |
-| `RepositoryException` | 500 |
-| `NotFoundException` | 404 |
-| `ConflictException` | 409 |
-| `PluginLifecycleException` | 500 |
+| Symbol | Use |
+|--------|-----|
+| `PluginException` | Base structured Python error |
+| `ValidationException` | Service-layer business validation |
+| `PermissionException` | Service-layer authorization failure |
+| `ConfigurationException` | Plugin configuration failure |
+| `RepositoryException` | Generic repository/storage failure |
+| `NotFoundException` | Service/repository lookup miss |
+| `ConflictException` | Duplicate or state conflict |
+| `PluginLifecycleException` | Startup/shutdown/health failure |
+
+In FastAPI route handlers, use `HTTPException` when you need a specific HTTP status, or catch these SDK exceptions and translate them yourself.
 
 ## Migrations
 
@@ -232,12 +256,14 @@ These four are the entire public testing surface. See [Recipes → Testing plugi
 
 | Symbol | Description |
 |--------|-------------|
-| `create_standalone_app(plugin)` | Build a FastAPI app that mounts the plugin's routers (used by `mint dev`) |
+| `create_standalone_app(plugin)` | Build a FastAPI app that mounts the plugin's routers; use it when replacing the scaffold's local factory |
 | `SPAStaticFiles` | StaticFiles subclass that falls through to `index.html` for SPA routing |
 | `PluginDependency` | Helper for declaring plugin-aware FastAPI deps |
 | `require_context` | FastAPI dependency that yields the active `PlatformContext` |
 
-Source: [`mint_sdk/app.py`](https://github.com/MorscherLab/mld/blob/main/packages/sdk-python/src/mint_sdk/app.py).
+Source: [`mint_sdk/app.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/app.py).
+
+Current `mint init` projects generate a `create_standalone_app()` function inside `plugin.py`, and `mint dev` runs that discovered factory. The SDK-level `create_standalone_app()` helper is the reusable version for plugins that want to remove the generated boilerplate.
 
 ## Client
 
@@ -251,7 +277,7 @@ See [REST client](/sdk/api/client) for full signatures.
 
 - The package version is `mint_sdk.__version__`. With `hatch-vcs`, this is derived from the git tag at build time.
 - Modules prefixed with `_` (`mint_sdk._discover`, `mint_sdk._version`, `mint_sdk._prompt`) are internal and may break without notice. Use only the symbols documented in `__init__.py`.
-- For testing, see [`mint_sdk.testing`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-python/src/mint_sdk/testing) — exports may evolve faster than the main SDK; check the testing module's `__init__.py` in your installed version.
+- For testing, see [`mint_sdk.testing`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk/testing) — exports may evolve faster than the main SDK; check the testing module's `__init__.py` in your installed version.
 
 ## Related
 

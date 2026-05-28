@@ -1,6 +1,6 @@
 # Migrations reference
 
-Source: [`mint_sdk/migrations/`](https://github.com/MorscherLab/mld/tree/main/packages/sdk-python/src/mint_sdk/migrations).
+Source: [`mint_sdk/migrations/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk/migrations).
 
 ## `PluginMigration`
 
@@ -18,7 +18,7 @@ class PluginMigration(ABC):
 Subclass to define one migration. The class **must** set `version` (int) and `name` (str) as class attributes. The metaclass enforces this at instantiation time.
 
 ```python
-# my_plugin/migrations/001_initial.py
+# my_plugin/migrations/v001_initial.py
 import sqlalchemy as sa
 from mint_sdk.migrations import PluginMigration, MigrationOps
 
@@ -38,7 +38,7 @@ class CreatePanelsTable(PluginMigration):
         await op.create_index("idx_panels_experiment", "panels", ["experiment_id"])
 ```
 
-The class name is arbitrary — the runner discovers any subclass of `PluginMigration` whose `version` is an int. Migration files conventionally use the pattern `NNN_<short_name>.py` so module filename order matches `version` order, but only `version` is authoritative.
+The class name is arbitrary — the runner discovers any subclass of `PluginMigration` whose `version` is an int. Migration files conventionally use the pattern `vNNN_<short_name>.py` so module filenames are valid import paths and match `version` order, but only `version` is authoritative.
 
 `destructive=True` opts in to `drop_table` / `drop_column` operations. Without it, calling those raises `DestructiveMigrationError`.
 

@@ -1,20 +1,46 @@
 # Components catalog
 
-The frontend SDK ships about 90 Vue component exports. This page documents the most-used surface for plugin frontends — layout primitives, form basics, dialogs, data displays, and domain widgets. For live previews, browse the [component playground](/sdk/frontend/playground); for exhaustive props and variants, run Histoire locally or browse the [source](https://github.com/MorscherLab/mld/tree/main/packages/sdk-frontend/src/components).
+The frontend SDK ships about 90 Vue component exports. This page documents the most-used surface for plugin frontends — layout primitives, form basics, dialogs, data displays, and domain widgets. For live previews, browse the [component playground](/sdk/frontend/playground); for exhaustive props and variants, run Histoire locally or browse the [source](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src/components).
 
 ::: tip Imports
 Every component is exported from the package root:
 
 ```ts
-import { AppLayout, BaseButton, FormBuilder } from '@morscherlab/mint-sdk'
+import { PluginWorkspaceView, BaseButton, FormBuilder } from '@morscherlab/mint-sdk'
 ```
 :::
 
 ## Layout
 
+### `PluginWorkspaceView`
+
+Current `mint init` frontends use this as the root plugin shell. It provides the plugin title area, optional page selector, settings/theme affordances, and sidebar wiring expected by the platform.
+
+```vue
+<script setup lang="ts">
+import { AppContainer, PluginWorkspaceView } from '@morscherlab/mint-sdk'
+import { pluginPageSelectorItems } from './generated/mint-plugin'
+</script>
+
+<template>
+  <PluginWorkspaceView
+    title="My plugin"
+    subtitle="Dashboard"
+    :page-selector="pluginPageSelectorItems"
+    current-page-selector-id="dashboard"
+    show-theme-toggle
+    show-settings
+  >
+    <AppContainer scrollable>
+      <router-view />
+    </AppContainer>
+  </PluginWorkspaceView>
+</template>
+```
+
 ### `AppLayout`
 
-Page shell with optional topbar and sidebar slots plus a content slot. Use as the root of every plugin page rendered inside the platform.
+Lower-level page shell with optional topbar and sidebar slots plus a content slot. Use it when you need to build a custom shell instead of the scaffolded `PluginWorkspaceView`.
 
 ```vue
 <script setup lang="ts">
@@ -71,34 +97,40 @@ Themed button with `variant`, `size`, `loading`, and `disabled` props. Honors th
 <BaseButton variant="ghost">Cancel</BaseButton>
 ```
 
-Variants: `primary`, `secondary`, `ghost`, `danger`, `cta` (orange CTA color). Sizes: `xs`, `sm`, `md` (default), `lg`.
+Variants: `primary`, `secondary`, `ghost`, `danger`, `success`, `cta` (orange CTA color). Sizes: `sm`, `md` (default), `lg`.
 
 ### `BaseInput`
 
-Text input with label, helper text, and error state. Supports `type` (`text`, `number`, `email`, `password`, …) and `v-model`.
+Text input with placeholder, error state, size, numeric bounds, and `v-model`. Wrap it in `FormField` when you need a label, hint, or validation message.
 
 ```vue
-<BaseInput
-  v-model="name"
-  label="Panel name"
-  placeholder="e.g. Cisplatin dose-response"
-  :error="errors.name"
-/>
+<FormField label="Panel name" :error="errors.name" field-id="panel-name">
+  <template #default="{ describedBy }">
+    <BaseInput
+      v-model="name"
+      placeholder="e.g. Cisplatin dose-response"
+      :error="Boolean(errors.name)"
+      :aria-describedby="describedBy"
+    />
+  </template>
+</FormField>
 ```
 
 ### `BaseSelect`
 
-Themed `<select>` with options array and `v-model`.
+Themed `<select>` with options array and `v-model`. Use `FormField` for the label.
 
 ```vue
-<BaseSelect
-  v-model="category"
-  label="Category"
-  :options="[
-    { value: 'tox', label: 'Toxicology' },
-    { value: 'eff', label: 'Efficacy' },
-  ]"
-/>
+<FormField label="Category">
+  <BaseSelect
+    v-model="category"
+    placeholder="Choose a category"
+    :options="[
+      { value: 'tox', label: 'Toxicology' },
+      { value: 'eff', label: 'Efficacy' },
+    ]"
+  />
+</FormField>
 ```
 
 ### `BaseCheckbox`
@@ -111,13 +143,19 @@ Single checkbox with label. Use `BaseRadioGroup` for grouped options or `BaseTog
 
 ### `BaseTextarea`
 
-Multi-line input. Auto-grows by default, capped at `maxRows`.
+Multi-line input with `rows`, `resize`, `maxlength`, error state, and `v-model`.
+
+```vue
+<FormField label="Notes" hint="Visible to collaborators">
+  <BaseTextarea v-model="notes" :rows="4" resize="vertical" />
+</FormField>
+```
 
 ## Modals and dialogs
 
 ### `BaseModal`
 
-Standard modal dialog. Controlled via `v-model:open`.
+Standard modal dialog. Controlled with `v-model`.
 
 ```vue
 <script setup lang="ts">
@@ -130,7 +168,7 @@ const showModal = ref(false)
 <template>
   <BaseButton @click="showModal = true">Open</BaseButton>
 
-  <BaseModal v-model:open="showModal" title="Edit panel">
+  <BaseModal v-model="showModal" title="Edit panel">
     <p>Modal body content.</p>
     <template #footer>
       <BaseButton variant="ghost" @click="showModal = false">Cancel</BaseButton>
@@ -142,26 +180,40 @@ const showModal = ref(false)
 
 ### `ConfirmDialog`
 
-Pre-built confirm-or-cancel dialog. Returns the user's choice via the resolution of `open()`.
+Pre-built confirm-or-cancel dialog. Control it with `v-model` and handle `confirm` / `cancel` events.
 
 ```vue
 <script setup lang="ts">
-import { ConfirmDialog } from '@morscherlab/mint-sdk'
+import { ref } from 'vue'
+import { BaseButton, ConfirmDialog, useApi } from '@morscherlab/mint-sdk'
 
-const confirmRef = ref<InstanceType<typeof ConfirmDialog> | null>(null)
+const api = useApi()
+const confirmingDelete = ref(false)
+const pendingPanelId = ref<string | null>(null)
 
-async function deletePanel(id: string) {
-  const ok = await confirmRef.value!.open({
-    title: 'Delete panel?',
-    body: 'This cannot be undone.',
-    variant: 'danger',
-  })
-  if (ok) await api.delete(`/panels/${id}`)
+function askDelete(id: string) {
+  pendingPanelId.value = id
+  confirmingDelete.value = true
+}
+
+async function confirmDelete() {
+  if (!pendingPanelId.value) return
+  await api.delete(`/panels/${pendingPanelId.value}`)
+  confirmingDelete.value = false
+  pendingPanelId.value = null
 }
 </script>
 
 <template>
-  <ConfirmDialog ref="confirmRef" />
+  <BaseButton variant="danger" @click="askDelete(panel.id)">Delete</BaseButton>
+  <ConfirmDialog
+    v-model="confirmingDelete"
+    title="Delete panel?"
+    message="This cannot be undone."
+    variant="danger"
+    confirm-label="Delete"
+    @confirm="confirmDelete"
+  />
 </template>
 ```
 
@@ -172,14 +224,14 @@ async function deletePanel(id: string) {
 Inline banner — info / warning / error / success.
 
 ```vue
-<AlertBox variant="warning" title="Heads up">
+<AlertBox type="warning" title="Heads up">
   Three panels need approval.
 </AlertBox>
 ```
 
-### `ToastNotification` / `useToast`
+### Toasts / `useToast`
 
-Toasts are typically dispatched via the `useToast` composable rather than rendered directly. See [Composables](/sdk/frontend/composables#usetoast).
+Toasts are dispatched via the `useToast` composable. The SDK registers the toast host through its install plugin, so plugin pages normally do not render a toast component directly. See [Composables](/sdk/frontend/composables#usetoast).
 
 ### `EmptyState`
 
@@ -189,11 +241,9 @@ Use when a list / view has no items yet.
 <EmptyState
   title="No panels yet"
   description="Create your first panel to get started."
-  icon="grid"
+  action-label="New panel"
+  @action="create"
 >
-  <template #action>
-    <BaseButton variant="primary" @click="create">New panel</BaseButton>
-  </template>
 </EmptyState>
 ```
 
@@ -201,29 +251,33 @@ Use when a list / view has no items yet.
 
 ### `DataFrame`
 
-Tabular display for analysis results — rows/columns, sticky headers, sortable, optional virtualization for large data.
+Tabular display for analysis results — data/columns, sticky headers, sorting, search, pagination, and row selection.
 
 ```vue
 <DataFrame
   :columns="[
-    { key: 'sample', label: 'Sample', sticky: true },
+    { key: 'sample', label: 'Sample', sortable: true },
     { key: 'concentration', label: 'Concentration (uM)', align: 'right' },
     { key: 'response', label: 'Response (%)', align: 'right' },
   ]"
-  :rows="rows"
+  :data="rows"
   :loading="loading"
+  sortable
+  sticky-header
 />
 ```
 
 ### `FileUploader`
 
-Drag-and-drop file uploader with progress and validation. Hits the platform's artifact API by default; supply a custom upload handler when you need different routing.
+Drag-and-drop file picker with type and size validation. It emits selected files; your route or generated client does the upload.
 
 ```vue
 <FileUploader
-  :accept="['.csv', '.xlsx']"
-  :max-size-mb="100"
-  @uploaded="onUploaded"
+  accept=".csv,.xlsx"
+  :max-size="100 * 1024 * 1024"
+  multiple
+  @upload="uploadFiles"
+  @error="toast.error"
 />
 ```
 
@@ -242,21 +296,31 @@ Variants: `default`, `primary`, `success`, `warning`, `error`, `info`.
 
 ### `StepWizard`
 
-Multi-step form with progress indicator. Steps register themselves via slots.
+Multi-step form with progress indicator. Pass a `steps` array and provide one named slot per step id.
 
 ```vue
-<StepWizard v-model:current="currentStep">
-  <StepWizardStep title="Basics">
-    <BaseInput v-model="data.name" label="Name" />
-  </StepWizardStep>
+<script setup lang="ts">
+import { ref } from 'vue'
+import { StepWizard, type WizardStep } from '@morscherlab/mint-sdk'
 
-  <StepWizardStep title="Drugs">
+const currentStep = ref(0)
+const steps: WizardStep[] = [
+  { id: 'basics', label: 'Basics' },
+  { id: 'drugs', label: 'Drugs' },
+  { id: 'review', label: 'Review' },
+]
+</script>
+
+<StepWizard v-model="currentStep" :steps="steps">
+  <template #step-basics>
+    <!-- basic fields -->
+  </template>
+  <template #step-drugs>
     <!-- drug picker -->
-  </StepWizardStep>
-
-  <StepWizardStep title="Review">
+  </template>
+  <template #step-review>
     <!-- summary -->
-  </StepWizardStep>
+  </template>
 </StepWizard>
 ```
 

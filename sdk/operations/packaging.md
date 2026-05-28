@@ -13,11 +13,13 @@ mint build
 What happens:
 
 1. Read `pyproject.toml` to determine the wheel name and version
-2. If `frontend/` exists (and `--no-frontend` isn't set), run `bun run build` (auto-detected: bun or npm) to produce `frontend/dist/`
-3. Build the Python wheel via `uv build --wheel`
-4. (If `--vendor-deps`) Resolve and download dependency wheels alongside the main wheel
-5. Assemble: wheel + dependency wheels + manifest into a zip
-6. Rename the zip to `.mint`
+2. Run `uv run pytest`; packaging stops if the test suite fails
+3. If `frontend/` exists (and `--no-frontend` isn't set), run the detected JS package manager's `install` and `run build` commands to produce `frontend/dist/`
+4. Warn if `pyproject.toml` does not force-include `frontend/dist/` in the wheel
+5. Build the Python wheel via `uv build --wheel`
+6. (If `--vendor-deps`) Resolve and download dependency wheels alongside the main wheel
+7. Assemble: `manifest.json` + wheel + dependency wheels into a zip
+8. Rename the zip to `.mint`
 
 ## Flags
 
@@ -74,16 +76,11 @@ The schema is owned by the SDK builder and consumed by the platform bundle insta
 
 By default:
 
-- Files matched by your `pyproject.toml`'s `[tool.hatch.build]` `include` list
-- The frontend's `dist/` directory (if it exists)
-- Your migrations package (must be inside `src/<plugin>/migrations/`)
+- Whatever your wheel build includes from `pyproject.toml`
+- The frontend's `dist/` directory, if `tool.hatch.build.targets.wheel.force-include` maps it into the wheel
+- Your migrations package, if it lives under the packaged Python module such as `src/<plugin>/migrations/`
 
-Excluded:
-
-- Tests (under `tests/`)
-- Source maps (unless explicitly included)
-- Files matched by `.gitignore`
-- The `.git/` directory and any other dotfiles
+The generated `mint init` project packages `src/<plugin>/` as the wheel. Tests, `.git/`, local virtualenvs, and frontend build caches are not part of that package unless you explicitly add them to the wheel config.
 
 To include extra files:
 
@@ -119,16 +116,22 @@ bun install --frozen-lockfile
 ## Inspect a built bundle
 
 ```bash
-mint info ./dist/my-plugin-1.0.0.mint
+unzip -l dist/my-plugin-1.0.0.mint
+unzip -p dist/my-plugin-1.0.0.mint manifest.json
 ```
 
-Prints the manifest, the wheel's metadata, and (if a frontend is included) a list of frontend assets.
+`mint info` and `mint doctor` inspect a plugin project directory, not a `.mint` bundle. Run them before packaging:
 
 ```bash
-mint doctor ./dist/my-plugin-1.0.0.mint
+uv run mint info .
+uv run mint doctor .
 ```
 
-Validates the bundle: manifest schema, wheel installs cleanly into a temp venv, frontend has an `index.html`, migrations parse, entry point resolves.
+To validate an install end-to-end, upload the bundle to a disposable platform or use the platform CLI against a test instance:
+
+```bash
+mint plugin upload dist/my-plugin-1.0.0.mint
+```
 
 ## Sizes
 
@@ -147,7 +150,7 @@ For very large plugins, consider:
 
 ## Notes
 
-- `mint build` is hermetic — it works in a clean checkout without prior installations, useful for CI.
+- `mint build` is self-contained enough for CI, but it still needs the local toolchain (`uv`, Python, and bun/npm for frontends) and network access unless dependencies are already cached.
 - Bundles are versioned by their internal manifest, not by filename. Renaming a `.mint` doesn't change what's installed.
 - Don't ship secrets in bundles. They're public artifacts. Use the platform's plugin settings (`apply_settings()`) for runtime credentials.
 

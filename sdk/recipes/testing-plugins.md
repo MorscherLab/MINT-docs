@@ -23,7 +23,10 @@ That's the complete public testing surface. Older docs referenced helpers like `
 my_plugin/
 ├── src/my_plugin/
 │   ├── plugin.py
-│   └── routes.py
+│   ├── routers/
+│   │   └── analysis.py
+│   ├── schemas/
+│   └── services/
 ├── tests/
 │   ├── conftest.py
 │   ├── test_repository.py
@@ -149,13 +152,19 @@ def test_subprocess_starts(tmp_path: Path):
 
 Use a temporary SQLite database and run migrations through `MigrationRunner.run(...)` directly:
 
+Install `greenlet` in the plugin's dev environment when you use `sqlite+aiosqlite://` migration tests:
+
+```bash
+uv add --dev greenlet
+```
+
 ```python
 import pytest
 from sqlalchemy.ext.asyncio import create_async_engine
 from mint_sdk.migrations import MigrationRunner
 
-from my_plugin.migrations.001_initial import CreatePanelsTable
-from my_plugin.migrations.002_add_tags import AddPanelTagsColumn
+from my_plugin.migrations.v001_initial import CreatePanelsTable
+from my_plugin.migrations.v002_add_tags import AddPanelTagsColumn
 
 
 @pytest.mark.asyncio
@@ -185,7 +194,7 @@ The platform doesn't require any specific coverage threshold — pick what your 
 
 - `pytest-asyncio` is the conventional async test runner. Add it via `uv add --dev pytest-asyncio` and set `asyncio_mode = "auto"` in `pyproject.toml`.
 - `RecordingContext` is request-scoped per fixture; if you need state to persist across multiple route calls within one test, share the same context instance (move it out of the fixture or pass it explicitly).
-- The harness intentionally doesn't simulate auth — `RecordingContext.is_authenticated` returns `True`; there's no real JWT verification. Tests that need to verify auth dependencies should override the FastAPI dependency directly.
+- The harness intentionally doesn't simulate real auth. `RecordingContext.is_authenticated` is `False` by default and becomes `True` only when you pass `RecordingContext(user={...})`; there is no real JWT verification. Tests that need to verify auth dependencies should override the FastAPI dependency directly.
 
 ## Related
 

@@ -2,24 +2,24 @@
 
 ## Goal
 
-Raise errors in plugin code that turn into well-structured HTTP responses, log usefully, and don't crash the platform process.
+Raise errors in plugin code that produce clear HTTP responses, log usefully, and don't crash the platform process.
 
 ## The exception taxonomy
 
-`mint_sdk.exceptions` defines six exception classes plus the base. Use them for plugin-side errors.
+`mint_sdk.exceptions` defines six exception classes plus the base. Use them for structured service/repository errors. For user-facing FastAPI route responses, use `fastapi.HTTPException` unless you have registered your own handler that translates `PluginException` to HTTP status codes.
 
 ```
-PluginException                       (base)
-├── ValidationException                400 — bad input
-├── PermissionException                403 — auth / role denied
-├── ConfigurationException             500 — plugin misconfigured
-├── RepositoryException                500 — DB / storage failure
-│   ├── NotFoundException              404 — resource not found
-│   └── ConflictException              409 — duplicate / state conflict
-└── PluginLifecycleException           500 — startup / shutdown error
+PluginException
+├── ValidationException
+├── PermissionException
+├── ConfigurationException
+├── RepositoryException
+│   ├── NotFoundException
+│   └── ConflictException
+└── PluginLifecycleException
 ```
 
-Every subclass carries `message`, `code`, and `details`. The platform middleware catches `PluginException` and emits:
+Every subclass carries `message`, `code`, and `details`. `to_dict()` emits:
 
 ```json
 {
@@ -32,53 +32,50 @@ Every subclass carries `message`, `code`, and `details`. The platform middleware
 ## Validation
 
 ```python
-from mint_sdk import ValidationException
+from fastapi import HTTPException, status
 
 @router.post("/items")
 async def create_item(body: ItemIn):
     if body.dose <= 0:
-        raise ValidationException(
-            "Dose must be positive",
-            field="dose",
-            value=body.dose,
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Dose must be positive",
         )
     ...
 ```
 
-Pydantic-level validation (e.g., type errors in the request body) is handled by FastAPI before your handler runs — those become 422 with a different shape. Use `ValidationException` for *business* rules Pydantic can't express.
+Pydantic-level validation (e.g., type errors in the request body) is handled by FastAPI before your handler runs — those become 422 with a different shape. Use `ValidationException` inside service code only when you plan to catch and translate it before returning an HTTP response.
 
 ## Not found
 
 ```python
-from mint_sdk import NotFoundException
+from fastapi import HTTPException, status
 
 @router.get("/items/{item_id}")
 async def get_item(item_id: int):
     item = await repo.get_by_id(item_id)
     if item is None:
-        raise NotFoundException(
-            f"Item not found",
-            entity="item",
-            entity_id=str(item_id),
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found",
         )
     return item
 ```
 
-`NotFoundException` is a subclass of `RepositoryException` but is mapped to 404, not 500. The middleware does the mapping; your code just raises.
+Use `NotFoundException` inside a repository/service layer if you want a structured Python error, then catch it in the route and translate it to `HTTPException`.
 
 ## Conflict
 
 ```python
-from mint_sdk import ConflictException
+from fastapi import HTTPException, status
 
 @router.post("/panels")
 async def create_panel(body: PanelIn):
     existing = await repo.get_by_name(body.name)
     if existing:
-        raise ConflictException(
-            f"Panel '{body.name}' already exists",
-            entity="panel",
-            conflict_field="name",
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Panel '{body.name}' already exists",
         )
     ...
 ```
@@ -86,16 +83,16 @@ async def create_panel(body: PanelIn):
 ## Permission
 
 ```python
-from mint_sdk import PermissionException
+from fastapi import HTTPException, status
 
 if user.role != "Admin" and item.owner_id != user.id:
-    raise PermissionException(
-        "Only the owner or an admin can edit this item",
-        required_permission="item.edit",
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Only the owner or an admin can edit this item",
     )
 ```
 
-Use `PermissionException` for runtime ownership checks on top of `require_plugin_role`. The role guard handles the broad "is this user an editor" question; ownership is a per-resource fact.
+Use the same pattern for runtime ownership checks on top of `require_plugin_role`. The role guard handles the broad "is this user an editor" question; ownership is a per-resource fact.
 
 ## Repository / DB errors
 
@@ -115,11 +112,11 @@ except DatabaseError as exc:
     ) from exc
 ```
 
-`from exc` preserves the chain — the original traceback is kept for the structured log entry while the user sees the friendly message.
+`from exc` preserves the chain. Catch `RepositoryException` at the route boundary if you want to translate it to an HTTP status; otherwise it is treated as an unhandled plugin error.
 
 ## User-facing vs. developer-facing messages
 
-- **User-facing**: short, actionable, in the user's language. "Panel name must be unique." Avoid technical detail. This is the exception's `message`.
+- **User-facing**: short, actionable, in the user's language. "Panel name must be unique." Avoid technical detail. For `HTTPException`, this is `detail`; for SDK exceptions, this is `message`.
 - **Developer-facing**: full context, stack trace, internal state. This goes into `details` and the log line, not the message.
 
 ```python
@@ -151,7 +148,7 @@ if item is None:
     raise NotFoundException("...")     # only convert the actual not-found case
 ```
 
-The platform middleware logs unhandled exceptions automatically; suppressing them by catching `Exception` makes debugging harder.
+The platform middleware logs unhandled plugin exceptions automatically; suppressing them by catching `Exception` makes debugging harder.
 
 ## Auto-issue reports
 
@@ -171,13 +168,13 @@ except ExternalServiceTimeout as exc:
     ) from exc
 ```
 
-Caught and re-raised as `PluginException`, the auto-issue logic skips it (it's expected) but the structured log still records the timeout.
+Caught and re-raised as `PluginException`, the original traceback stays chained for logs. If this is a route response, translate the exception to `HTTPException` before returning to the client.
 
 ## Notes
 
-- Always raise from your code; don't return error dicts. The middleware can't enrich responses you build manually.
-- Status codes derive from the exception class — you don't pick them. If you need a different status, override `code` and let the platform map.
-- For non-`PluginException` errors that escape, the middleware returns 500 and the platform's auto-issue feature decides whether to file a GitHub report.
+- Prefer `HTTPException` in route handlers and SDK exceptions in deeper service/repository code.
+- Use `raise ... from exc` when wrapping lower-level errors.
+- For errors that escape a plugin route, the platform error-isolation middleware returns 500 and logs the plugin route context.
 
 ## Related
 

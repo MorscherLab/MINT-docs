@@ -9,7 +9,7 @@ Apply a schema change AND populate the new columns from existing data — safely
 When the table is small (< 100k rows), a one-shot `UPDATE` is fine:
 
 ```python
-# my_plugin/migrations/005_normalize_panel_names.py
+# my_plugin/migrations/v005_normalize_panel_names.py
 import sqlalchemy as sa
 
 from mint_sdk.migrations import MigrationOps, PluginMigration
@@ -40,7 +40,7 @@ The `WHERE normalized_name IS NULL` makes it idempotent — re-running on a part
 `UPDATE` on millions of rows holds a long transaction and can lock the table. Chunk it:
 
 ```python
-# my_plugin/migrations/006_backfill_panel_dose_units.py
+# my_plugin/migrations/v006_backfill_panel_dose_units.py
 import sqlalchemy as sa
 
 from mint_sdk.migrations import MigrationOps, PluginMigration
@@ -132,13 +132,13 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from mint_sdk.migrations import MigrationRunner
 
 CreatePanelsTable = import_module(
-    "my_plugin.migrations.001_initial"
+    "my_plugin.migrations.v001_initial"
 ).CreatePanelsTable
 NormalizePanelNames = import_module(
-    "my_plugin.migrations.005_normalize_panel_names"
+    "my_plugin.migrations.v005_normalize_panel_names"
 ).NormalizePanelNames
 BackfillDoseUnits = import_module(
-    "my_plugin.migrations.006_backfill_panel_dose_units"
+    "my_plugin.migrations.v006_backfill_panel_dose_units"
 ).BackfillDoseUnits
 
 
@@ -165,6 +165,12 @@ async def test_006_handles_partial_application(tmp_path):
 ```
 
 SQLite-backed tests verify correctness and idempotency. If you add Postgres-specific locking clauses, cover that migration with a Postgres integration test too.
+
+For SQLite async tests, include `greenlet` in your dev dependencies:
+
+```bash
+uv add --dev greenlet
+```
 
 ## Notes
 

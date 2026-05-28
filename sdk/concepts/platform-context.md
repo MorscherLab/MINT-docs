@@ -20,51 +20,50 @@ When standalone, `context` is `None`; the plugin uses `LocalDatabase` (a `mint-s
 | `get_current_user_dependency()` | FastAPI `Depends` | Inject as `user = Depends(context.get_current_user_dependency())` |
 | `get_optional_user_dependency()` | FastAPI `Depends` | As above but `None`-tolerant |
 | `get_user_repository()` | `UserRepository \| None` | User lookups (read-only) |
-| `get_experiment_repository()` | `ExperimentRepository \| None` | Experiment CRUD (read-only for ANALYSIS, full for EXPERIMENT_DESIGN) |
+| `get_experiment_repository()` | `ExperimentRepository \| None` | Experiment access, type-gated by `PluginType` |
 | `get_plugin_data_repository()` | `PluginDataRepository \| None` | Save/load `DesignData` and `PluginAnalysisResult` |
 | `get_plugin_role_repository()` | `PluginRoleRepository \| None` | Per-plugin user roles |
 | `require_plugin_role(*roles)` | FastAPI `Depends` | Route guard — see below |
 | `get_config()` | `dict` (`PlatformConfig`) | Platform configuration view (filtered) |
 | `get_shared_db_session()` | async context manager | Async SQLAlchemy session scoped to your plugin's schema |
 
-Repositories return `None` when the corresponding capability isn't declared. So a plugin without `requires_experiments=True` will get `None` from `get_experiment_repository()` even when integrated. Plan your code accordingly.
+Repository access is still bounded by the platform deployment and plugin type. `STATIC` and `ANALYSIS` get a read-only experiment wrapper, `EXPERIMENT_DESIGN` gets a design-scoped wrapper, and `FULL` gets full experiment access. `get_shared_db_session()` requires shared-database setup; declare `requires_shared_database=True` when your plugin owns tables.
 
 ## Authentication and current user
 
-Two FastAPI dependencies cover the common cases:
+Two FastAPI dependencies cover the common cases. Because routes are usually declared in separate modules and `PlatformContext` is attached during `initialize()`, build auth-dependent routers from the plugin instance:
 
 ```python
 from fastapi import APIRouter, Depends
 from mint_sdk import PlatformContext
-
-router = APIRouter()
 
 class MyPlugin(AnalysisPlugin):
     async def initialize(self, context: PlatformContext | None = None):
         self._context = context
 
     def get_routers(self):
-        return [(router, "")]
+        return [(create_router(self), "")]
 
-@router.get("/me")
-async def me(user = Depends(_plugin._context.get_current_user_dependency())):
-    return {"id": user.id, "username": user.username}
+async def _allow_standalone():
+    return None
+
+def create_router(plugin: MyPlugin) -> APIRouter:
+    router = APIRouter()
+    context = getattr(plugin, "_context", None)
+    current_user = (
+        context.get_current_user_dependency()
+        if context is not None
+        else _allow_standalone
+    )
+
+    @router.get("/me")
+    async def me(user=Depends(current_user)):
+        return {"user": user}
+
+    return router
 ```
 
-In practice, plugins typically wrap the dependency once on the plugin instance:
-
-```python
-class MyPlugin(AnalysisPlugin):
-    async def initialize(self, context=None):
-        self._context = context
-        if context is not None:
-            self.current_user = context.get_current_user_dependency()
-        else:
-            async def _stub(): return None
-            self.current_user = _stub
-```
-
-…and then routes write `Depends(plugin.current_user)`. Standalone mode falls through to the stub.
+Standalone mode falls through to the stub. Integrated mode uses the platform auth dependency and request-scoped user context.
 
 ## Plugin role guard
 
@@ -76,9 +75,27 @@ class MyPlugin(AnalysisPlugin):
 - **Bypasses** the check for platform admins automatically
 
 ```python
-@router.get("/admin/settings")
-async def settings(user = context.require_plugin_role("admin", "owner")):
-    return {"settings": "..."}
+from fastapi import APIRouter, Depends
+
+
+async def _allow_standalone():
+    return None
+
+
+def create_admin_router(plugin: MyPlugin) -> APIRouter:
+    router = APIRouter(tags=["admin"])
+    context = getattr(plugin, "_context", None)
+    admin_or_owner = (
+        context.require_plugin_role("admin", "owner")
+        if context is not None
+        else Depends(_allow_standalone)
+    )
+
+    @router.get("/admin/settings", dependencies=[admin_or_owner])
+    async def settings():
+        return {"settings": "..."}
+
+    return router
 ```
 
 See [Recipes → Route permissions](/sdk/recipes/route-permissions) for the full pattern.

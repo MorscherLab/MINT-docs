@@ -6,7 +6,7 @@ Plugin authors don't deploy the platform — that's the lab admin's job. But wha
 
 | Target | Plugin author concerns |
 |--------|------------------------|
-| Direct Linux install (`uv tool install mint`) | Filesystem paths must be portable; native deps must match the host's libc |
+| Direct Linux wheel install | Filesystem paths must be portable; native deps must match the host's libc |
 | Docker image (`ghcr.io/morscherlab/mint`) | Native deps must be in the image (Python, R, system libs); plugin's heavy deps blow up image size |
 | Kubernetes (multi-replica) | Plugin migrations must use advisory locks correctly; long-running tasks need idempotency |
 
@@ -20,11 +20,12 @@ When a plugin is installed via the marketplace:
 ├── plugin_registry.json
 ├── marketplace/                 # registry cache
 └── plugins/
-    ├── uploads/                 # uploaded .mint bundles and extracted payloads
+    ├── manifest.json            # dynamically installed plugin restore manifest
+    ├── uploads/                 # uploaded .mint bundles and temporary extraction dirs
     ├── snapshots/               # Python environment snapshots
     └── my-plugin/
         ├── venv/                # isolated mode only
-        └── config.json          # legacy per-plugin settings fallback
+        └── ...
 ```
 
 Plugin Python code lives in:
@@ -58,7 +59,7 @@ When the platform runs as multiple replicas (e.g., Kubernetes with `replicas: 3`
 | Migrations | Advisory-locked — only one replica applies them; others wait. Postgres-only. |
 | Plugin install | Coordinated through the platform; no plugin-author concern |
 | In-process state | Each replica has its own — don't cache request-scoped data in module globals (see [Recipes → Logging & tracing](/sdk/recipes/logging-tracing)) |
-| Scheduled jobs | Use the platform's job-runner abstraction; running cron in-process across replicas duplicates the work |
+| Scheduled jobs | The SDK `JobRegistry` helper is in-memory and process-local; use your own durable queue for production jobs that must survive restarts or multiple replicas |
 | Filesystem writes | Use platform/plugin storage under `server.dataPath` on shared storage (NFS, etc.) — never write to local disk paths assuming a single replica |
 
 Plugins that need request-affinity (e.g., session-bound state in WebSocket connections) should declare it; the platform's reverse proxy can route to a stable replica via session affinity but not by default.
@@ -82,33 +83,32 @@ The platform doesn't enforce per-plugin resource quotas (CPU, RAM, disk). Plugin
 - **RAM**: stream large responses rather than buffering. Read DataFrames in chunks.
 - **Disk**: clean up old artifacts and cache files. The platform doesn't auto-prune plugin-owned files under `server.dataPath`.
 
-For heavy compute (multi-minute analyses), use the platform's job system rather than blocking the request:
+For heavy compute (multi-minute analyses), avoid blocking the request. `mint add job` gives you an in-memory `/jobs` router for standalone mode, tests, and small development workflows; production plugins should connect that public job payload shape to a durable queue or worker backend:
 
 ```python
 class MyPlugin(AnalysisPlugin):
     async def kick_off_analysis(self, experiment_id: int):
-        job_id = await self._enqueue_job(experiment_id)
+        job_id = await self._queue.submit(experiment_id)
         return {"job_id": job_id, "status": "queued"}
 ```
 
-The exact job-runner API is platform-version-specific; consult `mint-sdk` source for what's exposed in your installed version.
+Use `mint add job` when you want the generated router and SDK `JobState` / `JobProgress` serialization contract. Replace the generated in-memory service before relying on it for long production jobs.
 
 ## Configuration and secrets
 
-Three layers, in increasing precedence:
+Two layers matter for plugin-authored settings:
 
-1. **Defaults** baked into the plugin (`PluginMetadata`, `settings_model`)
-2. **Platform config** (`config.json` `plugins.settings.<name>` for the plugin's settings)
-3. **Per-deployment env vars** (`MINT_PLUGIN_<NAME>_<KEY>`)
+1. **Defaults** baked into the plugin (`settings_model`, plus any defaults your code supplies)
+2. **Platform config** (`config.json` → `plugins.settings.<name>`, edited through Admin UI or `mint plugin config`)
 
 Secrets:
 
 - **Don't** hardcode in the wheel
 - **Don't** commit to the manifest
-- **Do** use the platform's settings store (`apply_settings()`) and have admins set values from the UI
-- **Do** use env vars for deployment-specific values that admins shouldn't see in the UI (e.g., a database read-replica URL)
+- **Do** use the platform's settings store (`settings_model`, `apply_settings()`, `save_settings()`) and have admins set values from the UI or CLI
+- **Do** document any deployment-specific environment variables your plugin reads directly
 
-For per-user secrets (an external-service API token tied to a user's identity), store them in `UserPluginRole` extra fields or a plugin-owned table — not in `User`.
+For per-user secrets (an external-service API token tied to a user's identity), use a plugin-owned table with appropriate access checks — not the platform `User` record.
 
 ## Observability
 

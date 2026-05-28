@@ -4,17 +4,18 @@ MINT is built around a plugin architecture. The platform itself is intentionally
 
 > [Screenshot: Admin → Plugins page listing installed plugins with version, status, and migration state]
 
-## Two plugin types
+## Four plugin types
 
-| | Experiment-design plugin | Analysis plugin |
-|---|---|---|
-| Plugin type enum | `EXPERIMENT_DESIGN` | `ANALYSIS` |
-| Owns | An experiment type, with its own database schema | None |
-| Writes | Its own tables + the experiment's `design_data` | The experiment's `analysis_results` and artifacts |
-| Reads | Anything via `PlatformContext` | Existing experiments, projects, users |
-| Migrations | Yes — runs `PluginMigration`s on startup | Yes — even analysis plugins can have their own tables |
+Plugin type controls what the plugin may write through `PlatformContext`; all plugin types can still have their own routes and, when they declare migrations, their own plugin-owned tables.
 
-A plugin can implement only one type. Authors typically split a related lab capability into two plugins: a design plugin for the experiment metadata + workflow, and one or more analysis plugins that read those experiments and produce results.
+| Type | Typical role | Platform writes |
+|------|--------------|-----------------|
+| `STATIC` | Read-only reference UI, calculators, viewers | None |
+| `ANALYSIS` | Reads experiments and writes analysis outputs | Analysis results and artifacts |
+| `EXPERIMENT_DESIGN` | Creates or edits experiment design data | Experiment design data |
+| `FULL` | Combines design and analysis in one plugin | Design data, analysis results, and artifacts |
+
+Authors often split a related lab capability into two plugins: a design plugin for experiment metadata and workflow, and one or more analysis plugins that read those experiments and produce results. Use `FULL` only when one plugin genuinely owns both sides.
 
 ## Plugin lifecycle
 
@@ -28,9 +29,9 @@ register ──▶ install ──▶ initialize ──▶ ready
 
 | Phase | What happens |
 |-------|--------------|
-| **register** | The plugin's wheel is installable from PyPI / a private index, declares an entry point in the `mint.plugins` group |
-| **install** | `mint` resolves the plugin, places it in an isolated venv (or shared, if no conflicts), runs `MigrationRunner` to apply pending migrations |
-| **initialize** | `AnalysisPlugin.initialize(context)` is called once, the plugin returns its routers, the platform mounts them under `routes_prefix` |
+| **register** | The plugin's wheel or `.mint` bundle declares an entry point in the `mint.plugins` group |
+| **install** | The platform installs the package or bundle, checks dependency conflicts, records installed artifacts, and reports whether a restart is required |
+| **initialize** | The plugin's `initialize(context)` is called once, the plugin returns its routers, and the platform mounts them under `routes_prefix` |
 | **ready** | Plugin handles requests; UI tile is visible to users with the appropriate role |
 | **upgrade** | New version installed, migrations applied, snapshot taken so the upgrade can be rolled back |
 | **uninstall** | One of three modes (below) |
@@ -48,7 +49,7 @@ Plugins run with one of two isolation strategies:
 
 In both cases the plugin's HTTP surface is mounted at the `routes_prefix` declared in its `PluginMetadata`. The user can't tell from the URL whether the plugin is in-process or out-of-process; the platform handles the proxy transparently.
 
-The middleware in [`api/plugins/middleware.py`](https://github.com/MorscherLab/mld/blob/main/api/plugins/middleware.py) wraps every plugin call with error isolation — a plugin crash never takes down the platform.
+The middleware in [`api/plugins/middleware.py`](https://github.com/MorscherLab/MINT/blob/main/api/plugins/middleware.py) wraps every plugin call with error isolation — a plugin crash never takes down the platform.
 
 ## Plugin migrations
 
@@ -57,15 +58,15 @@ Plugins that own database tables use `mint_sdk.migrations` for versioned schema 
 ```python
 from mint_sdk.migrations import PluginMigration, MigrationOps
 
-class V001(PluginMigration):
-    revision = "001"
-    description = "create plates table"
+class Migration(PluginMigration):
+    version = 1
+    name = "create_plates_table"
 
-    async def upgrade(self, ops: MigrationOps) -> None:
-        await ops.create_table("plates", ...)
+    async def upgrade(self, op: MigrationOps) -> None:
+        await op.create_table("plates", ...)
 ```
 
-Migrations are recorded in `plugin_schema_migrations` (added by platform migration v011) and run advisory-locked so two replicas can't race. The admin UI surfaces:
+Save this as a module such as `migrations/v001_create_plates_table.py`. Migrations are recorded in `plugin_schema_migrations` and run advisory-locked so two replicas can't race. The admin UI surfaces:
 
 - `schema_version` — the plugin's currently applied revision
 - `pending_migrations` — revisions known to the plugin but not yet applied
@@ -77,11 +78,11 @@ If a migration fails, the plugin stays in an `error` state and its routes are no
 
 | Mode | What happens to data |
 |------|----------------------|
-| **keep** (default) | Tables and rows kept in the database. Reinstalling the plugin restores access. |
-| **archive** | Tables renamed with an `archived_<timestamp>_` prefix. No code can read them, but the data is recoverable. |
-| **purge** | Tables and uploaded artifacts permanently dropped. **Irreversible.** |
+| **keep** (current Admin UI / CLI behavior) | The package is uninstalled; plugin-owned tables and rows are kept in the database. Reinstalling the plugin can restore access. |
+| **archive** (manager-level cleanup mode) | The plugin schema is renamed with an archived prefix. No code can read it automatically, but a database admin can recover it. |
+| **purge** (manager-level cleanup mode) | The plugin schema is dropped after explicit confirmation. **Irreversible.** |
 
-> [Screenshot: uninstall confirmation dialog showing the three radio buttons]
+The current browser UI and `mint plugin uninstall` use the safe default: keep plugin data. Take a database backup before using lower-level cleanup paths or manual schema removal.
 
 ## Plugin roles
 
@@ -91,16 +92,14 @@ A user's plugin role for a given plugin is set from **Admin → Plugins → \<pl
 
 ## Built-in plugins
 
-A typical lab MINT install ships with a small set of first-party plugins:
+The marketplace can advertise first-party and lab-local plugins. Names and availability depend on the registry configured for your deployment.
 
-| Plugin | Type | Role |
-|--------|------|------|
-| `mint-ms-designer` | Design | LCMS sequence + plate-map design |
-| `mint-ms-planner` | Design | Acquisition scheduling |
-| `mint-ms-uploader` | Analysis | RAW file upload + auto-convert |
-| `mint-plugin-drp` | Analysis | Drug-response prediction |
-| `mint-hmdb` | Analysis | HMDB metabolite lookup |
-| `mint-chem-draw` | Tool | Chemical structure drawing widget |
+| Example plugin | Likely type | Role |
+|----------------|-------------|------|
+| MS experiment designer | `EXPERIMENT_DESIGN` or `FULL` | LC-MS sequence and plate-map design |
+| RAW file uploader | `ANALYSIS` | RAW file upload, conversion, and result attachment |
+| HMDB browser | `STATIC` or `ANALYSIS` | Metabolite lookup and annotation |
+| Chemical drawing widget | `STATIC` | Chemical structure drawing or visualization |
 
 The full catalog lives in the marketplace.
 

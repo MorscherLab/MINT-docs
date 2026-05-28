@@ -24,9 +24,9 @@ For the simpler "just create the tables" case where you don't need version histo
 flowchart LR
     A[Plugin source] -->|declares| B(get_migrations_package)
     B -->|imports| C[migrations package]
-    C --> M1[001_initial.py]
-    C --> M2[002_add_index.py]
-    C --> M3[003_add_column.py]
+    C --> M1[v001_initial.py]
+    C --> M2[v002_add_index.py]
+    C --> M3[v003_add_column.py]
     R[MigrationRunner] -->|reads| C
     R -->|reads| D[plugin_schema_migrations table]
     R -->|applies pending| DB[(plugin's schema)]
@@ -49,9 +49,9 @@ my_plugin/
 ├── plugin.py
 └── migrations/
     ├── __init__.py
-    ├── 001_initial.py
-    ├── 002_add_lot_index.py
-    └── 003_add_concentration_column.py
+    ├── v001_initial.py
+    ├── v002_add_lot_index.py
+    └── v003_add_concentration_column.py
 ```
 
 ```python
@@ -71,7 +71,7 @@ class MyPlugin(AnalysisPlugin):
 ```
 
 ```python
-# my_plugin/migrations/001_initial.py
+# my_plugin/migrations/v001_initial.py
 import sqlalchemy as sa
 from mint_sdk.migrations import PluginMigration, MigrationOps
 
@@ -93,7 +93,7 @@ class CreatePanelsTable(PluginMigration):
 
 `PluginMigration` requires two class attributes: `version: int` (used for ordering and tracking) and `name: str` (a short snake_case label that appears in logs and the tracking table). The class name itself is arbitrary; the runner discovers any subclass with an integer `version`.
 
-Use the file-naming convention `NNN_<short_name>.py` so module ordering matches version ordering, but only `version` is authoritative.
+Use the file-naming convention `vNNN_<short_name>.py` so modules are valid Python import paths and file ordering matches version ordering. Only the class's `version` value is authoritative.
 
 ## `MigrationOps`
 
@@ -163,12 +163,16 @@ You don't run migrations manually in production — the platform calls `Migratio
 4. Validates checksums against any already-applied migrations
 5. Runs each pending migration's `upgrade(ops)` inside the same transaction as a tracking-table insert
 
-For local development:
+For local development, distinguish the two modes:
 
 ```bash
-# Inside a plugin project, the platform runs the runner on startup
+# Starts the dev proxy and standalone plugin process.
+# Useful for frontend/API integration, but it does not install the plugin
+# as an entry-point plugin or apply its migrations to the platform database.
 mint dev --platform
 ```
+
+Use a migration unit test with `MigrationRunner` for quick feedback, or install the plugin into a disposable platform environment when you need to verify the real startup path.
 
 For a standalone platform start (no plugin attached), the migration runner runs as part of the normal `uvicorn api.main:app` startup — there is no "migrate only" mode.
 

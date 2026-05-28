@@ -44,9 +44,9 @@ Every project page has four tabs:
 
 ## Experiment codes within a project
 
-When you create an experiment inside a project, MINT auto-assigns a unique `experiment_code` like `EXP-001`. Codes are globally unique — they don't restart per project — so they're safe to copy across docs and grant reports.
+When you create an experiment inside a project, MINT auto-assigns a unique `experiment_code` in `TYPE-EXP-SEQ` format, such as `LCM-EXP-001` or `DR-EXP-001`. Codes are globally unique — they don't restart per project — so they're safe to copy across docs and grant reports.
 
-The auto-naming pattern is configurable per platform via `naming_service`; consult your admin if your lab uses a custom convention.
+The type prefix comes from the experiment type slug via `naming_service`; consult your admin if your lab uses a custom convention.
 
 ## Project archival
 
@@ -56,7 +56,7 @@ Archiving hides a project from the default dashboard listings without deleting a
 - A grant period has ended
 - You want to declutter the home dashboard for active members
 
-Archived projects remain reachable by direct URL and via the **Show archived** filter. Only admins or the project owner can archive or restore.
+Archived projects remain reachable by direct URL and via the **Show archived** filter. Only admins, the project creator, or the project lead can archive or restore.
 
 ## Deleting a project
 
@@ -70,13 +70,13 @@ For nearly every "I'm done with this" case, archive instead of delete. Deletion 
 
 Project access is governed by:
 
-1. **System role** — Admins see every project; Viewers see read-only
-2. **Project membership** — non-admins must be added to a project to see it
-3. **Per-project role** — membership comes with a role override (e.g., a system Member can be a project Owner inside one project)
+1. **System role** — route-level permissions such as `projects.view`, `projects.edit`, and `projects.manage_members`
+2. **Project creator / lead** — only the creator, lead, or Admin can update/delete the project or manage members
+3. **Project membership** — stored as `editor` or `viewer`; used for member lists and, in restricted experiment visibility mode, experiment visibility
 
 See [Permissions](/reference/permissions) for the full RBAC matrix.
 
 ## Next
 
 → [Experiments](/workflow/experiments) — the unit of work inside a project
-→ [Members & roles](/workflow/members-roles) — invitations, role overrides
+→ [Members & roles](/workflow/members-roles) — invitations, membership, and RBAC

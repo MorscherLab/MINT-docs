@@ -7,7 +7,7 @@ MINT reads configuration from four sources, in increasing order of precedence:
 3. **`.env`** — `dotenv`-style key/value pairs in the working directory.
 4. **Environment variables** — keys prefixed `MINT_`, with nested fields joined by `__` (e.g., `MINT_DATABASE__MODE=postgresql`).
 
-For most installations, editing `config.json` is the only configuration step. Environment variables are useful for containerized deployments where a config file is awkward.
+For most installations, editing `config.json` is the only configuration step. There is no separate `MINT_CONFIG_PATH` setting in the current platform; choose the config location by running from the directory that contains `config.json`, or by setting `MINT_SERVER__DATA_PATH` and placing the file at `<dataPath>/config.json`. Environment variables are useful for containerized deployments where a config file is awkward.
 
 ## Top-level schema
 
@@ -24,11 +24,13 @@ For most installations, editing `config.json` is the only configuration step. En
   "updates": { "...": "..." },
   "logging": { "...": "..." },
   "errorReporting": { "...": "..." },
-  "observability": { "...": "..." }
+  "observability": { "...": "..." },
+  "access": { "...": "..." },
+  "corsOrigins": []
 }
 ```
 
-The full schema is defined in [`api/config/models.py`](https://github.com/MorscherLab/mld/blob/main/api/config/models.py) using Pydantic — that file is the authoritative reference. The summary below covers the keys most installations touch.
+The full schema is defined in [`api/config/models.py`](https://github.com/MorscherLab/MINT/blob/main/api/config/models.py) using Pydantic — that file is the authoritative reference. The summary below covers the keys most installations touch.
 
 ## `devMode`
 
@@ -38,8 +40,8 @@ The full schema is defined in [`api/config/models.py`](https://github.com/Morsch
 
 When `true`:
 
-- Authentication is bypassed on every route — anyone hitting the URL is treated as admin
-- Database mode is forced to PostgreSQL at `localhost:5432`, db `mint_dev`, user/pw `mint`
+- Authentication is bypassed on every route; anyone hitting the URL is treated as admin
+- Database mode is forced to local SQLite, regardless of the configured database section
 
 ::: warning Never expose dev mode
 Dev mode is for local development and evaluation only. Never enable it on a host reachable from the network.
@@ -59,7 +61,7 @@ Dev mode is for local development and evaluation only. Never enable it on a host
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `mode` | `none` | One of `none` (file-based, single-user), `sqlite`, `postgresql` |
+| `mode` | `none` | One of `none` (auth/passkeys only; experiments/projects disabled), `sqlite`, `postgresql` |
 | `host` | `localhost` | PostgreSQL host |
 | `port` | `5432` | PostgreSQL port |
 | `databaseName` | `mint_db` | PostgreSQL database name |
@@ -130,6 +132,20 @@ See [Updates](/workflow/updates) for the wider picture.
 
 When `observability.enabled` is `false`, instrumentation is a no-op.
 
+## `access`
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `experimentVisibilityMode` | `open` | `open` keeps normal project-level experiment visibility; `restricted` limits experiment lists to creators, collaborators, and experiments in projects the user can access |
+
+## `corsOrigins`
+
+```json
+{ "corsOrigins": ["https://mint.example.org"] }
+```
+
+When empty, production CORS allows no cross-origin browser calls. In dev mode, MINT automatically allows the local frontend/backend origins used by the dev server.
+
 ## `logging` and `errorReporting`
 
 | Section | Keys |
@@ -164,6 +180,7 @@ The configured `server.dataPath` (default `./data`) holds platform runtime state
 | `plugin_registry.json` | Persistent plugin registry metadata |
 | `marketplace/` | Marketplace registry cache |
 | `plugins/uploads/` | Uploaded `.mint` bundles and extracted install payloads |
+| `plugins/manifest.json` | Restore manifest for dynamically installed plugin bundles |
 | `plugins/snapshots/` | Pre-install / pre-upgrade Python environment snapshots |
 | `plugins/<plugin>/venv/` | Isolated plugin virtual environments when subprocess isolation is used |
 | `plugins/<plugin>/config.json` | Legacy per-plugin settings fallback |

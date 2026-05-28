@@ -19,6 +19,7 @@ Both result in identical platform behavior; choose based on your operations pref
 |---|---|
 | **Operating system** | Linux server (x86_64 or arm64) — any modern distribution with glibc 2.28+ (Debian 11+, Ubuntu 20.04+, RHEL 9+, …) |
 | **Python** | 3.12 or newer — install via the distro package manager or [`uv python install`](https://docs.astral.sh/uv/concepts/python-versions/) |
+| **uv** | Required at runtime for plugin installs and isolated plugin environments; install it somewhere the `mint` service user can run |
 | **Database** | PostgreSQL 14+ (recommended) or SQLite for single-server installs |
 | **Disk** | ~2 GB for MINT + room for plugin venvs and uploaded artifacts |
 | **RAM** | 4 GB minimum, 8 GB recommended once plugins are installed |
@@ -30,33 +31,40 @@ The plugin loader uses advisory locks so plugin schema migrations only run once 
 
 ## Install the wheel
 
-Pick your preferred installer:
+Install `uv` first. Even if you install the platform wheel with `pip`, MINT uses `uv` later to install marketplace plugins and manage isolated plugin environments.
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+sudo install -m 755 "$(command -v uv)" /usr/local/bin/uv
+```
+
+Then pick your preferred installer:
 
 ::: code-group
 
 ```bash [uv (recommended)]
-# Install uv if not already present: https://docs.astral.sh/uv/
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
 # Create a dedicated user and venv for the platform process
 sudo useradd --system --create-home --shell /usr/sbin/nologin mint
+sudo install -o mint -g mint -m 750 -d /opt/mint /var/lib/mint /var/log/mint
 sudo -u mint bash -c '
-  uv venv ~/venv --python 3.12
-  ~/venv/bin/pip install mint
+  uv venv /opt/mint/venv --python 3.12
+  /opt/mint/venv/bin/pip install mint
 '
 ```
 
 ```bash [pip]
 sudo useradd --system --create-home --shell /usr/sbin/nologin mint
+sudo install -o mint -g mint -m 750 -d /opt/mint /var/lib/mint /var/log/mint
 sudo -u mint bash -c '
-  python3.12 -m venv ~/venv
-  ~/venv/bin/pip install mint
+  python3.12 -m venv /opt/mint/venv
+  /opt/mint/venv/bin/pip install mint
 '
 ```
 
 :::
 
-This installs the platform package (`mint`) plus its dependencies (including `mint-sdk`, which provides the `mint` CLI binary at `~mint/venv/bin/mint`). The platform itself runs as a long-lived `uvicorn` process — see "Run as a systemd service" below.
+This installs the platform package (`mint`) plus its dependencies (including `mint-sdk`, which provides the `mint` CLI binary at `/opt/mint/venv/bin/mint`). The platform itself runs as a long-lived `uvicorn` process — see "Run as a systemd service" below.
 
 ::: tip Get the `mint` CLI on your shell PATH
 The `mint` CLI is convenient for admins running platform-data commands (`mint auth login`, `mint experiment list`). To make it globally available, install `mint-sdk` separately as a uv tool:
@@ -70,31 +78,38 @@ This is independent of the platform's own venv and only affects the admin's shel
 
 ## Configure
 
-Create `/etc/mint/config.json` (or any other path the platform process can read; pass via `MINT_CONFIG_PATH` env var):
+Create `/var/lib/mint/config.json`:
 
 ```json
 {
   "devMode": false,
+  "server": {
+    "dataPath": "/var/lib/mint",
+    "externalUrl": "https://mint.example.org",
+    "rpId": "mint.example.org"
+  },
   "database": {
     "mode": "postgresql",
-    "url": "postgresql+asyncpg://mint:CHANGEME@localhost:5432/mint"
+    "host": "localhost",
+    "port": 5432,
+    "databaseName": "mint_db"
   },
+  "DB_USERNAME": "mint",
+  "DB_PASSWORD": "CHANGEME",
   "auth": {
-    "jwtSecret": "<generate a 32-byte random string>",
-    "passkeysEnabled": true
+    "jwtSecretKey": "<generate a 32-byte random string>",
+    "enablePasskey": true
   },
   "plugins": {
-    "loadFromEntryPoints": true,
-    "dataDir": "/var/lib/mint/plugin-data"
+    "loadFromEntryPoints": true
   },
   "marketplace": {
-    "registryUrl": "https://marketplace.morscherlab.org",
-    "requireApproval": true
+    "registryUrl": "https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json"
   }
 }
 ```
 
-Generate a JWT secret with `python3 -c "import secrets; print(secrets.token_urlsafe(32))"` and never commit it. Configuration priority is: environment variables (`MINT_` prefix) > `.env` > `config.json` > defaults. See [CLI configuration](/cli/configuration) for the full schema.
+Generate a JWT secret with `python3 -c "import secrets; print(secrets.token_urlsafe(32))"` and never commit it. MINT reads `config.json` from the working directory, or from `<server.dataPath>/config.json` when `MINT_SERVER__DATA_PATH` is set. The systemd unit below sets `MINT_SERVER__DATA_PATH=/var/lib/mint`, so `/var/lib/mint/config.json` is the file that will be loaded. Configuration priority is: environment variables (`MINT_` prefix) > `.env` > `config.json` > defaults. See [CLI configuration](/cli/configuration) for the full schema.
 
 ## Initialize the database
 
@@ -119,9 +134,10 @@ Wants=postgresql.service
 Type=simple
 User=mint
 Group=mint
-WorkingDirectory=/home/mint
-Environment=MINT_CONFIG_PATH=/etc/mint/config.json
-ExecStart=/home/mint/venv/bin/uvicorn api.main:app --host 127.0.0.1 --port 8001
+WorkingDirectory=/var/lib/mint
+Environment=PATH=/opt/mint/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=MINT_SERVER__DATA_PATH=/var/lib/mint
+ExecStart=/opt/mint/venv/bin/uvicorn api.main:app --host 127.0.0.1 --port 8001
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true
@@ -199,7 +215,7 @@ After setup:
 ## Upgrades
 
 ```bash
-sudo -u mint ~mint/venv/bin/pip install --upgrade mint
+sudo -u mint /opt/mint/venv/bin/pip install --upgrade mint
 sudo systemctl restart mint
 ```
 
@@ -212,7 +228,7 @@ See [Updates](/workflow/updates) for the in-app upgrade flow and rollback suppor
 | Problem | Fix |
 |---------|-----|
 | `command not found: mint` (admin shell) | Install the CLI as a uv tool: `uv tool install mint-sdk`, then `uv tool update-shell`. |
-| Service can't find `uvicorn` | The systemd unit must point at the venv's binary, e.g. `/home/mint/venv/bin/uvicorn`, not a global one. |
+| Service can't find `uvicorn` | The systemd unit must point at the venv's binary, e.g. `/opt/mint/venv/bin/uvicorn`, not a global one. |
 | Port 8001 already in use | Change `--port` in the systemd unit, or `lsof -i :8001` to find the conflicting process. |
 | Migration fails with advisory-lock error | Two MINT processes started simultaneously and both tried to migrate. Stop one, let the other finish, then restart. |
 | 502 from the reverse proxy | MINT failed to start or crashed. Check `journalctl -u mint -n 200` for the trace. |

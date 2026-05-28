@@ -6,7 +6,7 @@ The Concepts section explains how the MINT plugin model is organized, what runs 
 
 | # | Page | What you'll learn |
 |---|------|-------------------|
-| 1 | [Plugin types](/sdk/concepts/plugin-types) | Analysis vs experiment-design plugins; what each owns and writes |
+| 1 | [Plugin types](/sdk/concepts/plugin-types) | Static, analysis, experiment-design, and full plugins; what each owns and writes |
 | 2 | [Plugin lifecycle](/sdk/concepts/lifecycle) | The phases a plugin moves through, from registration to uninstall |
 | 3 | [Isolation](/sdk/concepts/isolation) | How conflicting plugins run in their own venvs and subprocesses |
 | 4 | [PlatformContext](/sdk/concepts/platform-context) | The single object that gives a plugin access to platform services |

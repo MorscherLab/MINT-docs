@@ -38,7 +38,7 @@ sequenceDiagram
     participant U as User
     participant P as Platform :8001
     participant M as proxy.py
-    participant S as Plugin subprocess :8005
+    participant S as Plugin subprocess :8003
 
     U->>P: GET /api/my-plugin/run
     P->>M: route prefix matches /my-plugin
@@ -75,11 +75,11 @@ In development, plugins are typically run as standalone subprocesses with `mint 
 ```toml
 # MINT/config.dev.toml
 [proxy]
-"/lcms-sequence" = "http://localhost:8004"
-"/peak-picking"  = "http://localhost:8005"
+"/hello-mint"    = "http://localhost:8003"
+"/peak-picking"  = "http://localhost:8004"
 ```
 
-The dev proxy uses the same forwarding logic as the production isolation proxy — same auth headers, same request IDs, same internal token — so a plugin that works under `mint dev --platform` will work in production isolated mode.
+The dev proxy preserves the production URL shape and forwards normal request headers, including user identity headers when the request has a bearer token. It does not install the plugin into the platform process and does not set `MINT_PLATFORM_URL` / `MINT_PLUGIN_TOKEN` for the dev server. Code that needs a full `PlatformContext` should still be tested with the plugin installed in a disposable MINT instance or with explicit SDK test harnesses.
 
 ## Trade-offs and guidance
 

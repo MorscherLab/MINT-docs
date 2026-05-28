@@ -1,6 +1,6 @@
 # Plugin types
 
-Every MINT plugin declares one of two `PluginType` values. The choice determines which platform repositories it can access and what it's allowed to write.
+Every MINT plugin declares a `PluginType`. The choice determines which platform repositories it can access and which experiment payloads it is allowed to write.
 
 ```python
 from mint_sdk import PluginType
@@ -14,20 +14,18 @@ class MyPlugin(AnalysisPlugin):
             description="...",
             analysis_type="metabolomics",
             routes_prefix="/my-plugin",
-            plugin_type=PluginType.ANALYSIS,   # or EXPERIMENT_DESIGN
+            plugin_type=PluginType.ANALYSIS,
         )
 ```
 
-## The two types
+## The four types
 
-| | `PluginType.EXPERIMENT_DESIGN` | `PluginType.ANALYSIS` |
-|---|---|---|
-| **Owns** | An experiment type, plus any tables it declares via `get_shared_models()` or migrations | None — reads existing experiments |
-| **Experiment writes** | Full CRUD via `ExperimentRepository` (`create`, `update`, `delete`) | Read-only — `create`/`update`/`delete` raise `PermissionException` |
-| **Design data writes** | Yes — owns `DesignData` for its experiment type | No |
-| **Analysis-result writes** | Optional | Primary purpose — accumulates `PluginAnalysisResult` per run |
-| **Visible at** | Experiment creation form, design tab | Experiment **Analyze** tab |
-| **Multiplicity per experiment** | Exactly one (the type's design plugin) | Many — every installed analysis plugin can act on the experiment |
+| Type | Use it for | Experiment repository | Design data | Analysis results |
+|------|------------|-----------------------|-------------|------------------|
+| `PluginType.STATIC` | UI/reporting/help plugins that should not mutate experiment data | Read-only | Read-only | Read-only |
+| `PluginType.ANALYSIS` | Processing existing experiments and saving computed results | Read-only experiment CRUD wrapper | Read-only | Can write this plugin's result |
+| `PluginType.EXPERIMENT_DESIGN` | Defining and editing an experiment's design payload | Design-scoped create/update/delete | Can write owned design data | Read-only |
+| `PluginType.FULL` | Rare plugins that must own both design data and analysis results | Full repository access | Can write | Can write |
 
 The class you subclass is `AnalysisPlugin` regardless of type — the name reflects the abstract base, not the runtime category. The `plugin_type` field on `PluginMetadata` is what the platform reads.
 
@@ -56,11 +54,13 @@ PluginCapabilities(
 
 ## Choosing a type
 
-Pick **`EXPERIMENT_DESIGN`** when your plugin defines what an experiment *is* — its design schema, the form users fill in, the metadata that travels with it. Examples: an LC-MS sequence designer that owns `LcmsSequenceTable`; a drug-response panel designer; a plate-map editor for cell culture experiments.
+Pick **`STATIC`** when your plugin only presents UI, dashboards, documentation, or read-only summaries. Static plugins can still expose routes and frontend pages, but the platform blocks design-data and analysis-result writes.
 
 Pick **`ANALYSIS`** when your plugin processes existing experiments and produces results. Examples: a peak-picking analysis that reads RAW files from an experiment and writes back peak tables; a drug-response prediction analysis that consumes panel design data and writes back IC50 estimates; a quality-control analysis that flags problematic samples.
 
-A single domain capability often splits into both — a design plugin to set up the experiment plus one or more analysis plugins that act on it.
+Pick **`EXPERIMENT_DESIGN`** when your plugin defines what an experiment *is* — its design schema, the form users fill in, the metadata that travels with it. Examples: an LC-MS sequence designer that owns `LcmsSequenceTable`; a drug-response panel designer; a plate-map editor for cell culture experiments.
+
+Pick **`FULL`** only when one plugin truly needs to do both jobs: create/update design data and write analysis results for the same workflow. A single domain capability often splits more cleanly into two plugins — one design plugin to set up the experiment plus one or more analysis plugins that act on it.
 
 ## Example: minimal pair
 

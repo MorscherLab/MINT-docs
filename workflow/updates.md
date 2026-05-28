@@ -1,6 +1,6 @@
 # Updates
 
-MINT's update story has two layers: the **platform** itself (the FastAPI backend + bundled frontend + `mint` CLI) and the **plugins** installed on top of it. Each layer updates independently: platform updates are checked from GitHub releases, while marketplace plugin updates are checked from the configured registry.
+MINT's update story has three related checks: the **platform** runtime, the bundled **mint-sdk** package, and the **plugins** installed on top of it. Platform and SDK updates are checked from GitHub releases; marketplace plugin updates are checked from the configured registry.
 
 > [Screenshot: Admin → Updates page showing platform and plugin update statuses]
 
@@ -38,16 +38,16 @@ There is a brief outage during the swap. For zero-downtime upgrades, run two MIN
 
 ## Plugin updates
 
-Plugin updates are surfaced in **Admin → Plugins** and **Admin → Marketplace**, with a per-plugin **Upgrade** button when the registry advertises a newer compatible version. Each plugin has its own marketplace auto-update preference in `marketplace.autoUpdatePlugins` (defaults to off):
+Plugin updates are surfaced in **Admin → Plugins** and the marketplace modal, with an **Update** action when the registry advertises a newer compatible version. Each plugin has its own marketplace auto-update preference in `marketplace.autoUpdatePlugins`:
 
 > [Screenshot: per-plugin upgrade card with Auto-update toggle and version picker]
 
 | Toggle | Behavior |
 |--------|----------|
-| **Auto-update off** (default) | Admin upgrades manually |
+| **Auto-update off** | Admin upgrades manually |
 | **Auto-update enabled** | Platform installs newer compatible versions automatically during the daily check |
 
-The marketplace's compatibility check matches the plugin's declared SDK range against the platform's bundled `mint-sdk` version — if a plugin needs a newer SDK than the current platform offers, it's hidden from the upgrade button until the platform itself is updated.
+The marketplace compatibility check compares each registry entry's `min_platform_version` with the running platform version. If a plugin requires a newer MINT platform, install/update actions are disabled until the platform itself is upgraded.
 
 ## Prereleases
 

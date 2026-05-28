@@ -1,6 +1,6 @@
 # Troubleshooting
 
-If something isn't working, check here first. If your problem isn't listed, [open an issue](https://github.com/MorscherLab/mld/issues) with the steps to reproduce.
+If something isn't working, check here first. If your problem isn't listed, [open an issue](https://github.com/MorscherLab/MINT/issues) with the steps to reproduce.
 
 ## Install / launch
 
@@ -27,10 +27,10 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| "Permission denied" on a project I should see | You're not a member, or your project role is read-only | Ask the project owner to add you / promote you |
+| "Permission denied" on a project I should see | Missing system permission, missing project membership, or restricted visibility | Ask the project lead or an admin to check your access |
 | Experiment status pill won't change | The plugin owning the type rejects the transition | Check the plugin's UI for blockers (missing required fields, unfinished steps) |
 | Auto-assigned experiment code skipped a number | Code generator allocates per-attempt; failed creates can leave gaps | Cosmetic only; codes are unique, not gapless |
-| Soft-deleted experiment can't be restored | More than 30 days have passed | Beyond the grace window the row is purged; restore from your platform-level database backup |
+| Deleted experiment needs recovery | Experiment delete removes the row from the database | Restore from your platform-level database backup; the UI does not currently provide an undo window |
 
 ## Plugins
 
@@ -49,7 +49,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 |---------|-------|-----|
 | Marketplace shows zero plugins | Registry URL unreachable, or registry returns malformed JSON | Check `marketplace.registryUrl`; visit the URL manually to validate |
 | "Install request" never gets approved | No admin with `plugins.install` has reviewed it | Ask an admin with plugin-install permission to approve or deny the request |
-| Plugin shows "incompatible" | The plugin's required SDK is newer than the platform's | Upgrade the platform first; only then can you install / upgrade the plugin |
+| Plugin shows "incompatible" | The registry entry requires a newer MINT platform version | Upgrade the platform first; only then can you install / upgrade the plugin |
 
 ## Updates
 
@@ -65,7 +65,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 |---------|-------|-----|
 | Disk full | Plugin artifact uploads fill `server.dataPath` | Move `server.dataPath` to a larger volume, or purge unused plugin caches |
 | Slow queries on Postgres | Missing index on a plugin-owned table | Add the index in a new plugin migration |
-| OpenTelemetry exporter errors in logs | OTLP endpoint unreachable | Set `observability.tracing.enabled: false` until fixed; the rest of the platform keeps working |
+| OpenTelemetry exporter errors in logs | OTLP endpoint unreachable | Set `observability.enabled: false` until fixed; the rest of the platform keeps working |
 | Auto-issued GitHub bug reports flooding | A recurring bug spams unique stack traces | Disable `errorReporting.enabled` until the bug is fixed |
 
 ## Hosted (lab) mode
@@ -79,5 +79,5 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 ## Still stuck?
 
 1. **Check the logs** — `journalctl -u mint -n 200` (direct install), `docker compose logs mint` (Docker), or **Admin → Status** in the UI — for error messages.
-2. **Search [GitHub issues](https://github.com/MorscherLab/mld/issues)** — someone may have hit it before.
+2. **Search [GitHub issues](https://github.com/MorscherLab/MINT/issues)** — someone may have hit it before.
 3. **Open a new issue** with: MINT version (`mint --version`), OS, the steps you took, and the error message. Include the request ID from the failing response if available — every response carries one and it indexes the structured logs.

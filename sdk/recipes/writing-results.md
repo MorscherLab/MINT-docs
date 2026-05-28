@@ -16,7 +16,7 @@ class MyPlugin(AnalysisPlugin):
         await self.save_analysis(experiment_id, result)
 ```
 
-`save_analysis` writes to `PluginAnalysisResult` keyed by `(experiment_id, plugin_id)`. The `plugin_id` defaults to `metadata.name`. Override `AnalysisPlugin.plugin_id` if you need a different storage key.
+`save_analysis` writes to `PluginAnalysisResult` keyed by `(experiment_id, plugin_id)`. In the current platform backend, that is stored as a JSON entry under `analysis_results[plugin_id]` on the experiment row. The `plugin_id` defaults to `metadata.name`. Override `AnalysisPlugin.plugin_id` if you need a different storage key.
 
 ## Preserve run history
 
@@ -48,7 +48,7 @@ A separate `latest` key is convenient for downstream consumers that don't want t
 
 ## Save design and analysis together
 
-For plugins that act on their own design data (rare, but useful for self-contained pipelines):
+For `FULL` plugins that legitimately own both design data and analysis results (rare, but useful for self-contained pipelines):
 
 ```python
 class MyPlugin(AnalysisPlugin):
@@ -61,7 +61,7 @@ class MyPlugin(AnalysisPlugin):
         )
 ```
 
-`save()` returns `(DesignData | None, PluginAnalysisResult | None)`.
+`save()` returns `(DesignData | None, PluginAnalysisResult | None)`. `ANALYSIS` plugins should pass only `analysis=...`; `EXPERIMENT_DESIGN` plugins should pass only `design=...`; `STATIC` plugins should not call either write path.
 
 ## Bulk write across experiments
 

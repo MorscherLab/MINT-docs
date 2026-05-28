@@ -1,6 +1,6 @@
 # Install on Linux (Docker)
 
-Run MINT as a Docker container, with Postgres alongside. This is the simplest reproducible deployment — pull a pinned image, declare config in env vars, point a reverse proxy at it.
+Run MINT as a Docker container, with Postgres alongside. This is the simplest reproducible deployment - pull a pinned image, declare config in env vars, point a reverse proxy at it.
 
 ::: tip Picking an install method
 MINT is supported on **Linux servers only**, via either Docker (this page) or the [direct install](/get-started/install-direct). Pick Docker when you want a self-contained, version-pinned deployment with clean rollback.
@@ -23,13 +23,13 @@ MINT is supported on **Linux servers only**, via either Docker (this page) or th
 The official image is published to GitHub Container Registry:
 
 ```
-ghcr.io/morscherlab/mint:1.0.0
-ghcr.io/morscherlab/mint:1
+ghcr.io/morscherlab/mint:1.0.7
+ghcr.io/morscherlab/mint:1.0
 ghcr.io/morscherlab/mint:latest
 ```
 
 ::: tip Pin to a specific version
-For production, pin to a full version (`1.0.0`) rather than a moving tag like `latest`. That way upgrades are an explicit edit and rollbacks are a one-line revert.
+For production, pin to a full version (`1.0.7` in the example below) rather than a moving tag like `latest`. Check [GitHub Releases](https://github.com/MorscherLab/MINT/releases) for the newest stable tag before installing. Explicit tags make upgrades an intentional edit and rollbacks a one-line revert.
 :::
 
 ## docker-compose.yml
@@ -40,24 +40,29 @@ A minimal compose file with Postgres included:
 # /opt/mint/docker-compose.yml
 services:
   mint:
-    image: ghcr.io/morscherlab/mint:1.0.0
+    image: ghcr.io/morscherlab/mint:1.0.7
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       MINT_DEV_MODE: "false"
+      MINT_SERVER__DATA_PATH: "/app/data"
+      MINT_SERVER__EXTERNAL_URL: "https://mint.example.org"
+      MINT_SERVER__RP_ID: "mint.example.org"
       MINT_DATABASE__MODE: "postgresql"
-      MINT_DATABASE__URL: "postgresql+asyncpg://mint:${POSTGRES_PASSWORD}@postgres:5432/mint"
-      MINT_AUTH__JWT_SECRET: "${MINT_JWT_SECRET}"
-      MINT_AUTH__PASSKEYS_ENABLED: "true"
-      MINT_PLUGINS__DATA_DIR: "/var/lib/mint/plugin-data"
-      MINT_MARKETPLACE__REGISTRY_URL: "https://marketplace.morscherlab.org"
-      MINT_MARKETPLACE__REQUIRE_APPROVAL: "true"
+      MINT_DATABASE__HOST: "postgres"
+      MINT_DATABASE__PORT: "5432"
+      MINT_DATABASE__DATABASE_NAME: "mint_db"
+      MINT_DB_USERNAME: "mint"
+      MINT_DB_PASSWORD: "${POSTGRES_PASSWORD}"
+      MINT_AUTH__JWT_SECRET_KEY: "${MINT_JWT_SECRET}"
+      MINT_AUTH__ENABLE_PASSKEY: "true"
+      MINT_MARKETPLACE__REGISTRY_URL: "https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json"
     volumes:
-      - mint-plugin-data:/var/lib/mint/plugin-data
+      - mint-data:/app/data
     ports:
-      - "127.0.0.1:8001:8001"
+      - "127.0.0.1:8001:8000"
 
   postgres:
     image: postgres:16
@@ -65,17 +70,17 @@ services:
     environment:
       POSTGRES_USER: mint
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: mint
+      POSTGRES_DB: mint_db
     volumes:
       - mint-postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mint -d mint"]
+      test: ["CMD-SHELL", "pg_isready -U mint -d mint_db"]
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
-  mint-plugin-data:
+  mint-data:
   mint-postgres:
 ```
 
@@ -83,11 +88,11 @@ And a sibling `.env`:
 
 ```bash
 # /opt/mint/.env  (chmod 600, never commit)
-POSTGRES_PASSWORD=$(openssl rand -base64 32)
-MINT_JWT_SECRET=$(openssl rand -base64 32)
+POSTGRES_PASSWORD=<paste output of: openssl rand -base64 32>
+MINT_JWT_SECRET=<paste output of: openssl rand -base64 32>
 ```
 
-(Run those `openssl` commands once and paste the resulting values.)
+Run those `openssl` commands once and paste the resulting values. Compose `.env` files do not evaluate shell command substitution.
 
 ## Launch
 
@@ -103,10 +108,10 @@ Expected output once startup completes (uvicorn is the platform's process):
 mint  | INFO:     Started server process [1]
 mint  | INFO:     Waiting for application startup.
 mint  | INFO:     Application startup complete.
-mint  | INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+mint  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
-The compose file binds the container's port 8001 to `127.0.0.1:8001` on the host — MINT is **not** directly reachable from the network until you put a reverse proxy in front.
+The compose file binds the container's port 8000 to `127.0.0.1:8001` on the host. MINT is **not** directly reachable from the network until you put a reverse proxy in front.
 
 ## Reverse proxy
 
@@ -168,6 +173,8 @@ volumes:
 
 :::
 
+If Caddy runs as a Compose service, point that Caddyfile at `mint:8000` instead of `127.0.0.1:8001`, because both containers share the Compose network.
+
 ## First-run setup
 
 Open the public URL in your browser. On a fresh install you'll see the **Setup** page (only shown when no admin exists). Create the first admin account; everything else is configured from the in-app **Admin** view.
@@ -198,8 +205,8 @@ The two persistent volumes hold everything:
 
 | Volume | Backup method |
 |--------|---------------|
-| `mint-postgres` | `docker compose exec postgres pg_dump -U mint mint > backup.sql` |
-| `mint-plugin-data` | `tar -C /var/lib/docker/volumes/mint-plugin-data -czf plugin-data.tar.gz _data` (path may vary by storage driver) |
+| `mint-postgres` | `docker compose exec postgres pg_dump -U mint mint_db > backup.sql` |
+| `mint-data` | `tar -C /var/lib/docker/volumes/mint-data -czf mint-data.tar.gz _data` (path may vary by storage driver) |
 
 Run both before any major upgrade and on a regular schedule. Snapshots taken by `snapshot.py` for plugin upgrades are short-lived rollback aids — not a backup substitute.
 
@@ -207,12 +214,12 @@ Run both before any major upgrade and on a regular schedule. Snapshots taken by 
 
 | Problem | Fix |
 |---------|-----|
-| Container exits immediately | `docker compose logs mint` for the trace. Most often: bad config (missing `MINT_AUTH__JWT_SECRET`) or unreachable Postgres. |
-| `connection refused` to Postgres | The `depends_on.condition: service_healthy` should prevent this — check `docker compose ps` and the Postgres healthcheck output. |
+| Container exits immediately | `docker compose logs mint` for the trace. Most often: bad config (missing `MINT_AUTH__JWT_SECRET_KEY`) or unreachable Postgres. |
+| `connection refused` to Postgres | The `depends_on.condition: service_healthy` should prevent this - check `docker compose ps` and the Postgres healthcheck output. |
 | Migration fails on startup | Container exits non-zero. Check the log line; if it's a plugin migration, fix the plugin's release and redeploy. |
 | 502 from the reverse proxy | Container not running, or the proxy is targeting the wrong host/port. `curl -I http://127.0.0.1:8001/api/health` from the host. |
-| Disk fills up unexpectedly | Plugin uploads into `mint-plugin-data` grew. Add monitoring; consider moving the volume to a larger disk. |
-| Need to inspect the database | `docker compose exec postgres psql -U mint mint` |
+| Disk fills up unexpectedly | Runtime data under `mint-data` grew, often from plugin uploads or cached bundles. Add monitoring; consider moving the volume to a larger disk. |
+| Need to inspect the database | `docker compose exec postgres psql -U mint mint_db` |
 
 ## Next step
 

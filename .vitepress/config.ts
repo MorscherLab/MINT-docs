@@ -7,7 +7,7 @@ export default defineConfig({
 
   cleanUrls: true,
   ignoreDeadLinks: false,
-  srcExclude: ['README.md', 'CLAUDE.md', 'docs/**', 'node_modules/**'],
+  srcExclude: ['README.md', 'CLAUDE.md', 'AGENTS.md', 'docs/**', 'node_modules/**'],
 
   head: [
     ['link', { rel: 'icon', href: '/mint-icon.png' }],
@@ -20,31 +20,43 @@ export default defineConfig({
 
     nav: [
       {
-        text: 'User Manual',
+        text: 'MINT Guide',
         items: [
-          { text: 'Get Started', link: '/get-started/install-direct' },
-          { text: 'Guide', link: '/workflow/projects' },
-          { text: 'CLI', link: '/cli/overview' },
+          { text: '1. Deploy MINT', link: '/get-started/install-direct' },
+          { text: '2. Data model: experiments', link: '/workflow/data-model' },
+          { text: '3. Plugin system', link: '/workflow/plugins' },
+          { text: '4. First experiment', link: '/get-started/quickstart' },
         ],
       },
       {
-        text: 'Plugin Development',
+        text: 'Build Plugins',
         items: [
-          { text: 'Concepts', link: '/sdk/concepts/' },
+          { text: 'Start: first plugin', link: '/sdk/tutorials/first-analysis-plugin' },
           { text: 'Tutorials', link: '/sdk/tutorials/' },
-          { text: 'Recipes', link: '/sdk/recipes/' },
+          { text: 'SDK concepts', link: '/sdk/concepts/' },
           { text: 'Frontend', link: '/sdk/frontend/' },
+          { text: 'Recipes', link: '/sdk/recipes/' },
           { text: 'Operations', link: '/sdk/operations/' },
-          { text: 'API Reference', link: '/sdk/api/' },
         ],
       },
-      { text: 'Reference', link: '/reference/ui-tour' },
+      {
+        text: 'Reference',
+        items: [
+          { text: 'CLI', link: '/cli/overview' },
+          { text: 'API Reference', link: '/sdk/api/' },
+          { text: 'UI tour', link: '/reference/ui-tour' },
+          { text: 'Permissions', link: '/reference/permissions' },
+          { text: 'Troubleshooting', link: '/reference/troubleshooting' },
+          { text: 'FAQ', link: '/reference/faq' },
+          { text: 'Glossary', link: '/reference/glossary' },
+        ],
+      },
       {
         text: 'More',
         items: [
           { text: 'Team', link: '/team' },
           { text: 'Changelog', link: '/changelog' },
-          { text: 'Source code', link: 'https://github.com/MorscherLab/mld' },
+          { text: 'Source code', link: 'https://github.com/MorscherLab/MINT' },
         ],
       },
       { text: 'Open MINT', link: 'https://mint.morscherlab.org' },
@@ -64,14 +76,15 @@ export default defineConfig({
       ],
       '/workflow/': [
         {
-          text: 'Guide',
+          text: 'MINT core',
           items: [
-            { text: 'Projects', link: '/workflow/projects' },
+            { text: 'Data model', link: '/workflow/data-model' },
             { text: 'Experiments', link: '/workflow/experiments' },
+            { text: 'Projects', link: '/workflow/projects' },
+            { text: 'Plugin system', link: '/workflow/plugins' },
+            { text: 'Marketplace', link: '/workflow/marketplace' },
             { text: 'Members & roles', link: '/workflow/members-roles' },
             { text: 'Authentication', link: '/workflow/auth-passkeys' },
-            { text: 'Plugins', link: '/workflow/plugins' },
-            { text: 'Marketplace', link: '/workflow/marketplace' },
             { text: 'Updates', link: '/workflow/updates' },
           ],
         },
@@ -88,6 +101,16 @@ export default defineConfig({
       ],
       '/sdk/': [
         {
+          text: 'Tutorials',
+          items: [
+            { text: 'Overview', link: '/sdk/tutorials/' },
+            { text: 'First analysis plugin', link: '/sdk/tutorials/first-analysis-plugin' },
+            { text: 'Adding a frontend', link: '/sdk/tutorials/adding-a-frontend' },
+            { text: 'Design plugin with tables', link: '/sdk/tutorials/design-plugin-with-tables' },
+            { text: 'Plugin roles', link: '/sdk/tutorials/plugin-roles' },
+          ],
+        },
+        {
           text: 'Concepts',
           items: [
             { text: 'Overview', link: '/sdk/concepts/' },
@@ -97,16 +120,6 @@ export default defineConfig({
             { text: 'PlatformContext', link: '/sdk/concepts/platform-context' },
             { text: 'Data model', link: '/sdk/concepts/data-model' },
             { text: 'Migrations', link: '/sdk/concepts/migrations' },
-          ],
-        },
-        {
-          text: 'Tutorials',
-          items: [
-            { text: 'Overview', link: '/sdk/tutorials/' },
-            { text: 'First analysis plugin', link: '/sdk/tutorials/first-analysis-plugin' },
-            { text: 'Design plugin with tables', link: '/sdk/tutorials/design-plugin-with-tables' },
-            { text: 'Adding a frontend', link: '/sdk/tutorials/adding-a-frontend' },
-            { text: 'Plugin roles', link: '/sdk/tutorials/plugin-roles' },
           ],
         },
         {
@@ -176,7 +189,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/MorscherLab/mld' },
+      { icon: 'github', link: 'https://github.com/MorscherLab/MINT' },
     ],
 
     search: { provider: 'local' },
