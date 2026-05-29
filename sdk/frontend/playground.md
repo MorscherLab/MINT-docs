@@ -1,6 +1,7 @@
 ---
 title: Component playground
 description: Live previews for MINT frontend SDK components.
+aside: false
 ---
 
 <script setup lang="ts">
@@ -19,7 +20,8 @@ import {
 const categories = ['All', 'Layout', 'Forms', 'Data', 'Lab', 'Feedback', 'Workflow']
 const activeCategory = ref('All')
 const query = ref('')
-const selectedWells = ref(['B2', 'C3'])
+const selectedWells = ref(['B2', 'H12', 'P24'])
+const selectedResultKeys = ref<(string | number)[]>([2, 5])
 const currentStep = ref(1)
 
 const components = [
@@ -39,27 +41,46 @@ const components = [
 ]
 
 const resultColumns = [
-  { key: 'compound', label: 'Compound', sortable: true },
+  { key: 'id', label: 'Run', sortable: true, align: 'center', width: 72 },
+  { key: 'compound', label: 'Compound', sortable: true, width: 130 },
+  { key: 'dose', label: 'Dose (uM)', sortable: true, align: 'right', width: 112 },
   { key: 'well', label: 'Well', align: 'center' },
-  { key: 'response', label: 'Response %', sortable: true, align: 'right' },
+  { key: 'replicate', label: 'Replicate', align: 'center', width: 104 },
+  { key: 'area', label: 'Peak area', sortable: true, align: 'right', width: 120 },
+  { key: 'response', label: 'Response %', sortable: true, align: 'right', width: 116 },
+  { key: 'cv', label: 'CV %', sortable: true, align: 'right', width: 86 },
   { key: 'status', label: 'Status' },
 ]
 
-const resultRows = [
-  { id: 1, compound: 'MINT-2847', well: 'A1', response: 95.2, status: 'Pass' },
-  { id: 2, compound: 'MINT-2847', well: 'A2', response: 82.1, status: 'Pass' },
-  { id: 3, compound: 'MINT-2847', well: 'A3', response: 54.7, status: 'Pass' },
-  { id: 4, compound: 'MINT-3192', well: 'B1', response: 88.7, status: 'Pass' },
-  { id: 5, compound: 'MINT-3192', well: 'B2', response: 45.2, status: 'Flagged' },
-  { id: 6, compound: 'Vehicle', well: 'C1', response: 2.3, status: 'Pass' },
-]
+const resultRows = Array.from({ length: 18 }, (_, index) => {
+  const compounds = ['MINT-2847', 'MINT-3192', 'Vehicle']
+  const compound = compounds[index % compounds.length]
+  const row = String.fromCharCode(65 + Math.floor(index / 6))
+  const col = (index % 6) + 1
+  const response = compound === 'Vehicle' ? 1.5 + (index % 3) : Math.max(5, 98 - index * 4.6)
+  const cv = 2.4 + (index % 5) * 1.1
+
+  return {
+    id: index + 1,
+    compound,
+    dose: compound === 'Vehicle' ? 0 : Number((10 / (index % 6 + 1)).toFixed(2)),
+    well: `${row}${col}`,
+    replicate: (index % 3) + 1,
+    area: Math.round(185000 - index * 6400),
+    response: Number(response.toFixed(1)),
+    cv: Number(cv.toFixed(1)),
+    status: cv > 6.5 ? 'Flagged' : 'Pass',
+  }
+})
 
 const heatmapWells = Object.fromEntries(
-  Array.from({ length: 8 }, (_, row) =>
-    Array.from({ length: 12 }, (_, col) => {
+  Array.from({ length: 16 }, (_, row) =>
+    Array.from({ length: 24 }, (_, col) => {
       const id = `${String.fromCharCode(65 + row)}${col + 1}`
-      const value = Math.max(0.05, 1 - (row + col) / 19)
-      return [id, { state: 'filled', sampleType: col % 3 === 0 ? 'control' : 'sample', value }]
+      const radial = Math.abs(row - 7.5) / 7.5 + Math.abs(col - 11.5) / 11.5
+      const value = Math.max(0.04, 1 - radial / 2)
+      const isControl = col === 0 || col === 23 || row === 0 || row === 15
+      return [id, { state: 'filled', sampleType: isControl ? 'control' : 'sample', value }]
     }),
   ).flat(),
 )
@@ -67,6 +88,7 @@ const heatmapWells = Object.fromEntries(
 const wizardSteps = [
   { id: 'setup', label: 'Setup', description: 'Configure the experiment' },
   { id: 'samples', label: 'Samples', description: 'Choose wells and groups' },
+  { id: 'protocol', label: 'Protocol', description: 'Review acquisition settings' },
   { id: 'review', label: 'Review', description: 'Confirm and submit' },
 ]
 
@@ -82,15 +104,20 @@ const codeSamples = {
   row-key="id"
   searchable
   sortable
+  selectable
+  sticky-header
+  max-height="360px"
   bordered
 />`,
   plate: `<WellPlate
   v-model="selectedWells"
+  :format="384"
   :wells="heatmapWells"
-  :heatmap="{ enabled: true, min: 0, max: 1, colorScale: 'viridis' }"
+  :heatmap="{ enabled: true, min: 0, max: 1, colorScale: 'viridis', showLegend: true }"
   selection-mode="multiple"
+  size="fill"
 />`,
-  wizard: `<StepWizard v-model="currentStep" :steps="wizardSteps" :linear="false">
+  wizard: `<StepWizard v-model="currentStep" :steps="wizardSteps" :linear="false" size="md">
   <template #step-samples>Select wells and groups</template>
 </StepWizard>`,
   science: `<StatusIndicator status="success" label="Validated" />
@@ -122,6 +149,7 @@ const filteredComponents = computed(() => {
 
 ## Live Examples
 
+<div class="mint-playground-wide">
 <div class="mint-demo-grid">
   <section class="mint-demo-card">
     <div class="mint-demo-card__header">
@@ -160,11 +188,16 @@ const filteredComponents = computed(() => {
         :data="resultRows"
         :columns="resultColumns"
         row-key="id"
+        :selected-keys="selectedResultKeys"
         searchable
         sortable
+        selectable
+        sticky-header
         bordered
         size="sm"
+        max-height="360px"
         :pagination="false"
+        @update:selected-keys="selectedResultKeys = $event"
       />
     </div>
     <details class="mint-code-toggle">
@@ -179,16 +212,17 @@ const filteredComponents = computed(() => {
     <div class="mint-demo-card__header">
       <div>
         <h3 class="mint-demo-card__title">Plate map</h3>
-        <p class="mint-demo-card__desc">Interactive 96-well heatmap with selectable wells.</p>
+        <p class="mint-demo-card__desc">Interactive 384-well heatmap that uses the full documentation viewport.</p>
       </div>
     </div>
-    <div class="mint-live-surface">
+    <div class="mint-live-surface mint-live-surface--plate">
       <WellPlate
         v-model="selectedWells"
+        :format="384"
         :wells="heatmapWells"
-        :heatmap="{ enabled: true, min: 0, max: 1, colorScale: 'viridis' }"
+        :heatmap="{ enabled: true, min: 0, max: 1, colorScale: 'viridis', showLegend: true }"
         selection-mode="multiple"
-        size="sm"
+        size="fill"
         :show-labels="true"
       />
       <p class="mint-live-caption">Selected wells: {{ selectedWells.join(', ') || 'none' }}</p>
@@ -201,7 +235,7 @@ const filteredComponents = computed(() => {
     </details>
   </section>
 
-  <section class="mint-demo-card">
+  <section class="mint-demo-card mint-demo-card--wide">
     <div class="mint-demo-card__header">
       <div>
         <h3 class="mint-demo-card__title">Workflow steps</h3>
@@ -209,7 +243,7 @@ const filteredComponents = computed(() => {
       </div>
     </div>
     <div class="mint-live-surface">
-      <StepWizard v-model="currentStep" :steps="wizardSteps" :linear="false" size="sm">
+      <StepWizard v-model="currentStep" :steps="wizardSteps" :linear="false" size="md">
         <template #step-setup>
           <div class="mint-wizard-panel">
             <strong>Setup</strong>
@@ -220,6 +254,12 @@ const filteredComponents = computed(() => {
           <div class="mint-wizard-panel">
             <strong>Samples</strong>
             <span>Select wells, controls, and replicate groups.</span>
+          </div>
+        </template>
+        <template #step-protocol>
+          <div class="mint-wizard-panel">
+            <strong>Protocol</strong>
+            <span>Review acquisition method, injection order, and QC cadence.</span>
           </div>
         </template>
         <template #step-review>
@@ -263,6 +303,7 @@ const filteredComponents = computed(() => {
       </div>
     </details>
   </section>
+</div>
 </div>
 
 ## Component Index

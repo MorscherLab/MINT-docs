@@ -60,13 +60,13 @@
   color: var(--vp-c-brand-1);
 }
 
-.mint-showcase-button--primary {
+.mint-showcase-button.mint-showcase-button--primary {
   border-color: var(--vp-c-brand-1);
   background: var(--vp-c-brand-1);
   color: white;
 }
 
-.mint-showcase-button--primary:hover {
+.mint-showcase-button.mint-showcase-button--primary:hover {
   background: var(--vp-c-brand-2);
   color: white;
 }
@@ -158,6 +158,15 @@
   line-height: 1.45;
 }
 
+.vp-doc._sdk_frontend_playground {
+  max-width: min(1120px, 100%);
+  margin-inline: auto;
+}
+
+.mint-playground-wide {
+  width: 100%;
+}
+
 .mint-demo-grid {
   display: grid;
   gap: 1rem;
@@ -212,7 +221,16 @@
 }
 
 .mint-live-surface--table {
+  min-height: 24rem;
   overflow-x: auto;
+}
+
+.mint-live-surface--plate {
+  overflow-x: auto;
+}
+
+.mint-live-surface--plate > .mint-well-plate {
+  min-width: 820px;
 }
 
 .mint-live-row {
@@ -244,6 +262,9 @@
   gap: 0.25rem;
   min-height: 5rem;
   padding: 1rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background: var(--vp-c-bg);
 }
 
 .mint-wizard-panel span {
