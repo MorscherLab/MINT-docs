@@ -238,6 +238,6 @@ See [FormBuilder deep dive](/sdk/frontend/form-builder).
 
 ## Related
 
-- [Components](/sdk/frontend/components) — components that pair with these composables
+- [Component Library](/sdk/components/) — components that pair with these composables
 - [Design tokens](/sdk/frontend/design-tokens) — `useTheme` integrates with the token system
 - [API Reference → Frontend SDK](/sdk/api/frontend) — every composable's exported types

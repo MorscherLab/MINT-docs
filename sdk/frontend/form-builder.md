@@ -268,6 +268,6 @@ async function handleSave() {
 
 ## Related
 
-- [Components → FormBuilder](/sdk/frontend/components#formbuilder) — basic usage
+- [Component Library → FormBuilder](/sdk/components/form-builder) — basic usage
 - [Composables → useFormBuilder](/sdk/frontend/composables#useformbuilder) — programmatic API
 - [Tutorials → Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) — design plugin context

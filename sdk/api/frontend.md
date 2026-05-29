@@ -120,7 +120,7 @@ About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components
 | `DropdownButton` | Button with attached menu |
 | `FitPanel` | Fit-to-container panel |
 
-For full prop signatures, browse the source or run the local Histoire storybook. For curated live examples, use the [component playground](/sdk/frontend/playground).
+For full prop signatures, browse the source or run the local Histoire storybook. For curated live examples, open a page in the [Component Library](/sdk/components/); each component page embeds its own playground.
 
 ## Composables
 
@@ -207,5 +207,5 @@ For the full list, the TypeScript source is the canonical reference: [`packages/
 
 ## Related
 
-- [Components](/sdk/frontend/components) — top-20 with usage examples
+- [Component Library](/sdk/components/) — one page per component with usage notes and source links
 - [Composables](/sdk/frontend/composables) — deep dives on the 7 most-used

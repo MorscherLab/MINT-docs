@@ -6,7 +6,7 @@
 
 | Category | Surface | Detail |
 |----------|---------|--------|
-| Components | About 90 component exports | [Component playground](/sdk/frontend/playground) showcases common workflows; [Components catalog](/sdk/frontend/components) documents the most-used surface |
+| Components | 90+ component exports | [Component Library](/sdk/components/) documents each export and embeds a playground on each component page |
 | Composables | 35+ typed composables | [Composables](/sdk/frontend/composables) — `useApi`, `useAuth`, `useExperimentSelector`, `usePluginClient`, `useFormBuilder`, … |
 | Design tokens | 500+ CSS custom properties | [Design tokens](/sdk/frontend/design-tokens) — colors, spacing, motion, focus rings |
 | Theming | Light/dark/density support | [Theming](/sdk/frontend/theming) — `prefers-reduced-motion`, palette overrides, accessibility |
@@ -47,11 +47,11 @@ If you scaffolded with `mint init` and did not pass `--no-frontend`, all of this
    mint sdk generate
    ```
 
-## Component playground
+## Component library
 
-The frontend SDK has a public component showcase and a local Histoire storybook:
+The frontend SDK now has a standalone component section and a local Histoire storybook:
 
-- [Component playground](/sdk/frontend/playground) — live package-backed examples and a searchable component index
+- [Component Library](/sdk/components/) — one page per exported component, with a live package-backed playground on each component page
 
 The full Histoire lab runs locally during SDK development:
 
@@ -81,7 +81,7 @@ Treat the showcase as the public component reference. The pages here cover patte
 
 | # | Page | What you'll learn |
 |---|------|-------------------|
-| 1 | [Components](/sdk/frontend/components) | Catalog of the most-used components with usage examples |
+| 1 | [Component Library](/sdk/components/) | Component pages, imports, source links, and playground |
 | 2 | [Composables](/sdk/frontend/composables) | Full list with deep dives on the 7 most-used |
 | 3 | [Design tokens](/sdk/frontend/design-tokens) | The CSS variable families and Tailwind v4 usage |
 | 4 | [Theming](/sdk/frontend/theming) | Light/dark, density, palette override, accessibility |
@@ -93,5 +93,5 @@ Treat the showcase as the public component reference. The pages here cover patte
 
 ## Next
 
-→ [Components](/sdk/frontend/components) — catalog with usage
+→ [Component Library](/sdk/components/) — component pages and playground
 → [Composables](/sdk/frontend/composables) — typed reactive hooks

@@ -182,5 +182,5 @@ Hits are usually candidates for `var(--…)` substitution.
 ## Related
 
 - [Theming](/sdk/frontend/theming) — palette overrides, density, accessibility
-- [Components](/sdk/frontend/components) — every component reads tokens
+- [Component Library](/sdk/components/) — every component reads tokens
 - The token source: `packages/sdk-frontend/src/styles/variables.css`

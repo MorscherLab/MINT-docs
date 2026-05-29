@@ -325,6 +325,6 @@ mint build
 
 ## Next
 
-- [Frontend → Components](/sdk/frontend/components) - choose SDK UI pieces before writing custom Vue
+- [Component Library](/sdk/components/) - choose SDK UI pieces before writing custom Vue
 - [Frontend → Composables](/sdk/frontend/composables) - platform-aware state and API helpers
 - [Operations → Packaging](/sdk/operations/packaging) - how frontend assets enter the `.mint` bundle

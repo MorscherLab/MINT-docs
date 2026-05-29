@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress'
+import { componentSidebarGroups } from './componentCatalog'
 
 export default defineConfig({
   title: 'MINT',
@@ -54,6 +55,7 @@ export default defineConfig({
           { text: 'Plugin development overview', link: '/sdk/' },
           { text: 'Start: first plugin', link: '/sdk/tutorials/first-analysis-plugin' },
           { text: 'Tutorials', link: '/sdk/tutorials/' },
+          { text: 'Component Library', link: '/sdk/components/' },
           { text: 'SDK concepts', link: '/sdk/concepts/' },
           { text: 'Frontend', link: '/sdk/frontend/' },
           { text: 'Recipes', link: '/sdk/recipes/' },
@@ -120,6 +122,15 @@ export default defineConfig({
           ],
         },
       ],
+      '/sdk/components/': [
+        {
+          text: 'Component Library',
+          items: [
+            { text: 'Overview', link: '/sdk/components/' },
+          ],
+        },
+        ...componentSidebarGroups,
+      ],
       '/sdk/': [
         {
           text: 'Plugin Development',
@@ -130,6 +141,12 @@ export default defineConfig({
             { text: 'Adding a frontend', link: '/sdk/tutorials/adding-a-frontend' },
             { text: 'Design plugin with tables', link: '/sdk/tutorials/design-plugin-with-tables' },
             { text: 'Plugin roles', link: '/sdk/tutorials/plugin-roles' },
+          ],
+        },
+        {
+          text: 'Component Library',
+          items: [
+            { text: 'Overview', link: '/sdk/components/' },
           ],
         },
         {
@@ -163,8 +180,6 @@ export default defineConfig({
           text: 'Frontend',
           items: [
             { text: 'Overview', link: '/sdk/frontend/' },
-            { text: 'Component playground', link: '/sdk/frontend/playground' },
-            { text: 'Components', link: '/sdk/frontend/components' },
             { text: 'Composables', link: '/sdk/frontend/composables' },
             { text: 'Design tokens', link: '/sdk/frontend/design-tokens' },
             { text: 'Theming', link: '/sdk/frontend/theming' },
