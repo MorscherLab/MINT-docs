@@ -28,7 +28,7 @@ Plugin code is identical between modes. The platform hands the plugin a `Platfor
 
 ## Where to go next
 
-- **Want to build something now?** → [Tutorials](/sdk/tutorials/) — start with [First analysis plugin](/sdk/tutorials/first-analysis-plugin)
+- **Want to build something now?** → [Plugin Development Guide](/sdk/) — start with [First analysis plugin](/sdk/tutorials/first-analysis-plugin)
 - **Need a specific pattern?** → [Recipes](/sdk/recipes/)
 - **Looking up an exact symbol?** → [API Reference](/sdk/api/)
 - **Frontend / UI?** → [Frontend](/sdk/frontend/)

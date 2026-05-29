@@ -70,7 +70,7 @@ Switch the experiment status to **completed** when the work is finished. MINT re
 - **Invite collaborators** — see [Members & roles](/workflow/members-roles)
 - **Install another plugin** — see [Marketplace](/workflow/marketplace)
 - **Use the CLI** — see [`mint` overview](/cli/overview) for scripted experiment + project access
-- **Build your own plugin** — see [Plugin Development](/sdk/concepts/) and the [First analysis plugin tutorial](/sdk/tutorials/first-analysis-plugin)
+- **Build your own plugin** — start with the [Plugin Development Guide](/sdk/)
 
 ## Troubleshooting
 

@@ -44,12 +44,14 @@ export default defineConfig({
           { text: '1. Deploy MINT', link: '/get-started/install-direct' },
           { text: '2. Data model: experiments', link: '/workflow/data-model' },
           { text: '3. Plugin system', link: '/workflow/plugins' },
-          { text: '4. First experiment', link: '/get-started/quickstart' },
+          { text: '4. Plugin development guide', link: '/sdk/' },
+          { text: 'First experiment walkthrough', link: '/get-started/quickstart' },
         ],
       },
       {
         text: 'Build Plugins',
         items: [
+          { text: 'Plugin development overview', link: '/sdk/' },
           { text: 'Start: first plugin', link: '/sdk/tutorials/first-analysis-plugin' },
           { text: 'Tutorials', link: '/sdk/tutorials/' },
           { text: 'SDK concepts', link: '/sdk/concepts/' },
@@ -120,9 +122,10 @@ export default defineConfig({
       ],
       '/sdk/': [
         {
-          text: 'Tutorials',
+          text: 'Plugin Development',
           items: [
-            { text: 'Overview', link: '/sdk/tutorials/' },
+            { text: 'Overview', link: '/sdk/' },
+            { text: 'Tutorial path', link: '/sdk/tutorials/' },
             { text: 'First analysis plugin', link: '/sdk/tutorials/first-analysis-plugin' },
             { text: 'Adding a frontend', link: '/sdk/tutorials/adding-a-frontend' },
             { text: 'Design plugin with tables', link: '/sdk/tutorials/design-plugin-with-tables' },

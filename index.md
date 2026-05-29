@@ -14,7 +14,7 @@ hero:
       link: /get-started/install-direct
     - theme: alt
       text: Build a plugin
-      link: /sdk/tutorials/first-analysis-plugin
+      link: /sdk/
     - theme: alt
       text: Hosted MINT instance
       link: https://mint.morscherlab.org
@@ -41,8 +41,8 @@ features:
   - icon: 🧰
     title: Build a plugin step by step
     details: Start with mint init, run the backend and frontend in development mode, read experiments through PlatformContext, write results, add migrations, and package a .mint bundle.
-    link: /sdk/tutorials/first-analysis-plugin
-    linkText: First plugin tutorial
+    link: /sdk/
+    linkText: Plugin development guide
 
   - icon: 🔐
     title: Auth, roles, and passkeys

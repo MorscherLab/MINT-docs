@@ -67,4 +67,4 @@ For production, use PostgreSQL. SQLite mode is useful for single-server evaluati
 
 → [Experiments](/workflow/experiments) - user workflow around the model
 → [Plugins](/workflow/plugins) - how plugins attach to experiments
-→ [First analysis plugin](/sdk/tutorials/first-analysis-plugin) - build a plugin that reads an experiment and writes results
+→ [Plugin Development Guide](/sdk/) - build a plugin that reads an experiment and writes results

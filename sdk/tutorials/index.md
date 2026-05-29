@@ -2,6 +2,8 @@
 
 This is the hands-on path for building a MINT plugin. Start with a small analysis plugin, add a browser frontend, then build a design plugin with tables and role checks.
 
+For the full Plugin Development chapter map, start at [Plugin Development Guide](/sdk/).
+
 ## Before you start
 
 You'll need:
