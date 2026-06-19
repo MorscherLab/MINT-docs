@@ -46,7 +46,9 @@ Convenience methods:
 | `save_design(experiment_id, data, *, schema_version=None)` | Save / update `DesignData` |
 | `load_design(experiment_id)` | Load `DesignData` |
 | `save_analysis(experiment_id, result)` | Save / update `PluginAnalysisResult` |
-| `load_analysis(experiment_id)` | Load `PluginAnalysisResult` |
+| `load_analysis(experiment_id, fields=None)` | Load this plugin's `PluginAnalysisResult`; optionally project selected top-level result keys |
+| `load_artifacts(experiment_id)` | Load only `result["artifacts"]` (or a custom key) without transferring large result payloads |
+| `load_analyses(experiment_id, include_others=False)` | Load analysis results; defaults to this plugin's own result only |
 | `save(experiment_id, *, design=..., analysis=...)` | Save both at once |
 | `load(experiment_id)` | Load both |
 | `delete_design(experiment_id)` | Delete design |
@@ -55,6 +57,8 @@ Convenience methods:
 | `save_template(...)`, `load_template(...)` | Save/load one typed biology template |
 | `save_template_collection(...)`, `load_template_collection(...)` | Save/load multiple biology templates |
 | `save_template_preset(...)` | Save one built-in template preset collection |
+
+`load_analysis(fields=[...])` is useful when the result contains large tables and the UI only needs a few metadata keys. Store artifact references under `ANALYSIS_ARTIFACTS_KEY` (`"artifacts"`) and call `load_artifacts()` when a reader only needs downloadable outputs.
 
 Settings:
 
@@ -170,11 +174,13 @@ Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/ma
 | Symbol | Description |
 |--------|-------------|
 | `ExperimentRepository` | `get_by_id`, `list_all`, `create`, `update`, `delete`, `has_design_data` |
-| `PluginDataRepository` | `save_experiment_data`, `get_experiment_data`, `delete_experiment_data`, `save_analysis_result`, `get_analysis_result`, `get_analysis_results`, `delete_analysis_result` |
+| `PluginDataRepository` | `save_experiment_data`, `get_experiment_data`, `delete_experiment_data`, `save_analysis_result`, `get_analysis_result`, `get_analysis_result_fields`, `get_analysis_results`, `delete_analysis_result` |
 | `UserRepository` | `get_by_id`, `get_by_username`, `list_all` |
 | `PluginRoleRepository` | `get_role`, `set_role`, `remove_role`, `list_plugin_roles`, `list_user_roles` |
 
 All repository methods are async. `ANALYSIS` and `STATIC` plugins receive a read-only `ExperimentRepository`; `EXPERIMENT_DESIGN` plugins can create/update/delete through the design-scoped wrapper; `FULL` receives the unrestricted platform repository. Data writes are also type-gated: `ANALYSIS` can save analysis results, `EXPERIMENT_DESIGN` can save design data, `FULL` can save both, and `STATIC` can save neither.
+
+`PluginDataRepository.get_analysis_results(experiment_id)` now returns only the calling plugin's own results by default. Pass `include_others=True` only for intentional cross-plugin reader plugins. `get_analysis_result_fields(experiment_id, plugin_id, fields)` projects selected top-level keys from `result`.
 
 ## Local database (standalone)
 
@@ -249,6 +255,7 @@ These four are the entire public testing surface. See [Recipes → Testing plugi
 | `auto_json_to_tree(data, *, compact=True)` | Generic dict → TreeNode list |
 | `auto_json_to_csv(data)` | Generic dict → flat CSV string |
 | `auto_json_to_summary(data)` | Generic dict → `{metadata, sections}` |
+| `ANALYSIS_ARTIFACTS_KEY` | Conventional result key (`"artifacts"`) for artifact references |
 
 `AnalysisPlugin.export_tree`, `export_summary`, `export_csv` use these by default; override on the plugin to customize.
 

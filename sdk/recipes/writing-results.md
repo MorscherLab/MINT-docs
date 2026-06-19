@@ -120,9 +120,11 @@ The frontend reads the summary structure and renders cards / tables / metric til
 
 ## Referencing produced artifacts
 
-If your analysis produces a file (CSV report, image, raw output blob), embed the **artifact ID** in the result JSON so the frontend can render a download link:
+If your analysis produces a file (CSV report, image, raw output blob), store artifact references under the conventional `result["artifacts"]` key so reader plugins can fetch only those references without loading the full result payload:
 
 ```python
+from mint_sdk import ANALYSIS_ARTIFACTS_KEY
+
 class MyPlugin(AnalysisPlugin):
     async def run(self, experiment_id: int):
         csv_bytes = self._compute_report(experiment_id)
@@ -130,16 +132,25 @@ class MyPlugin(AnalysisPlugin):
             csv_bytes, filename="report.csv"
         )
         await self.save_analysis(experiment_id, {
-            "report_artifact_id": artifact_id,
+            "summary": {"rows": 1240},
+            ANALYSIS_ARTIFACTS_KEY: [
+                {"id": artifact_id, "filename": "report.csv", "kind": "csv"},
+            ],
         })
 ```
 
-The artifact upload mechanism is platform-version-specific. The SDK's `MINTClient` does not currently expose a `client.artifacts` resource; uploads go through the platform's REST API directly. Read your installed platform's `/api` schema (browse `/docs` on a running platform) for the current upload endpoint shape.
+Later, load only that key:
+
+```python
+artifacts = await self.load_artifacts(experiment_id)
+```
+
+For any other small metadata projection, call `await self.load_analysis(experiment_id, fields=["summary", "artifacts"])`. The repository will avoid transferring or parsing large tables stored under other result keys.
 
 ## Notes
 
 - `result` is JSON. Serialize complex Python objects yourself (datetimes, dataclasses, NumPy) — the SDK doesn't auto-convert.
-- Results are **per-plugin per-experiment**. Two analysis plugins running on the same experiment have independent rows; neither sees the other's writes.
+- Results are **per-plugin per-experiment**. Two analysis plugins running on the same experiment have independent rows. `load_analysis()` and `load_analyses()` default to the calling plugin's own result; pass `include_others=True` only for reader plugins that intentionally aggregate results from multiple plugins.
 - For large outputs (megabytes of peak data per run), consider writing to plugin-owned tables instead — JSON columns aren't ideal for queries or bulk reads. See [Recipes → Querying plugin data](/sdk/recipes/querying-plugin-data).
 
 ## Related

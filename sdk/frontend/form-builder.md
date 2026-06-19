@@ -1,6 +1,6 @@
 # FormBuilder
 
-`FormBuilder` is a schema-driven form engine in the frontend SDK. Used by experiment-design plugins to render their design schema, it eliminates per-plugin form boilerplate while keeping enough flexibility for custom field types and conditional logic.
+`FormBuilder` is a schema-driven form engine in the frontend SDK. It can render a full `FormSchema`, a compact `controls` object, or a `defineControlModel()` workspace model. Experiment-design plugins use it to eliminate per-plugin form boilerplate while keeping enough flexibility for custom field types and conditional logic.
 
 ## When to use FormBuilder vs. hand-rolled forms
 
@@ -11,7 +11,7 @@
 | Field set varies per experiment type or per-tenant | Same form everywhere |
 | Validation rules are declarative (required, min/max, regex) | Custom validation needs (e.g., async server-side checks per keystroke) |
 
-Most experiment-design plugins use FormBuilder for their design view; analysis plugins typically don't need it.
+Most experiment-design plugins use FormBuilder for their design view. Analysis plugins use it when they have parameter forms, settings panels, or generated `ControlWorkspaceView` pages.
 
 ## Quick start
 
@@ -67,6 +67,84 @@ const data = ref({})
 ```
 
 `data.value` updates as the user types. Validation errors are rendered inline; submission state is managed by the wrapping page.
+
+## Compact controls
+
+For new plugin UI, start with compact controls when your form is ordinary fields and sections. One compact model can feed `FormBuilder`, `SettingsModal`, `AppSidebar`, `AppTopBar` settings, and `ControlWorkspaceView`.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { FormBuilder, defineControls } from '@morscherlab/mint-sdk'
+
+const controls = defineControls({
+  threshold: {
+    type: 'number',
+    label: 'Threshold',
+    default: 0.05,
+    min: 0,
+    max: 1,
+    section: 'analysis',
+  },
+  method: {
+    label: 'Method',
+    default: 'linear',
+    options: ['linear', 'logistic'],
+    section: 'analysis',
+  },
+  includeQc: {
+    label: 'Include QC samples',
+    default: true,
+    section: 'filters',
+  },
+})
+
+const values = ref({})
+</script>
+
+<template>
+  <FormBuilder
+    v-model="values"
+    :controls="controls"
+  />
+</template>
+```
+
+The SDK infers field types and defaults from simple values where it can. String and number option arrays are accepted directly by `BaseSelect`, `BaseRadioGroup`, `SegmentedControl`, and `MultiSelect`, so you do not need to expand every option into `{ value, label }` unless labels differ from values.
+
+When the same controls should drive an entire page shell, wrap them in a model:
+
+```ts
+import { defineControlModel } from '@morscherlab/mint-sdk'
+
+const workspaceModel = defineControlModel({
+  views: {
+    run: {
+      label: 'Run',
+      sections: {
+        analysis: {
+          label: 'Analysis',
+          controls: {
+            threshold: { type: 'number', default: 0.05, min: 0, max: 1 },
+            method: { default: 'linear', options: ['linear', 'logistic'] },
+          },
+        },
+      },
+    },
+  },
+})
+```
+
+```vue
+<ControlWorkspaceView
+  v-model="values"
+  :model="workspaceModel"
+  title="Analysis"
+  sidebar-title="Run controls"
+/>
+```
+
+Use a full `FormSchema` when you need exact JSON schema-like control over every section, wizard step, conditional rule, or custom field.
 
 ## Field types
 
@@ -261,7 +339,9 @@ async function handleSave() {
 
 ## Notes
 
-- The schema is JSON-serializable — you can fetch it from your plugin's backend at runtime if it varies per experiment type or per tenant.
+- The full `FormSchema` is JSON-serializable — you can fetch it from your plugin's backend at runtime if it varies per experiment type or per tenant.
+- Compact controls are best for code-owned plugin UI; full schemas are best when the backend owns the exact form shape.
+- `FormBuilder` syncs external `v-model` changes back into its internal state, so shared values stay coherent when `AppSidebar`, `SettingsModal`, and the main form edit the same object.
 - For very large schemas (50+ fields), split the schema into smaller `sections` or use a wizard with `steps` so only the relevant fields are visible at once.
 - `multiselect`, `molecule`, and `concentration` fields can hold non-trivial state. Keep them in their own sections so re-renders are scoped.
 - For wizards, prefer the `StepWizard` component wrapping multiple smaller `FormBuilder` instances over one giant schema.

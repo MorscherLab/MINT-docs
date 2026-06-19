@@ -17,6 +17,8 @@ Plugin type controls what the plugin may write through `PlatformContext`; all pl
 
 Authors often split a related lab capability into two plugins: a design plugin for experiment metadata and workflow, and one or more analysis plugins that read those experiments and produce results. Use `FULL` only when one plugin genuinely owns both sides.
 
+Analysis result reads are scoped to the calling plugin by default in the SDK. Plugins that intentionally summarize or compare results from other plugins must request cross-plugin reads explicitly.
+
 ## Plugin lifecycle
 
 ```

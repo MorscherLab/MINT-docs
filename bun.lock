@@ -5,7 +5,7 @@
     "": {
       "name": "mint-docs",
       "dependencies": {
-        "@morscherlab/mint-sdk": "^1.0.7",
+        "@morscherlab/mint-sdk": "^1.0.41",
         "@simplewebauthn/browser": "^10.0.0",
         "beautiful-mermaid": "^1.1.3",
         "pinia": "^3.0.4",
@@ -126,7 +126,7 @@
 
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
 
-    "@morscherlab/mint-sdk": ["@morscherlab/mint-sdk@1.0.7", "", { "dependencies": { "@floating-ui/dom": "^1.7.6", "axios": "1.13.6" }, "peerDependencies": { "@simplewebauthn/browser": "^10.0.0", "pinia": "^2.1.0 || ^3.0.0", "tailwindcss": "^4.1.0", "vue": "^3.4.0", "vue-router": "^4.2.0" }, "optionalPeers": ["@simplewebauthn/browser", "vue-router"] }, "sha512-8k/9GUQqgVW3ZZD0qWrE1tcQzp6Y8cScxLxpjdKCsZ/rTIAqVHrbVQF+ZEmRcNGv5H3O/177OMAzuiX3h2dW2A=="],
+    "@morscherlab/mint-sdk": ["@morscherlab/mint-sdk@1.0.41", "", { "dependencies": { "@floating-ui/dom": "^1.7.6", "axios": "1.13.6" }, "peerDependencies": { "@simplewebauthn/browser": "^10.0.0", "pinia": "^2.1.0 || ^3.0.0", "tailwindcss": "^4.1.0", "vue": "^3.4.0", "vue-router": "^4.2.0" }, "optionalPeers": ["@simplewebauthn/browser", "vue-router"] }, "sha512-hmNnduYRZnP0odmcGsgAQXdqV02S3jDsayoC7iqcl/5iRNPWlsqqDnnJDMKzC7QWyL5PRSsxfuoD4+MyfYqySQ=="],
 
     "@rollup/rollup-android-arm-eabi": ["@rollup/rollup-android-arm-eabi@4.60.2", "", { "os": "android", "cpu": "arm" }, "sha512-dnlp69efPPg6Uaw2dVqzWRfAWRnYVb1XJ8CyyhIbZeaq4CA5/mLeZ1IEt9QqQxmbdvagjLIm2ZL8BxXv5lH4Yw=="],
 

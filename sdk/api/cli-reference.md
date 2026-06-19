@@ -242,7 +242,7 @@ Browse SDK reference documentation.
 mint docs [path...] [--json] [--no-cache] [--clear-cache]
 ```
 
-`path...` is a series of positional segments such as `frontend components`, `contract .`, `template plate-map`, or `search "<concept>"`. With no path, prints the docs index.
+`path...` is a series of positional segments such as `frontend components`, `contract .`, `template plate-map`, or `search "<concept>"`. With no path, prints the docs index. `mint docs contract .` prints local endpoint methods/paths, generated client call shapes, inferred path/query params, request/response types, and the frontend helper imports for the current plugin.
 
 ### `mint add`
 
@@ -260,7 +260,7 @@ Add common plugin pieces to an existing project.
 | `mint add artifact [--path PATH]` | Add a local artifact helper and `/artifacts` router |
 | `mint add hook <before-save\|after-save\|status-change> [--path PATH]` | Add a lifecycle hook |
 | `mint add frontend-page <name> [--path PATH]` | Add and register a Vue view |
-| `mint add frontend-composable <name> [--endpoint PATH] [--path PATH]` | Add a Vue composable wired to plugin API |
+| `mint add frontend-composable <name> [--endpoint PATH] [--path PATH]` | Add a Vue composable wrapper around the generated plugin client |
 | `mint add r-analysis <name> [--script PATH] [--generate] [--page] [--path PATH]` | Add an R-backed analysis endpoint scaffold |
 | `mint add data-template [template] [--list] [--json] [--generate] [--page] [--path PATH]` | Add biology data-template helpers |
 | `mint add data-template-pack [pack] [--list] [--json] [--generate] [--page] [--path PATH]` | Add a curated data-template pack |
@@ -305,6 +305,13 @@ mint sdk generate [PATH] [--check] [--json] [--output DIR]
 ```
 
 `--check` reports drift without writing files, useful in CI. `--output` is relative to the plugin root.
+
+Generated frontend plugins get:
+
+- `frontend/src/generated/mint-plugin.contract.json`
+- `frontend/src/generated/mint-plugin.ts`
+
+The TypeScript file exports `useGeneratedPluginClient()`, `useGeneratedPluginContract()`, typed endpoint metadata, page selector items, settings helpers when a backend `settings_model` exists, and upload/download/SSE helpers for matching endpoints.
 
 ## Configuration files
 

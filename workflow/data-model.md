@@ -30,7 +30,7 @@ An experiment combines platform fields with plugin-defined fields:
 | Analysis results | run outputs, summaries, result metadata | JSON entries keyed by plugin ID, written by `ANALYSIS` or `FULL` plugins |
 | Artifacts | uploaded files, generated reports, exported tables | Usually plugin-produced or plugin-consumed |
 
-Think of the platform experiment row as the stable spine. Plugins should store highly structured or query-heavy data in their own tables, then write compact design/result summaries back onto the experiment so the MINT UI can show status and launch follow-up workflows.
+Think of the platform experiment row as the stable spine. Plugins should store highly structured or query-heavy data in their own tables, then write compact design/result summaries back onto the experiment so the MINT UI can show status and launch follow-up workflows. SDK reads of analysis results default to the calling plugin's own entry; reader plugins opt into cross-plugin aggregation explicitly.
 
 ## How plugins attach data
 

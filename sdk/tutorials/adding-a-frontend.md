@@ -126,6 +126,8 @@ function pageId(path: string): string {
 }
 
 const pageSelector = pluginPageSelectorItems
+const visiblePageSelector = computed(() => pageSelector.length > 1 ? pageSelector : undefined)
+
 const currentPageSelectorId = computed(() => {
   const path = normalizeNavPath(route.path)
   return pageSelector.find(p => p.to === path)?.id ?? pageSelector[0]?.id ?? pageId(path)
@@ -140,10 +142,11 @@ const currentPageTitle = computed(() => {
   <PluginWorkspaceView
     title="Hello MINT"
     :subtitle="currentPageTitle"
-    :page-selector="pageSelector"
+    :page-selector="visiblePageSelector"
     :current-page-selector-id="currentPageSelectorId"
     show-theme-toggle
     show-settings
+    :show-standalone-label="false"
     :show-sidebar="false"
   >
     <AppContainer scrollable>
@@ -169,7 +172,7 @@ After Tutorial 1's backend changes, run:
 mint sdk generate
 ```
 
-The generated client exposes the backend route:
+The generated client exposes the backend route plus contract metadata:
 
 ```ts
 // frontend/src/generated/mint-plugin.ts
@@ -180,9 +183,30 @@ export type GeneratedPluginClient = {
     body: AnalyzeRequest
   }) => Promise<AnalyzeResponse>
 }
+
+export const pluginPageSelectorItems = getPluginPageSelectorItems(pluginContract)
+export const generatedPluginEndpoints = ['health', 'analyze'] as const
+
+declare function useGeneratedPluginClient(): GeneratedPluginClient
+declare function useGeneratedPluginContract(): unknown
+declare function buildGeneratedPluginEndpointUrl(
+  name: 'health' | 'analyze',
+  payload?: unknown,
+): string
 ```
 
-Do not edit `frontend/src/generated/*` by hand. Regenerate it whenever backend routes or response schemas change. If fields you just added to a Pydantic model do not appear in `AnalyzeResponse`, you are probably running an older `mint-sdk`; update the SDK and run `mint sdk generate` again.
+Endpoint calls use a structured payload when a route has path/query params and a body:
+
+```ts
+await pluginClient.analyze({
+  pathParams: { experimentId: 1 },
+  body: { parameters: { threshold: '0.5' } },
+})
+```
+
+The same generated file also exports endpoint definitions, URL builders, upload/download helpers, event-stream helpers, settings helpers when your backend declares `settings_model`, and `pluginContractHash` for diagnostics.
+
+Do not edit `frontend/src/generated/*` by hand. Regenerate it whenever backend routes, `PluginMetadata.nav_items`, settings models, or response schemas change. If fields you just added to a Pydantic model do not appear in `AnalyzeResponse`, you are probably running an older `mint-sdk`; update the SDK and run `mint sdk generate` again.
 
 ## 4. Replace the analysis view
 

@@ -140,7 +140,7 @@ For complex queries (e.g., "find experiments where `result.method == 'v4'`"), pr
 | `ExperimentRepository` | `Experiment` | `Experiment` (`EXPERIMENT_DESIGN` and `FULL` plugins) |
 | `PluginDataRepository.save_experiment_data` | `DesignData` | `DesignData` |
 | `PluginDataRepository.save_analysis_result` | `PluginAnalysisResult` | `PluginAnalysisResult` |
-| `PluginDataRepository.get_analysis_results` | `list[PluginAnalysisResult]` (every plugin's results for one experiment) | — |
+| `PluginDataRepository.get_analysis_results` | `list[PluginAnalysisResult]` (calling plugin by default; pass `include_others=True` for every plugin's result on one experiment) | — |
 | `UserRepository` | `User` | — |
 | `PluginRoleRepository` | `UserPluginRole`, `str | None` (a single role) | `UserPluginRole` |
 

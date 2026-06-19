@@ -23,13 +23,13 @@ MINT is supported on **Linux servers only**, via either Docker (this page) or th
 The official image is published to GitHub Container Registry:
 
 ```
-ghcr.io/morscherlab/mint:1.0.7
+ghcr.io/morscherlab/mint:1.0.41
 ghcr.io/morscherlab/mint:1.0
 ghcr.io/morscherlab/mint:latest
 ```
 
 ::: tip Pin to a specific version
-For production, pin to a full version (`1.0.7` in the example below) rather than a moving tag like `latest`. Check [GitHub Releases](https://github.com/MorscherLab/MINT/releases) for the newest stable tag before installing. Explicit tags make upgrades an intentional edit and rollbacks a one-line revert.
+For production, pin to a full version (`1.0.41` in the example below) rather than a moving tag like `latest`. Check [GitHub Releases](https://github.com/MorscherLab/MINT/releases) for the newest stable tag before installing. Explicit tags make upgrades an intentional edit and rollbacks a one-line revert.
 :::
 
 ## docker-compose.yml
@@ -40,7 +40,7 @@ A minimal compose file with Postgres included:
 # /opt/mint/docker-compose.yml
 services:
   mint:
-    image: ghcr.io/morscherlab/mint:1.0.7
+    image: ghcr.io/morscherlab/mint:1.0.41
     restart: unless-stopped
     depends_on:
       postgres:

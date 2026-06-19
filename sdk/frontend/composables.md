@@ -1,6 +1,6 @@
 # Composables
 
-The frontend SDK ships 35+ typed composables. This page lists the commonly used ones with a one-line summary, then deep-dives on the 7 you'll use most often: `useApi`, `useAuth`, `useToast`, `usePlatformContext`, `useExperimentSelector`, `useExperimentData`, `useFormBuilder`.
+The frontend SDK ships 60+ typed composables and helper factories. This page lists the commonly used ones with a one-line summary, then deep-dives on the hooks plugin authors reach for most often: generated plugin clients, current experiment context, settings, forms, and platform-aware API calls.
 
 ## Full list
 
@@ -15,6 +15,8 @@ The frontend SDK ships 35+ typed composables. This page lists the commonly used 
 | `usePlatformContext` | Integration, plugin, user, theme, feature flags | Plugins mounted inside the platform shell |
 | `useForm` | Reactive form state with validation rules | Manual form management |
 | `useFormBuilder` | Schema-driven form runtime | The `FormBuilder` component (rare to use directly) |
+| `defineControls`, `defineControlModel` | Typed compact control schemas | Generate FormBuilder, SettingsModal, AppSidebar, and ControlWorkspaceView bindings from one model |
+| `useControlSchema`, `useControlWorkspace` | Derived form/sidebar/topbar/component bindings | Custom generated workspaces |
 | `useAsync`, `useAsyncBatch` | Async-state helpers (loading/data/error) | Wrap any async operation |
 | `useWellPlateEditor` | Well-plate state + helpers | Plate-design UIs |
 | `useRackEditor` | Rack-layout state | Sample-rack UIs |
@@ -28,8 +30,11 @@ The frontend SDK ships 35+ typed composables. This page lists the commonly used 
 | `useProtocolTemplates` | Lab-protocol template engine | Step-by-step protocol UIs |
 | `useAutoGroup` | Auto-group samples by name prefix | Sample grouping helpers |
 | `usePluginConfig` | Plugin settings reactive object | Reading plugin config from the frontend |
-| `usePluginClient` | Stable identity for generated plugin clients | Typed calls from `frontend/src/generated/mint-plugin.ts` |
-| `usePluginSettings` | Plugin settings from platform context | Reading installed plugin settings |
+| `createPluginClient`, `usePluginClient` | Contract-aware plugin API client runtime | Generated `useGeneratedPluginClient()` wrappers |
+| `buildPluginEndpointUrl`, `resolvePluginBaseUrl` | URL helpers matching generated calls | Rendering links, diagnostics, downloads, and previews |
+| `uploadPluginEndpoint`, `downloadPluginEndpoint` | Multipart and Blob helpers | Generated upload/download endpoint wrappers |
+| `usePluginEventStream` | Auth-aware SSE stream helper | Generated event-stream endpoints |
+| `usePluginSettings` | Plugin settings from platform context or standalone route | Generated `useGeneratedPluginSettings()` wrappers |
 | `useCurrentExperiment` | Current platform experiment | Integrated plugin pages tied to an experiment |
 | `useExperimentSelector` | Picker UI + reactive selected experiment | Experiment dropdowns |
 | `useExperimentData` | Reactive exported experiment data payload | Live experiment view |
@@ -78,6 +83,94 @@ The full return shape is `{ client, get, post, put, patch, delete, upload, downl
 - Sets JSON headers by default and lets Axios set multipart boundaries for `upload()`
 
 For plugin-scoped calls, prefer the generated client from `frontend/src/generated/mint-plugin.ts` after running `mint sdk generate`. It uses the plugin contract, route prefix, and platform context to build the right URLs.
+
+### Generated plugin clients
+
+`mint sdk generate` writes `frontend/src/generated/mint-plugin.ts`. Import from that generated file in plugin code; it wraps the lower-level SDK helpers with your plugin's own endpoint names and types.
+
+```ts
+import {
+  buildGeneratedPluginEndpointUrl,
+  downloadGeneratedPluginEndpoint,
+  generatedPluginEndpoints,
+  useGeneratedPluginClient,
+  useGeneratedPluginContract,
+  useGeneratedPluginEventStream,
+  useGeneratedPluginSettings,
+} from '../generated/mint-plugin'
+
+const pluginClient = useGeneratedPluginClient()
+const pluginContract = useGeneratedPluginContract()
+const settings = useGeneratedPluginSettings()
+
+await pluginClient.analyze({
+  pathParams: { experimentId: 42 },
+  query: { dryRun: true },
+  body: { parameters: { threshold: 0.05 } },
+})
+
+const analyzeUrl = buildGeneratedPluginEndpointUrl('analyze', {
+  pathParams: { experimentId: 42 },
+})
+
+const hasExport = pluginContract.hasEndpoint('exportReport')
+const endpointNames = generatedPluginEndpoints
+const report = await downloadGeneratedPluginEndpoint('downloadReport', undefined, 'report.csv')
+
+const stream = useGeneratedPluginEventStream('events', {
+  parseJson: true,
+  onMessage(message) {
+    console.log(message.data)
+  },
+})
+```
+
+Generated clients accept the structured shape `{ pathParams, query, body }` for endpoints that combine route params, query params, and request bodies. For older code, flat payload fields still work, but the structured form is clearer and avoids name collisions.
+
+Use `pluginContract.endpointDefinitions`, `pluginContract.getEndpoint(name)`, and `pluginContract.buildEndpointUrl(name, payload)` when you need diagnostics or a link preview without making the request. Use `pluginContract.adaptRequest()` / `adaptResponse()` only at domain-model boundaries where your local UI model is intentionally narrower than the generated API shape.
+
+### `useCurrentExperiment`
+
+Reads the active experiment from platform injection or the current route, then optionally fetches the full experiment payload. Use it in integrated plugin pages instead of asking users to type an experiment id.
+
+```ts
+import { computed } from 'vue'
+import { useCurrentExperiment } from '@morscherlab/mint-sdk'
+import { useGeneratedPluginClient } from '../generated/mint-plugin'
+
+const currentExperiment = useCurrentExperiment()
+const pluginClient = useGeneratedPluginClient()
+
+const canRun = computed(() => currentExperiment.hasExperiment.value)
+
+async function run() {
+  const experimentId = currentExperiment.requireExperimentId()
+  await pluginClient.analyze({
+    pathParams: { experimentId },
+    body: { parameters: {} },
+  })
+}
+```
+
+The generated client can infer `experimentId` for route params named `experimentId` when the platform context contains it, but passing it explicitly keeps examples and tests easier to read.
+
+### `usePluginSettings`
+
+Generated clients expose `useGeneratedPluginSettings()` when the backend declares `settings_model`. It loads from platform plugin config when installed, or from the plugin-local `/settings` route in standalone mode.
+
+```ts
+import { useGeneratedPluginSettings } from '../generated/mint-plugin'
+
+const settings = useGeneratedPluginSettings()
+
+settings.values.value.threshold = 0.05
+await settings.save()
+
+// Ready for PluginWorkspaceView / AppTopBar:
+const settingsConfig = settings.settingsConfig
+```
+
+The return shape includes `settings`, `values`, `config`, `settingsConfig`, `isLoading`, `isSaving`, `error`, `isDirty`, `load()`, `save()`, `reset()`, and `setValues()`.
 
 ### `useAuth`
 
@@ -219,6 +312,48 @@ const showAdvanced = evaluateCondition(
 
 See [FormBuilder deep dive](/sdk/frontend/form-builder).
 
+### `defineControls` and `useControlWorkspace`
+
+Compact controls let one model generate forms, settings modals, sidebars, topbar settings, and initial values:
+
+```ts
+import { ref } from 'vue'
+import {
+  ControlWorkspaceView,
+  defineControlModel,
+} from '@morscherlab/mint-sdk'
+
+const workspaceModel = defineControlModel({
+  views: {
+    run: {
+      label: 'Run',
+      sections: {
+        parameters: {
+          label: 'Parameters',
+          controls: {
+            threshold: { type: 'number', default: 0.05, min: 0, max: 1 },
+            method: { default: 'linear', options: ['linear', 'logistic'] },
+          },
+        },
+      },
+    },
+  },
+})
+
+const values = ref({})
+```
+
+```vue
+<ControlWorkspaceView
+  v-model="values"
+  :model="workspaceModel"
+  title="Analysis"
+  sidebar-title="Run controls"
+/>
+```
+
+For lower-level layouts, `useControlSchema()` gives you `formSchema`, `settingsSchema`, `topBarSettingsConfig`, `sidebarPanels`, `sectionSchemas`, and `initialValues`. `useControlWorkspace()` wraps those into shared reactive values and ready-to-bind `AppTopBar`, `AppSidebar`, and `FormBuilder` props.
+
 ## Other notable composables (one-line each)
 
 | Composable | Use it when |
@@ -229,12 +364,19 @@ See [FormBuilder deep dive](/sdk/frontend/form-builder).
 | `useChemicalFormula` | Show elemental composition of a formula string |
 | `useTheme` | Custom theme switcher (the standard `<ThemeToggle>` already uses this) |
 | `useTimeUtils` | Plate-reader scheduling, anything with time slots |
+| `useRequestSyncState` | Loading/error/last-saved state around requests |
+| `useFileImport` | Read and validate delimited text imports |
+| `useListSelection`, `useSelectionLimit` | Table, list, and plate selection state |
+| `useTextSearch`, `useSortedItems` | Client-side filtering and sorting |
+| `useExpansionSet` | Expand/collapse state for trees and grouped lists |
+| `useBioTemplateWorkspace` | Template-driven controls, preview, and component bindings |
 
 ## Notes
 
 - All composables use Vue 3 Composition API. Call them inside `<script setup>` or `setup()` only.
 - Most composables return `Ref` or `ComputedRef` — destructure but keep the references reactive.
-- The composables that hit the network (`useApi`, `useExperimentData`, `useExperimentSelector`) handle auth automatically; you don't construct your own `fetch` calls.
+- The composables that hit the network (`useApi`, generated plugin clients, `useExperimentData`, `useExperimentSelector`) handle auth automatically; you don't construct your own `fetch` calls.
+- Prefer public package imports (`@morscherlab/mint-sdk` or documented subpaths). `mint doctor` flags legacy `usePluginApi()`, direct private SDK subpaths, and raw plugin API `fetch('/api/...')` calls.
 
 ## Related
 

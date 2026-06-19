@@ -124,7 +124,7 @@ For full prop signatures, browse the source or run the local Histoire storybook.
 
 ## Composables
 
-35+ typed composables. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src/composables).
+60+ typed composables and helper factories. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src/composables).
 
 | Composable | Returns | Purpose |
 |------------|---------|---------|
@@ -149,13 +149,52 @@ For full prop signatures, browse the source or run the local Histoire storybook.
 | `useProtocolTemplates` | protocol step engine | Protocol UIs |
 | `useAutoGroup` | sample auto-grouping | Group by name prefix |
 | `usePluginConfig` | plugin settings | Read plugin config |
-| `usePluginClient` | contract-aware plugin API client | Calls generated plugin endpoints |
+| `createPluginClient`, `usePluginClient` | contract-aware plugin API runtime | Generated plugin clients |
+| `buildPluginEndpointUrl`, `resolvePluginBaseUrl` | URL helpers | Link previews and diagnostics that match generated client calls |
+| `uploadPluginEndpoint`, `downloadPluginEndpoint`, `downloadBlob` | multipart / Blob helpers | Generated upload and download endpoint wrappers |
+| `usePluginEventStream` | auth-aware SSE helper | Generated event-stream endpoint wrappers |
 | `usePluginSettings` | plugin settings helpers | Load/save plugin configuration |
 | `useCurrentExperiment` | active experiment helper | Read the experiment selected by the platform shell |
 | `useExperimentSelector` | reactive experiment picker | Experiment dropdowns |
 | `useExperimentData` | reactive experiment view | Live design + analysis |
 | `useExperimentSave` | save/load design data and analysis results | Save back to experiment |
 | `useAppExperiment` | provide / inject pattern | Plugin-tree-wide active experiment |
+| `defineControls`, `defineControlModel` | compact control schemas | Generate forms/settings/sidebar/workspaces from one model |
+| `useControlSchema`, `useControlWorkspace` | derived control bindings | Lower-level control-driven layouts |
+| `defineDoseDesignControlModel` | dose-design preset model | Standard `WellPlate` + `DoseCalculator` workspaces |
+| `useBioTemplateWorkspace`, `useBioTemplatePresetWorkspace`, `useBioTemplatePackWorkspace` | biology template bindings | Template-driven design pages |
+| `useFileImport` | delimited file parser state | CSV/TSV import flows |
+| `useListSelection`, `useSelectionLimit` | selection state | Tables, sample lists, well plates |
+| `useTextSearch`, `useSortedItems` | client-side search/sort | Filterable lists and tables |
+| `useExpansionSet` | expand/collapse state | Trees and grouped panels |
+
+## Generated plugin client helpers
+
+The generated file `frontend/src/generated/mint-plugin.ts` wraps the lower-level helpers above with your plugin's contract:
+
+| Generated export | Purpose |
+|------------------|---------|
+| `useGeneratedPluginClient()` | Typed endpoint calls |
+| `useGeneratedPluginContract()` | Contract metadata, endpoint lookup, URL builders, upload/download adapters |
+| `useGeneratedPluginSettings()` | Typed settings values, save/load, and `settingsConfig` for top bars |
+| `generatedPluginEndpoints` | Literal endpoint-name array |
+| `generatedPluginEndpointDefinitions` | Endpoint method/path/param metadata |
+| `buildGeneratedPluginEndpointUrl(name, payload)` | Concrete URL for an endpoint payload |
+| `uploadGeneratedPluginEndpoint(name, payload)` | Multipart upload through the generated contract |
+| `downloadGeneratedPluginEndpoint(name, payload, filename?)` | Blob download through the generated contract |
+| `useGeneratedPluginEventStream(name, payload?, options?)` | SSE stream with auth headers and reconnect |
+
+Generated endpoint calls accept the structured payload shape:
+
+```ts
+await pluginClient.analyze({
+  pathParams: { experimentId: 42 },
+  query: { dryRun: true },
+  body: { parameters: { threshold: 0.05 } },
+})
+```
+
+Flat payload fields are still accepted for compatibility, but the structured form is the recommended style for new code.
 
 ## Exported types
 
@@ -194,6 +233,14 @@ import {
   type DilutionPreset,
   type RegistryEntry,           // formBuilderRegistry
   type AppExperimentState,      // useAppExperiment
+  type PluginContract,          // generated plugin clients
+  type PluginEndpointDefinition,
+  type PluginEventStreamOptions,
+  type UsePluginSettingsReturn,
+  type UseCurrentExperimentReturn,
+  type ControlSchema,           // compact controls
+  type ControlModel,
+  type UseControlWorkspaceReturn,
 } from '@morscherlab/mint-sdk'
 ```
 
@@ -204,8 +251,10 @@ For the full list, the TypeScript source is the canonical reference: [`packages/
 - All components and composables target Vue 3 with the Composition API. They don't work with Options API.
 - Tree-shaking is supported — importing one component pulls only that component into the bundle.
 - Current plugin scaffolds import Tailwind v4 and the SDK style bundle from `frontend/src/style.css`: `@import "tailwindcss";` then `@import "@morscherlab/mint-sdk/styles" layer(mint-sdk);`. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
+- For plugin-scoped API calls, prefer `useGeneratedPluginClient()` from `frontend/src/generated/mint-plugin.ts`; use raw `useApi()` for platform APIs outside the plugin contract.
+- `mint doctor` flags legacy `usePluginApi()`, private SDK subpath imports, direct frontend composable file subpaths, and raw plugin API `fetch('/api/...')` calls.
 
 ## Related
 
 - [Component Library](/sdk/components/) — one page per component with usage notes and source links
-- [Composables](/sdk/frontend/composables) — deep dives on the 7 most-used
+- [Composables](/sdk/frontend/composables) — deep dives on generated clients, settings, current experiment, controls, and forms

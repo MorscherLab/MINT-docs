@@ -134,13 +134,17 @@ For the most common operations on `DesignData` and `PluginAnalysisResult`, the p
 | `await self.save_design(experiment_id, data)` | Save / update design data | Returns `None` |
 | `await self.load_design(experiment_id)` | Load design data | Returns `None` |
 | `await self.save_analysis(experiment_id, result)` | Save / update analysis result for *this* plugin | Returns `None` |
-| `await self.load_analysis(experiment_id)` | Load analysis result for this plugin | Returns `None` |
+| `await self.load_analysis(experiment_id, fields=None)` | Load analysis result for this plugin, optionally projecting top-level result keys | Returns `None` |
+| `await self.load_artifacts(experiment_id)` | Load only `result["artifacts"]` from this plugin's result | Returns `None` |
+| `await self.load_analyses(experiment_id, include_others=False)` | Load analysis results; defaults to this plugin's own result | Returns `[]` |
 | `await self.save(experiment_id, design=..., analysis=...)` | Save both at once | Returns `(None, None)` |
 | `await self.load(experiment_id)` | Load both | Returns `(None, None)` |
 | `await self.delete_design(experiment_id)` | Delete design | Returns `False` |
 | `await self.delete_analysis(experiment_id)` | Delete analysis | Returns `False` |
 
 These are the daily authoring API. Drop down to `context.get_plugin_data_repository()` only when you need bulk operations or have multiple plugin IDs to coordinate.
+
+For cross-plugin readers, call `load_analyses(experiment_id, include_others=True)` or `repo.get_analysis_results(experiment_id, include_others=True)` explicitly. The default is intentionally scoped to the calling plugin so ordinary analysis plugins do not accidentally consume another plugin's result payloads.
 
 ## What `PlatformContext` is *not*
 

@@ -573,9 +573,9 @@ const accountMenuItems = [
 ]
 
 const pluginSwitcherInfo = {
-  current: { id: 'dose', label: 'Dose Response', version: '1.0.7', color: '#f97316' },
+  current: { id: 'dose', label: 'Dose Response', version: '1.0.41', color: '#f97316' },
   plugins: [
-    { id: 'dose', label: 'Dose Response', version: '1.0.7', color: '#f97316' },
+    { id: 'dose', label: 'Dose Response', version: '1.0.41', color: '#f97316' },
     { id: 'lcms', label: 'LC-MS Batch', version: '0.9.4', color: '#0ea5e9' },
     { id: 'qc', label: 'QC Review', version: '0.4.1', color: '#16a34a' },
   ],
@@ -1092,6 +1092,7 @@ const fallbackReason = computed(() => {
     </div>
 
     <div class="mint-component-playground__surface">
+      <ClientOnly>
       <template v-if="name === 'AlertBox'">
         <AlertBox type="success" title="Analysis complete" action-label="Open result">
           24 samples processed. QC checks passed for 23 samples.
@@ -2024,6 +2025,10 @@ const fallbackReason = computed(() => {
           <p>{{ fallbackReason }}</p>
         </div>
       </template>
+      <template #fallback>
+        <span class="mint-live-caption">Preview loads in the browser.</span>
+      </template>
+      </ClientOnly>
     </div>
 
     <p class="mint-live-caption" v-if="hasLivePreview">

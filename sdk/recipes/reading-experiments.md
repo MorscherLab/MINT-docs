@@ -85,6 +85,23 @@ class MyPlugin(AnalysisPlugin):
 
 `load()` returns `(DesignData | None, PluginAnalysisResult | None)` — works in both standalone (returns `(None, None)`) and integrated modes.
 
+To read all analysis results for a cross-plugin dashboard, be explicit:
+
+```python
+class ReaderPlugin(AnalysisPlugin):
+    async def summarize_all_results(self, experiment_id: int):
+        results = await self.load_analyses(
+            experiment_id,
+            include_others=True,
+        )
+        return [
+            {"plugin": result.plugin_id, "keys": sorted(result.result.keys())}
+            for result in results
+        ]
+```
+
+Without `include_others=True`, `load_analyses()` returns only this plugin's own result. That matches `load_analysis()` and avoids accidental cross-plugin reads in normal analysis plugins.
+
 ## Notes
 
 - `ExperimentRepository.create / update / delete` raise `PermissionException` for `STATIC` and `ANALYSIS` plugins. They are available to `EXPERIMENT_DESIGN` plugins through the design-scoped wrapper and to `FULL` plugins through the full repository.
