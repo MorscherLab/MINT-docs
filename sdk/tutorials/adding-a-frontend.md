@@ -161,7 +161,7 @@ The CSS entry is intentionally small:
 ```css
 /* frontend/src/style.css */
 @import "tailwindcss";
-@import "@morscherlab/mint-sdk/styles" layer(mint-sdk);
+@import "@morscherlab/mint-sdk/styles";
 ```
 
 ## 3. Use the generated client

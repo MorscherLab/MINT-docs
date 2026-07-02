@@ -36,6 +36,18 @@ Update notifications appear in **Admin → Updates** with the diff of the change
 
 There is a brief outage during the swap. For zero-downtime upgrades, run two MINT replicas behind a load balancer and rolling-restart them.
 
+### Docker runtime bundles
+
+Docker deployments do not have a `.git` checkout inside the container. For that install path, MINT applies the platform release's runtime bundle instead of running `git checkout`. If the GitHub release asset is private or rate-limited, set `MINT_UPDATES__GITHUB_TOKEN` in the container environment before using **Admin → Updates**.
+
+For unattended Docker updates, opt in with:
+
+```bash
+MINT_UPDATES__AUTO_APPLY_ON_STARTUP=true
+```
+
+On each container creation or recreation, the entrypoint checks for a newer platform bundle, applies it when available, and continues startup even if the preflight update check fails. Leave this off when your lab requires scheduled maintenance windows or manual release review.
+
 ## Plugin updates
 
 Plugin updates are surfaced in **Admin → Plugins** and the marketplace modal, with an **Update** action when the registry advertises a newer compatible version. Each plugin has its own marketplace auto-update preference in `marketplace.autoUpdatePlugins`:

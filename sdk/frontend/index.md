@@ -25,7 +25,7 @@ If you scaffolded with `mint init` and did not pass `--no-frontend`, all of this
    ```css
    /* src/style.css */
    @import "tailwindcss";
-   @import "@morscherlab/mint-sdk/styles" layer(mint-sdk);
+   @import "@morscherlab/mint-sdk/styles";
    ```
 
 3. **Install the Vue plugin** before Pinia/router:

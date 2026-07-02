@@ -79,11 +79,12 @@ Visible only to platform admins.
 |------|----------|
 | **Users** | Account list, role assignments, manual disable / re-enable |
 | **Roles** | System role presets and custom-role editor |
+| **Experiment Types** | Experiment type registration and platform-owned design metadata |
 | **Plugins** | Installed plugins, per-plugin upgrade / uninstall |
-| **Marketplace** | Catalog browser, install requests, approval queue |
-| **Updates** | Platform and plugin update statuses |
-| **Status** | Live health overview (DB, plugins, queues) |
-| **Settings** | SMTP, marketplace registry, observability, auth |
+| **Logs** | Structured platform logs and health diagnostics |
+| **Configuration** | Platform, auth, database, storage, access, marketplace, observability |
+| **Server** | Runtime status and platform update controls |
+| **Terminal** | Optional container/process shell and persisted startup script; hidden unless `adminTerminalEnabled` is on |
 
 > [Screenshot: Admin → Users page with a custom role highlighted]
 

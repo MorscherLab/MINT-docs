@@ -15,7 +15,7 @@ Frontend scaffolding is included by default with `mint init` (skipped when `--no
 ```css
 /* frontend/src/style.css */
 @import "tailwindcss";
-@import "@morscherlab/mint-sdk/styles" layer(mint-sdk);
+@import "@morscherlab/mint-sdk/styles";
 ```
 
 ## Token families

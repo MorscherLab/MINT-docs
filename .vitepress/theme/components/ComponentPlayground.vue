@@ -86,6 +86,9 @@ import {
   SequenceInput,
   SequenceProgressBar,
   SettingsModal,
+  SmartGroupFieldRecipe,
+  SmartGroupManual,
+  SmartGroupModal,
   Skeleton,
   StatusIndicator,
   StepWizard,
@@ -121,8 +124,10 @@ const tagsValue = ref(['control', 'dose'])
 const modalOpen = ref(false)
 const confirmOpen = ref(false)
 const selectedRows = ref<(string | number)[]>([2])
+const dataFrameColumnWidths = ref<Record<string, number>>({})
 const selectedWells = ref(['B2', 'H12', 'P24'])
 const currentStep = ref(1)
+const smartGroupMode = ref<'auto' | 'manual'>('auto')
 const colorValue = ref(42)
 const segmentedValue = ref('plate')
 const dropdownValue = ref('export')
@@ -1050,6 +1055,9 @@ const previewNames = new Set([
   'SequenceInput',
   'SequenceProgressBar',
   'SettingsModal',
+  'SmartGroupFieldRecipe',
+  'SmartGroupManual',
+  'SmartGroupModal',
   'Skeleton',
   'StatusIndicator',
   'StepWizard',
@@ -1585,6 +1593,22 @@ const fallbackReason = computed(() => {
         </div>
       </template>
 
+      <template v-else-if="name === 'SmartGroupModal'">
+        <SmartGroupModal
+          v-model:mode="smartGroupMode"
+          @apply="smartGroupMode = 'manual'"
+          @done="smartGroupMode = 'auto'"
+        />
+      </template>
+
+      <template v-else-if="name === 'SmartGroupFieldRecipe'">
+        <SmartGroupFieldRecipe @apply="smartGroupMode = 'manual'" @manual="smartGroupMode = 'manual'" />
+      </template>
+
+      <template v-else-if="name === 'SmartGroupManual'">
+        <SmartGroupManual @done="smartGroupMode = 'auto'" @auto="smartGroupMode = 'auto'" />
+      </template>
+
       <template v-else-if="name === 'GroupAssigner'">
         <GroupAssigner
           :groups="groupAssignerGroups"
@@ -1745,9 +1769,12 @@ const fallbackReason = computed(() => {
           sortable
           selectable
           sticky-header
+          resizable
+          deletable
           bordered
           size="sm"
           :pagination="false"
+          v-model:column-widths="dataFrameColumnWidths"
           @update:selected-keys="selectedRows = $event"
         />
       </template>

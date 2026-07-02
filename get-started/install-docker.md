@@ -23,13 +23,13 @@ MINT is supported on **Linux servers only**, via either Docker (this page) or th
 The official image is published to GitHub Container Registry:
 
 ```
-ghcr.io/morscherlab/mint:1.0.41
+ghcr.io/morscherlab/mint:1.0.47
 ghcr.io/morscherlab/mint:1.0
 ghcr.io/morscherlab/mint:latest
 ```
 
 ::: tip Pin to a specific version
-For production, pin to a full version (`1.0.41` in the example below) rather than a moving tag like `latest`. Check [GitHub Releases](https://github.com/MorscherLab/MINT/releases) for the newest stable tag before installing. Explicit tags make upgrades an intentional edit and rollbacks a one-line revert.
+For production, pin to a full version (`1.0.47` in the example below) rather than a moving tag like `latest`. Check [GitHub Releases](https://github.com/MorscherLab/MINT/releases) for the newest stable tag before installing. Explicit tags make upgrades an intentional edit and rollbacks a one-line revert.
 :::
 
 ## docker-compose.yml
@@ -40,7 +40,7 @@ A minimal compose file with Postgres included:
 # /opt/mint/docker-compose.yml
 services:
   mint:
-    image: ghcr.io/morscherlab/mint:1.0.41
+    image: ghcr.io/morscherlab/mint:1.0.47
     restart: unless-stopped
     depends_on:
       postgres:
@@ -59,6 +59,8 @@ services:
       MINT_AUTH__JWT_SECRET_KEY: "${MINT_JWT_SECRET}"
       MINT_AUTH__ENABLE_PASSKEY: "true"
       MINT_MARKETPLACE__REGISTRY_URL: "https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json"
+      MINT_UPDATES__AUTO_APPLY_ON_STARTUP: "false"
+      MINT_ADMIN_TERMINAL_ENABLED: "false"
     volumes:
       - mint-data:/app/data
     ports:
@@ -198,6 +200,22 @@ docker compose logs -f mint   # confirm migrations applied cleanly
 ```
 
 To roll back, revert the tag and `docker compose up -d mint` again. The Postgres volume retains data; the platform's own migrations are forward-only, so a rollback only works if you haven't crossed a major version boundary. Take a `pg_dump` before major upgrades.
+
+### Optional startup auto-update
+
+Docker images can also apply the newest platform runtime bundle before Uvicorn starts:
+
+```yaml
+environment:
+  MINT_UPDATES__AUTO_APPLY_ON_STARTUP: "true"
+  MINT_UPDATES__GITHUB_TOKEN: "${GITHUB_TOKEN:-}"
+```
+
+Use this only when you intentionally want recreated containers to move to the latest compatible MINT release automatically. The entrypoint checks GitHub releases, applies the bundle when one is available, and starts MINT anyway if the update check fails.
+
+### Optional Admin terminal
+
+`MINT_ADMIN_TERMINAL_ENABLED` controls **Admin → Terminal**. It is off by default because commands run inside the container as the MINT process user. When enabled, admins with `platform.configure` can open a short-lived terminal session and save commands to `/app/data/admin-terminal/startup.sh`; the Docker entrypoint runs that executable script on future container starts. Keep this disabled unless your deployment needs runtime maintenance from the web UI.
 
 ## Backups
 

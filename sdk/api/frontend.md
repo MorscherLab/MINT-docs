@@ -4,7 +4,7 @@ Components, composables, and types exported from `@morscherlab/mint-sdk`. Each e
 
 ## Components
 
-About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src/components).
+90+ Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src/components).
 
 ### Layout
 
@@ -58,7 +58,7 @@ About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components
 
 | Component | Use |
 |-----------|-----|
-| `DataFrame` | Sortable / sticky table |
+| `DataFrame` | Searchable, sortable, sticky table with optional row selection, deletion, and column resizing |
 | `AppContainer`, `CollapsibleCard`, `ResourceCard` | Card and panel surfaces |
 | `Breadcrumb` | Breadcrumb trail |
 | `ScientificNumber` | Formatted scientific number |
@@ -107,6 +107,9 @@ About 90 Vue 3 component exports. Source: [`packages/sdk-frontend/src/components
 | `SampleSelector` | Multi-sample selector |
 | `GroupAssigner` | Manual group assignment UI |
 | `AutoGroupModal` | Auto-grouping modal (driven by `useAutoGroup`) |
+| `SmartGroupModal` | Two-mode smart grouping shell for auto and manual sample grouping |
+| `SmartGroupFieldRecipe` | Auto grouping view based on parsed sample fields and QC routing |
+| `SmartGroupManual` | Manual cohort builder for irregular sample names |
 | `BatchProgressList` | Progress for batch operations |
 
 ### Theming + utilities
@@ -250,7 +253,7 @@ For the full list, the TypeScript source is the canonical reference: [`packages/
 
 - All components and composables target Vue 3 with the Composition API. They don't work with Options API.
 - Tree-shaking is supported — importing one component pulls only that component into the bundle.
-- Current plugin scaffolds import Tailwind v4 and the SDK style bundle from `frontend/src/style.css`: `@import "tailwindcss";` then `@import "@morscherlab/mint-sdk/styles" layer(mint-sdk);`. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
+- Current plugin scaffolds import Tailwind v4 and the SDK style bundle from `frontend/src/style.css`: `@import "tailwindcss";` then `@import "@morscherlab/mint-sdk/styles";`. Keep the SDK import unlayered so Tailwind preflight cannot outrank SDK component styles. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
 - For plugin-scoped API calls, prefer `useGeneratedPluginClient()` from `frontend/src/generated/mint-plugin.ts`; use raw `useApi()` for platform APIs outside the plugin contract.
 - `mint doctor` flags legacy `usePluginApi()`, private SDK subpath imports, direct frontend composable file subpaths, and raw plugin API `fetch('/api/...')` calls.
 

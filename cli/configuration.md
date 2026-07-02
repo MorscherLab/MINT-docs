@@ -16,9 +16,11 @@ For most installations, editing `config.json` is the only configuration step. Th
   "platformName": "MINT",
   "devMode": false,
   "setupCompleted": false,
+  "adminTerminalEnabled": false,
   "server": { "...": "..." },
   "database": { "...": "..." },
   "auth": { "...": "..." },
+  "sso": { "...": "..." },
   "plugins": { "...": "..." },
   "marketplace": { "...": "..." },
   "updates": { "...": "..." },
@@ -90,6 +92,41 @@ PostgreSQL credentials are top-level settings named `DB_USERNAME` and `DB_PASSWO
 | `jwtSecretKey` | auto-generated if empty | Secret used to sign JWTs |
 | `tokenExpireMinutes` | `1440` | Token lifetime |
 
+## `sso`
+
+Built-in SSO currently covers SWITCH edu-ID through OpenID Connect:
+
+```json
+{
+  "sso": {
+    "eduid": {
+      "enabled": false,
+      "issuer": "https://login.eduid.ch/",
+      "clientId": "",
+      "clientSecret": "",
+      "scopes": ["openid", "profile", "email", "https://eduid.ch/scope/userinfo.read"],
+      "autoProvision": true,
+      "activeByDefault": true,
+      "usernameClaim": "email",
+      "identityClaim": "swissEduIDUniqueID"
+    }
+  }
+}
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `enabled` | `false` | Show **Sign in with SWITCH edu-ID** on the login page |
+| `issuer` | `https://login.eduid.ch/` | OIDC issuer; MINT normalizes the trailing slash |
+| `clientId` / `clientSecret` | `""` | edu-ID OIDC client credentials |
+| `scopes` | `openid`, `profile`, `email`, edu-ID userinfo | OIDC scopes; env values may be JSON or comma-separated |
+| `autoProvision` | `true` | Create a MINT user on first successful edu-ID login |
+| `activeByDefault` | `true` | Newly provisioned users are active immediately |
+| `usernameClaim` | `email` | Claim used as the MINT username |
+| `identityClaim` | `swissEduIDUniqueID` | Stable edu-ID identity key stored for future logins |
+
+edu-ID SSO requires database-backed users (`database.mode` must be `sqlite` or `postgresql`) and a public `server.externalUrl`, because the callback URL is `<externalUrl>/api/auth/sso/eduid/callback`.
+
 ## `plugins`
 
 | Key | Default | Description |
@@ -120,6 +157,8 @@ PostgreSQL credentials are top-level settings named `DB_USERNAME` and `DB_PASSWO
 
 See [Updates](/workflow/updates) for the wider picture.
 
+Docker startup auto-update is controlled by the container entrypoint environment variable `MINT_UPDATES__AUTO_APPLY_ON_STARTUP`, not by `config.json`.
+
 ## `observability`
 
 | Key | Default | Description |
@@ -137,6 +176,14 @@ When `observability.enabled` is `false`, instrumentation is a no-op.
 | Key | Default | Description |
 |-----|---------|-------------|
 | `experimentVisibilityMode` | `open` | `open` keeps normal project-level experiment visibility; `restricted` limits experiment lists to creators, collaborators, and experiments in projects the user can access |
+
+## `adminTerminalEnabled`
+
+```json
+{ "adminTerminalEnabled": false }
+```
+
+When enabled, users with `platform.configure` can use **Admin → Terminal** to open a short-lived shell inside the running MINT container/process and maintain a persisted startup script under `server.dataPath/admin-terminal/startup.sh`. Keep this off by default; it is intended for tightly controlled server administration, not routine plugin use.
 
 ## `corsOrigins`
 
@@ -164,8 +211,11 @@ Nested keys use `__` (double underscore) as the separator, and `MINT_` as the pr
 | `database.mode` | `MINT_DATABASE__MODE` |
 | `database.databaseName` | `MINT_DATABASE__DATABASE_NAME` |
 | `auth.jwtSecretKey` | `MINT_AUTH__JWT_SECRET_KEY` |
+| `sso.eduid.enabled` | `MINT_SSO__EDUID__ENABLED` |
+| `sso.eduid.clientId` | `MINT_SSO__EDUID__CLIENT_ID` |
 | `marketplace.registryUrl` | `MINT_MARKETPLACE__REGISTRY_URL` |
 | `updates.platformRepo` | `MINT_UPDATES__PLATFORM_REPO` |
+| `adminTerminalEnabled` | `MINT_ADMIN_TERMINAL_ENABLED` |
 
 Booleans accept `true`/`false`/`1`/`0`. JSON values can be embedded literally.
 
@@ -184,6 +234,7 @@ The configured `server.dataPath` (default `./data`) holds platform runtime state
 | `plugins/snapshots/` | Pre-install / pre-upgrade Python environment snapshots |
 | `plugins/<plugin>/venv/` | Isolated plugin virtual environments when subprocess isolation is used |
 | `plugins/<plugin>/config.json` | Legacy per-plugin settings fallback |
+| `admin-terminal/startup.sh` | Optional startup script managed by **Admin → Terminal** |
 
 Removing `marketplace/` is safe; it regenerates on demand. Removing `plugins/snapshots/` discards rollback history.
 

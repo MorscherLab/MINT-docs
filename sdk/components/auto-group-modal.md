@@ -36,4 +36,16 @@ The applied result includes `groups`, `experimentalGroups`, `qcGroups`, `metadat
 
 For prop-level detail, open the source file.
 
+## Smart Group Components
+
+The smart grouping UI is also exported as composable pieces:
+
+| Component | Use |
+|-----------|-----|
+| `SmartGroupModal` | Full two-mode auto/manual grouping shell |
+| `SmartGroupFieldRecipe` | Auto grouping view only |
+| `SmartGroupManual` | Manual cohort builder only |
+
+Use `AutoGroupModal` when you want the existing sample auto-grouping integration. Use the `SmartGroup*` components when a plugin needs to own more of the modal shell, route the mode switch itself, or embed one grouping mode inside a larger workflow.
+
 [Back to component library](/sdk/components/)

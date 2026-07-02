@@ -1,8 +1,8 @@
 # Authentication
 
-MINT supports two complementary authentication methods: a classic email + password flow that issues JWTs, and WebAuthn / passkey login that uses a hardware security key, Touch ID, Windows Hello, or any other passkey-capable authenticator.
+MINT supports three complementary authentication paths: a classic email + password flow that issues JWTs, WebAuthn / passkey login that uses a hardware security key, Touch ID, Windows Hello, or another passkey-capable authenticator, and optional SWITCH edu-ID single sign-on.
 
-> [Screenshot: login page showing email-and-password form and "Sign in with passkey" button]
+> [Screenshot: login page showing email-and-password form, "Sign in with SWITCH edu-ID", and "Sign in with passkey" buttons]
 
 ## At a glance
 
@@ -10,8 +10,9 @@ MINT supports two complementary authentication methods: a classic email + passwo
 |--------|-------------------|---------------|--------------|
 | **Password + JWT** | A password | A salted password hash + your JWT secret | Yes |
 | **Passkey (WebAuthn)** | Nothing - your device authenticates you | A public key only | Per-device unless you sync via iCloud Keychain / Google Password Manager |
+| **SWITCH edu-ID** | Your institutional edu-ID login | A linked external identity and normal MINT user record | Yes |
 
-Both methods can be enabled at the same time. Users sign in with a password first, register a passkey from their profile, and can then choose either method on the login page.
+All methods can be enabled at the same time. Users may sign in with a password, register a passkey from their profile, link an edu-ID account, and then choose the available method on the login page.
 
 ## Sign in with email + password
 
@@ -51,9 +52,38 @@ To log in with a passkey, click **Sign in with passkey** on the login page; your
 | All authenticators lost | Ask an admin to reset the password after the lab's normal out-of-band identity check, then register a fresh passkey. |
 | Account compromised | Admin disables or deletes the user from **Admin → Users**, then re-creates or re-enables access after a password reset and passkey review. |
 
-## External identity providers
+## SWITCH edu-ID SSO
 
-The current core configuration covers local password/JWT auth and WebAuthn passkeys. It does not include a built-in SSO/OIDC provider block or a local-login toggle in `config.json`. If a deployment needs organization SSO, put MINT behind a lab-managed reverse proxy or external access gateway and keep a break-glass MINT admin account available.
+When `sso.eduid.enabled` is `true`, the login page shows **Sign in with SWITCH edu-ID**. MINT starts an OpenID Connect authorization flow at `/api/auth/sso/eduid/login`, handles the callback at `/api/auth/sso/eduid/callback`, and completes browser handoff through `/api/auth/sso/eduid/complete`.
+
+Minimal config:
+
+```json
+{
+  "server": {
+    "externalUrl": "https://mint.example.org"
+  },
+  "database": {
+    "mode": "postgresql"
+  },
+  "sso": {
+    "eduid": {
+      "enabled": true,
+      "clientId": "<edu-id client id>",
+      "clientSecret": "<edu-id client secret>"
+    }
+  }
+}
+```
+
+Key requirements:
+
+- `database.mode` must be `sqlite` or `postgresql`; edu-ID SSO does not work in database-less mode.
+- `server.externalUrl` must be the public HTTPS URL so MINT can build the callback URL.
+- `openid` must remain in `sso.eduid.scopes`.
+- Keep at least one local password/passkey admin account as break-glass access in case the external provider is unavailable.
+
+If `autoProvision` is enabled, a successful first edu-ID login creates the MINT user automatically. The stable edu-ID claim defaults to `swissEduIDUniqueID`, while the local username defaults to the `email` claim.
 
 ## Rate limiting
 

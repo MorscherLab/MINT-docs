@@ -20,6 +20,9 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Login loops back to the page | Cookies blocked for the platform domain | Allow cookies and reload |
 | "Invalid credentials" with the right password | JWT secret rotated mid-session | Sign in again — token rotation invalidates active sessions |
 | Passkey prompt fails | Browser doesn't support WebAuthn, or platform is on `127.0.0.1` over HTTP from a non-localhost browser | Use a recent Chrome/Safari/Firefox/Edge; serve over HTTPS for non-loopback access |
+| SWITCH edu-ID button missing | `sso.eduid.enabled` is false or the frontend is still using cached auth config | Enable `sso.eduid`, reload the page, and confirm `/api/auth/config` returns `sso.eduid.enabled: true` |
+| edu-ID callback fails | Missing `server.externalUrl`, missing `openid` scope, or callback URL not registered with edu-ID | Set `server.externalUrl` to the public HTTPS URL and register `<externalUrl>/api/auth/sso/eduid/callback` with edu-ID |
+| edu-ID login says database is required | Platform is running with `database.mode: none` | Use SQLite or PostgreSQL; SSO users need database-backed accounts |
 | "Rate limit exceeded" on auth | More than 20 attempts in 60s from your IP | Wait 60s; if you're behind a proxy that doesn't forward `X-Forwarded-For`, configure it to do so |
 | All admins lost access | Last admin demoted by mistake | Recover by editing the database directly: set the desired user's role back to Admin (`UPDATE users SET role_id = ...`) |
 
@@ -58,6 +61,17 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | "Update available" notification keeps coming back | Background update checks are enabled and a newer release exists | Install the update or set `updates.autoCheckEnabled: false` |
 | Platform update breaks a plugin | Plugin needs a fix for the new SDK | Restore the previous platform deployment/database backup until the plugin is updated |
 | Prereleases do not show up | Prerelease checks are disabled, or you're already on the newest tag | Set `updates.includePrereleases: true` if you intentionally want prereleases |
+| Docker container updates on restart when you did not expect it | Startup auto-update is enabled | Set `MINT_UPDATES__AUTO_APPLY_ON_STARTUP=false` and redeploy |
+| Docker startup auto-update fails but MINT still starts | The entrypoint treats startup update failures as warnings | Check `docker compose logs mint`, fix GitHub token/network/release access, then restart when ready |
+
+## Admin terminal
+
+| Problem | Cause | Fix |
+|---------|-------|-----|
+| **Admin → Terminal** shows disabled | `adminTerminalEnabled` is false | Set `MINT_ADMIN_TERMINAL_ENABLED=true` or `"adminTerminalEnabled": true`, then restart MINT |
+| Terminal tab missing | User lacks `platform.configure`, or admin tabs are filtered by role | Ask an admin to assign a role with `platform.configure` |
+| Terminal connects then closes | The short-lived WebSocket token expired or another session replaced it | Click connect again; only one terminal session per user is kept active |
+| Startup command does not rerun after container recreation | Startup script was not saved/executable or path was overridden | Check `/app/data/admin-terminal/startup.sh` or `MINT_ADMIN_TERMINAL_STARTUP_SCRIPT` in container logs |
 
 ## Database / observability
 
