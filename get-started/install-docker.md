@@ -23,13 +23,13 @@ MINT is supported on **Linux servers only**, via either Docker (this page) or th
 The official image is published to GitHub Container Registry:
 
 ```
-ghcr.io/morscherlab/mint:1.0.47
-ghcr.io/morscherlab/mint:1.0
+ghcr.io/morscherlab/mint:1.1.9
+ghcr.io/morscherlab/mint:1.1
 ghcr.io/morscherlab/mint:latest
 ```
 
 ::: tip Pin to a specific version
-For production, pin to a full version (`1.0.47` in the example below) rather than a moving tag like `latest`. Check [GitHub Releases](https://github.com/MorscherLab/MINT/releases) for the newest stable tag before installing. Explicit tags make upgrades an intentional edit and rollbacks a one-line revert.
+For production, pin to a full version (`1.1.9` in the example below) rather than a moving tag like `latest`. Check [GitHub Releases](https://github.com/MorscherLab/MINT/releases) for the newest stable tag before installing. Explicit tags make upgrades an intentional edit and rollbacks a one-line revert.
 :::
 
 ## docker-compose.yml
@@ -40,7 +40,7 @@ A minimal compose file with Postgres included:
 # /opt/mint/docker-compose.yml
 services:
   mint:
-    image: ghcr.io/morscherlab/mint:1.0.47
+    image: ghcr.io/morscherlab/mint:1.1.9
     restart: unless-stopped
     depends_on:
       postgres:
@@ -177,6 +177,19 @@ volumes:
 
 If Caddy runs as a Compose service, point that Caddyfile at `mint:8000` instead of `127.0.0.1:8001`, because both containers share the Compose network.
 
+MINT trusts forwarded client headers only from loopback proxies by default. If
+your reverse proxy runs in a separate container, set
+`MINT_SERVER__TRUSTED_PROXY_CIDRS` to a JSON list containing only that Compose
+network or proxy address, for example:
+
+```yaml
+environment:
+  MINT_SERVER__TRUSTED_PROXY_CIDRS: '["127.0.0.1/32", "::1/128", "172.18.0.0/16"]'
+```
+
+Do not use a broad trusted proxy range on hosts that receive traffic directly
+from users.
+
 ## First-run setup
 
 Open the public URL in your browser. On a fresh install you'll see the **Setup** page (only shown when no admin exists). Create the first admin account; everything else is configured from the in-app **Admin** view.
@@ -185,7 +198,7 @@ Open the public URL in your browser. On a fresh install you'll see the **Setup**
 
 After setup:
 
-1. Configure SMTP and the marketplace registry from **Admin → Settings**
+1. Configure notification delivery and the marketplace registry from **Admin → Configuration** and **Admin → Plugins**
 2. Create your first **Project** (see [Projects](/workflow/projects))
 3. Invite team members and assign system roles (see [Members & roles](/workflow/members-roles))
 
@@ -193,7 +206,7 @@ After setup:
 
 ```bash
 cd /opt/mint
-# Edit docker-compose.yml, bump the image tag (e.g., 1.0.0 → 1.1.0)
+# Edit docker-compose.yml, bump the image tag (e.g., 1.1.8 -> 1.1.9)
 docker compose pull mint
 docker compose up -d mint
 docker compose logs -f mint   # confirm migrations applied cleanly

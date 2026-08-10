@@ -174,7 +174,7 @@ mint dev --platform
 
 Use a migration unit test with `MigrationRunner` for quick feedback, or install the plugin into a disposable platform environment when you need to verify the real startup path.
 
-For a standalone platform start (no plugin attached), the migration runner runs as part of the normal `uvicorn api.main:app` startup — there is no "migrate only" mode.
+For a standalone platform start (no plugin attached), the migration runner runs as part of the normal `uvicorn api.main:create_app --factory` startup — there is no "migrate only" mode.
 
 ## Append-only discipline
 

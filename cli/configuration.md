@@ -3,27 +3,34 @@
 MINT reads configuration from four sources, in increasing order of precedence:
 
 1. **Built-in defaults** — used when no other source overrides them.
-2. **`config.json`** — normally `./config.json`; if `MINT_SERVER__DATA_PATH` is set, MINT uses `<dataPath>/config.json` when that file exists or when `./config.json` is absent.
+2. **`config.json`** — `MINT_CONFIG_PATH` wins when set; otherwise MINT uses `./config.json`, or `<server.dataPath>/config.json` when `MINT_SERVER__DATA_PATH` points at a data directory and that file should be used.
 3. **`.env`** — `dotenv`-style key/value pairs in the working directory.
 4. **Environment variables** — keys prefixed `MINT_`, with nested fields joined by `__` (e.g., `MINT_DATABASE__MODE=postgresql`).
 
-For most installations, editing `config.json` is the only configuration step. There is no separate `MINT_CONFIG_PATH` setting in the current platform; choose the config location by running from the directory that contains `config.json`, or by setting `MINT_SERVER__DATA_PATH` and placing the file at `<dataPath>/config.json`. Environment variables are useful for containerized deployments where a config file is awkward.
+For most installations, editing `config.json` is the only configuration step. Use `MINT_CONFIG_PATH` when the config file lives outside the working directory or data path. Environment variables are useful for containerized deployments where a config file is awkward.
 
 ## Top-level schema
 
 ```json
 {
   "platformName": "MINT",
+  "platformDescription": "Experiment database and analysis platform",
+  "loginDescription": "...",
+  "loginPoints": [],
+  "loginFooter": "Developed by Morscher Lab",
+  "loginFooterDetail": "University Children’s Hospital Zürich",
   "devMode": false,
   "setupCompleted": false,
   "adminTerminalEnabled": false,
   "server": { "...": "..." },
   "database": { "...": "..." },
+  "storage": { "...": "..." },
   "auth": { "...": "..." },
   "sso": { "...": "..." },
   "plugins": { "...": "..." },
   "marketplace": { "...": "..." },
   "updates": { "...": "..." },
+  "notifications": { "...": "..." },
   "logging": { "...": "..." },
   "errorReporting": { "...": "..." },
   "observability": { "...": "..." },
@@ -55,9 +62,11 @@ Dev mode is for local development and evaluation only. Never enable it on a host
 |-----|---------|-------------|
 | `apiMountPath` | `/api` | API mount path |
 | `dataPath` | `./data` | Runtime state directory |
+| `instanceId` | generated if empty | Durable deployment namespace for public identifiers |
 | `rpId` | `""` | WebAuthn relying-party ID |
 | `rpName` | `MINT` | WebAuthn relying-party display name |
 | `externalUrl` | `""` | Public platform URL, used for frontend/plugin context |
+| `trustedProxyCidrs` | `["127.0.0.1/32", "::1/128"]` | Proxy source networks trusted for forwarded client IP headers |
 
 ## `database`
 
@@ -82,6 +91,41 @@ Dev mode is for local development and evaluation only. Never enable it on a host
 ```
 
 PostgreSQL credentials are top-level settings named `DB_USERNAME` and `DB_PASSWORD` in `config.json` (or `MINT_DB_USERNAME` / `MINT_DB_PASSWORD` in the environment), not nested under `database`.
+
+## `storage`
+
+MINT can keep experiment objects on local disk, S3-compatible storage, or
+OpenStack Swift. Local storage is the default and uses `server.dataPath` unless
+`storage.objects.localPath` is set.
+
+```json
+{
+  "storage": {
+    "objects": {
+      "backend": "local",
+      "localPath": ""
+    },
+    "s3": {
+      "enabled": false,
+      "endpointUrl": "",
+      "regionName": "",
+      "objectBucket": "",
+      "objectPrefix": ""
+    },
+    "swift": {
+      "enabled": false,
+      "authUrl": "",
+      "objectContainer": "",
+      "objectPrefix": ""
+    }
+  }
+}
+```
+
+Set `storage.objects.backend` to `s3` or `swift` only after the matching
+backend section is configured. Secrets may be supplied through environment
+aliases such as `MINT_S3_ACCESS_KEY_ID`, `MINT_S3_SECRET_ACCESS_KEY`,
+`MINT_SWIFT_PASSWORD`, or the nested `MINT_STORAGE__...` names.
 
 ## `auth`
 
@@ -159,6 +203,20 @@ See [Updates](/workflow/updates) for the wider picture.
 
 Docker startup auto-update is controlled by the container entrypoint environment variable `MINT_UPDATES__AUTO_APPLY_ON_STARTUP`, not by `config.json`.
 
+## `notifications`
+
+Platform-owned notification integrations deliver plugin `@notify` events and
+admin messages. Plugins publish typed events; MINT owns SMTP/webhook delivery,
+retry state, and recipient policy.
+
+| Section | Main keys |
+|---------|-----------|
+| `notifications.email` | `enabled`, `host`, `port`, `tlsMode`, `fromAddress`, `fromName`, `username`, `password` |
+| `notifications.teams` | `enabled`, `webhookUrl` |
+| `notifications.slack` | `enabled`, `webhookUrl` |
+
+Only enable an integration when its required host/webhook fields are set.
+
 ## `observability`
 
 | Key | Default | Description |
@@ -208,6 +266,7 @@ Nested keys use `__` (double underscore) as the separator, and `MINT_` as the pr
 |------------|---------|
 | `devMode` | `MINT_DEV_MODE` |
 | `server.dataPath` | `MINT_SERVER__DATA_PATH` |
+| `server.trustedProxyCidrs` | `MINT_SERVER__TRUSTED_PROXY_CIDRS` |
 | `database.mode` | `MINT_DATABASE__MODE` |
 | `database.databaseName` | `MINT_DATABASE__DATABASE_NAME` |
 | `auth.jwtSecretKey` | `MINT_AUTH__JWT_SECRET_KEY` |
@@ -215,6 +274,8 @@ Nested keys use `__` (double underscore) as the separator, and `MINT_` as the pr
 | `sso.eduid.clientId` | `MINT_SSO__EDUID__CLIENT_ID` |
 | `marketplace.registryUrl` | `MINT_MARKETPLACE__REGISTRY_URL` |
 | `updates.platformRepo` | `MINT_UPDATES__PLATFORM_REPO` |
+| `notifications.email.host` | `MINT_NOTIFICATIONS__EMAIL__HOST` |
+| `notifications.teams.webhookUrl` | `MINT_NOTIFICATIONS__TEAMS__WEBHOOK_URL` |
 | `adminTerminalEnabled` | `MINT_ADMIN_TERMINAL_ENABLED` |
 
 Booleans accept `true`/`false`/`1`/`0`. JSON values can be embedded literally.

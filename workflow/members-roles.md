@@ -1,6 +1,6 @@
 # Members & Roles
 
-MINT uses platform role-based access control (RBAC) plus project membership. A **system role** governs route-level rights across the platform. Project membership decides who belongs to a project, who leads it, and, in restricted visibility mode, which project experiments a user can see. Eighteen permissions are grouped across five resource families; admins can also build custom roles by composing those permissions.
+MINT uses platform role-based access control (RBAC) plus project membership. A **system role** governs route-level rights across the platform. Project membership decides who belongs to a project, who leads it, and, in restricted visibility mode, which project experiments a user can see. Twenty-three permissions are grouped across nine resource families; admins can also build custom roles by composing those permissions.
 
 > [Screenshot: Admin → Roles page with the Admin / Member / Viewer presets and a custom role]
 
@@ -10,7 +10,7 @@ Three roles ship out of the box:
 
 | Role | Effective rights |
 |------|------------------|
-| **Admin** | All 18 permissions. Manages users, roles, plugins, the marketplace, the platform itself. |
+| **Admin** | All 23 permissions. Manages users, roles, plugins, jobs, notices, the marketplace, and the platform itself. |
 | **Member** | Create and edit projects/experiments they belong to. Run analysis plugins. No platform admin. |
 | **Viewer** | Read-only across the platform. No writes. |
 
@@ -42,7 +42,7 @@ From a project's **Members** tab, click **Invite**.
 
 Project members appear immediately on the project. In `access.experimentVisibilityMode: "restricted"`, membership contributes to which experiments appear in lists. An experiment's own [collaborators](/workflow/experiments#collaborators) can also grant visibility on a single experiment.
 
-## The 18 permissions
+## The 23 permissions
 
 Permissions are referenced by `resource.action` strings. The platform's backend routes check them via FastAPI dependencies; the admin UI surfaces grouped toggles for each.
 
@@ -51,6 +51,10 @@ Permissions are referenced by `resource.action` strings. The platform's backend 
 | **`projects.*`** (5) | `view`, `create`, `edit`, `delete`, `manage_members` |
 | **`experiments.*`** (4) | `view`, `create`, `edit`, `delete` |
 | **`plugins.*`** (4) | `view`, `use`, `configure`, `install` |
+| **`jobs.*`** (2) | `read_all`, `manage_all` |
+| **`notifications.*`** (1) | `receive_important` |
+| **`calendar.*`** (1) | `read_all` |
+| **`notices.*`** (1) | `publish` |
 | **`users.*`** (3) | `view`, `invite`, `manage` |
 | **`platform.*`** (2) | `configure`, `view_logs` |
 
@@ -58,13 +62,13 @@ The full mapping of role → permissions lives at [`api/permissions.py`](https:/
 
 ## Custom roles
 
-Admins can compose custom roles from any subset of the 18 permissions:
+Admins can compose custom roles from any subset of the 23 permissions:
 
 > [Screenshot: custom-role editor with permissions checkboxes]
 
 Custom roles are useful for narrow scopes — e.g., a "Plugin operator" role that has `plugins.view`, `plugins.use`, and `plugins.configure` but not `plugins.install`. Once defined, they appear alongside the built-in roles when assigning a system role to a user.
 
-The role-design rationale (why exactly these 18 permissions, why these groups) is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-10-rbac-roles-design.md).
+The role-design rationale for the original RBAC model is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-10-rbac-roles-design.md). The current authoritative permission list is [`api/permissions.py`](https://github.com/MorscherLab/MINT/blob/main/api/permissions.py).
 
 ## Plugin-specific roles
 

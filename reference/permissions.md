@@ -2,7 +2,7 @@
 
 MINT's RBAC has three pieces:
 
-1. **18 permissions** in 5 resource families
+1. **23 permissions** in 9 resource families
 2. **3 system roles** (Admin / Member / Viewer) plus admin-defined custom roles
 3. **Project membership and experiment collaborators** layered around visibility
 
@@ -38,6 +38,31 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 | `plugins.configure` | Change plugin settings, manage per-plugin user roles |
 | `plugins.install` | Install / uninstall / upgrade plugins (gates the marketplace approval action) |
 
+### `jobs.*` (2)
+
+| Permission | What it grants |
+|------------|----------------|
+| `jobs.read_all` | Read job state beyond the current user's own jobs |
+| `jobs.manage_all` | Cancel or manage jobs beyond the current user's own jobs |
+
+### `notifications.*` (1)
+
+| Permission | What it grants |
+|------------|----------------|
+| `notifications.receive_important` | Receive platform-routed important notifications |
+
+### `calendar.*` (1)
+
+| Permission | What it grants |
+|------------|----------------|
+| `calendar.read_all` | Read calendar feeds beyond the current user's personal scope |
+
+### `notices.*` (1)
+
+| Permission | What it grants |
+|------------|----------------|
+| `notices.publish` | Publish, pin, archive, and expire platform notices |
+
 ### `users.*` (3)
 
 | Permission | What it grants |
@@ -57,8 +82,8 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 
 The platform ships three system roles. Their permission sets come directly from `api/permissions.py`:
 
-- **Admin** — every permission (all 18)
-- **Member** — every permission EXCEPT `users.manage`, `platform.configure`, `plugins.install`
+- **Admin** — every permission (all 23)
+- **Member** — every permission EXCEPT `users.manage`, `platform.configure`, `plugins.install`, `jobs.read_all`, `jobs.manage_all`, `notifications.receive_important`, `calendar.read_all`, `notices.publish`
 - **Viewer** — only the four `*.view` permissions: `projects.view`, `experiments.view`, `plugins.view`, `users.view`
 
 Tabular form:
@@ -78,6 +103,11 @@ Tabular form:
 | `plugins.use` | ✓ | ✓ | |
 | `plugins.configure` | ✓ | ✓ | |
 | `plugins.install` | ✓ | | |
+| `jobs.read_all` | ✓ | | |
+| `jobs.manage_all` | ✓ | | |
+| `notifications.receive_important` | ✓ | | |
+| `calendar.read_all` | ✓ | | |
+| `notices.publish` | ✓ | | |
 | `users.view` | ✓ | ✓ | ✓ |
 | `users.invite` | ✓ | ✓ | |
 | `users.manage` | ✓ | | |
@@ -86,7 +116,7 @@ Tabular form:
 
 ## Custom roles
 
-Admins can build custom roles by composing any subset of the 18 permissions above. Custom roles appear alongside the built-in three when assigning a user's system role.
+Admins can build custom roles by composing any subset of the 23 permissions above. Custom roles appear alongside the built-in three when assigning a user's system role.
 
 Common custom-role recipes:
 
@@ -97,7 +127,7 @@ Common custom-role recipes:
 | **Plugin admin** | The Plugin operator set plus `plugins.install` |
 | **Project lead** | All `projects.*` plus all `experiments.*` |
 
-The role-design rationale (why exactly these 18 permissions) is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-10-rbac-roles-design.md).
+The role-design rationale for the original RBAC shape is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-10-rbac-roles-design.md). The current authoritative list is `api/permissions.py`.
 
 ## Project membership
 

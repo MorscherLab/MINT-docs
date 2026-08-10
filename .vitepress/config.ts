@@ -8,7 +8,7 @@ export default defineConfig({
 
   cleanUrls: true,
   ignoreDeadLinks: false,
-  srcExclude: ['README.md', 'CLAUDE.md', 'AGENTS.md', 'docs/**', 'node_modules/**'],
+  srcExclude: ['README.md', 'CLAUDE.md', 'AGENTS.md', 'docs/**', 'tasks/**', 'node_modules/**'],
 
   head: [
     ['link', { rel: 'icon', href: '/mint-icon.png' }],

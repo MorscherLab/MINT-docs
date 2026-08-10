@@ -1,6 +1,6 @@
 # mint CLI
 
-The `mint` command-line interface ships with the **`mint-sdk`** package (PyPI). It does **not** start the platform — the platform server is launched directly via `uvicorn api.main:app` (see [Install on Linux](/get-started/install-direct)). `mint` covers two complementary roles:
+The `mint` command-line interface ships with the **`mint-sdk`** package (PyPI). It covers plugin development and remote platform administration; production platform processes are configured separately (see [Install on Linux](/get-started/install-direct)).
 
 | Role | What it does | Detail |
 |------|--------------|--------|
@@ -53,9 +53,9 @@ Full details — subcommands and primary flags: [Plugin Development → CLI refe
 
 ## What `mint` is not
 
-- **Not a platform launcher.** `mint serve` doesn't exist. Start the platform with `uvicorn api.main:app`.
+- **Not a generic platform launcher.** `mint serve` doesn't exist. Direct installs usually run the ASGI factory with `uvicorn api.main:create_app --factory`; runtime/source deployments can use `mint daemon` when they need the 1.1 job/session host worker.
 - **Not a local `pip install <plugin>` replacement.** `mint plugin install` asks the running platform server to install a package or server-visible source, and `mint plugin upload` sends a `.mint` bundle to that server. For day-to-day use, admins usually use the Marketplace or Admin UI.
-- **Not a daemon.** `mint dev` runs in the foreground.
+- **Not the production daemon by default.** `mint dev` is for plugin hot reload, while `mint daemon` is the foreground runtime command used by Docker/Linux/WSL deployments.
 
 ## Next
 

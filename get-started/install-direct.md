@@ -64,7 +64,7 @@ sudo -u mint bash -c '
 
 :::
 
-This installs the platform package (`mint`) plus its dependencies (including `mint-sdk`, which provides the `mint` CLI binary at `/opt/mint/venv/bin/mint`). The platform itself runs as a long-lived `uvicorn` process — see "Run as a systemd service" below.
+This installs the platform package (`mint`) plus its dependencies (including `mint-sdk`, which provides the `mint` CLI binary at `/opt/mint/venv/bin/mint`). The platform itself runs as a long-lived single-worker ASGI process — see "Run as a systemd service" below.
 
 ::: tip Get the `mint` CLI on your shell PATH
 The `mint` CLI is convenient for admins running platform-data commands (`mint auth login`, `mint experiment list`). To make it globally available, install `mint-sdk` separately as a uv tool:
@@ -109,7 +109,7 @@ Create `/var/lib/mint/config.json`:
 }
 ```
 
-Generate a JWT secret with `python3 -c "import secrets; print(secrets.token_urlsafe(32))"` and never commit it. MINT reads `config.json` from the working directory, or from `<server.dataPath>/config.json` when `MINT_SERVER__DATA_PATH` is set. The systemd unit below sets `MINT_SERVER__DATA_PATH=/var/lib/mint`, so `/var/lib/mint/config.json` is the file that will be loaded. Configuration priority is: environment variables (`MINT_` prefix) > `.env` > `config.json` > defaults. See [CLI configuration](/cli/configuration) for the full schema.
+Generate a JWT secret with `openssl rand -base64 32` and never commit it. MINT reads `config.json` from `MINT_CONFIG_PATH` when that variable is set, otherwise from the working directory, or from `<server.dataPath>/config.json` when `MINT_SERVER__DATA_PATH` is set and that data-path file should win. The systemd unit below sets `MINT_SERVER__DATA_PATH=/var/lib/mint`, so `/var/lib/mint/config.json` is the file that will be loaded. Configuration priority is: environment variables (`MINT_` prefix) > `.env` > `config.json` > defaults. See [CLI configuration](/cli/configuration) for the full schema.
 
 ## Initialize the database
 
@@ -137,7 +137,7 @@ Group=mint
 WorkingDirectory=/var/lib/mint
 Environment=PATH=/opt/mint/venv/bin:/usr/local/bin:/usr/bin:/bin
 Environment=MINT_SERVER__DATA_PATH=/var/lib/mint
-ExecStart=/opt/mint/venv/bin/uvicorn api.main:app --host 127.0.0.1 --port 8001
+ExecStart=/opt/mint/venv/bin/uvicorn api.main:create_app --factory --host 127.0.0.1 --port 8001
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true
@@ -198,7 +198,7 @@ mint.example.org {
 
 :::
 
-Caddy auto-issues TLS certificates; nginx pairs naturally with `certbot`. Either way, make sure `X-Forwarded-For` is forwarded so MINT's rate limiter sees real client IPs.
+Caddy auto-issues TLS certificates; nginx pairs naturally with `certbot`. Either way, make sure `X-Forwarded-For` is forwarded so MINT's rate limiter sees real client IPs. MINT trusts forwarded headers only from `127.0.0.1/32` and `::1/128` by default; if your proxy is not local loopback, add only its address or CIDR to `server.trustedProxyCidrs`.
 
 ## First-run setup
 
@@ -208,7 +208,7 @@ Open the public URL in your browser. On a fresh install you'll see the **Setup**
 
 After setup:
 
-1. Configure SMTP and the marketplace registry from **Admin → Settings**
+1. Configure notification delivery and the marketplace registry from **Admin → Configuration** and **Admin → Plugins**
 2. Create your first **Project** (see [Projects](/workflow/projects))
 3. Invite team members and assign system roles (see [Members & roles](/workflow/members-roles))
 
@@ -223,6 +223,13 @@ For zero-downtime upgrades, run two MINT replicas behind the load balancer and r
 
 See [Updates](/workflow/updates) for the in-app upgrade flow and rollback support.
 
+::: tip Runtime daemon
+Source-checkout and runtime-bundle installs can also run the current foreground
+server through `mint daemon`. It wraps the same ASGI app with one host worker
+for sessions, plugin jobs, global CPU slots, and per-user job limits. Use
+`--forwarded-allow-ips` only for known proxy addresses or CIDRs.
+:::
+
 ## Troubleshooting
 
 | Problem | Fix |
@@ -232,7 +239,7 @@ See [Updates](/workflow/updates) for the in-app upgrade flow and rollback suppor
 | Port 8001 already in use | Change `--port` in the systemd unit, or `lsof -i :8001` to find the conflicting process. |
 | Migration fails with advisory-lock error | Two MINT processes started simultaneously and both tried to migrate. Stop one, let the other finish, then restart. |
 | 502 from the reverse proxy | MINT failed to start or crashed. Check `journalctl -u mint -n 200` for the trace. |
-| Rate limit fires for every request | The proxy isn't forwarding `X-Forwarded-For`. Add the header in the proxy config. |
+| Rate limit fires for every request | The proxy isn't forwarding `X-Forwarded-For`, or its address is missing from `server.trustedProxyCidrs`. |
 | Plugin install fails with `uv` not found | The plugin manager uses `uv` to install plugins into isolated venvs. Install it system-wide so the `mint` user can invoke it. |
 
 ## Next step

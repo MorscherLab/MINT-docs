@@ -76,7 +76,7 @@ pip install --user --upgrade mint
 pipx upgrade mint
 ```
 
-For self-hosted deployments, use `Admin → Updates` to check and apply available releases. Take a normal deployment/database backup before upgrading. See [Updates](/workflow/updates).
+For self-hosted deployments, use the Admin platform and plugin panels to check and apply available releases. Take a normal deployment/database backup before upgrading. See [Updates](/workflow/updates).
 
 ## Is MINT open source?
 

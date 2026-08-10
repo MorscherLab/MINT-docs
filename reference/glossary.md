@@ -40,7 +40,7 @@ When `updates.includePrereleases` is true, the platform update checker includes 
 A per-experiment role override stored on the experiment itself. Survives project membership changes.
 
 **Custom role**
-A platform-wide role assembled by an admin from any subset of the 18 permissions. Sits alongside the built-in Admin / Member / Viewer.
+A platform-wide role assembled by an admin from the platform permission catalog. Sits alongside the built-in Admin / Member / Viewer.
 
 ## D
 
@@ -103,7 +103,7 @@ The historical name of the platform — Morscher Laboratory Database. Now retire
 A WebAuthn credential — a public/private key pair stored on a device. Replaces or supplements password login.
 
 **Permission**
-A `resource.action` string (e.g., `experiment.write`) that backend routes check. 18 permissions total, in 5 groups.
+A `resource.action` string (e.g., `experiments.edit`) that backend routes check. Current MINT releases define 23 permissions in 9 groups.
 
 **Plugin auto-update**
 A per-plugin marketplace setting stored in `marketplace.autoUpdatePlugins`. When enabled, compatible registry updates can be installed automatically by the marketplace sync task.
