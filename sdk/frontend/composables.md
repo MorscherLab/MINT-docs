@@ -213,7 +213,7 @@ const toast = useToast()
 toast.success('Panel saved')
 toast.warning('Detected 3 duplicates — review before saving')
 toast.error('Failed to save: network error')
-toast.info('Tip: use Cmd+K to open the command palette')
+toast.info('Tip: results are saved to the experiment artifacts card')
 
 // Generic dispatcher: message, type, duration
 toast.show('Panel saved', 'success', 5000)

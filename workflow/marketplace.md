@@ -2,7 +2,7 @@
 
 The marketplace is MINT's plugin discovery and install surface. Users browse available plugins; admins approve install requests and manage the lifecycle.
 
-> [Screenshot: Admin -> Plugins -> Plugin Registry modal showing plugin cards, filters, Installed/Update badges, and cached registry status]
+> [Screenshot: Admin -> Plugins -> Registry showing plugin cards, filters, Installed/Update badges, and cached registry status]
 
 ## What's a marketplace registry
 
@@ -22,18 +22,18 @@ The feed for each plugin contains:
 | Author + repo + license | Provenance |
 | Description, tags, icon URL | Marketplace UI |
 
-A plugin can be in the registry without yet being installed. Conversely, plugins installed outside the registry through **Admin → Plugins** or the platform API won't appear in Marketplace — they show up under **Installed** but not **Marketplace**.
+A plugin can be in the registry without yet being installed. Conversely, plugins installed outside the registry through **Admin -> Plugins -> Installed** or the platform API will not appear in the Registry catalog. They still show up under **Installed**.
 
 MINT keeps an in-memory and on-disk registry cache under
 `server.dataPath/marketplace/`. If the remote registry is temporarily
 unavailable, the catalog falls back to the cache and marks the response as
-cached. Click **Refresh** in the registry modal to force a fetch when you have
+cached. Click **Refresh** in the Registry section to force a fetch when you have
 `plugins.configure`.
 
 ## Browsing
 
-Open **Admin -> Plugins**, then **Browse Registry**. Cards show name, type,
-latest version, tags, author, and a one-line summary.
+Open **Admin -> Plugins -> Registry**. Cards show name, type, latest version,
+tags, author, and a one-line summary.
 
 > [Screenshot: marketplace card with Install / Request install buttons]
 
@@ -75,7 +75,7 @@ If install fails, the operation reports the failing step and leaves the plugin u
 
 > [Screenshot: install progress dialog with each step ticking through]
 
-After a successful install, check **Installed plugins**. A package can appear as
+After a successful install, check **Admin -> Plugins -> Installed**. A package can appear as
 **Installed but not loaded yet** with a **Restart required** badge. It is not
 serving plugin routes until the server restarts and the plugin reaches the
 running state.
@@ -95,7 +95,7 @@ compatibility gates and restart-required behavior as a manual update.
 
 ## Uninstall
 
-From **Admin → Plugins**, click **Uninstall** on the plugin. The current Admin UI and `mint plugin uninstall` use the safe default: remove the package and keep plugin-owned database tables in place.
+From **Admin -> Plugins -> Installed**, click **Uninstall** on the plugin. The current Admin UI and `mint plugin uninstall` use the safe default: remove the package and keep plugin-owned database tables in place.
 
 See [Plugins → Uninstall modes](/workflow/plugins#uninstall-modes) for the full discussion.
 

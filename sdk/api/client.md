@@ -157,7 +157,7 @@ Network / timeout errors raise `httpx` exceptions — wrap in your own retry log
 
 `MINTClient` wires a refresh callback at construction. When a request returns 401 with an expired token, the client attempts `auth.refresh()` once before re-raising. Long-running scripts get refresh for free; explicit triggers aren't needed.
 
-For genuinely long jobs (CI runs that span days), prefer service-account tokens with longer TTL — generate from **Admin → Users → Service accounts** in the platform UI.
+For genuinely long jobs (CI runs that span days), prefer service-account tokens with longer TTL — generate from **Admin -> People -> Users -> Service accounts** in the platform UI.
 
 ## Pagination
 

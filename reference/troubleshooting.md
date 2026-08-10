@@ -11,7 +11,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Browser shows "Cannot connect" | Platform process crashed | `journalctl -u mint -n 200` (direct install) or `docker compose logs mint` (Docker); restart |
 | MINT starts but no logo / styles | Browser cached an old build | Hard-refresh with **⌘⇧R** (Mac) or **Ctrl+Shift+R** (Win/Linux) |
 | Migration fails with advisory-lock error | Two MINT processes started simultaneously | Stop one, let the other finish, restart |
-| Plugin migration fails on platform startup | A plugin's migration raised | Platform exits non-zero; **Admin → Plugins** (after restart from a known-good plugin set) shows the error. Fix the plugin's migration in a follow-up release. |
+| Plugin migration fails on platform startup | A plugin's migration raised | Platform exits non-zero; **Admin -> Plugins -> Installed** (after restart from a known-good plugin set) shows the error. Fix the plugin's migration in a follow-up release. |
 
 ## Authentication
 
@@ -40,11 +40,11 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Problem | Cause | Fix |
 |---------|-------|-----|
 | Plugin install fails with a dependency conflict | Plugin requires a clashing dep | The platform retries with an isolated venv automatically; if that also fails, the plugin's deps are inconsistent — open an issue against the plugin |
-| Plugin tile not visible to a user | User lacks the plugin role | **Admin → Plugins → \<plugin> → Users** — grant the appropriate plugin role |
-| Plugin upgrade fails partway | New migration crashed | Platform rolls back to the previous version; **Admin → Plugins** shows the error; fix the migration in a new plugin release |
-| Plugin process keeps crashing | Plugin error in `initialize()` or a request handler | In development, run `mint dev logs backend --lines 100`; in production, use **Admin → Status** or the platform service logs, then open the experiment that triggered it and check the Jobs panel |
+| Plugin tile not visible to a user | User lacks the plugin role | **Admin -> Plugins -> Installed -> Access control** — grant the appropriate plugin role |
+| Plugin upgrade fails partway | New migration crashed | Platform rolls back to the previous version; **Admin -> Plugins -> Installed** shows the error; fix the migration in a new plugin release |
+| Plugin process keeps crashing | Plugin error in `initialize()` or a request handler | In development, run `mint dev logs backend --lines 100`; in production, use **Admin -> Platform -> Server**, **Admin -> Platform -> Logs**, or the platform service logs. If the failure came from a generated analysis run, also check the plugin page's job status tray. |
 | `mint dev` can't find the plugin | Working directory has no `pyproject.toml` with `mint.plugins` entry point | `cd` into the plugin root, or `mint init` to scaffold |
-| Plugin appears installed but routes return 404 | Plugin failed `initialize()` and the loader skipped mounting | **Admin → Plugins** shows the failure reason; fix and reload |
+| Plugin appears installed but routes return 404 | Plugin failed `initialize()` and the loader skipped mounting | **Admin -> Plugins -> Installed** shows the failure reason; fix and reload |
 
 ## Marketplace
 
@@ -68,7 +68,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| **Admin → Terminal** shows disabled | `adminTerminalEnabled` is false | Set `MINT_ADMIN_TERMINAL_ENABLED=true` or `"adminTerminalEnabled": true`, then restart MINT |
+| **Admin -> Platform -> Terminal** shows disabled | `adminTerminalEnabled` is false | Set `MINT_ADMIN_TERMINAL_ENABLED=true` or `"adminTerminalEnabled": true`, then restart MINT |
 | Terminal tab missing | User lacks `platform.configure`, or admin tabs are filtered by role | Ask an admin to assign a role with `platform.configure` |
 | Terminal connects then closes | The short-lived WebSocket token expired or another session replaced it | Click connect again; only one terminal session per user is kept active |
 | Startup command does not rerun after container recreation | Startup script was not saved/executable or path was overridden | Check `/app/data/admin-terminal/startup.sh` or `MINT_ADMIN_TERMINAL_STARTUP_SCRIPT` in container logs |
@@ -92,6 +92,6 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 
 ## Still stuck?
 
-1. **Check the logs** — `journalctl -u mint -n 200` (direct install), `docker compose logs mint` (Docker), or **Admin → Status** in the UI — for error messages.
+1. **Check the logs** — `journalctl -u mint -n 200` (direct install), `docker compose logs mint` (Docker), or **Admin -> Platform -> Logs** in the UI — for error messages.
 2. **Search [GitHub issues](https://github.com/MorscherLab/MINT/issues)** — someone may have hit it before.
 3. **Open a new issue** with: MINT version (`mint --version`), OS, the steps you took, and the error message. Include the request ID from the failing response if available — every response carries one and it indexes the structured logs.

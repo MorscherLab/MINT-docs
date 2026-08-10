@@ -42,7 +42,7 @@ Optional lifecycle hooks (default to no-op):
 
 | Method | When called |
 |--------|-------------|
-| `check_health()` | Periodically by **Admin → Status** |
+| `check_health()` | Periodically by the platform and surfaced in **Admin -> Platform -> Server** |
 | `@on_event("experiment.before_save")` or legacy `on_before_experiment_save(...)` | Before any experiment write |
 | `@on_event("experiment.after_save")` or legacy `on_after_experiment_save(...)` | After a successful experiment write |
 | `@on_event("experiment.status_changed")` or legacy `on_experiment_status_change(...)` | On status flip |

@@ -4,7 +4,7 @@ The SDK ships with light/dark theme support, table-density settings, and palette
 
 ## Light, dark, system
 
-The platform exposes a theme switcher in the user's avatar menu — Light / Dark / System. Plugins:
+The platform exposes a theme switcher in the top action bar — Light / Dark / System. Plugins:
 
 - **Inherit automatically** when they use the current scaffold's `<PluginWorkspaceView>` / `<AppContainer>` wrapper, or another SDK shell such as `<AppLayout>`, together with design tokens
 - **Should not maintain a separate theme switcher** — the platform owns it

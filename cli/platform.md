@@ -109,7 +109,7 @@ Prints a one-screen health overview:
 - Loaded plugins returned by `/health`
 - Token validity / expiry when the server can verify it
 
-For deeper operational status, use **Admin → Status** in the browser UI.
+For deeper operational status, use **Admin -> Platform -> Server** in the browser UI.
 
 ## Admin
 

@@ -5,7 +5,7 @@ projects, experiments, members, plugins, and marketplace. Everything
 lab-specific - LC-MS sequence design, drug-response prediction, chemical
 drawing, importers, viewers - arrives as a plugin.
 
-> [Screenshot: Admin -> Plugins page showing Install Plugin, Installed plugins, pending restart rows, and the Browse Registry button]
+> [Screenshot: Admin -> Plugins group showing Installed and Registry sections, pending restart rows, and marketplace cards]
 
 Think of the plugin system as five layers:
 
@@ -96,7 +96,7 @@ Plugins run with one of two isolation strategies:
 | **Shared environment** | When dependency sets are compatible | Plugin shares the platform's venv |
 | **Per-plugin venv** | When the manifest/runtime installs the plugin as a subprocess because dependency isolation is needed | `uv` creates a separate venv; plugin runs in a subprocess and the platform proxies HTTP to it |
 
-In both cases the plugin's HTTP surface is mounted at the `routes_prefix` declared in its `PluginMetadata`. The user can't tell from the URL whether the plugin is in-process or out-of-process; the platform handles the proxy transparently.
+In both cases the plugin's HTTP surface is mounted at the `routes_prefix` declared with `@mint_plugin(...)` or legacy metadata. The user can't tell from the URL whether the plugin is in-process or out-of-process; the platform handles the proxy transparently.
 
 Administrators can inspect isolated subprocesses from the server status view:
 plugin name, status, port, start time, and restart count are shown in the
@@ -146,7 +146,7 @@ manual schema removal.
 Plugins can register their own `UserPluginRole` entries, separate from platform RBAC. A plugin role is a string the plugin author chose; it lets the plugin gate features per user without burdening the platform's role model.
 
 A user's plugin role for a given plugin is set from **Admin -> Plugins ->
-Installed plugins -> more actions -> Access control**.
+Installed -> plugin actions -> Access control**.
 
 ## Built-in plugins
 

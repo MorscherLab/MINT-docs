@@ -30,9 +30,9 @@ Rotating `auth.jwtSecretKey` invalidates every active session, signing every use
 
 ## Sign in with a passkey
 
-If passkeys are enabled (`auth.enablePasskey: true`), users can register one or more authenticators from the profile **Passkey** tab.
+If passkeys are enabled (`auth.enablePasskey: true`), users can register one or more authenticators from **Your account -> Security**.
 
-> [Screenshot: profile Passkey tab listing registered credentials with device names and creation timestamps]
+> [Screenshot: Your account -> Security listing registered passkeys with device names and creation timestamps]
 
 Each registered passkey carries:
 
@@ -47,10 +47,10 @@ To log in with a passkey, click **Sign in with passkey** on the login page; your
 
 | Scenario | Resolution |
 |----------|------------|
-| Lost passkey, password still known | Sign in with the password, then remove the old credential and register a new passkey from the profile **Passkey** tab. |
-| Forgotten password | An admin with `users.manage` can set a new password from **Admin → Users**. There is no self-service email reset flow in the current core platform. |
+| Lost passkey, password still known | Sign in with the password, then remove the old credential and register a new passkey from **Your account -> Security**. |
+| Forgotten password | An admin with `users.manage` can set a new password from **Admin -> People -> Users**. There is no self-service email reset flow in the current core platform. |
 | All authenticators lost | Ask an admin to reset the password after the lab's normal out-of-band identity check, then register a fresh passkey. |
-| Account compromised | Admin disables or deletes the user from **Admin → Users**, then re-creates or re-enables access after a password reset and passkey review. |
+| Account compromised | Admin disables or deletes the user from **Admin -> People -> Users**, then re-creates or re-enables access after a password reset and passkey review. |
 
 ## SWITCH edu-ID SSO
 

@@ -57,26 +57,34 @@ Two layers:
 
 `snapshot.py` keeps short-lived rollback snapshots for plugin upgrades, but those aren't a backup substitute — they're a local rollback aid.
 
+## Does MINT support SSO?
+
+Yes. Current MINT releases include built-in SWITCH edu-ID sign-in through OpenID Connect. Enable it under `sso.eduid`, set `server.externalUrl` to the public HTTPS URL, and keep SQLite or PostgreSQL enabled because SSO users need database-backed accounts.
+
+Other identity providers can still sit in front of MINT through an organization-managed reverse proxy or access gateway, but SWITCH edu-ID is the supported in-platform SSO path today. See [Authentication](/workflow/auth-passkeys).
+
 ## Can I write a plugin in something other than Python?
 
 The plugin contract is a FastAPI app + entry point in the `mint.plugins` group, so the plugin process itself must be Python. The plugin can shell out to native binaries, call other languages over IPC, or do anything else inside that process — but the platform-facing surface is Python + FastAPI.
 
-The frontend half is Vue 3, but it's optional: a backend-only plugin (e.g., a webhook receiver) doesn't need a frontend.
+For UI, choose the plugin mode that matches the job:
+
+- `generated` uses Python decorators and schemas to produce a MINT-native UI without a custom frontend build.
+- `standard` gives you a Vue 3 workspace when the plugin needs a custom interactive view.
+- Backend-only plugins can skip frontend code entirely.
 
 ## How do I update MINT?
 
+For a direct Linux platform install, upgrade the platform package inside the service venv and restart the service:
+
 ```bash
-# uv
-uv tool upgrade mint
-
-# pip
-pip install --user --upgrade mint
-
-# pipx
-pipx upgrade mint
+sudo -u mint /opt/mint/venv/bin/pip install --upgrade mint
+sudo systemctl restart mint
 ```
 
-For self-hosted deployments, use the Admin platform and plugin panels to check and apply available releases. Take a normal deployment/database backup before upgrading. See [Updates](/workflow/updates).
+For Docker, bump the image tag or use the runtime-bundle update path described in [Updates](/workflow/updates). The `uv tool upgrade mint-sdk` / `pipx upgrade mint-sdk` style commands only update an admin shell's `mint` CLI; they do not upgrade the running platform service.
+
+For self-hosted deployments, use **Admin -> Platform -> Server** and **Admin -> Plugins** to check available platform and plugin releases. Take a normal deployment/database backup before upgrading.
 
 ## Is MINT open source?
 

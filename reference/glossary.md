@@ -125,7 +125,7 @@ A self-contained extension to the platform. Plugin classes inherit
 `mint.plugins` entry-point group.
 
 **`PlatformContext`**
-The runtime object the platform hands a plugin. Provides repository accessors, the current user, and an OpenTelemetry tracer.
+The runtime bridge the platform hands a plugin during startup. It exposes the current actor plus scoped services for experiments, projects, analysis artifacts, plugin-owned data, settings, notifications, calendar events, and job visibility according to the plugin's declared capabilities.
 
 **Project**
 The top-level grouping in MINT. Owns a set of experiments and a member list. Project membership gates access to all experiments in the project.
@@ -142,7 +142,7 @@ Drops a plugin's tables and uploaded artifacts permanently. Irreversible.
 The platform's data-access abstraction. Each resource (project, experiment, user, …) has a repository that hides whether the storage is files, SQLite, or Postgres.
 
 **Routes prefix**
-The URL path a plugin mounts under, declared in `PluginMetadata.routes_prefix` (e.g., `/my-plugin`).
+The URL path a plugin mounts under, declared with `@mint_plugin(routes_prefix="/my-plugin")` or legacy `PluginMetadata.routes_prefix`.
 
 ## S
 
@@ -155,7 +155,7 @@ backup substitute.
 `mint-sdk` (Python) for plugin backends; `@morscherlab/mint-sdk` (npm) for plugin frontends. The contract between plugins and the platform.
 
 **SSO (Single Sign-On)**
-Delegating authentication to an external identity provider such as Microsoft Entra, Google Workspace, or Okta. The current core MINT config does not include a built-in OIDC provider block; deployments that need SSO usually place MINT behind an organization-managed reverse proxy or access gateway.
+Delegating authentication to an external identity provider. Current MINT releases include built-in SWITCH edu-ID sign-in through OpenID Connect. Other providers can still be handled by an organization-managed reverse proxy or access gateway when needed.
 
 **Status (experiment)**
 One of `planned`, `ongoing`, `completed`, or `cancelled`. Most plugins gate writes on the status.

@@ -208,7 +208,7 @@ Open the public URL in your browser. On a fresh install you'll see the **Setup**
 
 After setup:
 
-1. Configure notification delivery and the marketplace registry from **Admin → Configuration** and **Admin → Plugins**
+1. Configure notification delivery and the marketplace registry from **Admin -> Platform -> Configuration** and **Admin -> Plugins -> Registry**
 2. Create your first **Project** (see [Projects](/workflow/projects))
 3. Invite team members and assign system roles (see [Members & roles](/workflow/members-roles))
 

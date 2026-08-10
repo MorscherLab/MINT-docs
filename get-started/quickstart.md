@@ -49,11 +49,11 @@ Switch the status to **ongoing**. Most plugins gate result writes on `ongoing` o
 
 Use the experiment's **Analysis artifacts** card to pick an available analysis plugin, or open the plugin from the home **Plugins** launcher and select this experiment. Fill in the plugin's parameters and click **Run**.
 
-The plugin runs in its own isolated subprocess; MINT proxies its UI back into the page. Progress is tracked in the **Jobs** panel (top-right).
+If the plugin needs dependency isolation, MINT runs it in a subprocess and proxies its UI back into the page. Generated analysis plugins show run progress in the plugin page's job status tray.
 
 > [Screenshot: analysis-plugin sidebar with parameters and Run button]
 
-Approximate runtimes depend on the plugin and dataset size. The Jobs panel shows live status: queued → running → done (or failed).
+Approximate runtimes depend on the plugin and dataset size. The plugin job tray shows live status: queued → running → done (or failed).
 
 ## Step 5: Review analysis artifacts
 

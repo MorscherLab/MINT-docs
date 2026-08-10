@@ -2,7 +2,7 @@
 
 MINT's update story has three related checks: the **platform** runtime, the bundled **mint-sdk** package, and the **plugins** installed on top of it. Platform and SDK updates are checked from GitHub releases; marketplace plugin updates are checked from the configured registry.
 
-> [Screenshot: Admin → Plugins page showing platform and plugin update statuses]
+> [Screenshot: Admin -> Platform -> Server and Admin -> Plugins showing platform and plugin update statuses]
 
 ## Platform updates
 
@@ -27,7 +27,7 @@ Configured under `updates` in `config.json`:
 | `includePrereleases` | Include GitHub prereleases in the update list |
 | `pluginSources` | Optional per-plugin GitHub release sources used outside the marketplace registry |
 
-Update status appears in the Admin area alongside plugin and platform configuration. Installation:
+Update status appears in **Admin -> Platform -> Server** alongside platform health and runtime details. Installation:
 
 1. Stops the running MINT process gracefully
 2. Replaces the wheel
@@ -50,7 +50,7 @@ On each container creation or recreation, the entrypoint checks for a newer plat
 
 ## Plugin updates
 
-Plugin updates are surfaced in **Admin → Plugins** and the marketplace modal, with an **Update** action when the registry advertises a newer compatible version. Each plugin has its own marketplace auto-update preference in `marketplace.autoUpdatePlugins`:
+Plugin updates are surfaced in **Admin -> Plugins -> Installed** and **Admin -> Plugins -> Registry**, with an **Update** action when the registry advertises a newer compatible version. Each plugin has its own marketplace auto-update preference in `marketplace.autoUpdatePlugins`:
 
 > [Screenshot: per-plugin upgrade card with Auto-update toggle and version picker]
 

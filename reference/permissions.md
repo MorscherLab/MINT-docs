@@ -75,7 +75,7 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 
 | Permission | What it grants |
 |------------|----------------|
-| `platform.configure` | Modify admin settings (SMTP, marketplace registry, observability, auth), apply platform updates, and use **Admin → Terminal** when enabled |
+| `platform.configure` | Modify admin settings (SMTP, marketplace registry, observability, auth), apply platform updates, and use **Admin -> Platform -> Terminal** when enabled |
 | `platform.view_logs` | View structured logs and the admin status dashboard |
 
 ## System roles → permissions
@@ -154,11 +154,11 @@ Collaborator entries survive even if the user is later removed from the project 
 
 ## Plugin-internal roles
 
-Plugins can register their own role enum via `UserPluginRole`. These are scoped to the plugin: they don't grant any platform permissions and don't appear in this matrix. A plugin's role affects only what that plugin's own UI lets the user do. Set them under **Admin → Plugins → \<plugin> → Users**. See [Plugin Development → Tutorials → Plugin roles](/sdk/tutorials/plugin-roles) for how plugins use them.
+Plugins can register their own role enum via `UserPluginRole`. These are scoped to the plugin: they don't grant any platform permissions and don't appear in this matrix. A plugin's role affects only what that plugin's own UI lets the user do. Set them under **Admin -> Plugins -> Installed -> Access control**. See [Plugin Development → Tutorials → Plugin roles](/sdk/tutorials/plugin-roles) for how plugins use them.
 
 ## Admin terminal
 
-**Admin → Terminal** is not a separate permission. It is available only when both conditions are true:
+**Admin -> Platform -> Terminal** is not a separate permission. It is available only when both conditions are true:
 
 - `adminTerminalEnabled` is enabled in platform config or via `MINT_ADMIN_TERMINAL_ENABLED=true`
 - The user has `platform.configure`

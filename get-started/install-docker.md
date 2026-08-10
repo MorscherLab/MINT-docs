@@ -198,7 +198,7 @@ Open the public URL in your browser. On a fresh install you'll see the **Setup**
 
 After setup:
 
-1. Configure notification delivery and the marketplace registry from **Admin → Configuration** and **Admin → Plugins**
+1. Configure notification delivery and the marketplace registry from **Admin -> Platform -> Configuration** and **Admin -> Plugins -> Registry**
 2. Create your first **Project** (see [Projects](/workflow/projects))
 3. Invite team members and assign system roles (see [Members & roles](/workflow/members-roles))
 
@@ -228,7 +228,7 @@ Use this only when you intentionally want recreated containers to move to the la
 
 ### Optional Admin terminal
 
-`MINT_ADMIN_TERMINAL_ENABLED` controls **Admin → Terminal**. It is off by default because commands run inside the container as the MINT process user. When enabled, admins with `platform.configure` can open a short-lived terminal session and save commands to `/app/data/admin-terminal/startup.sh`; the Docker entrypoint runs that executable script on future container starts. Keep this disabled unless your deployment needs runtime maintenance from the web UI.
+`MINT_ADMIN_TERMINAL_ENABLED` controls **Admin -> Platform -> Terminal**. It is off by default because commands run inside the container as the MINT process user. When enabled, admins with `platform.configure` can open a short-lived terminal session and save commands to `/app/data/admin-terminal/startup.sh`; the Docker entrypoint runs that executable script on future container starts. Keep this disabled unless your deployment needs runtime maintenance from the web UI.
 
 ## Backups
 

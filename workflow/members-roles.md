@@ -2,7 +2,7 @@
 
 MINT uses platform role-based access control (RBAC) plus project membership. A **system role** governs route-level rights across the platform. Project membership decides who belongs to a project, who leads it, and, in restricted visibility mode, which project experiments a user can see. Twenty-three permissions are grouped across nine resource families; admins can also build custom roles by composing those permissions.
 
-> [Screenshot: Admin → Roles page with the Admin / Member / Viewer presets and a custom role]
+> [Screenshot: Admin -> People -> Roles page with the Admin / Member / Viewer presets and a custom role]
 
 ## System roles
 
@@ -14,7 +14,7 @@ Three roles ship out of the box:
 | **Member** | Create and edit projects/experiments they belong to. Run analysis plugins. No platform admin. |
 | **Viewer** | Read-only across the platform. No writes. |
 
-Every user has exactly one system role. Set on **Admin → Users** for a single user, or via the in-app onboarding flow when invitations are accepted.
+Every user has exactly one system role. Set on **Admin -> People -> Users** for a single user, or via the in-app onboarding flow when invitations are accepted.
 
 ## Project membership
 

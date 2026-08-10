@@ -24,4 +24,4 @@
   - [x] Correct SDK lifecycle/isolation concepts for `@mint_plugin`, decorated endpoints, settings hooks, and SDK version pinning.
   - [x] Sync packaging, publishing, config, API, frontend settings, deploying, and glossary references touched by plugin-system semantics.
 - [x] Plugin development guide: MINT SDK 1.1 `mint init --mode`, decorators, jobs, generated UI.
-- [ ] Reference/UI: admin navigation, account modal, glossary, FAQ, screenshots.
+- [x] Reference/UI: admin navigation, account modal, glossary, FAQ, screenshots.

@@ -60,7 +60,7 @@ The experiment page groups artifacts by producing plugin. It marks active artifa
 | `EXPERIMENT_DESIGN` | Yes | Yes | No | Plate maps, acquisition sequences, treatment layouts |
 | `FULL` | Yes | Yes | Yes | End-to-end workflows that own design and analysis |
 
-The plugin type is declared in `PluginMetadata.plugin_type`. The platform enforces write boundaries through `PlatformContext`, so an analysis plugin cannot accidentally overwrite design data.
+The plugin type is declared with `@mint_plugin(plugin_type=...)` or legacy metadata. The platform enforces write boundaries through `PlatformContext`, so an analysis plugin cannot accidentally overwrite design data.
 
 ## Storage layers
 

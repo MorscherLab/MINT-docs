@@ -241,7 +241,7 @@ When `observability.enabled` is `false`, instrumentation is a no-op.
 { "adminTerminalEnabled": false }
 ```
 
-When enabled, users with `platform.configure` can use **Admin → Terminal** to open a short-lived shell inside the running MINT container/process and maintain a persisted startup script under `server.dataPath/admin-terminal/startup.sh`. Keep this off by default; it is intended for tightly controlled server administration, not routine plugin use.
+When enabled, users with `platform.configure` can use **Admin -> Platform -> Terminal** to open a short-lived shell inside the running MINT container/process and maintain a persisted startup script under `server.dataPath/admin-terminal/startup.sh`. Keep this off by default; it is intended for tightly controlled server administration, not routine plugin use.
 
 ## `corsOrigins`
 
@@ -295,7 +295,7 @@ The configured `server.dataPath` (default `./data`) holds platform runtime state
 | `plugins/snapshots/` | Pre-install / pre-upgrade Python environment snapshots |
 | `plugins/<plugin>/venv/` | Isolated plugin virtual environments when subprocess isolation is used |
 | `plugins/<plugin>/config.json` | Legacy per-plugin settings fallback |
-| `admin-terminal/startup.sh` | Optional startup script managed by **Admin → Terminal** |
+| `admin-terminal/startup.sh` | Optional startup script managed by **Admin -> Platform -> Terminal** |
 
 Removing `marketplace/` is safe; it regenerates on demand. Removing `plugins/snapshots/` discards rollback history.
 

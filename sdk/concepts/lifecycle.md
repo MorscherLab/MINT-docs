@@ -71,7 +71,7 @@ The platform discovers entry points on every startup when `plugins.loadFromEntry
 
 ### Installing
 
-Triggered by **Admin -> Plugins -> Browse Registry -> Install**, bundle upload,
+Triggered by **Admin -> Plugins -> Registry -> Install**, bundle upload,
 or an admin install request through the platform API. The platform:
 
 1. Resolves the registry entry, upload, wheel, or `.mint` bundle.
