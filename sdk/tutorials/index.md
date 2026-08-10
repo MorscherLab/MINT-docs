@@ -1,6 +1,6 @@
 # Plugin development tutorials
 
-This is the hands-on path for building a MINT plugin. Start with a small analysis plugin, add a browser frontend, then build a design plugin with tables and role checks.
+This is the hands-on path for building a MINT plugin. Start with the SDK-managed generated UI path, then move to a custom Vue workspace when you need full control.
 
 For the full Plugin Development chapter map, start at [Plugin Development Guide](/sdk/).
 
@@ -22,12 +22,12 @@ You do not need to read the whole SDK reference first. When a tutorial introduce
 
 | Step | Tutorial | Project | What you will have afterward |
 |------|----------|---------|------------------------------|
-| 1 | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | `hello-mint` | Backend-only `ANALYSIS` plugin with routes, tests, `PlatformContext` reads, and a `.mint` bundle |
-| 2 | [Adding a frontend](/sdk/tutorials/adding-a-frontend) | `hello-mint` | Vue 3 frontend using `PluginWorkspaceView`, generated typed client, and `@morscherlab/mint-sdk` |
-| 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | `panel-designer` | `EXPERIMENT_DESIGN` plugin with SQLModel tables, CRUD routes, local SQLite, and installed-mode migrations |
+| 1 | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | `hello-mint` | `generated` mode `ANALYSIS` plugin with `@generated_ui`, one typed `@job`, a job test, and a `.mint` bundle |
+| 2 | [Adding a frontend](/sdk/tutorials/adding-a-frontend) | `hello-standard` | `standard` mode plugin with `@endpoint` handlers, a Vue 3 workspace, and the generated typed client |
+| 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | `panel-designer` | `EXPERIMENT_DESIGN` plugin with SQLModel tables, CRUD endpoints, local SQLite, and installed-mode migrations |
 | 4 | [Plugin roles](/sdk/tutorials/plugin-roles) | `panel-designer` | Plugin-specific `viewer` / `editor` / `admin` roles enforced by backend routes and reflected in the UI |
 
-The first two tutorials build one analysis plugin. The last two build a separate design plugin. That split mirrors real MINT deployments: design plugins usually define experiment structure, while analysis plugins read experiments and attach results.
+The first two tutorials are intentionally separate projects. `generated` mode is the fastest first plugin; `standard` mode is the custom UI path. The last two build a design plugin, which mirrors real MINT deployments: design plugins usually define experiment structure, while analysis plugins read experiments and attach results.
 
 ## What to learn before each step
 

@@ -3,19 +3,16 @@
 Every MINT plugin declares a `PluginType`. The choice determines which platform repositories it can access and which experiment payloads it is allowed to write.
 
 ```python
-from mint_sdk import PluginType
+from mint_sdk import AnalysisPlugin, PluginType, mint_plugin
 
+
+@mint_plugin(
+    analysis_type="metabolomics",
+    routes_prefix="/my-plugin",
+    plugin_type=PluginType.ANALYSIS,
+)
 class MyPlugin(AnalysisPlugin):
-    @property
-    def metadata(self):
-        return PluginMetadata(
-            name="My plugin",
-            version="1.0.0",
-            description="...",
-            analysis_type="metabolomics",
-            routes_prefix="/my-plugin",
-            plugin_type=PluginType.ANALYSIS,
-        )
+    pass
 ```
 
 ## The four types
@@ -27,7 +24,7 @@ class MyPlugin(AnalysisPlugin):
 | `PluginType.EXPERIMENT_DESIGN` | Defining and editing an experiment's design payload | Design-scoped create/update/delete | Can write owned design data | Read-only |
 | `PluginType.FULL` | Rare plugins that must own both design data and analysis outputs | Full repository access | Can write | Can write |
 
-The class you subclass is `AnalysisPlugin` regardless of type — the name reflects the abstract base, not the runtime category. The `plugin_type` field on `PluginMetadata` is what the platform reads.
+The class you subclass is `AnalysisPlugin` regardless of type — the name reflects the abstract base, not the runtime category. The `plugin_type` value declared through `@mint_plugin(...)` is what the platform reads. Legacy plugins may still return `PluginMetadata` from a `metadata` property, but new plugins should use the decorator.
 
 ## Capability flags
 
@@ -67,58 +64,40 @@ Pick **`FULL`** only when one plugin truly needs to do both jobs: create/update 
 ::: code-group
 
 ```python [Design plugin]
-from mint_sdk import AnalysisPlugin, PluginMetadata, PluginType, PluginCapabilities
+from mint_sdk import AnalysisPlugin, PluginCapabilities, PluginType, mint_plugin
 
+
+@mint_plugin(
+    analysis_type="metabolomics",
+    routes_prefix="/lcms-sequence",
+    plugin_type=PluginType.EXPERIMENT_DESIGN,
+    capabilities=PluginCapabilities(
+        requires_auth=True,
+        requires_experiments=True,
+        requires_database=True,
+        requires_shared_database=True,
+    ),
+)
 class LcmsSequenceDesignPlugin(AnalysisPlugin):
-    @property
-    def metadata(self):
-        return PluginMetadata(
-            name="LC-MS sequence designer",
-            version="1.0.0",
-            description="Design LC-MS acquisition sequences",
-            analysis_type="metabolomics",
-            routes_prefix="/lcms-sequence",
-            plugin_type=PluginType.EXPERIMENT_DESIGN,
-            capabilities=PluginCapabilities(
-                requires_auth=True,
-                requires_experiments=True,
-                requires_database=True,
-                requires_shared_database=True,
-            ),
-        )
-
-    def get_routers(self):
-        return []  # routers omitted for brevity
-
-    async def initialize(self, context=None): self._context = context
-    async def shutdown(self): pass
+    pass
 ```
 
 ```python [Analysis plugin]
-from mint_sdk import AnalysisPlugin, PluginMetadata, PluginType, PluginCapabilities
+from mint_sdk import AnalysisPlugin, PluginCapabilities, PluginType, mint_plugin
 
+
+@mint_plugin(
+    analysis_type="metabolomics",
+    routes_prefix="/peak-picking",
+    plugin_type=PluginType.ANALYSIS,
+    capabilities=PluginCapabilities(
+        requires_auth=True,
+        requires_experiments=True,
+        requires_database=True,
+    ),
+)
 class PeakPickingPlugin(AnalysisPlugin):
-    @property
-    def metadata(self):
-        return PluginMetadata(
-            name="Peak picking",
-            version="1.0.0",
-            description="Detect peaks in LC-MS chromatograms",
-            analysis_type="metabolomics",
-            routes_prefix="/peak-picking",
-            plugin_type=PluginType.ANALYSIS,
-            capabilities=PluginCapabilities(
-                requires_auth=True,
-                requires_experiments=True,
-                requires_database=True,
-            ),
-        )
-
-    def get_routers(self):
-        return []
-
-    async def initialize(self, context=None): self._context = context
-    async def shutdown(self): pass
+    pass
 ```
 
 :::

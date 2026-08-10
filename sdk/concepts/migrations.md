@@ -56,16 +56,20 @@ my_plugin/
 
 ```python
 # my_plugin/plugin.py
-from mint_sdk import AnalysisPlugin, PluginMetadata
+from mint_sdk import AnalysisPlugin, PluginCapabilities, PluginType, mint_plugin
 
+
+@mint_plugin(
+    analysis_type="experiment-design",
+    routes_prefix="/my-plugin",
+    plugin_type=PluginType.EXPERIMENT_DESIGN,
+    capabilities=PluginCapabilities(
+        requires_database=True,
+        requires_experiments=True,
+        requires_shared_database=True,
+    ),
+)
 class MyPlugin(AnalysisPlugin):
-    @property
-    def metadata(self) -> PluginMetadata: ...
-
-    def get_routers(self): ...
-    async def initialize(self, context=None): self._context = context
-    async def shutdown(self): pass
-
     def get_migrations_package(self) -> str:
         return "my_plugin.migrations"
 ```

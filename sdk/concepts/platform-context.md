@@ -3,11 +3,13 @@
 `PlatformContext` is the single object the platform hands to a plugin. Through it, the plugin reaches every platform-side service: experiments, plugin data, users, plugin roles, the platform config, and a database session scoped to the plugin's schema.
 
 ```python
-from mint_sdk import PlatformContext
+from mint_sdk import AnalysisPlugin, PlatformContext, mint_plugin
 
+
+@mint_plugin(analysis_type="custom", routes_prefix="/my-plugin")
 class MyPlugin(AnalysisPlugin):
-    async def initialize(self, context: PlatformContext | None = None):
-        self._context = context   # may be None in standalone mode
+    async def initialize(self, context: PlatformContext | None = None) -> None:
+        await super().initialize(context)
 ```
 
 When standalone, `context` is `None`; the plugin uses `LocalDatabase` (a `mint-sdk`-managed local SQLite) instead. When integrated, `context` is a real `PlatformContext` instance and every accessor below is live.
@@ -19,51 +21,41 @@ When standalone, `context` is `None`; the plugin uses `LocalDatabase` (a `mint-s
 | `is_authenticated` (property) | `bool` | True if the active request has an authenticated user |
 | `get_current_user_dependency()` | FastAPI `Depends` | Inject as `user = Depends(context.get_current_user_dependency())` |
 | `get_optional_user_dependency()` | FastAPI `Depends` | As above but `None`-tolerant |
+| `get_plugin_actor_dependency()` | FastAPI `Depends` | Yields typed `PluginActor` with platform role, plugin role, and permissions |
+| `get_optional_plugin_actor_dependency()` | FastAPI `Depends` | Optional typed actor |
+| `get_job_visibility_dependency()` | FastAPI `Depends` | Yields typed job visibility for job routes |
 | `get_user_repository()` | `UserRepository \| None` | User lookups (read-only) |
 | `get_experiment_repository()` | `ExperimentRepository \| None` | Experiment access, type-gated by `PluginType` |
 | `get_plugin_data_repository()` | `PluginDataRepository \| None` | Save/load `DesignData`, `AnalysisArtifact`, and compatibility `PluginAnalysisResult` |
 | `get_plugin_role_repository()` | `PluginRoleRepository \| None` | Per-plugin user roles |
 | `require_plugin_role(*roles)` | FastAPI `Depends` | Route guard — see below |
-| `get_config()` | `dict` (`PlatformConfig`) | Platform configuration view (filtered) |
+| `get_plugin_config()` | `dict` (`PlatformConfig`) | Persisted plugin configuration view |
+| `enqueue_notifications(...)` | async method | Durable notification enqueue hook when the platform supports it |
+| `publish_calendar_events(...)` | async method | Durable calendar publish/cancel hook when the platform supports it |
 | `get_shared_db_session()` | async context manager | Async SQLAlchemy session scoped to your plugin's schema |
 
 Repository access is still bounded by the platform deployment and plugin type. `STATIC` and `ANALYSIS` get a read-only experiment wrapper, `EXPERIMENT_DESIGN` gets a design-scoped wrapper, and `FULL` gets full experiment access. `get_shared_db_session()` requires shared-database setup; declare `requires_shared_database=True` when your plugin owns tables.
 
-## Authentication and current user
+## Authentication and Current Actor
 
-Two FastAPI dependencies cover the common cases. Because routes are usually declared in separate modules and `PlatformContext` is attached during `initialize()`, build auth-dependent routers from the plugin instance:
+For ordinary `@endpoint` methods, use the typed request dependencies exported by the SDK:
 
 ```python
-from fastapi import APIRouter, Depends
-from mint_sdk import PlatformContext
+from mint_sdk import AnalysisPlugin, CurrentPluginActor, endpoint, mint_plugin
 
+
+@mint_plugin(analysis_type="custom", routes_prefix="/my-plugin")
 class MyPlugin(AnalysisPlugin):
-    async def initialize(self, context: PlatformContext | None = None):
-        self._context = context
-
-    def get_routers(self):
-        return [(create_router(self), "")]
-
-async def _allow_standalone():
-    return None
-
-def create_router(plugin: MyPlugin) -> APIRouter:
-    router = APIRouter()
-    context = getattr(plugin, "_context", None)
-    current_user = (
-        context.get_current_user_dependency()
-        if context is not None
-        else _allow_standalone
-    )
-
-    @router.get("/me")
-    async def me(user=Depends(current_user)):
-        return {"user": user}
-
-    return router
+    @endpoint.get("/me", auth=True)
+    async def me(self, actor: CurrentPluginActor) -> dict[str, str | None]:
+        return {
+            "user_id": actor.user_id,
+            "username": actor.username,
+            "plugin_role": actor.plugin_role,
+        }
 ```
 
-Standalone mode falls through to the stub. Integrated mode uses the platform auth dependency and request-scoped user context.
+Standalone mode returns a deliberate `standalone` actor. Integrated mode resolves the actor from the platform request and includes platform permissions plus the current plugin role when available.
 
 ## Plugin role guard
 
@@ -125,6 +117,8 @@ class MyPlugin(AnalysisPlugin):
 
 Prefer `self.get_plugin_db_session()` over the context method directly — it gives you mode-portable plugin code.
 
+Current `mint dev` / `create_plugin_app()` initializes standalone SQLite automatically for plugins with a shared-database contract. If you build a custom host, call `await plugin.ensure_standalone_database()` before using `get_plugin_db_session()` in standalone mode.
+
 ## Convenience methods on `AnalysisPlugin`
 
 For the most common operations on `DesignData`, `AnalysisArtifact`, and compatibility `PluginAnalysisResult`, the plugin base class wraps `PluginDataRepository`:
@@ -166,9 +160,7 @@ For mode-portable code:
 ```python
 class MyPlugin(AnalysisPlugin):
     async def initialize(self, context=None):
-        self._context = context
-        if context is None:
-            self._setup_standalone_db()      # base class helper
+        await super().initialize(context)
 
     def get_experiment_id_from_request(self, request_body):
         # Use convenience methods — they no-op cleanly when standalone

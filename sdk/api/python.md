@@ -12,6 +12,10 @@ Core public symbols exported from `mint_sdk`, grouped by area. Each entry has a 
 | `PluginCapabilities` | What platform features the plugin needs |
 | `PluginType` | Enum: `STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, or `FULL` |
 | `PlatformContext` | The runtime object the platform hands to plugins |
+| `mint_plugin` | Preferred class decorator for plugin metadata and runtime behavior |
+| `endpoint` | Decorator namespace for instance-method HTTP endpoints |
+| `generated_ui` | Class decorator that opts into the SDK-managed generated workspace |
+| `job` | Decorator for typed managed jobs |
 
 Source: [`mint_sdk/plugin.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/plugin.py), [`mint_sdk/models.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/models.py), [`mint_sdk/context.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/context.py).
 
@@ -29,6 +33,7 @@ Common lifecycle and routing methods:
 | Method | Purpose |
 |--------|---------|
 | `metadata` (property) | Return legacy property metadata or the resolved `@mint_plugin` declaration |
+| `@endpoint.get/post/put/patch/delete(...)` | Preferred route declaration for plugin instance methods |
 | `get_routers()` | Advanced native routers below this plugin's API prefix; defaults to `[]` |
 | `initialize(context)` | Initialize and retain the active platform context; default stores context |
 | `shutdown()` | Clean up plugin resources; default no-op |
@@ -168,12 +173,17 @@ Use `ANALYSIS` for plugins that read experiments and write analysis artifacts or
 | `is_authenticated` (property) | `bool` |
 | `get_current_user_dependency()` | FastAPI `Depends`-able |
 | `get_optional_user_dependency()` | FastAPI `Depends`-able |
+| `get_plugin_actor_dependency()` | FastAPI `Depends`-able typed `PluginActor` |
+| `get_optional_plugin_actor_dependency()` | Optional typed `PluginActor` dependency |
+| `get_job_visibility_dependency()` | Typed job-visibility dependency |
 | `get_user_repository()` | `UserRepository \| None` |
 | `get_experiment_repository()` | `ExperimentRepository \| None` |
 | `get_plugin_data_repository()` | `PluginDataRepository \| None` |
 | `get_plugin_role_repository()` | `PluginRoleRepository \| None` |
 | `require_plugin_role(*roles)` | FastAPI `Depends`-able |
-| `get_config()` | `PlatformConfig` (alias for `dict`) |
+| `get_plugin_config()` | `PlatformConfig` (alias for `dict`) |
+| `enqueue_notifications(...)` | Durable notification enqueue hook for supported platform integrations |
+| `publish_calendar_events(...)` | Durable calendar event publish/cancel hook for supported platform integrations |
 | `get_shared_db_session()` (async ctx) | SQLAlchemy session scoped to plugin's schema |
 
 ## Data models
@@ -264,6 +274,9 @@ See [Migrations](/sdk/api/migrations) for full signatures.
 
 ```python
 from mint_sdk.testing import (
+    CompletedPluginJob,         # completed job state + natural result value helper
+    PluginJobTestError,         # raised when a harness-submitted job fails
+    PluginTestHarness,          # run real @job declarations through the SDK job API
     make_test_plugin,           # build a minimal AnalysisPlugin subclass inline
     build_test_app,             # turn a plugin instance into a FastAPI app
     RecordingContext,           # in-memory PlatformContext with a working PluginDataRepository
@@ -271,7 +284,7 @@ from mint_sdk.testing import (
 )
 ```
 
-These four are the entire public testing surface. See [Recipes → Testing plugins](/sdk/recipes/testing-plugins) for usage.
+See [Recipes → Testing plugins](/sdk/recipes/testing-plugins) for usage. Prefer `PluginTestHarness` for `@job` plugins and `TestClient(create_plugin_app())` for HTTP endpoints.
 
 ## Export utilities
 
@@ -289,13 +302,14 @@ These four are the entire public testing surface. See [Recipes → Testing plugi
 | Symbol | Description |
 |--------|-------------|
 | `create_standalone_app(plugin)` | Build a FastAPI app that mounts the plugin's routers; use it when replacing the scaffold's local factory |
+| `mint_sdk.runtime:create_plugin_app` | SDK-owned Uvicorn factory used by current `mint init` projects and `mint dev` |
 | `SPAStaticFiles` | StaticFiles subclass that falls through to `index.html` for SPA routing |
 | `PluginDependency` | Helper for declaring plugin-aware FastAPI deps |
 | `require_context` | FastAPI dependency that yields the active `PlatformContext` |
 
 Source: [`mint_sdk/app.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/app.py).
 
-Current `mint init` projects generate a `create_standalone_app()` function inside `plugin.py`, and `mint dev` runs that discovered factory. The SDK-level `create_standalone_app()` helper is the reusable version for plugins that want to remove the generated boilerplate.
+Current `mint init` projects use the SDK-owned runtime target `mint_sdk.runtime:create_plugin_app`, which discovers the current project's single `mint.plugins` entry point and passes it to `create_standalone_app()`. Use `create_standalone_app(MyPlugin)` directly in tests or custom hosts when you already have the plugin class.
 
 ## Client
 

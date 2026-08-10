@@ -23,5 +23,5 @@
   - [x] Update marketplace registry, install request, cache, compatibility, and restart-required docs.
   - [x] Correct SDK lifecycle/isolation concepts for `@mint_plugin`, decorated endpoints, settings hooks, and SDK version pinning.
   - [x] Sync packaging, publishing, config, API, frontend settings, deploying, and glossary references touched by plugin-system semantics.
-- [ ] Plugin development guide: MINT SDK 1.1 `mint init --mode`, decorators, jobs, generated UI.
+- [x] Plugin development guide: MINT SDK 1.1 `mint init --mode`, decorators, jobs, generated UI.
 - [ ] Reference/UI: admin navigation, account modal, glossary, FAQ, screenshots.

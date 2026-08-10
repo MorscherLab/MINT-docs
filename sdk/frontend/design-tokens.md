@@ -10,7 +10,7 @@ Tokens also make light/dark/density work universally. The dark theme just change
 
 ## Setup
 
-Frontend scaffolding is included by default with `mint init` (skipped when `--no-frontend` is passed). Manual setup:
+`mint init --mode standard` scaffolds these imports for you. `generated` mode uses the SDK-managed UI and does not need a plugin-authored Vue bundle. Manual setup:
 
 ```css
 /* frontend/src/style.css */

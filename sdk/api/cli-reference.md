@@ -147,10 +147,7 @@ mint init [DIRECTORY] [flags]
 | `--name`, `-n` | Plugin name (human-readable) |
 | `--description`, `-d` | One-line description |
 | `--type`, `-t` | Plugin type: `analysis`, `experiment-design`, `static`, or `full` |
-| `--template` | Plugin starter template (see `--list-templates`) |
-| `--list-templates` | List starter templates and exit |
-| `--json` | Output starter-template catalog as JSON when listing |
-| `--no-frontend` | Skip frontend scaffolding |
+| `--mode` | Plugin mode: `generated` (SDK-managed UI + `@job`) or `standard` (FastAPI-style `@endpoint` + Vue workspace) |
 | `--no-install` | Skip `uv sync` and `bun install` |
 | `--no-git` | Skip `git init` |
 | `--force` | Allow non-empty target directory |
@@ -160,6 +157,8 @@ mint init [DIRECTORY] [flags]
 | `--email` | Override `git config user.email` |
 
 Without `--yes`, missing fields are prompted interactively. With `--yes`, the AI-assistant file defaults to `claude`, which creates `CLAUDE.md`. If `mint doctor` says that file is missing current SDK guidance, run `mint doctor --fix` once to refresh it. `--ai-assistant none` skips assistant files, but the current `mint doctor` check still expects one of those files; run `mint doctor --fix` if you later want a passing doctor report.
+
+Use `generated` mode for the first plugin unless you know you need a custom Vue workspace. Use `standard` mode when the UI needs custom layout, custom controls, or multiple interactive views.
 
 ### `mint dev`
 
@@ -206,6 +205,7 @@ mint build [PATH] [flags]
 | `--no-frontend` | Skip the frontend build step |
 | `--vendor-deps` | Include dependency wheels in the bundle (opt-in) |
 | `--output-dir` | Output directory (default `dist`) |
+| `--include-wheel` | Include the built wheel alongside the `.mint` bundle output |
 
 Output: `dist/<name>-<version>.mint`. Note the `.mint` extension.
 
@@ -224,6 +224,7 @@ mint doctor [PATH] [flags]
 | `--r` | Check the R bridge environment |
 | `--fix` | Apply safe automatic fixes; with `--deps`, also fix platform-core dependency alignment |
 | `--explain` | Show why each failed check matters |
+| `--strict` | Treat warnings as failures |
 | `--json` | Output machine-readable check results |
 
 ### `mint info`
@@ -256,7 +257,6 @@ Add common plugin pieces to an existing project.
 | `mint add migration <name> [--path PATH]` | Add a plugin schema migration |
 | `mint add schema <name> [--file requests\|responses] [--field name:type] [--generate] [--path PATH]` | Add a Pydantic schema |
 | `mint add service <name> [--method NAME] [--path PATH]` | Add a service module |
-| `mint add job [name] [--path PATH]` | Add a job service and `/jobs` router |
 | `mint add artifact [--path PATH]` | Add a local artifact helper and `/artifacts` router |
 | `mint add hook <before-save\|after-save\|status-change> [--path PATH]` | Add a lifecycle hook |
 | `mint add frontend-page <name> [--path PATH]` | Add and register a Vue view |
@@ -265,6 +265,54 @@ Add common plugin pieces to an existing project.
 | `mint add data-template [template] [--list] [--json] [--generate] [--page] [--path PATH]` | Add biology data-template helpers |
 | `mint add data-template-pack [pack] [--list] [--json] [--generate] [--page] [--path PATH]` | Add a curated data-template pack |
 | `mint add data-template-preset [preset] [--list] [--json] [--page] [--path PATH]` | Add a ready-to-save data-template preset |
+
+There is no `mint add job` command in MINT v1.1.9. Use `mint init --mode generated` for the current job scaffold, or add `@job` methods by hand.
+
+### `mint verify`
+
+Build a plugin and exercise the real install/restart/load path in a disposable verification environment.
+
+```bash
+mint verify [PATH] [flags]
+```
+
+Common flags:
+
+| Flag | Effect |
+|------|--------|
+| `PATH` (positional) | Plugin project directory (default `.`) |
+| `--image` | Platform image to verify against |
+| `--channel` | Platform channel to verify against |
+| `--force` | Replace an existing installed copy |
+| `--no-frontend` | Skip frontend build |
+| `--vendor-deps` | Vendor dependency wheels into the bundle |
+| `--include-wheel` | Include the built wheel alongside the bundle |
+| `--bundle` | Reuse an existing `.mint` bundle |
+| `--timeout` | Verification timeout |
+| `--keep` | Keep the verification environment for inspection |
+
+### `mint deploy`
+
+Build and deploy the plugin to a running platform.
+
+```bash
+mint deploy [PATH] --to URL [flags]
+```
+
+Common flags:
+
+| Flag | Effect |
+|------|--------|
+| `PATH` (positional) | Plugin project directory (default `.`) |
+| `--to` | Target platform URL |
+| `--force` | Replace an existing installed copy |
+| `--restart` / `--no-restart` | Restart platform/plugin process after deploy |
+| `--no-frontend` | Skip frontend build |
+| `--vendor-deps` | Vendor dependency wheels into the bundle |
+| `--include-wheel` | Include the built wheel alongside the bundle |
+| `--bundle` | Deploy an existing `.mint` bundle |
+| `--timeout` | Deploy timeout |
+| `--json` | Output machine-readable results |
 
 ## Develop / SDK sub-app
 

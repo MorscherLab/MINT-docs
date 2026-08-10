@@ -1,28 +1,31 @@
-# Tutorial 1 - First analysis plugin
+# Tutorial 1 - First Analysis Plugin
 
-You'll build a minimal analysis plugin called **hello-mint**. It starts from the SDK's `analysis-basic` template, exposes a health route, then turns the generated placeholder analysis route into a small experiment-aware endpoint.
+You'll build **hello-mint**, a small `ANALYSIS` plugin in `generated` mode. This is the shortest path to a useful first plugin: you write Python decorators, and the SDK supplies the standard job API plus a generated UI.
 
 By the end you will have:
 
-- A real `mint init` project with the current `routers/`, `schemas/`, and `services/` layout
-- A route that reads an experiment through `PlatformContext` when the plugin is installed by the platform
-- A route test that runs without a full platform
+- A real `mint init --mode generated` project
+- One typed `@job`
+- A job test that uses the SDK runtime through `PluginTestHarness`
 - A `.mint` bundle ready to install
 
-**Time:** 30-45 minutes
+**Time:** 20-30 minutes
 **Prereqs:** Python 3.12+, `uv`, and the `mint` CLI from `mint-sdk`
 
-## 1. Scaffold the project
+::: info Current CLI shape
+MINT v1.1.9 does not have `mint add job`. Start a job-based plugin with `mint init --mode generated`, or add `@job` methods directly to an existing plugin class.
+:::
 
-Create a backend-only analysis plugin first. Frontend scaffolding is on by default, so this tutorial passes `--no-frontend`; the frontend is added in [Tutorial 2](/sdk/tutorials/adding-a-frontend).
+## 1. Scaffold the Project
+
+Create the plugin:
 
 ```bash
 mint init hello-mint \
   --name "Hello MINT" \
   --description "Hello world analysis plugin" \
+  --mode generated \
   --type analysis \
-  --template analysis-basic \
-  --no-frontend \
   --yes
 cd hello-mint
 ```
@@ -36,8 +39,9 @@ cd hello-mint
 | Plugin class | `HelloMintPlugin` |
 | Route prefix | `/hello-mint` |
 | Entry point | `hello-mint = "mint_plugin_hello_mint.plugin:HelloMintPlugin"` |
+| Plugin mode | `generated` |
 
-The generated tree should look like this:
+The generated tree is intentionally small:
 
 ```text
 hello-mint/
@@ -46,401 +50,189 @@ hello-mint/
 │       ├── ci.yml
 │       └── release.yml
 ├── .gitignore
-├── CHANGELOG.md
 ├── CLAUDE.md
-├── pyproject.toml
 ├── README.md
-├── scripts/
-│   ├── build.sh
-│   ├── dev.sh
-│   └── release.sh
+├── pyproject.toml
 ├── src/
 │   └── mint_plugin_hello_mint/
 │       ├── __init__.py
-│       ├── plugin.py
-│       ├── routers/
-│       │   ├── __init__.py
-│       │   └── analysis.py
-│       ├── schemas/
-│       │   ├── __init__.py
-│       │   ├── requests.py
-│       │   └── responses.py
-│       └── services/
-│           ├── __init__.py
-│           └── analysis_service.py
+│       └── plugin.py
 └── tests/
-    ├── __init__.py
     └── test_plugin.py
 ```
-
-`CLAUDE.md` is generated because `--yes` accepts the default AI-assistant choice. Keep that default while following this tutorial. If `mint doctor` says it is missing current SDK guidance, run `mint doctor --fix` once to refresh it. If you pass `--ai-assistant none`, the current SDK will scaffold no assistant file and `mint doctor` will report the missing AI instructions as a failing check; `mint doctor --fix` creates `AGENTS.md`.
 
 Checkpoint:
 
 ```bash
-mint doctor --fix
+mint doctor --strict
 uv run pytest -q
 ```
 
 Both should pass before you change anything.
 
-## 2. Inspect the generated plugin
+## 2. Inspect the Plugin Class
 
-The plugin class owns metadata, lifecycle, and router registration. This snippet is trimmed to the parts you need to read first; keep the generated singleton, frontend, and health-check helpers in the file.
+Open `src/mint_plugin_hello_mint/plugin.py`. The important parts look like this:
 
 ```python
-# src/mint_plugin_hello_mint/plugin.py
+from mint_sdk import (
+    AnalysisPlugin,
+    PluginCapabilities,
+    PluginType,
+    generated_ui,
+    job,
+    mint_plugin,
+)
+
+
+@mint_plugin(
+    analysis_type="custom",
+    routes_prefix="/hello-mint",
+    plugin_type=PluginType.ANALYSIS,
+    capabilities=PluginCapabilities(),
+    icon="M4 19h16M7 16V8m5 8V4m5 12v-6",
+)
+@generated_ui()
 class HelloMintPlugin(AnalysisPlugin):
-    @property
-    def metadata(self) -> PluginMetadata:
-        return PluginMetadata(
-            name="hello-mint",
-            version=PLUGIN_VERSION,
-            description="Hello world analysis plugin",
-            analysis_type="custom",
-            routes_prefix="/hello-mint",
-            plugin_type=PluginType.ANALYSIS,
-            capabilities=PluginCapabilities(
-                requires_auth=False,
-                requires_database=False,
-                requires_experiments=False,
-            ),
-            nav_items=[
-                PluginNavItem(path="/", label="Dashboard", id="dashboard"),
-                PluginNavItem(path="/analysis", label="Analysis", id="analysis"),
-            ],
-        )
-
-    async def initialize(self, context: PlatformContext | None = None) -> None:
-        self._context = context
-
-    def get_routers(self) -> list[tuple[APIRouter, str]]:
-        return [(analysis.router, "")]
+    @job(cpu=1)
+    def analyze(self, value: float = 1.0) -> dict[str, float]:
+        return {
+            "input": value,
+            "doubled": value * 2,
+        }
 ```
 
-The generated router already has a health endpoint and a placeholder analysis endpoint:
+Three decorators do the work:
+
+| Decorator | What it declares |
+|-----------|------------------|
+| `@mint_plugin(...)` | Plugin metadata, route prefix, type, capabilities, icon, navigation, and optional settings model |
+| `@generated_ui()` | The plugin uses the SDK-managed form/result workspace |
+| `@job(...)` | A typed calculation the runtime can submit, track, cancel, and render |
+
+The package name and dependency versions still live in `pyproject.toml`. Do not duplicate package identity inside the class.
+
+## 3. Run the Job Test
+
+Open `tests/test_plugin.py`:
 
 ```python
-# src/mint_plugin_hello_mint/routers/analysis.py
-@router.get("/health")
-async def health():
-    return {"status": "healthy", "plugin": "hello-mint"}
+from mint_sdk.testing import PluginTestHarness
+
+from mint_plugin_hello_mint.plugin import HelloMintPlugin
 
 
-@router.post("/analyze/{experiment_id}", response_model=AnalyzeResponse)
-async def analyze(experiment_id: int, request: AnalyzeRequest) -> AnalyzeResponse:
-    service = analysis_service.get_analysis_service()
-    return await service.analyze(experiment_id, request)
+def test_generated_manifest_exposes_job() -> None:
+    with PluginTestHarness(HelloMintPlugin) as harness:
+        completed = harness.run("analyze", value=2.5)
+
+    assert completed.value == {"input": 2.5, "doubled": 5.0}
 ```
+
+`PluginTestHarness` starts the real standalone plugin app, submits the job through the SDK job API, waits for completion, and loads the standardized result payload. This catches more integration drift than calling `HelloMintPlugin().analyze()` directly.
 
 Run it:
 
 ```bash
-mint dev
+uv run pytest -q
 ```
 
-In another terminal:
+## 4. Make the Job More Real
 
-```bash
-curl http://127.0.0.1:8003/api/hello-mint/health
-# {"status":"healthy","plugin":"hello-mint"}
-```
-
-Stop the server with **Ctrl+C** before continuing.
-
-## 3. Ask for platform access
-
-An analysis plugin can read experiments, but only if it declares the capabilities. In `plugin.py`, change the capability block:
+Replace `analyze()` with a small normalization example:
 
 ```python
-# src/mint_plugin_hello_mint/plugin.py
-capabilities=PluginCapabilities(
-    requires_auth=True,
-    requires_database=True,
-    requires_experiments=True,
-),
+@job(
+    title="Normalize intensities",
+    description="Divide every value by the largest value in the submitted list.",
+    cpu=1,
+)
+def analyze(self, values: list[float] | None = None) -> dict[str, object]:
+    submitted = values or [1.0, 2.0, 4.0]
+    maximum = max(submitted) if submitted else 0.0
+    normalized = [value / maximum for value in submitted] if maximum else []
+    return {
+        "count": len(submitted),
+        "maximum": maximum,
+        "normalized": normalized,
+    }
 ```
 
-`PluginType.ANALYSIS` keeps experiment access read-only. This plugin can fetch experiments and save its own analysis results, but it cannot create, update, or delete experiments.
-
-## 4. Make the response useful
-
-Replace the generated response schema:
+Then update the test:
 
 ```python
-# src/mint_plugin_hello_mint/schemas/responses.py
-from pydantic import BaseModel
+def test_generated_manifest_exposes_job() -> None:
+    with PluginTestHarness(HelloMintPlugin) as harness:
+        completed = harness.run("analyze", values=[2.0, 4.0, 8.0])
 
-
-class AnalyzeResponse(BaseModel):
-    experiment_id: int
-    status: str
-    template: str
-    hint: str
-    experiment_name: str | None = None
-    experiment_status: str | None = None
-    parameter_count: int = 0
-```
-
-The route will now return enough information to prove it read the experiment and counted the submitted parameters.
-
-## 5. Inject a plugin-aware service
-
-Routes are module-level FastAPI functions, while `PlatformContext` lives on the plugin instance after `initialize()`. Use `PluginDependency` to connect those two pieces without package globals.
-
-Replace the router:
-
-```python
-# src/mint_plugin_hello_mint/routers/analysis.py
-from fastapi import APIRouter, Depends
-from mint_sdk.app import PluginDependency
-
-from mint_plugin_hello_mint.schemas.requests import AnalyzeRequest
-from mint_plugin_hello_mint.schemas.responses import AnalyzeResponse
-from mint_plugin_hello_mint.services.analysis_service import AnalysisService
-
-router = APIRouter(tags=["analysis"])
-analysis_service_dep = PluginDependency[AnalysisService]("AnalysisService")
-
-
-@router.get("/health")
-async def health():
-    return {"status": "healthy", "plugin": "hello-mint"}
-
-
-@router.post("/analyze/{experiment_id}", response_model=AnalyzeResponse)
-async def analyze(
-    experiment_id: int,
-    request: AnalyzeRequest,
-    service: AnalysisService = Depends(analysis_service_dep),
-) -> AnalyzeResponse:
-    return await service.analyze(experiment_id, request)
-```
-
-Replace the service:
-
-```python
-# src/mint_plugin_hello_mint/services/analysis_service.py
-from typing import TYPE_CHECKING
-
-from fastapi import HTTPException, status
-
-from mint_plugin_hello_mint.schemas.requests import AnalyzeRequest
-from mint_plugin_hello_mint.schemas.responses import AnalyzeResponse
-
-if TYPE_CHECKING:
-    from mint_plugin_hello_mint.plugin import HelloMintPlugin
-
-
-class AnalysisService:
-    def __init__(self, plugin: "HelloMintPlugin") -> None:
-        self.plugin = plugin
-
-    async def analyze(self, experiment_id: int, request: AnalyzeRequest) -> AnalyzeResponse:
-        parameter_count = len(request.parameters)
-        repo = (
-            self.plugin.context.get_experiment_repository()
-            if self.plugin.context is not None
-            else None
-        )
-
-        if repo is None:
-            return AnalyzeResponse(
-                experiment_id=experiment_id,
-                status="standalone",
-                template="analysis-basic",
-                hint="No PlatformContext; install the plugin in MINT to read real experiments.",
-                parameter_count=parameter_count,
-            )
-
-        experiment = await repo.get_by_id(experiment_id)
-        if experiment is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Experiment {experiment_id} not found",
-            )
-
-        result = {
-            "experiment": {
-                "id": experiment.id,
-                "name": experiment.name,
-                "status": experiment.status,
-                "experiment_type": experiment.experiment_type,
-            },
-            "parameters": request.parameters,
-        }
-        await self.plugin.save_analysis(experiment_id, result)
-
-        return AnalyzeResponse(
-            experiment_id=experiment.id,
-            status="ok",
-            template="analysis-basic",
-            hint="Saved a small analysis result through PluginDataRepository.",
-            experiment_name=experiment.name,
-            experiment_status=experiment.status,
-            parameter_count=parameter_count,
-        )
-```
-
-Wire the dependency during plugin initialization. Add the imports near the top of `plugin.py`, then update only `initialize()` and `shutdown()`; keep the rest of the generated class intact.
-
-```python
-# src/mint_plugin_hello_mint/plugin.py
-from mint_plugin_hello_mint.routers.analysis import analysis_service_dep
-from mint_plugin_hello_mint.services.analysis_service import AnalysisService
-
-
-class HelloMintPlugin(AnalysisPlugin):
-    # ... metadata and get_routers as generated ...
-
-    async def initialize(self, context: PlatformContext | None = None) -> None:
-        self._context = context
-        analysis_service_dep.set(AnalysisService(self))
-        mode = "integrated" if context else "standalone"
-        print(f"[{PLUGIN_NAME}] Initialized in {mode} mode")
-
-    async def shutdown(self) -> None:
-        analysis_service_dep.reset()
-        print(f"[{PLUGIN_NAME}] Shutting down...")
+    assert completed.value == {
+        "count": 3,
+        "maximum": 8.0,
+        "normalized": [0.25, 0.5, 1.0],
+    }
 ```
 
 Checkpoint:
 
 ```bash
-uv run ruff check .
+mint doctor --strict
 uv run pytest -q
 ```
 
-If the generated test still expects `status == "not_implemented"`, update it in the next step.
+## 5. Preview the Generated UI
 
-## 6. Update the route test
-
-The route should still work without a platform. In standalone mode, it returns a clear fallback instead of trying to read a real experiment.
-
-```python
-# tests/test_plugin.py - replace test_analyze_route
-def test_analyze_route(self):
-    payload = {"parameters": {"threshold": "0.5"}}
-
-    with _create_test_client() as client:
-        response = client.post("/api/hello-mint/analyze/42", json=payload)
-
-    assert response.status_code == 200
-    body = response.json()
-    assert body["experiment_id"] == 42
-    assert body["status"] == "standalone"
-    assert body["template"] == "analysis-basic"
-    assert body["parameter_count"] == 1
-```
-
-Run:
-
-```bash
-uv run pytest -q
-```
-
-## 7. Run standalone
+Start the standalone runtime:
 
 ```bash
 mint dev
 ```
 
-In another terminal:
-
-```bash
-curl -X POST http://127.0.0.1:8003/api/hello-mint/analyze/42 \
-  -H "Content-Type: application/json" \
-  -d '{"parameters":{"threshold":"0.5"}}'
-```
-
-Expected shape:
-
-```json
-{
-  "experiment_id": 42,
-  "status": "standalone",
-  "template": "analysis-basic",
-  "hint": "No PlatformContext; install the plugin in MINT to read real experiments.",
-  "experiment_name": null,
-  "experiment_status": null,
-  "parameter_count": 1
-}
-```
-
-This proves the route, request schema, response schema, and service wiring all work without platform setup.
-
-## 8. Run through the platform dev proxy
-
-From the plugin root:
-
-```bash
-mint dev --platform
-```
-
-The startup summary includes the actual ports. By default:
+By default the plugin backend serves:
 
 ```text
-Platform backend   http://localhost:8001
-Plugin backend     http://127.0.0.1:8003/api/hello-mint
-Proxy              /hello-mint -> http://localhost:8003
+http://127.0.0.1:8003/api/hello-mint
 ```
 
-Call the route through the platform:
+Because the plugin uses `@generated_ui()`, the same process also serves the generated workspace below the plugin route prefix:
+
+```text
+http://127.0.0.1:8003/hello-mint
+```
+
+> [Screenshot: generated hello-mint workspace showing the Normalize intensities job form and completed JSON result]
+
+The generated UI is good when the plugin can be described as typed inputs plus result output. If the user experience needs custom layout, multi-step interaction, live previews, or a domain-specific control such as a plate map, use `standard` mode in [Tutorial 2](/sdk/tutorials/adding-a-frontend).
+
+## 6. Build the Bundle
+
+Run the release checks you should expect in CI:
 
 ```bash
-curl -X POST http://127.0.0.1:8001/api/hello-mint/analyze/1 \
-  -H "Content-Type: application/json" \
-  -d '{"parameters":{"threshold":"0.5"}}'
-```
-
-This verifies that the platform can route to your dev plugin and show it in plugin navigation. The plugin process is still the standalone dev server, so `PlatformContext` is still `None` and the response stays in standalone mode:
-
-```json
-{
-  "experiment_id": 1,
-  "status": "standalone",
-  "template": "analysis-basic",
-  "hint": "No PlatformContext; install the plugin in MINT to read real experiments.",
-  "experiment_name": null,
-  "experiment_status": null,
-  "parameter_count": 1
-}
-```
-
-When the plugin is installed and loaded by MINT from its `mint.plugins` entry point, the platform calls `initialize(context)`. In that integrated mode the same route can read experiments, save analysis results, and return a 404 for a missing experiment.
-
-## 9. Validate and build
-
-Run the project checks:
-
-```bash
-mint doctor --fix
+mint doctor --strict
 uv run pytest -q
+mint build .
 ```
 
-Build the installable bundle:
+The bundle lands in:
 
-```bash
-mint build
-# dist/*.mint
+```text
+dist/hello-mint-<version>.mint
 ```
 
-The `.mint` file contains the plugin wheel and manifest. If you add a frontend later, `mint build` also builds `frontend/dist/` and includes those assets inside the wheel.
+A `.mint` bundle contains the plugin wheel, manifest, and any bundled frontend assets. Generated-mode plugins usually have no `frontend/` directory because the UI is supplied by the SDK.
 
-## Where you've landed
+## Where You've Landed
 
-You have a runnable analysis plugin that:
+You now have a generated-mode analysis plugin that:
 
-- Uses the current `mint init` scaffold
-- Serves `/api/hello-mint/health`
-- Serves `/api/hello-mint/analyze/{experiment_id}`
-- Reads experiments through `PlatformContext` in integrated mode
-- Saves a small analysis result through `save_analysis`
-- Falls back cleanly in standalone mode
-- Passes tests and builds into a `.mint` bundle
+- Declares metadata with `@mint_plugin`
+- Exposes one typed `@job`
+- Lets the SDK provide the standard form/result UI
+- Tests the real job runtime with `PluginTestHarness`
+- Builds into an installable `.mint` bundle
 
 ## Next
 
-- [Tutorial 2 - Adding a frontend](/sdk/tutorials/adding-a-frontend) - add a Vue UI on top of this backend
+- [Tutorial 2 - Adding a frontend](/sdk/tutorials/adding-a-frontend) - build a custom Vue workspace with `standard` mode
 - [Tutorial 3 - Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) - own a database schema
 - [Recipes](/sdk/recipes/) - patterns for the next features you'll add

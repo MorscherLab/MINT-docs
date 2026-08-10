@@ -83,16 +83,19 @@ The platform doesn't enforce per-plugin resource quotas (CPU, RAM, disk). Plugin
 - **RAM**: stream large responses rather than buffering. Read DataFrames in chunks.
 - **Disk**: clean up old artifacts and cache files. The platform doesn't auto-prune plugin-owned files under `server.dataPath`.
 
-For heavy compute (multi-minute analyses), avoid blocking the request. `mint add job` gives you an in-memory `/jobs` router for standalone mode, tests, and small development workflows; production plugins should connect that public job payload shape to a durable queue or worker backend:
+For heavy compute (multi-minute analyses), avoid blocking request handlers. Declare managed work with `@job`; the SDK mounts the standard job API and generated UI support when jobs are present:
 
 ```python
+from mint_sdk import AnalysisPlugin, job
+
+
 class MyPlugin(AnalysisPlugin):
-    async def kick_off_analysis(self, experiment_id: int):
-        job_id = await self._queue.submit(experiment_id)
-        return {"job_id": job_id, "status": "queued"}
+    @job(cpu=2)
+    def analyze(self, experiment_id: int) -> dict[str, int | str]:
+        return {"experiment_id": experiment_id, "status": "completed"}
 ```
 
-Use `mint add job` when you want the generated router and SDK `JobState` / `JobProgress` serialization contract. Replace the generated in-memory service before relying on it for long production jobs.
+The default job runtime is process-local. That is fine for generated-mode plugins, tests, and small workflows. For production work that must survive restarts or multi-replica deployments, keep the `@job` public contract but connect the actual computation to your durable worker or queue backend.
 
 ## Configuration and secrets
 

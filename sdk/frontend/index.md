@@ -14,7 +14,7 @@
 
 ## Setup checklist
 
-If you scaffolded with `mint init` and did not pass `--no-frontend`, all of this is already done. For a manual setup:
+If you scaffolded with `mint init --mode standard`, all of this is already done. `generated` mode uses the SDK-managed UI and usually has no `frontend/` directory. For a manual setup:
 
 1. **Install**
    ```bash

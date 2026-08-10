@@ -119,35 +119,33 @@ git tag v1.1.0-beta.2 && git push --tags    # if bugs found
 git tag v1.1.0          && git push --tags    # graduate to stable
 ```
 
-## Versioning in `PluginMetadata`
+## Versioning in Plugin Metadata
 
-The `PluginMetadata.version` field is *informational* — it gets read by the marketplace UI and shown to users. It should match the wheel's version. With `hatch-vcs`, this happens automatically:
+The resolved `plugin.metadata.version` field is *informational* — it gets read by the marketplace UI and shown to users. With `@mint_plugin`, the SDK resolves it from package identity, so keep the wheel version as the single source of truth. With `hatch-vcs`, the wheel version comes from the git tag.
 
 ```python
-# src/my_plugin/plugin.py
-from my_plugin._version import __version__
+from mint_sdk import AnalysisPlugin, mint_plugin
 
+
+@mint_plugin(analysis_type="custom", routes_prefix="/my-plugin")
 class MyPlugin(AnalysisPlugin):
-    @property
-    def metadata(self) -> PluginMetadata:
-        return PluginMetadata(
-            name="my-plugin",
-            version=__version__,
-            # ...
-        )
+    pass
 ```
 
-Don't hardcode the version string — keep it derived from the tag.
+Don't hardcode the version string in plugin code. Keep it derived from the package version/tag.
 
 ## Schema versioning
 
-`PluginMetadata.schema_version` is separate from the plugin version. It tracks the shape of `DesignData.data`:
+`schema_version` is separate from the plugin version. It tracks the shape of `DesignData.data`:
 
 ```python
-PluginMetadata(
-    # ...
+@mint_plugin(
+    analysis_type="custom",
+    routes_prefix="/my-plugin",
     schema_version="1.0",   # bump when DesignData.data shape changes
 )
+class MyPlugin(AnalysisPlugin):
+    pass
 ```
 
 Examples:
