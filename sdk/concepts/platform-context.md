@@ -21,7 +21,7 @@ When standalone, `context` is `None`; the plugin uses `LocalDatabase` (a `mint-s
 | `get_optional_user_dependency()` | FastAPI `Depends` | As above but `None`-tolerant |
 | `get_user_repository()` | `UserRepository \| None` | User lookups (read-only) |
 | `get_experiment_repository()` | `ExperimentRepository \| None` | Experiment access, type-gated by `PluginType` |
-| `get_plugin_data_repository()` | `PluginDataRepository \| None` | Save/load `DesignData` and `PluginAnalysisResult` |
+| `get_plugin_data_repository()` | `PluginDataRepository \| None` | Save/load `DesignData`, `AnalysisArtifact`, and compatibility `PluginAnalysisResult` |
 | `get_plugin_role_repository()` | `PluginRoleRepository \| None` | Per-plugin user roles |
 | `require_plugin_role(*roles)` | FastAPI `Depends` | Route guard — see below |
 | `get_config()` | `dict` (`PlatformConfig`) | Platform configuration view (filtered) |
@@ -127,16 +127,23 @@ Prefer `self.get_plugin_db_session()` over the context method directly — it gi
 
 ## Convenience methods on `AnalysisPlugin`
 
-For the most common operations on `DesignData` and `PluginAnalysisResult`, the plugin base class wraps `PluginDataRepository`:
+For the most common operations on `DesignData`, `AnalysisArtifact`, and compatibility `PluginAnalysisResult`, the plugin base class wraps `PluginDataRepository`:
 
 | Method | What it does | Standalone? |
 |--------|--------------|-------------|
 | `await self.save_design(experiment_id, data)` | Save / update design data | Returns `None` |
 | `await self.load_design(experiment_id)` | Load design data | Returns `None` |
-| `await self.save_analysis(experiment_id, result)` | Save / update analysis result for *this* plugin | Returns `None` |
-| `await self.load_analysis(experiment_id, fields=None)` | Load analysis result for this plugin, optionally projecting top-level result keys | Returns `None` |
-| `await self.load_artifacts(experiment_id)` | Load only `result["artifacts"]` from this plugin's result | Returns `None` |
-| `await self.load_analyses(experiment_id, include_others=False)` | Load analysis results; defaults to this plugin's own result | Returns `[]` |
+| `await self.save_analysis_artifact(experiment_id, result, artifact_key="default")` | Save / update one named artifact for this plugin | Returns `None` |
+| `await self.save_analysis_artifacts(experiment_id, artifacts)` | Atomically save multiple named artifacts | Raises without context |
+| `await self.save_analysis_file_artifact(experiment_id, data, ...)` | Save an uploaded/reused file object as a managed artifact | Returns `None` |
+| `await self.load_analysis_artifact(experiment_id, artifact_key="default")` | Load one active artifact for this plugin | Returns `None` |
+| `await self.load_analysis_artifacts(experiment_id, include_others=False)` | Load artifact metadata; defaults to this plugin's own artifacts | Returns `[]` |
+| `await self.archive_analysis_artifact(experiment_id, artifact_key="default")` | Archive one artifact owned by this plugin | Returns `None` |
+| `await self.restore_analysis_artifact(experiment_id, artifact_key="default")` | Restore one archived artifact owned by this plugin | Returns `None` |
+| `await self.save_analysis(experiment_id, result)` | Compatibility path: save / update `PluginAnalysisResult` for this plugin | Returns `None` |
+| `await self.load_analysis(experiment_id, fields=None)` | Compatibility path: load this plugin's result, optionally projecting top-level result keys | Returns `None` |
+| `await self.load_artifacts(experiment_id)` | Legacy helper: load only `result["artifacts"]` from this plugin's compatibility result | Returns `None` |
+| `await self.load_analyses(experiment_id, include_others=False)` | Load compatibility results; defaults to this plugin's own result | Returns `[]` |
 | `await self.save(experiment_id, design=..., analysis=...)` | Save both at once | Returns `(None, None)` |
 | `await self.load(experiment_id)` | Load both | Returns `(None, None)` |
 | `await self.delete_design(experiment_id)` | Delete design | Returns `False` |
@@ -144,7 +151,7 @@ For the most common operations on `DesignData` and `PluginAnalysisResult`, the p
 
 These are the daily authoring API. Drop down to `context.get_plugin_data_repository()` only when you need bulk operations or have multiple plugin IDs to coordinate.
 
-For cross-plugin readers, call `load_analyses(experiment_id, include_others=True)` or `repo.get_analysis_results(experiment_id, include_others=True)` explicitly. The default is intentionally scoped to the calling plugin so ordinary analysis plugins do not accidentally consume another plugin's result payloads.
+For cross-plugin readers, call `load_analysis_artifacts(experiment_id, include_others=True)`, `load_analyses(experiment_id, include_others=True)`, or the matching repository methods explicitly. The default is intentionally scoped to the calling plugin so ordinary analysis plugins do not accidentally consume another plugin's output payloads.
 
 ## What `PlatformContext` is *not*
 

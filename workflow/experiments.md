@@ -1,8 +1,8 @@
 # Experiments
 
-An **experiment** is the central unit of work in MINT. It has a unique type-scoped code, a type, a status, optional dates, optional collaborators, one design-data payload, and analysis results keyed by plugin.
+An **experiment** is the central unit of work in MINT. It has a unique type-scoped code, a type, a status, optional dates, optional collaborators, one design-data payload, and zero or more named analysis artifacts.
 
-> [Screenshot: experiment detail page with header, design panel, analyze tab, and results tab]
+> [Screenshot: experiment detail page with header, design data card, analysis artifacts card, and metadata rail]
 
 ## Anatomy
 
@@ -15,12 +15,12 @@ An **experiment** is the central unit of work in MINT. It has a unique type-scop
 | **Owner** | The user who created it. |
 | **Collaborators** | Per-experiment role overrides on top of project membership. |
 | **Design data** | One JSON payload owned by the experiment-design or full plugin. |
-| **Analysis results** | JSON outputs keyed by plugin ID. A plugin can keep its own run history inside its result payload. |
-| **Artifacts** | Uploaded files (RAW data, plates, sequence sheets, etc.). |
+| **Analysis artifacts** | Named outputs from analysis/full plugins. Each artifact has a producing plugin, stable key, display name, status, and result payload. |
+| **File-backed outputs** | Binary outputs such as reports, tables, or RAW-derived files referenced from an analysis artifact and streamed from the object store. |
 
 ## Create an experiment
 
-From a project page, click **New experiment** on the **Experiments** tab.
+From a project page, click **New Experiment**.
 
 > [Screenshot: new-experiment modal with type selector and design fields]
 
@@ -58,14 +58,38 @@ Plugin types interact with experiments differently:
 
 | Type | Experiment role |
 |------|-----------------|
-| `STATIC` | Can read experiment context for viewers or reference tools, but cannot write design data or analysis results. |
-| `ANALYSIS` | Reads existing experiments and writes its own entry under `analysis_results` plus produced artifacts. |
+| `STATIC` | Can read experiment context for viewers or reference tools, but cannot write design data or analysis artifacts. |
+| `ANALYSIS` | Reads existing experiments and writes named analysis artifacts. Legacy `save_analysis` writes remain available for compatibility. |
 | `EXPERIMENT_DESIGN` | Owns an experiment type and writes that experiment's `design_data`. |
-| `FULL` | Owns design data and can also write analysis results/artifacts. |
+| `FULL` | Owns design data and can also write analysis artifacts. |
 
 A given experiment has exactly one design-owning plugin, selected by its type, but it can be analyzed by many `ANALYSIS` or `FULL` plugins over time.
 
 See [Plugins](/workflow/plugins) for the full plugin model.
+
+## Design and analysis on the detail page
+
+The experiment detail page is a single record view: design, analysis outputs, and metadata live on the same page.
+
+| Region | What to use it for |
+|--------|--------------------|
+| **Header** | Read the experiment code/name, update status, edit metadata, cancel/reactivate, or open the design plugin. |
+| **Design data** | Review the design document as grouped fields and sample rows. Export JSON or CSV when design data is present. |
+| **Analysis artifacts** | Review outputs grouped by producing plugin. Empty experiments show analysis plugins that can run next and why unavailable plugins are blocked. |
+| **Metadata rail** | Check type, project, timeline, creator, data lineage, collaborators, tags, and destructive actions. |
+
+Artifacts are grouped by plugin and sorted by most recent update. MINT shows the artifact display name, artifact key, result keys, status, and available actions:
+
+| Action | Effect |
+|--------|--------|
+| **Open** | Launch the plugin route that produced the artifact, with the experiment and artifact preselected when the plugin supports it. |
+| **Download** | Download the file referenced by `result["file"]`, or download the JSON payload for non-file artifacts. |
+| **Edit** | Rename the artifact or update its note. |
+| **Archive** | Hide the artifact from normal lists and SDK reads without deleting it. |
+| **Restore** | Bring an archived artifact back into normal lists. |
+| **Delete permanently** | Remove an archived artifact and any owned file object that MINT can verify. |
+
+An active artifact is labeled **stale** when the experiment's design data was edited after that artifact was written. Rerun the producing analysis plugin when the design change invalidates the output.
 
 ## Collaborators
 
@@ -101,7 +125,7 @@ The experiments list inside a project supports:
 
 ## Deleting experiments
 
-Deleting an experiment currently removes the experiment row. Treat it as irreversible from the UI and make sure your platform database backups cover the recovery window your lab needs. Plugin-owned tables and external artifacts should define their own cleanup or retention policy.
+Deleting an experiment removes the experiment record and platform-owned dependent rows, including design data and analysis artifact metadata. Treat it as irreversible from the UI and make sure your platform database backups cover the recovery window your lab needs. Plugin-owned tables and external file retention can still be plugin-specific.
 
 ## Next
 

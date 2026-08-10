@@ -13,7 +13,7 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 
 | Recipe | When |
 |--------|------|
-| [Writing results](/sdk/recipes/writing-results) | Upsert `PluginAnalysisResult`, preserve run history inside the payload, reference produced artifacts by ID |
+| [Writing results](/sdk/recipes/writing-results) | Save named `AnalysisArtifact` outputs, preserve visible run history, and publish file-backed artifacts |
 
 ## Permissions and identity
 

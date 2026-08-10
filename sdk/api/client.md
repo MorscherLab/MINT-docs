@@ -61,7 +61,7 @@ These are thin wrappers over `client.auth`.
 | Property | Type | Purpose |
 |----------|------|---------|
 | `client.auth` | `AuthAPI` | Login / logout / verify / refresh / whoami |
-| `client.experiments` | `ExperimentsAPI` | Experiment CRUD, design data, analysis results, experiment types |
+| `client.experiments` | `ExperimentsAPI` | Experiment CRUD, design data, compatibility analysis results, experiment types |
 | `client.projects` | `ProjectsAPI` | List, get, create, update, delete, experiments, members |
 | `client.plugins` | `PluginsAPI` | List loaded plugins |
 | `client.admin` | `AdminAPI` | Admin diagnostics, users, roles, plugin-role assignments |
@@ -110,7 +110,7 @@ Deletion is immediate in the current backend. Take a normal database backup befo
 
 ## Experiment data
 
-Design data is one JSON payload per experiment. Analysis results are JSON entries keyed by `plugin_id`.
+Design data is one JSON payload per experiment. Compatibility analysis results are still available as per-plugin JSON payloads; user-facing result review in current MINT is centered on first-class analysis artifacts.
 
 ```python
 with MINTClient() as client:

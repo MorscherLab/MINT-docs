@@ -13,7 +13,7 @@ Use migrations when:
 
 Skip migrations when:
 
-- All your plugin's data fits inside `DesignData.data` JSON or `PluginAnalysisResult.result` JSON
+- All your plugin's data fits inside `DesignData.data`, `AnalysisArtifact.result`, or compatibility `PluginAnalysisResult.result` JSON
 - You only need ephemeral state (caches, queues) that can be regenerated
 
 For the simpler "just create the tables" case where you don't need version history, override `get_shared_models()` instead — the platform calls `create_all()` on startup. Migrations and `get_shared_models()` are mutually exclusive: use one or the other, not both.

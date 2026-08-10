@@ -38,7 +38,7 @@ The frontend SDK ships 60+ typed composables and helper factories. This page lis
 | `useCurrentExperiment` | Current platform experiment | Integrated plugin pages tied to an experiment |
 | `useExperimentSelector` | Picker UI + reactive selected experiment | Experiment dropdowns |
 | `useExperimentData` | Reactive exported experiment data payload | Live experiment view |
-| `useExperimentSave` | Save/load design data and analysis results | Forms that save back to an experiment |
+| `useExperimentSave` | Save/load design data and compatibility analysis results | Forms that save back to an experiment |
 | `useAppExperiment` | App-level experiment provide/inject | Plugin pages that need the active experiment |
 :::
 

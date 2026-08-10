@@ -2,49 +2,55 @@
 
 ## Goal
 
-Persist analysis output back to the platform so it shows up under the experiment's **Results** tab and is discoverable by other plugins.
+Persist analysis output back to the platform so it shows up under the experiment's **Analysis artifacts** card and is discoverable by other plugins.
 
 ## The simplest case
 
-Use the convenience method:
+Use a named analysis artifact:
 
 ```python
 class MyPlugin(AnalysisPlugin):
     async def run(self, experiment_id: int):
         # ... compute the result dict ...
         result = {"method": "v4", "n_peaks": 312, "score": 0.92}
-        await self.save_analysis(experiment_id, result)
+        await self.save_analysis_artifact(
+            experiment_id,
+            result,
+            artifact_key="summary",
+            display_name="Peak summary",
+        )
 ```
 
-`save_analysis` writes to `PluginAnalysisResult` keyed by `(experiment_id, plugin_id)`. In the current platform backend, that is stored as a JSON entry under `analysis_results[plugin_id]` on the experiment row. The `plugin_id` defaults to `metadata.name`. Override `AnalysisPlugin.plugin_id` if you need a different storage key.
+`save_analysis_artifact()` writes an `AnalysisArtifact` keyed by `(experiment_id, plugin_id, artifact_key)`. Saving the same key again updates that named output; saving different keys lets one plugin publish separate outputs such as `summary`, `qc-report`, and `peak-table`.
+
+`save_analysis()` is still available as the compatibility path for older plugins that store one `PluginAnalysisResult` per experiment/plugin pair, but new user-visible outputs should use analysis artifacts.
 
 ## Preserve run history
 
-`save_analysis` is **upsert** — calling it again with the same `(experiment_id, plugin_id)` overwrites the previous row. To keep history, embed runs as a list:
+Artifact saves are **upserts** per `artifact_key`. To keep a visible history, use a stable key per run or per output:
 
 ```python
 from datetime import datetime, UTC
 
 class MyPlugin(AnalysisPlugin):
     async def run(self, experiment_id: int):
-        previous = await self.load_analysis(experiment_id)
-        history = (previous.result.get("runs") if previous else []) or []
-
+        run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         new_run = {
-            "run_id": datetime.now(UTC).isoformat(),
+            "run_id": run_id,
             "method": "v4",
             "n_peaks": 312,
             "user_id": self._current_user_id(),
         }
-        history.append(new_run)
 
-        await self.save_analysis(experiment_id, {
-            "latest": new_run,
-            "runs": history[-50:],   # cap to last 50 runs
-        })
+        await self.save_analysis_artifact(
+            experiment_id,
+            new_run,
+            artifact_key=f"run-{run_id}",
+            display_name=f"Run {run_id}",
+        )
 ```
 
-A separate `latest` key is convenient for downstream consumers that don't want to read the whole history.
+For very long histories or query-heavy run records, use a plugin-owned table and publish only the latest summary or downloadable report as an analysis artifact.
 
 ## Save design and analysis together
 
@@ -54,14 +60,16 @@ For `FULL` plugins that legitimately own both design data and analysis results (
 class MyPlugin(AnalysisPlugin):
     async def configure_and_run(self, experiment_id: int, params: dict):
         result = await self._compute(experiment_id, params)
-        await self.save(
+        await self.save(experiment_id, design={"params": params})
+        await self.save_analysis_artifact(
             experiment_id,
-            design={"params": params},
-            analysis={"latest": result},
+            {"latest": result},
+            artifact_key="latest",
+            display_name="Latest result",
         )
 ```
 
-`save()` returns `(DesignData | None, PluginAnalysisResult | None)`. `ANALYSIS` plugins should pass only `analysis=...`; `EXPERIMENT_DESIGN` plugins should pass only `design=...`; `STATIC` plugins should not call either write path.
+`save()` returns `(DesignData | None, PluginAnalysisResult | None)` for the compatibility path. `ANALYSIS` plugins should save artifacts, `EXPERIMENT_DESIGN` plugins should save design data, and `STATIC` plugins should not call either write path.
 
 ## Bulk write across experiments
 
@@ -70,16 +78,16 @@ The convenience methods are scoped to one experiment. For batch operations, drop
 ```python
 class MyPlugin(AnalysisPlugin):
     async def batch_save(self, results: dict[int, dict]):
-        repo = self._context.get_plugin_data_repository()
         for experiment_id, result in results.items():
-            await repo.save_analysis_result(
-                experiment_id=experiment_id,
-                plugin_id=self.plugin_id,
-                result=result,
+            await self.save_analysis_artifact(
+                experiment_id,
+                result,
+                artifact_key="batch-summary",
+                display_name="Batch summary",
             )
 ```
 
-The repo doesn't ship a multi-row `save_many` method by design — most write paths benefit from the per-experiment hooks (`on_after_experiment_save`, etc.) firing one at a time. If your workflow legitimately needs bulk insert, implement it directly via `get_shared_db_session()` on a plugin-owned table.
+For multiple artifacts on one experiment, pass `AnalysisArtifactInput` objects to `save_analysis_artifacts()`; the SDK commits all of them or rolls the whole batch back. For cross-experiment bulk inserts, keep the per-experiment loop above or write query-heavy data to a plugin-owned table via `get_shared_db_session()`.
 
 ## Idempotency under retry
 
@@ -88,9 +96,11 @@ If your analysis is triggered by a queue or scheduler that may retry on failure,
 ```python
 class MyPlugin(AnalysisPlugin):
     async def run(self, experiment_id: int, *, request_id: str):
-        previous = await self.load_analysis(experiment_id)
-        existing_runs = (previous.result.get("runs") if previous else []) or []
-        if any(r["run_id"] == request_id for r in existing_runs):
+        existing = await self.load_analysis_artifact(
+            experiment_id,
+            artifact_key=f"run-{request_id}",
+        )
+        if existing:
             return  # already done; don't append a duplicate
 
         # ... compute and save ...
@@ -100,7 +110,9 @@ class MyPlugin(AnalysisPlugin):
 
 ## Surfacing results in the experiment UI
 
-The platform's experiment **Results** tab automatically renders every plugin's `PluginAnalysisResult.result`. Default rendering uses `AnalysisPlugin.export_tree()` / `export_summary()` / `export_csv()`, which produce sensible defaults via the SDK's `auto_json_to_*` helpers. Override these to customize the display:
+The platform experiment page lists every active analysis artifact in the **Analysis artifacts** card. The card shows the producing plugin, artifact key, display name, status, result keys, and open/download/archive actions. Use the source plugin page for rich interactive visualization; the platform can always download the artifact payload as JSON.
+
+Compatibility `PluginAnalysisResult` exports still use `AnalysisPlugin.export_tree()` / `export_summary()` / `export_csv()`:
 
 ```python
 class MyPlugin(AnalysisPlugin):
@@ -118,42 +130,44 @@ class MyPlugin(AnalysisPlugin):
 
 The frontend reads the summary structure and renders cards / tables / metric tiles.
 
-## Referencing produced artifacts
+## Saving file-backed artifacts
 
-If your analysis produces a file (CSV report, image, raw output blob), store artifact references under the conventional `result["artifacts"]` key so reader plugins can fetch only those references without loading the full result payload:
+If your analysis produces a file (CSV report, image, raw output blob), use `save_analysis_file_artifact()` so the SDK uploads the bytes or reuses an existing object-store reference, then saves artifact metadata:
 
 ```python
-from mint_sdk import ANALYSIS_ARTIFACTS_KEY
-
 class MyPlugin(AnalysisPlugin):
     async def run(self, experiment_id: int):
         csv_bytes = self._compute_report(experiment_id)
-        artifact_id = await self._upload_via_platform_rest_api(
-            csv_bytes, filename="report.csv"
+        await self.save_analysis_file_artifact(
+            experiment_id,
+            csv_bytes,
+            filename="report.csv",
+            artifact_key="report",
+            kind="csv",
+            display_name="CSV report",
+            metadata={"rows": 1240},
         )
-        await self.save_analysis(experiment_id, {
-            "summary": {"rows": 1240},
-            ANALYSIS_ARTIFACTS_KEY: [
-                {"id": artifact_id, "filename": "report.csv", "kind": "csv"},
-            ],
-        })
 ```
 
-Later, load only that key:
+Later, stream the file back out:
 
 ```python
-artifacts = await self.load_artifacts(experiment_id)
+await self.load_analysis_file_artifact(
+    experiment_id,
+    "/tmp/report.csv",
+    artifact_key="report",
+)
 ```
 
-For any other small metadata projection, call `await self.load_analysis(experiment_id, fields=["summary", "artifacts"])`. The repository will avoid transferring or parsing large tables stored under other result keys.
+Older plugins may still store file references under `result["artifacts"]` and read them with `load_artifacts()`. Prefer file-backed analysis artifacts for new code.
 
 ## Notes
 
 - `result` is JSON. Serialize complex Python objects yourself (datetimes, dataclasses, NumPy) — the SDK doesn't auto-convert.
-- Results are **per-plugin per-experiment**. Two analysis plugins running on the same experiment have independent rows. `load_analysis()` and `load_analyses()` default to the calling plugin's own result; pass `include_others=True` only for reader plugins that intentionally aggregate results from multiple plugins.
+- Artifacts are **per-plugin per-experiment per-key**. Two analysis plugins running on the same experiment have independent artifacts, and one plugin can save multiple artifact keys. `load_analysis_artifacts()` defaults to the calling plugin's own artifacts; pass `include_others=True` only for reader plugins that intentionally aggregate results from declared plugins.
 - For large outputs (megabytes of peak data per run), consider writing to plugin-owned tables instead — JSON columns aren't ideal for queries or bulk reads. See [Recipes → Querying plugin data](/sdk/recipes/querying-plugin-data).
 
 ## Related
 
-- [Concepts → Data model](/sdk/concepts/data-model) — `PluginAnalysisResult` shape
+- [Concepts → Data model](/sdk/concepts/data-model) — `AnalysisArtifact` and compatibility `PluginAnalysisResult` shapes
 - [Recipes → Reading experiments](/sdk/recipes/reading-experiments) — read side

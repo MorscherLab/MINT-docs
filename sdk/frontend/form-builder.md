@@ -335,7 +335,7 @@ async function handleSave() {
 }
 ```
 
-`useExperimentSave` exposes `isSaving`, `isLoading`, `error`, `lastLoadedAt`, and `lastSavedAt` refs, plus explicit helpers for design data, analysis results, and current-experiment saves.
+`useExperimentSave` exposes `isSaving`, `isLoading`, `error`, `lastLoadedAt`, and `lastSavedAt` refs, plus explicit helpers for design data, compatibility analysis results, and current-experiment saves.
 
 ## Notes
 

@@ -12,7 +12,12 @@
 
 ## Later modules
 
-- [ ] Experiment/data model: first-class analysis artifacts, Home/Notices, project rollups.
+- [x] Experiment/data model: first-class analysis artifacts, Home/Notices, project rollups.
+  - [x] Update workflow data-model and experiment pages.
+  - [x] Update project and quickstart workflow text.
+  - [x] Update UI tour and glossary.
+  - [x] Sync SDK data-model/API references that directly describe experiment results.
+  - [x] Build, search for stale UI/model phrasing, commit, and push.
 - [ ] Plugin system: compatibility enforcement, registry fallback, plugin calendar/notifications.
 - [ ] Plugin development guide: MINT SDK 1.1 `mint init --mode`, decorators, jobs, generated UI.
 - [ ] Reference/UI: admin navigation, account modal, glossary, FAQ, screenshots.

@@ -20,12 +20,12 @@ class MyPlugin(AnalysisPlugin):
 
 ## The four types
 
-| Type | Use it for | Experiment repository | Design data | Analysis results |
+| Type | Use it for | Experiment repository | Design data | Analysis artifacts/results |
 |------|------------|-----------------------|-------------|------------------|
 | `PluginType.STATIC` | UI/reporting/help plugins that should not mutate experiment data | Read-only | Read-only | Read-only |
-| `PluginType.ANALYSIS` | Processing existing experiments and saving computed results | Read-only experiment CRUD wrapper | Read-only | Can write this plugin's result |
+| `PluginType.ANALYSIS` | Processing existing experiments and saving computed outputs | Read-only experiment CRUD wrapper | Read-only | Can write this plugin's artifacts and compatibility result |
 | `PluginType.EXPERIMENT_DESIGN` | Defining and editing an experiment's design payload | Design-scoped create/update/delete | Can write owned design data | Read-only |
-| `PluginType.FULL` | Rare plugins that must own both design data and analysis results | Full repository access | Can write | Can write |
+| `PluginType.FULL` | Rare plugins that must own both design data and analysis outputs | Full repository access | Can write | Can write |
 
 The class you subclass is `AnalysisPlugin` regardless of type — the name reflects the abstract base, not the runtime category. The `plugin_type` field on `PluginMetadata` is what the platform reads.
 
@@ -54,13 +54,13 @@ PluginCapabilities(
 
 ## Choosing a type
 
-Pick **`STATIC`** when your plugin only presents UI, dashboards, documentation, or read-only summaries. Static plugins can still expose routes and frontend pages, but the platform blocks design-data and analysis-result writes.
+Pick **`STATIC`** when your plugin only presents UI, dashboards, documentation, or read-only summaries. Static plugins can still expose routes and frontend pages, but the platform blocks design-data and analysis-output writes.
 
 Pick **`ANALYSIS`** when your plugin processes existing experiments and produces results. Examples: a peak-picking analysis that reads RAW files from an experiment and writes back peak tables; a drug-response prediction analysis that consumes panel design data and writes back IC50 estimates; a quality-control analysis that flags problematic samples.
 
 Pick **`EXPERIMENT_DESIGN`** when your plugin defines what an experiment *is* — its design schema, the form users fill in, the metadata that travels with it. Examples: an LC-MS sequence designer that owns `LcmsSequenceTable`; a drug-response panel designer; a plate-map editor for cell culture experiments.
 
-Pick **`FULL`** only when one plugin truly needs to do both jobs: create/update design data and write analysis results for the same workflow. A single domain capability often splits more cleanly into two plugins — one design plugin to set up the experiment plus one or more analysis plugins that act on it.
+Pick **`FULL`** only when one plugin truly needs to do both jobs: create/update design data and write analysis artifacts or compatibility results for the same workflow. A single domain capability often splits more cleanly into two plugins — one design plugin to set up the experiment plus one or more analysis plugins that act on it.
 
 ## Example: minimal pair
 

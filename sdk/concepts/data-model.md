@@ -55,7 +55,7 @@ class DesignData:
 
 ### `PluginAnalysisResult`
 
-The output of one analysis-plugin run on one experiment.
+The compatibility result payload for one plugin on one experiment.
 
 ```python
 @dataclass(slots=True)
@@ -66,18 +66,49 @@ class PluginAnalysisResult:
     result: dict[str, Any]
     created_at: datetime
     updated_at: datetime
+    artifact_id: int | None = None
+    artifact_key: str | None = None
+    display_name: str | None = None
+    status: str | None = None
+    result_keys: list[str] = field(default_factory=list)
 ```
 
-The current platform stores analysis results as JSON entries keyed by `plugin_id` on the experiment row. Saving a new result for the same `(experiment_id, plugin_id)` updates that entry; it does not append a separate run row. To preserve history, embed a per-run sub-key inside `result`:
+`save_analysis()` / `load_analysis()` still use this shape so older plugins keep working. Saving a new compatibility result for the same `(experiment_id, plugin_id)` updates that plugin's current result.
+
+For current MINT plugins, prefer named analysis artifacts when the output should appear in the experiment UI, be archived/restored, or exist as more than one independently managed result:
 
 ```python
-await plugin.save_analysis(experiment_id, {
-    "runs": [
-        {"id": "2026-05-01T10:00:00Z", "summary": {...}},
-        {"id": "2026-05-01T14:00:00Z", "summary": {...}},
-    ],
-})
+await plugin.save_analysis_artifact(
+    experiment_id,
+    {"summary": {"n_peaks": 312}, "table": rows},
+    artifact_key="peak-table",
+    display_name="Peak table",
+)
 ```
+
+### `AnalysisArtifact`
+
+The first-class result object shown on experiment pages.
+
+```python
+@dataclass(slots=True)
+class AnalysisArtifact:
+    id: int
+    experiment_id: int
+    plugin_id: str
+    artifact_key: str
+    display_name: str
+    status: str
+    result: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+    result_keys: list[str] = field(default_factory=list)
+    note: str | None = None
+    archived_at: datetime | None = None
+    archived_by: int | None = None
+```
+
+`AnalysisArtifactSummary` has the same metadata fields without `result`. `AnalysisArtifactInput` is the batch-save input shape: `artifact_key`, `result`, optional `display_name`, and optional `note`.
 
 ### `User`
 
@@ -118,18 +149,20 @@ class UserPluginRole:
 ```
 Project ────< Experiment ──────── DesignData          (one design payload per experiment)
                   │
-                  └──────────────── PluginAnalysisResult  (one entry per plugin id)
+                  └────────────────< AnalysisArtifact     (named outputs per plugin)
+                  │
+                  └──────────────── PluginAnalysisResult  (compatibility result per plugin id)
                   │
                   └────────────────< (plugin-owned tables, via shared_db_session)
 
 User ──────< UserPluginRole              (one per (user, plugin))
 ```
 
-The platform owns `Project`, `Experiment`, `User`, `DesignData`, `PluginAnalysisResult`, and `UserPluginRole`. In the current backend, design data and analysis results are JSON columns on the experiment row and the SDK adapter returns SDK-shaped objects for plugin code. Plugin-owned tables live in the plugin's own Postgres schema (integrated mode) or its own SQLite database (standalone mode).
+The platform owns `Project`, `Experiment`, `User`, `DesignData`, `AnalysisArtifact`, compatibility `PluginAnalysisResult` records, and `UserPluginRole`. Design data and artifact payloads are JSON-backed; plugin-owned tables live in the plugin's own Postgres schema (integrated mode) or its own SQLite database (standalone mode).
 
 ## JSONB portability
 
-`DesignData.data` and `PluginAnalysisResult.result` are JSON-typed columns. Postgres uses native `jsonb` (queryable, indexable); SQLite uses serialized JSON in a TEXT column. The repository layer abstracts the difference. Code that just reads / writes whole dicts works in both backends.
+`DesignData.data`, `AnalysisArtifact.result`, and compatibility `PluginAnalysisResult.result` are JSON-typed payloads. Postgres uses native `jsonb` (queryable, indexable); SQLite uses serialized JSON in a TEXT column. The repository layer abstracts the difference. Code that just reads / writes whole dicts works in both backends.
 
 For complex queries (e.g., "find experiments where `result.method == 'v4'`"), prefer a real column inside a plugin-owned table over JSON-key indexing — JSON expression indexes work but reduce portability.
 
@@ -139,7 +172,12 @@ For complex queries (e.g., "find experiments where `result.method == 'v4'`"), pr
 |------------|---------|--------|
 | `ExperimentRepository` | `Experiment` | `Experiment` (`EXPERIMENT_DESIGN` and `FULL` plugins) |
 | `PluginDataRepository.save_experiment_data` | `DesignData` | `DesignData` |
-| `PluginDataRepository.save_analysis_result` | `PluginAnalysisResult` | `PluginAnalysisResult` |
+| `PluginDataRepository.save_analysis_result` | `PluginAnalysisResult` | `PluginAnalysisResult` compatibility payload |
+| `PluginDataRepository.save_analysis_artifact` | `AnalysisArtifact` | Named analysis artifact |
+| `PluginDataRepository.save_analysis_artifacts` | `list[AnalysisArtifact]` | Atomic batch of named artifacts |
+| `PluginDataRepository.list_analysis_artifacts` | `list[AnalysisArtifactSummary]` | — |
+| `PluginDataRepository.get_analysis_artifact` | `AnalysisArtifact \| None` | — |
+| `PluginDataRepository.archive_analysis_artifact` / `restore_analysis_artifact` | `AnalysisArtifactSummary \| None` | Artifact status |
 | `PluginDataRepository.get_analysis_results` | `list[PluginAnalysisResult]` (calling plugin by default; pass `include_others=True` for every plugin's result on one experiment) | — |
 | `UserRepository` | `User` | — |
 | `PluginRoleRepository` | `UserPluginRole`, `str | None` (a single role) | `UserPluginRole` |
@@ -150,7 +188,7 @@ See the [API Reference → Python SDK](/sdk/api/python) for the full method list
 
 Plugins extend the data model in two complementary ways:
 
-1. **Within `DesignData.data` / `PluginAnalysisResult.result`** — JSON. Quick and schema-flexible. Best for plugin-specific configuration and outputs.
+1. **Within `DesignData.data` / `AnalysisArtifact.result`** — JSON. Quick and schema-flexible. Best for plugin-specific configuration and outputs.
 2. **Plugin-owned tables** — declare via `get_shared_models()` and/or migrations. Best for queryable, relational data the plugin owns end-to-end.
 
 Pick (1) when the data is tightly coupled to one experiment and never queried across experiments by anyone else. Pick (2) when you need indexes, cross-experiment queries, or relational integrity.

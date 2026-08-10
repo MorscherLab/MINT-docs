@@ -39,15 +39,15 @@ Fill in the design fields exposed by the experiment type, then **Save**. The exp
 
 > [Screenshot: experiment-detail page in planned status]
 
-## Step 3: Move to ongoing and upload data
+## Step 3: Move to ongoing and attach data
 
-Switch the status to **ongoing**. Most plugins gate result writes on `ongoing` or `completed`. Then upload the relevant artifacts (RAW files, sequence sheets, design plates) — the file picker shows the experiment-type's expected attachments.
+Switch the status to **ongoing**. Most plugins gate result writes on `ongoing` or `completed`. If your workflow needs files or instrument output, open the relevant design or analysis plugin and attach the data there; plugin-produced files come back to the experiment as analysis artifacts.
 
-> [Screenshot: experiment file uploader with attachments queued]
+> [Screenshot: experiment detail page with status set to ongoing and plugin launch options visible]
 
 ## Step 4: Run an analysis plugin
 
-Open the **Analyze** tab on the experiment. Pick an installed analysis plugin from the dropdown, fill in its parameters, and click **Run**.
+Use the experiment's **Analysis artifacts** card to pick an available analysis plugin, or open the plugin from the home **Plugins** launcher and select this experiment. Fill in the plugin's parameters and click **Run**.
 
 The plugin runs in its own isolated subprocess; MINT proxies its UI back into the page. Progress is tracked in the **Jobs** panel (top-right).
 
@@ -55,11 +55,11 @@ The plugin runs in its own isolated subprocess; MINT proxies its UI back into th
 
 Approximate runtimes depend on the plugin and dataset size. The Jobs panel shows live status: queued → running → done (or failed).
 
-## Step 5: See your results
+## Step 5: Review analysis artifacts
 
-When the plugin finishes, the experiment's **Results** tab populates with whatever the plugin wrote (charts, tables, downloadable artifacts). Core MINT stores one result entry per plugin; plugins that need run history keep that history inside their own result payload or plugin-owned tables.
+When the plugin finishes, the experiment's **Analysis artifacts** card populates with the outputs it wrote. Artifacts are grouped by producing plugin and can include summaries, tables, downloadable files, or JSON payloads. If you edit the design after an analysis runs, MINT marks older artifacts as **stale** so you know which outputs may need to be regenerated.
 
-> [Screenshot: results tab showing one plugin result entry with charts, tables, and exports]
+> [Screenshot: analysis artifacts card showing one plugin group with downloadable outputs]
 
 ## Step 6: Wrap up
 

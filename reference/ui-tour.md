@@ -18,44 +18,45 @@ Always visible. Spans the full width.
 
 ## Home dashboard
 
-The landing page after logging in. Three regions:
+The landing page after logging in. The current dashboard is built for quick triage:
 
 | Region | What it shows |
 |--------|---------------|
-| **Projects tile grid** | Every project you're a member of, sorted by recent activity |
-| **Recent experiments** | Your last edited / viewed experiments |
-| **Plugins** | Tiles for every plugin available to your role |
+| **Status strip** | Today's date, open items that need attention, and the lab notice board |
+| **Notice board** | The pinned or newest active notice, with an earlier-notices modal when history exists |
+| **Recent experiments** | Recently updated experiments with status and code |
+| **Recent projects** | Recently updated projects with experiment counts and project status |
+| **Plugins launcher** | Searchable grid/list of enabled plugins, with per-user pinning and entry-point links |
 
 > [Screenshot: home dashboard fully labeled]
 
 ## Project page
 
-Four tabs:
+Single record view:
 
-| Tab | Contents |
-|-----|----------|
-| **Overview** | Description, member count, experiment counts by status, recent activity |
-| **Experiments** | Sortable, filterable list — click a row to drill in |
-| **Members** | Project membership, lead/creator context, and stored member labels |
-| **Settings** | Rename, archive, delete (admin only) |
+| Region | Contents |
+|--------|----------|
+| **Header** | Project name, status, description, edit action, and **New Experiment** |
+| **Rollup chips** | Counts for all experiments, with design data, and no design data; click to filter the table |
+| **Experiments table** | Code, name, type, status, design completeness, and created date |
+| **Metadata rail** | Project dates, members, tags, and admin-only destructive actions |
 
-> [Screenshot: project page with the Experiments tab selected]
+> [Screenshot: project page with rollup chips and experiments table]
 
 ## Experiment detail page
 
-Five tabs:
+Single record view:
 
-| Tab | Contents |
-|-----|----------|
-| **Overview** | Code, title, type, status pill, owner, collaborators, design summary |
-| **Design** | Form rendered by the experiment-design plugin; editable per status |
-| **Files** | Uploaded artifacts (RAW data, sequences, plates, …) |
-| **Analyze** | Pick an analysis plugin, run it, watch progress |
-| **Results** | Accumulated outputs from past analysis runs |
+| Region | Contents |
+|--------|----------|
+| **Header** | Experiment code, title, status stepper, edit/cancel/reactivate actions, and an **Open in plugin** action when a design plugin owns the experiment |
+| **Design data** | Grouped design fields, sample rows, JSON/CSV export, and fallback full-document viewer |
+| **Analysis artifacts** | Outputs grouped by producing plugin, with status, artifact key, result keys, open/download/edit/archive actions, and a show-archived toggle |
+| **Metadata rail** | Type, project, timeline, creator, parent link, data lineage, collaborators, tags, and delete action |
 
-The status pill in the header drives writability — see [Experiments → Lifecycle](/workflow/experiments#lifecycle).
+The status control in the header drives writability — see [Experiments → Lifecycle](/workflow/experiments#lifecycle).
 
-> [Screenshot: experiment detail page with the Analyze tab open]
+> [Screenshot: experiment detail page with the Analysis artifacts card open]
 
 ## Jobs panel (slide-out)
 
@@ -65,7 +66,7 @@ Click the activity indicator (top-right of the action bar) to open. Lists every 
 |---------|--------------|
 | Job row | Plugin name + experiment + status pill |
 | Progress bar | Live during runs |
-| **Open** | Jump to the experiment's Results tab with this run highlighted |
+| **Open** | Jump to the experiment or source plugin view for this job/artifact |
 | **Cancel** | Stop a running job (best-effort — depends on plugin) |
 | **Retry** | Re-run a failed job with the same parameters |
 
@@ -81,6 +82,7 @@ Visible only to platform admins.
 | **Roles** | System role presets and custom-role editor |
 | **Experiment Types** | Experiment type registration and platform-owned design metadata |
 | **Plugins** | Installed plugins, per-plugin upgrade / uninstall |
+| **Notices** | Publish, pin, archive, restore, and delete home-dashboard notices |
 | **Logs** | Structured platform logs and health diagnostics |
 | **Configuration** | Platform, auth, database, storage, access, marketplace, observability |
 | **Server** | Runtime status and platform update controls |

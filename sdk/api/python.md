@@ -46,8 +46,16 @@ Convenience methods:
 | `save_design(experiment_id, data, *, schema_version=None)` | Save / update `DesignData` |
 | `load_design(experiment_id)` | Load `DesignData` |
 | `save_analysis(experiment_id, result)` | Save / update `PluginAnalysisResult` |
+| `save_analysis_artifact(experiment_id, result, *, artifact_key="default", display_name=None, note=None)` | Save / update one named `AnalysisArtifact` |
+| `save_analysis_artifacts(experiment_id, artifacts)` | Atomically save multiple `AnalysisArtifactInput` records |
+| `save_analysis_file_artifact(experiment_id, data, *, filename=None, artifact_key=None, kind="file", ...)` | Upload or reuse a file object and save a file-backed analysis artifact |
 | `load_analysis(experiment_id, fields=None)` | Load this plugin's `PluginAnalysisResult`; optionally project selected top-level result keys |
-| `load_artifacts(experiment_id)` | Load only `result["artifacts"]` (or a custom key) without transferring large result payloads |
+| `load_analysis_artifact(experiment_id, *, artifact_key="default", plugin_id=None, fields=None)` | Load one active named artifact |
+| `load_analysis_file_artifact(experiment_id, path, *, artifact_key="default", plugin_id=None)` | Stream a file-backed artifact to a local path |
+| `load_analysis_artifacts(experiment_id, *, include_others=False, include_archived=False)` | Load artifact metadata for an experiment |
+| `archive_analysis_artifact(experiment_id, *, artifact_key="default")` | Archive one of this plugin's artifacts |
+| `restore_analysis_artifact(experiment_id, *, artifact_key="default")` | Restore one of this plugin's archived artifacts |
+| `load_artifacts(experiment_id)` | Legacy helper: load only `result["artifacts"]` (or a custom key) from `PluginAnalysisResult` |
 | `load_analyses(experiment_id, include_others=False)` | Load analysis results; defaults to this plugin's own result only |
 | `save(experiment_id, *, design=..., analysis=...)` | Save both at once |
 | `load(experiment_id)` | Load both |
@@ -58,7 +66,7 @@ Convenience methods:
 | `save_template_collection(...)`, `load_template_collection(...)` | Save/load multiple biology templates |
 | `save_template_preset(...)` | Save one built-in template preset collection |
 
-`load_analysis(fields=[...])` is useful when the result contains large tables and the UI only needs a few metadata keys. Store artifact references under `ANALYSIS_ARTIFACTS_KEY` (`"artifacts"`) and call `load_artifacts()` when a reader only needs downloadable outputs.
+`save_analysis()` / `load_analysis()` are the compatibility result path. Prefer `save_analysis_artifact()` for outputs that should appear as managed artifacts in the experiment UI, especially when one run produces multiple named outputs or file-backed downloads. `load_analysis(fields=[...])` remains useful when an older result contains large tables and the UI only needs a few metadata keys.
 
 Settings:
 
@@ -138,7 +146,7 @@ class PluginType(str, Enum):
     FULL = "full"
 ```
 
-Use `ANALYSIS` for plugins that read experiments and write analysis results, `EXPERIMENT_DESIGN` for plugins that own experiment design data, `FULL` only when one plugin must write both design data and analysis results, and `STATIC` for UI/reporting plugins that should not write either.
+Use `ANALYSIS` for plugins that read experiments and write analysis artifacts or compatibility results, `EXPERIMENT_DESIGN` for plugins that own experiment design data, `FULL` only when one plugin must write both design data and analysis outputs, and `STATIC` for UI/reporting plugins that should not write either.
 
 ### `PlatformContext`
 
@@ -162,7 +170,11 @@ Use `ANALYSIS` for plugins that read experiments and write analysis results, `EX
 | `Experiment` | Dataclass — experiment row |
 | `DesignData` | Dataclass — per-experiment design payload |
 | `PluginExperimentData` | Backward-compat alias for `DesignData` |
-| `PluginAnalysisResult` | Dataclass — per-(experiment, plugin) analysis output |
+| `PluginAnalysisResult` | Dataclass — compatibility per-(experiment, plugin) analysis output |
+| `AnalysisArtifactInput` | Dataclass — one named artifact to save in an atomic batch |
+| `AnalysisArtifactSummary` | Dataclass — metadata-only artifact record |
+| `AnalysisArtifact` | Dataclass — full artifact record with result payload |
+| `AnalysisFileArtifactUpdate` | Dataclass — CAS file-artifact replacement result |
 | `User` | Dataclass — user row |
 | `UserPluginRole` | Dataclass — per-(user, plugin) role row |
 | `PlatformConfig` | Type alias `dict[str, Any]` for platform config view |
@@ -174,13 +186,13 @@ Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/ma
 | Symbol | Description |
 |--------|-------------|
 | `ExperimentRepository` | `get_by_id`, `list_all`, `create`, `update`, `delete`, `has_design_data` |
-| `PluginDataRepository` | `save_experiment_data`, `get_experiment_data`, `delete_experiment_data`, `save_analysis_result`, `get_analysis_result`, `get_analysis_result_fields`, `get_analysis_results`, `delete_analysis_result` |
+| `PluginDataRepository` | `save_experiment_data`, `get_experiment_data`, `delete_experiment_data`, compatibility `save_analysis_result` / `get_analysis_result`, plus `save_analysis_artifact`, `create_analysis_artifact`, `save_analysis_artifacts`, `list_analysis_artifacts`, `get_analysis_artifact`, `archive_analysis_artifact`, `restore_analysis_artifact` |
 | `UserRepository` | `get_by_id`, `get_by_username`, `list_all` |
 | `PluginRoleRepository` | `get_role`, `set_role`, `remove_role`, `list_plugin_roles`, `list_user_roles` |
 
-All repository methods are async. `ANALYSIS` and `STATIC` plugins receive a read-only `ExperimentRepository`; `EXPERIMENT_DESIGN` plugins can create/update/delete through the design-scoped wrapper; `FULL` receives the unrestricted platform repository. Data writes are also type-gated: `ANALYSIS` can save analysis results, `EXPERIMENT_DESIGN` can save design data, `FULL` can save both, and `STATIC` can save neither.
+All repository methods are async. `ANALYSIS` and `STATIC` plugins receive a read-only `ExperimentRepository`; `EXPERIMENT_DESIGN` plugins can create/update/delete through the design-scoped wrapper; `FULL` receives the unrestricted platform repository. Data writes are also type-gated: `ANALYSIS` can save analysis artifacts and compatibility results, `EXPERIMENT_DESIGN` can save design data, `FULL` can save both, and `STATIC` can save neither.
 
-`PluginDataRepository.get_analysis_results(experiment_id)` now returns only the calling plugin's own results by default. Pass `include_others=True` only for intentional cross-plugin reader plugins. `get_analysis_result_fields(experiment_id, plugin_id, fields)` projects selected top-level keys from `result`.
+`PluginDataRepository.get_analysis_results(experiment_id)` and `list_analysis_artifacts(experiment_id)` return only the calling plugin's own data by default. Pass `include_others=True` only for intentional cross-plugin reader plugins whose `analysis_result_readers` declaration allows those plugin IDs. `get_analysis_result_fields(...)` and `get_analysis_artifact(..., fields=[...])` project selected top-level keys from `result`.
 
 ## Local database (standalone)
 
@@ -255,7 +267,7 @@ These four are the entire public testing surface. See [Recipes → Testing plugi
 | `auto_json_to_tree(data, *, compact=True)` | Generic dict → TreeNode list |
 | `auto_json_to_csv(data)` | Generic dict → flat CSV string |
 | `auto_json_to_summary(data)` | Generic dict → `{metadata, sections}` |
-| `ANALYSIS_ARTIFACTS_KEY` | Conventional result key (`"artifacts"`) for artifact references |
+| `ANALYSIS_ARTIFACTS_KEY` | Legacy conventional result key (`"artifacts"`) for references inside `PluginAnalysisResult` |
 
 `AnalysisPlugin.export_tree`, `export_summary`, `export_csv` use these by default; override on the plugin to customize.
 

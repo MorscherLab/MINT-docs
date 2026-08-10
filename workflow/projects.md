@@ -2,7 +2,7 @@
 
 A **project** is the top-level grouping in MINT. It owns a set of experiments and a set of members; every experiment lives in exactly one project, and access is governed primarily through project membership.
 
-> [Screenshot: project detail page with experiments list, members panel, and overview tiles]
+> [Screenshot: project detail page with header, rollup filters, experiments table, and metadata rail]
 
 ## When to create a project
 
@@ -31,16 +31,18 @@ From the home dashboard, click **New project**.
 
 ## Project anatomy
 
-Every project page has four tabs:
+The project page is a compact record view:
 
-| Tab | Contents |
-|-----|----------|
-| **Overview** | Project description, recent activity, experiment counts by status |
-| **Experiments** | Sortable, filterable list of experiments — see [Experiments](/workflow/experiments) |
-| **Members** | Per-project members and their roles — see [Members & roles](/workflow/members-roles) |
-| **Settings** | Rename, archive, delete (admin only) |
+| Region | Contents |
+|--------|----------|
+| **Header** | Project name, status, description, **Edit**, and **New Experiment**. |
+| **Rollup filters** | Counts for all experiments, experiments with design data, and experiments without design data. Clicking a chip filters the table. |
+| **Experiments table** | Dense list with code, name, type, status, design completeness, and created date. Click a row to open the experiment. |
+| **Metadata rail** | Project dates, lead/creator context, members, tags, and admin actions. |
 
-> [Screenshot: project tabs with Experiments selected]
+The rollups describe the whole project, not just the current search filter. They are meant to answer the first operational question a project lead usually has: "which experiments have a design ready to analyze?"
+
+> [Screenshot: project rollup chips filtering the experiments table]
 
 ## Experiment codes within a project
 
@@ -60,7 +62,7 @@ Archived projects remain reachable by direct URL and via the **Show archived** f
 
 ## Deleting a project
 
-Deletion is irreversible — every experiment in the project is also removed, including uploaded artifacts and analysis-plugin results. The action requires admin privilege and a confirmation dialog with the project name typed back.
+Deletion is irreversible — every experiment in the project is also removed, including design data and platform analysis artifact records. Plugin-owned tables and files can have their own cleanup policy, so prefer archiving unless the project was created by mistake. The action requires admin privilege and a confirmation dialog with the project name typed back.
 
 ::: warning Prefer archival
 For nearly every "I'm done with this" case, archive instead of delete. Deletion is for genuinely accidental projects.

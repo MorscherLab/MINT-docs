@@ -160,7 +160,7 @@ For full prop signatures, browse the source or run the local Histoire storybook.
 | `useCurrentExperiment` | active experiment helper | Read the experiment selected by the platform shell |
 | `useExperimentSelector` | reactive experiment picker | Experiment dropdowns |
 | `useExperimentData` | reactive experiment view | Live design + analysis |
-| `useExperimentSave` | save/load design data and analysis results | Save back to experiment |
+| `useExperimentSave` | save/load design data and compatibility analysis results | Save back to experiment |
 | `useAppExperiment` | provide / inject pattern | Plugin-tree-wide active experiment |
 | `defineControls`, `defineControlModel` | compact control schemas | Generate forms/settings/sidebar/workspaces from one model |
 | `useControlSchema`, `useControlWorkspace` | derived control bindings | Lower-level control-driven layouts |
