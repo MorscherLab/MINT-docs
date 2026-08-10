@@ -204,7 +204,10 @@ await pluginClient.analyze({
 })
 ```
 
-The same generated file also exports endpoint definitions, URL builders, upload/download helpers, event-stream helpers, settings helpers when your backend declares `settings_model`, and `pluginContractHash` for diagnostics.
+The same generated file also exports endpoint definitions, URL builders,
+upload/download helpers, event-stream helpers, settings helpers when your
+backend declares `@mint_plugin(config=SettingsModel)`, and `pluginContractHash`
+for diagnostics.
 
 Do not edit `frontend/src/generated/*` by hand. Regenerate it whenever backend routes, `PluginMetadata.nav_items`, settings models, or response schemas change. If fields you just added to a Pydantic model do not appear in `AnalyzeResponse`, you are probably running an older `mint-sdk`; update the SDK and run `mint sdk generate` again.
 

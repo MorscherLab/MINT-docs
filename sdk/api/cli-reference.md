@@ -311,7 +311,7 @@ Generated frontend plugins get:
 - `frontend/src/generated/mint-plugin.contract.json`
 - `frontend/src/generated/mint-plugin.ts`
 
-The TypeScript file exports `useGeneratedPluginClient()`, `useGeneratedPluginContract()`, typed endpoint metadata, page selector items, settings helpers when a backend `settings_model` exists, and upload/download/SSE helpers for matching endpoints.
+The TypeScript file exports `useGeneratedPluginClient()`, `useGeneratedPluginContract()`, typed endpoint metadata, page selector items, settings helpers when a backend declares `@mint_plugin(config=SettingsModel)`, and upload/download/SSE helpers for matching endpoints.
 
 ## Configuration files
 

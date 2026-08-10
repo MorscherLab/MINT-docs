@@ -17,24 +17,31 @@ Source: [`mint_sdk/plugin.py`](https://github.com/MorscherLab/MINT/blob/main/pac
 
 ### `AnalysisPlugin`
 
-Abstract methods (every plugin must implement):
+Required package surface:
 
-| Method | Returns |
+| Surface | Purpose |
+|---------|---------|
+| `mint.plugins` entry point | Points to the `AnalysisPlugin` subclass |
+| `@mint_plugin(...)` or legacy `metadata` | Declares runtime behavior; package identity comes from PEP 621 |
+
+Common lifecycle and routing methods:
+
+| Method | Purpose |
 |--------|---------|
-| `metadata` (property) | `PluginMetadata` |
-| `get_routers()` | `list[tuple[APIRouter, str]]` |
-| `initialize(context)` | `None` (async) |
-| `shutdown()` | `None` (async) |
+| `metadata` (property) | Return legacy property metadata or the resolved `@mint_plugin` declaration |
+| `get_routers()` | Advanced native routers below this plugin's API prefix; defaults to `[]` |
+| `initialize(context)` | Initialize and retain the active platform context; default stores context |
+| `shutdown()` | Clean up plugin resources; default no-op |
 
 Optional lifecycle hooks (default to no-op):
 
 | Method | When called |
 |--------|-------------|
 | `check_health()` | Periodically by **Admin → Status** |
-| `on_before_experiment_save(experiment_id, data)` | Before any experiment write |
-| `on_after_experiment_save(experiment_id, data)` | After a successful experiment write |
-| `on_experiment_status_change(experiment_id, old, new)` | On status flip |
-| `apply_settings(settings)` | When the plugin's settings change |
+| `@on_event("experiment.before_save")` or legacy `on_before_experiment_save(...)` | Before any experiment write |
+| `@on_event("experiment.after_save")` or legacy `on_after_experiment_save(...)` | After a successful experiment write |
+| `@on_event("experiment.status_changed")` or legacy `on_experiment_status_change(...)` | On status flip |
+| `@on_config_change(...)` / `apply_settings(settings)` | When plugin settings are applied |
 | `get_migrations_package()` | Returns dotted path; `None` (default) means no migrations |
 | `get_shared_models()` | List of SQLAlchemy models for owned tables |
 | `get_frontend_dir()` | Path to built frontend (auto-detected by default) |
@@ -72,11 +79,12 @@ Settings:
 
 | Symbol | Purpose |
 |--------|---------|
-| `settings_model` (class attr) | Pydantic model for typed settings |
+| `@mint_plugin(config=SettingsModel)` | Preferred declaration for typed settings |
 | `settings` (property) | Current settings instance |
 | `apply_settings(dict)` | Validate + populate settings |
-| `save_settings(dict_or_model)` | Persist via the platform's config store |
-| `get_configurable_settings()` | Auto-derived from `settings_model` |
+| `save_settings_transactionally(dict_or_model, expected_revision=...)` | Persist a full settings replacement against an optional opaque revision |
+| `patch_settings_transactionally({...})` | Persist a shallow partial settings update with bounded CAS retries |
+| `get_configurable_settings()` | Auto-derived from decorator-owned config |
 
 Standalone helpers:
 
@@ -105,6 +113,7 @@ icon: str = ""                # SVG path data
 color: str = ""               # Optional brand color hex
 nav_items: list[PluginNavItem] = []
 analysis_result_readers: list[str] = []
+allowed_experiment_types: list[str] | None = None
 schema_version: str = "1.0"
 dependencies: list[str] = []  # plugin slugs that must load first
 ```
@@ -134,6 +143,10 @@ requires_database: bool = False
 requires_experiments: bool = False
 requires_shared_database: bool = False
 supports_experiment_linking: bool = False
+supports_email_notifications: bool = False
+supports_teams_notifications: bool = False
+supports_slack_notifications: bool = False
+supports_calendar_events: bool = False
 ```
 
 ### `PluginType`

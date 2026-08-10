@@ -156,7 +156,10 @@ The generated client can infer `experimentId` for route params named `experiment
 
 ### `usePluginSettings`
 
-Generated clients expose `useGeneratedPluginSettings()` when the backend declares `settings_model`. It loads from platform plugin config when installed, or from the plugin-local `/settings` route in standalone mode.
+Generated clients expose `useGeneratedPluginSettings()` when the backend
+declares `@mint_plugin(config=SettingsModel)`. It loads from platform plugin
+config when installed, or from the plugin-local `/settings` route in standalone
+mode.
 
 ```ts
 import { useGeneratedPluginSettings } from '../generated/mint-plugin'

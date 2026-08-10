@@ -1,20 +1,39 @@
 # Isolation
 
-MINT runs plugins with as little process overhead as possible while still tolerating dependency conflicts and crashes. Two strategies cover the spectrum: shared environment and per-plugin venv.
+MINT runs plugins with as little process overhead as possible while still
+tolerating incompatible Python dependencies and plugin crashes. Version
+compatibility is checked first; runtime isolation is only considered after a
+plugin is allowed to install on the current platform.
 
 ## When each kicks in
 
 ```mermaid
 flowchart TD
-    A[Plugin install] --> B[Read plugin's<br/>declared dependencies]
-    B --> C{conflict.py:<br/>any clash with<br/>installed packages?}
-    C -->|No| D[Shared mode<br/>—— platform venv]
-    C -->|Yes| E[Isolated mode<br/>—— uv-managed venv]
-    D --> F[Mount routers in-process]
-    E --> G[Run plugin in subprocess<br/>+ HTTP proxy]
+    A[Plugin install] --> B{MINT version<br/>compatible?}
+    B -->|No| X[Block install<br/>or require force]
+    B -->|Yes| C[Read wheel and<br/>declared dependencies]
+    C --> D{Dependency/runtime<br/>isolation needed?}
+    D -->|No| E[Shared mode<br/>platform venv]
+    D -->|Yes| F[Isolated mode<br/>uv-managed venv]
+    E --> G[Mount routers in-process]
+    F --> H[Run plugin in subprocess<br/>plus HTTP proxy]
 ```
 
-The conflict check compares each declared requirement against the platform's resolved environment using PEP 440 specifier intersection. If every plugin requirement is satisfiable by a single resolution that also keeps existing plugins working, shared mode is used.
+The version gate checks two sources:
+
+| Source | Checked against |
+|--------|-----------------|
+| Marketplace `min_platform_version` | The running MINT platform version |
+| Bundle `[tool.mint].requires_mint` / manifest `requires_mint` | The running MINT platform version |
+
+The platform and `mint-sdk` are version-locked. Shared installs use a
+constraints file so a plugin cannot silently upgrade or downgrade the platform
+SDK. Isolated installs also pin the plugin venv to the platform's exact
+`mint-sdk` version; if the plugin wheel declares a range that excludes that
+version, the install fails before the resolver produces a confusing error.
+
+After version compatibility passes, the dependency/runtime decision determines
+whether the plugin can run in-process or must use a subprocess runtime.
 
 ## Shared mode
 
@@ -27,11 +46,16 @@ When a plugin's dependencies don't clash, MINT installs the wheel into the platf
 | Crash blast radius | Wrapped by `api/plugins/middleware.py` — a route exception becomes a 500 for that route only |
 | Visible to user | Identical to native platform routes |
 
-This is the default and the right choice for the vast majority of plugins. Only reach for isolation when you genuinely have conflicting deps.
+This is the default and the right choice for the vast majority of plugins. Keep
+your `mint-sdk` dependency range honest and avoid pinning common libraries too
+tightly unless your plugin really needs it.
 
 ## Isolated mode
 
-When `conflict.py` detects an unresolvable clash (most often: two plugins want different majors of the same library), MINT provisions a per-plugin venv via `uv` and runs the plugin in its own subprocess on a dedicated port.
+When a plugin is installed as a subprocess runtime, MINT provisions a
+per-plugin venv via `uv`, caches the trusted wheel bundle under
+`server.dataPath`, records the runtime in the plugin manifest, and runs the
+plugin on a dedicated local port.
 
 ```mermaid
 sequenceDiagram
@@ -68,6 +92,11 @@ An isolated plugin doesn't share memory with the platform — it talks back over
 
 Plugin code is identical in both modes.
 
+Admins can inspect active subprocess runtimes in the server status view's
+**Plugin processes** card. It lists plugin name, status, port, start time, and
+restart count. If no subprocess plugins are active, the card says that no
+plugin subprocesses are isolated on separate ports.
+
 ## Dev mode proxy
 
 In development, plugins are typically run as standalone subprocesses with `mint dev --platform` so the developer can hot-reload either side independently. `api/plugins/dev_proxy.py` consumes a `config.dev.toml` that maps route prefixes to localhost URLs:
@@ -99,25 +128,19 @@ The dev proxy preserves the production URL shape and forwards normal request hea
 
 ## Configuration
 
-Isolation is decided automatically. To force a plugin into isolated mode (e.g., to test the proxy path), set:
+Plugin loading configuration lives under `plugins` in `config.json`:
 
-```json
-{
-  "plugins": {
-    "forceIsolated": ["my-plugin-slug"]
-  }
-}
-```
+| Key | Use |
+|-----|-----|
+| `loadFromEntryPoints` | Discover installed `mint.plugins` entry points on startup |
+| `plugins` | Add explicit module/class plugin entries for local or special deployments |
+| `extraIndexUrls` | Additional Python package indexes used during plugin installs |
+| `settings` | Durable per-plugin settings resolved for decorator-declared config |
 
-Conversely, to force shared mode and skip the conflict check (rarely a good idea):
-
-```json
-{
-  "plugins": {
-    "forceShared": ["my-plugin-slug"]
-  }
-}
-```
+Current user-facing configuration does not expose `forceIsolated` or
+`forceShared` switches. To exercise subprocess behavior during development,
+test an installed bundle in a disposable MINT instance, or run a standalone
+plugin behind the development proxy with `mint dev --platform`.
 
 ## Next
 

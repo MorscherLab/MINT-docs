@@ -43,6 +43,16 @@ The marketplace registry is a JSON feed plus the bundle URLs it points at. Hosti
 
 The platform polls the registry's `registry.json`. Each entry points to a GitHub release source (`github_repo` + `asset_pattern`), and the platform downloads the matching `.mint` asset from that release. There's no central authority — point `marketplace.registryUrl` at whichever registry you trust.
 
+Two compatibility declarations matter:
+
+| Declaration | Lives in | Checked when |
+|-------------|----------|--------------|
+| `min_platform_version` | Registry entry | Catalog listing, install/update button state, marketplace install |
+| `[tool.mint].requires_mint` | Plugin `pyproject.toml`, copied into `.mint` manifest | Bundle upload or marketplace bundle install |
+
+Keep them consistent. `min_platform_version` is a simple floor used by the
+catalog; `requires_mint` is a PEP 440 specifier used by the bundle installer.
+
 ### Submission to the Morscher Lab registry
 
 1. Open a PR against [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry) adding your plugin to `registry.json`
@@ -138,6 +148,7 @@ For platform and GitHub-source plugin checks, prerelease inclusion is controlled
 - [ ] Changelog updated (`CHANGELOG.md`)
 - [ ] Version tag matches the wheel and the manifest
 - [ ] Registry `min_platform_version` is the lowest platform you support
+- [ ] `[tool.mint].requires_mint` in `pyproject.toml` matches the bundle's real platform requirement
 - [ ] `pyproject.toml`'s `mint-sdk` range covers the SDK versions you build against
 - [ ] Bundle size is reasonable (see [Packaging](/sdk/operations/packaging#sizes))
 

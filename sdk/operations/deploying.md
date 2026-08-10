@@ -98,14 +98,14 @@ Use `mint add job` when you want the generated router and SDK `JobState` / `JobP
 
 Two layers matter for plugin-authored settings:
 
-1. **Defaults** baked into the plugin (`settings_model`, plus any defaults your code supplies)
+1. **Defaults** baked into the plugin (`@mint_plugin(config=SettingsModel)`, plus any defaults your code supplies)
 2. **Platform config** (`config.json` → `plugins.settings.<name>`, edited through Admin UI or `mint plugin config`)
 
 Secrets:
 
 - **Don't** hardcode in the wheel
 - **Don't** commit to the manifest
-- **Do** use the platform's settings store (`settings_model`, `apply_settings()`, `save_settings()`) and have admins set values from the UI or CLI
+- **Do** use the platform's settings store (`@mint_plugin(config=...)`, `@on_config_change`, `save_settings_transactionally()`, `patch_settings_transactionally()`) and have admins set values from the UI or CLI
 - **Do** document any deployment-specific environment variables your plugin reads directly
 
 For per-user secrets (an external-service API token tied to a user's identity), use a plugin-owned table with appropriate access checks — not the platform `User` record.

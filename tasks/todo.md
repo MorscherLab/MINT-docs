@@ -18,6 +18,10 @@
   - [x] Update UI tour and glossary.
   - [x] Sync SDK data-model/API references that directly describe experiment results.
   - [x] Build, search for stale UI/model phrasing, commit, and push.
-- [ ] Plugin system: compatibility enforcement, registry fallback, plugin calendar/notifications.
+- [x] Plugin system: compatibility enforcement, registry fallback, plugin calendar/notifications.
+  - [x] Update admin/user-facing plugin lifecycle docs.
+  - [x] Update marketplace registry, install request, cache, compatibility, and restart-required docs.
+  - [x] Correct SDK lifecycle/isolation concepts for `@mint_plugin`, decorated endpoints, settings hooks, and SDK version pinning.
+  - [x] Sync packaging, publishing, config, API, frontend settings, deploying, and glossary references touched by plugin-system semantics.
 - [ ] Plugin development guide: MINT SDK 1.1 `mint init --mode`, decorators, jobs, generated UI.
 - [ ] Reference/UI: admin navigation, account modal, glossary, FAQ, screenshots.

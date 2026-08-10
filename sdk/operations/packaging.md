@@ -16,10 +16,11 @@ What happens:
 2. Run `uv run pytest`; packaging stops if the test suite fails
 3. If `frontend/` exists (and `--no-frontend` isn't set), run the detected JS package manager's `install` and `run build` commands to produce `frontend/dist/`
 4. Warn if `pyproject.toml` does not force-include `frontend/dist/` in the wheel
-5. Build the Python wheel via `uv build --wheel`
-6. (If `--vendor-deps`) Resolve and download dependency wheels alongside the main wheel
-7. Assemble: `manifest.json` + wheel + dependency wheels into a zip
-8. Rename the zip to `.mint`
+5. Read `[tool.mint].requires_mint`; if omitted, derive a floor from the current `mint-sdk` version
+6. Build the Python wheel via `uv build --wheel`
+7. (If `--vendor-deps`) Resolve and download dependency wheels alongside the main wheel
+8. Assemble: `manifest.json` + wheel + dependency wheels into a zip
+9. Rename the zip to `.mint`
 
 ## Flags
 
@@ -71,6 +72,18 @@ The frontend's `dist/` is *not* a separate top-level directory in the bundle —
 ```
 
 The schema is owned by the SDK builder and consumed by the platform bundle installer. `mint build` generates it from `pyproject.toml`, the built wheel filename, optional vendored wheels, and whether `frontend/` was built.
+
+Set the MINT compatibility floor deliberately in `pyproject.toml`:
+
+```toml
+[tool.mint]
+requires_mint = ">=1.1.0"
+```
+
+The platform checks this specifier when installing a `.mint` bundle. It also
+pins plugin installs to the platform's own `mint-sdk` version, so a wheel whose
+`mint-sdk` dependency excludes that version fails preflight instead of changing
+the platform SDK under an installed server.
 
 ## What gets included
 
@@ -152,7 +165,7 @@ For very large plugins, consider:
 
 - `mint build` is self-contained enough for CI, but it still needs the local toolchain (`uv`, Python, and bun/npm for frontends) and network access unless dependencies are already cached.
 - Bundles are versioned by their internal manifest, not by filename. Renaming a `.mint` doesn't change what's installed.
-- Don't ship secrets in bundles. They're public artifacts. Use the platform's plugin settings (`apply_settings()`) for runtime credentials.
+- Don't ship secrets in bundles. They're public artifacts. Use platform plugin settings declared with `@mint_plugin(config=...)` and applied through `@on_config_change()` for runtime credentials.
 
 ## Related
 

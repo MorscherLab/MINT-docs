@@ -178,7 +178,7 @@ edu-ID SSO requires database-backed users (`database.mode` must be `sqlite` or `
 | `loadFromEntryPoints` | `true` | Discover plugins via the `mint.plugins` entry-point group |
 | `plugins` | `[]` | Explicit plugin module/class entries from config |
 | `extraIndexUrls` | `[]` | Additional Python package indexes for plugin installs |
-| `settings` | `{}` | Centralized per-plugin settings passed to `apply_settings()` |
+| `settings` | `{}` | Centralized per-plugin settings resolved for decorator-declared config and exposed through the plugin settings store |
 
 ## `marketplace`
 

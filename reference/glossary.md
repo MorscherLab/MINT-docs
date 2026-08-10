@@ -17,7 +17,9 @@ A managed result object attached to one experiment. It is keyed by producing plu
 The SDK compatibility object returned by `save_analysis()` / `load_analysis()`. Current user-facing result review is centered on analysis artifacts; use this term mainly when reading older plugins or SDK APIs.
 
 **Approval queue**
-The list of pending plugin install requests, visible to admins under **Admin → Marketplace**. Users without `plugins.install` can submit requests; admins approve or deny them.
+The list of pending plugin install requests, visible to admins from the plugin
+registry/requests surface. Users without `plugins.install` can submit requests;
+admins approve or deny them.
 
 **Archive (project)**
 Hides a project from default dashboards without deleting any data. Reversible.
@@ -34,7 +36,10 @@ The device or method that proves a user's identity in WebAuthn / passkey login �
 ## C
 
 **Capability**
-A flag in `PluginMetadata` declaring that a plugin needs read or write access to a specific resource family (experiments, projects, …). The `PlatformContext` enforces capabilities at runtime.
+A `PluginCapabilities` flag declaring that a plugin needs platform services such
+as auth, experiments, database access, shared plugin tables, notifications, or
+calendar events. The platform and SDK use these flags when wiring runtime
+access.
 
 **Prerelease updates**
 When `updates.includePrereleases` is true, the platform update checker includes GitHub prereleases in addition to stable releases.
@@ -83,7 +88,9 @@ The auth token MINT issues after a successful password or passkey login. Stored 
 The catalog of plugins available for install. Sourced from `marketplace.registryUrl`. Admins approve install requests when approval is enforced.
 
 **Marketplace registry**
-A static JSON feed plus the `.mint` bundle files it points at. Hostable on any HTTPS endpoint. The default registry is `MorscherLab/mint-registry`.
+A static JSON feed that points at GitHub release `.mint` assets. Hostable on
+any HTTPS endpoint. The default registry is `MorscherLab/mint-registry`; private
+deployments can point `marketplace.registryUrl` at an aggregate registry.
 
 **Member (system role)**
 A user with read + write rights for projects and experiments they belong to, but no platform-admin rights. Most lab users are Members.
@@ -112,7 +119,10 @@ A `resource.action` string (e.g., `experiments.edit`) that backend routes check.
 A per-plugin marketplace setting stored in `marketplace.autoUpdatePlugins`. When enabled, compatible registry updates can be installed automatically by the marketplace sync task.
 
 **Plugin**
-A self-contained extension to the platform. Plugin classes inherit `AnalysisPlugin` from `mint-sdk`, then declare their runtime category with `PluginMetadata.plugin_type` (`STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, or `FULL`). Discovered via the `mint.plugins` entry-point group.
+A self-contained extension to the platform. Plugin classes inherit
+`AnalysisPlugin` from `mint-sdk`, declare runtime behavior with
+`@mint_plugin(...)` or legacy metadata, and are discovered via the
+`mint.plugins` entry-point group.
 
 **`PlatformContext`**
 The runtime object the platform hands a plugin. Provides repository accessors, the current user, and an OpenTelemetry tracer.
@@ -137,7 +147,9 @@ The URL path a plugin mounts under, declared in `PluginMetadata.routes_prefix` (
 ## S
 
 **Snapshot**
-A pre-upgrade capture of plugin database + filesystem state, used for rollback. Created by `snapshot.py`. Short-lived — not a backup substitute.
+A pre-install or pre-upgrade capture of the Python plugin environment used for
+best-effort package rollback. Short-lived - not a database or object-store
+backup substitute.
 
 **SDK**
 `mint-sdk` (Python) for plugin backends; `@morscherlab/mint-sdk` (npm) for plugin frontends. The contract between plugins and the platform.
