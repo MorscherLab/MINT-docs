@@ -105,7 +105,7 @@ A `PluginMigration` from `mint_sdk.migrations`. Plugins that own tables ship mig
 Mass-spec INtegrated Toolkit. The current name for the platform formerly called MLD. Rebrand landed alongside `v1.0.0`.
 
 **MLD**
-The historical name of the platform — Morscher Laboratory Database. Now retired in favor of MINT, but the GitHub repo retains the name.
+The historical name of the platform — Morscher Laboratory Database. Now retired in favor of MINT.
 
 ## P
 
