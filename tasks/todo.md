@@ -8,7 +8,7 @@
 - [x] Correct platform configuration notes that affect deployment.
 - [x] Correct the permissions reference count and new deployment-adjacent permission families.
 - [x] Run the VitePress build and a focused stale-content search.
-- [ ] Commit and push the module.
+- [x] Commit and push the module.
 
 ## Later modules
 
