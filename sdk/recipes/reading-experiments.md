@@ -85,11 +85,19 @@ class MyPlugin(AnalysisPlugin):
 
 `load()` returns `(DesignData | None, PluginAnalysisResult | None)` — works in both standalone (returns `(None, None)`) and integrated modes.
 
-To read all analysis results for a cross-plugin dashboard, be explicit:
+To read allowed producer results for a cross-plugin dashboard, declare their exact plugin IDs and opt in at the call site:
 
 ```python
+from mint_sdk import AnalysisPlugin, mint_plugin
+
+
+@mint_plugin(
+    analysis_type="dashboard",
+    routes_prefix="/dashboard",
+    analysis_result_readers=["peak-picking", "quality-control"],
+)
 class ReaderPlugin(AnalysisPlugin):
-    async def summarize_all_results(self, experiment_id: int):
+    async def summarize_allowed_results(self, experiment_id: int):
         results = await self.load_analyses(
             experiment_id,
             include_others=True,
@@ -100,11 +108,11 @@ class ReaderPlugin(AnalysisPlugin):
         ]
 ```
 
-Without `include_others=True`, `load_analyses()` returns only this plugin's own result. That matches `load_analysis()` and avoids accidental cross-plugin reads in normal analysis plugins.
+Without `include_others=True`, `load_analyses()` returns only this plugin's own result. With it, the repository adds only the producer IDs declared in `analysis_result_readers`; it never returns every plugin's output. A direct `get_analysis_result(experiment_id, plugin_id)` call enforces the same producer-or-allowlist rule.
 
 ## Notes
 
-- `ExperimentRepository.create / update / delete` raise `PermissionException` for `STATIC` and `ANALYSIS` plugins. They are available to `EXPERIMENT_DESIGN` plugins through the design-scoped wrapper and to `FULL` plugins through the full repository.
+- `ExperimentRepository.create / update / delete` require the resolved `experiment_crud` capability. The original type defaults deny it for `STATIC` and `ANALYSIS`, allow it for `EXPERIMENT_DESIGN` and `FULL`, and require `WORKFLOW` to opt in explicitly.
 - `Experiment.experiment_code` (the user-facing `LCM-EXP-001` / `DR-EXP-001` string) is **not** on the SDK dataclass. The repository exposes it only via the REST API. If you need to display it, query the platform's `/api/experiments/{id}` from the plugin's frontend instead.
 - `tags` and `custom_metadata` are JSON columns. They're read-only here; for write access, use a recipe that modifies the experiment via the `EXPERIMENT_DESIGN` plugin that owns the type.
 

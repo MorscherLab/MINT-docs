@@ -10,7 +10,7 @@ Write fast unit and integration tests for plugin code without spinning up a full
 from mint_sdk.testing import (
     make_test_plugin,                # build a minimal AnalysisPlugin subclass inline
     build_test_app,                  # turn a plugin instance into a FastAPI app
-    RecordingContext,                # in-memory PlatformContext with a real PluginDataRepository
+    RecordingContext,                # in-memory PlatformContext with a real ExperimentRepository
     write_standalone_plugin_module,  # drop a uvicorn-compatible plugin module into tmp_path
 )
 ```
@@ -36,7 +36,7 @@ my_plugin/
 
 ## Plugin-level fixture with `RecordingContext`
 
-`RecordingContext` is an in-memory `PlatformContext` whose `PluginDataRepository` actually writes/reads from a Python dict. It's enough to exercise the plugin's convenience methods (`save_design`, `load_design`, `save_analysis`, `load_analysis`).
+`RecordingContext` is an in-memory `PlatformContext` whose `ExperimentRepository` actually writes/reads from a Python dict. It's enough to exercise the plugin's convenience methods (`save_design`, `load_design`, `save_analysis`, `load_analysis`).
 
 ```python
 # tests/conftest.py

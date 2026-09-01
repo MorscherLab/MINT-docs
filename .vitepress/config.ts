@@ -195,6 +195,7 @@ export default defineConfig({
             { text: 'CI patterns', link: '/sdk/operations/ci-patterns' },
             { text: 'Versioning', link: '/sdk/operations/versioning' },
             { text: 'Deploying', link: '/sdk/operations/deploying' },
+            { text: 'Migrate to 1.2', link: '/sdk/operations/migrating-to-1.2' },
             { text: 'Upgrading the SDK', link: '/sdk/operations/upgrading-sdk' },
           ],
         },

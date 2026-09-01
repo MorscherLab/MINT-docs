@@ -118,10 +118,11 @@ Add indexes lazily — only when you have a query plan that needs them. Excess i
 
 A plugin's tables live in its own Postgres schema, isolated from other plugins. Cross-plugin reads are not supported through `get_shared_db_session()`. If two plugins need to share data, the right model is:
 
-1. The producer plugin saves to `PluginAnalysisResult` (visible to all)
-2. The consumer plugin reads via `PluginDataRepository.get_analysis_result(experiment_id, producer_plugin_id)`
+1. The producer plugin saves a `PluginAnalysisResult` or named analysis artifact.
+2. The consumer declares the producer's exact plugin ID with `@mint_plugin(..., analysis_result_readers=["producer-plugin"])`.
+3. The consumer reads it via `ExperimentRepository.get_analysis_result(experiment_id, "producer-plugin")`, or passes `include_others=True` to the matching list method.
 
-This keeps data ownership clear and avoids tight coupling between plugin schemas.
+Without that declaration, the repository exposes only the consumer's own outputs and rejects direct reads of another plugin's result. `include_others=True` means “include declared readers,” not “include every plugin.” This keeps data ownership clear and avoids tight coupling between plugin schemas.
 
 ## Notes
 

@@ -22,7 +22,7 @@ MLD was the original name (Morscher Laboratory Database). It was rebranded to **
 
 ## Where does my data go?
 
-**Self-managed install (direct or Docker, on a Linux server):** Data lives on your server — relational data in Postgres (recommended) or SQLite, files under the configured `server.dataPath`. MINT itself makes outbound network requests only to the marketplace registry and (optionally) the GitHub release feed for updates.
+**Self-managed install (direct or Docker, on a Linux server):** Data lives on your server — relational data in PostgreSQL, files under the configured `server.dataPath`. MINT itself makes outbound network requests only to the marketplace registry and (optionally) the GitHub release feed for updates.
 
 **Hosted (`mint.morscherlab.org`):** Data resides on the lab server. Access is governed by the same RBAC controls as any other deployment.
 
@@ -38,11 +38,7 @@ Yes — the rebrand is name-only at the data level. Existing MLD installations u
 
 ## What database backends are supported?
 
-| Mode | When |
-|------|------|
-| `none` | Auth/passkeys and setup only; experiments/projects/plugins that need SQL storage are disabled |
-| `sqlite` | Single-server evaluation installs; no horizontal scaling |
-| `postgresql` | Recommended for shared deployments. Required for HA / multi-replica because plugin migrations rely on Postgres advisory locks. |
+PostgreSQL is the only supported MINT platform database in 1.2. The SDK's local-db extra still uses SQLite when a plugin runs standalone; that is separate from the installed platform.
 
 ## How big a deployment can MINT handle?
 
@@ -52,14 +48,14 @@ Single-process MINT comfortably serves dozens of concurrent users with a handful
 
 Two layers:
 
-1. **Database** — standard `pg_dump` / `pg_dumpall` (Postgres) or file copy (SQLite, when MINT is stopped).
-2. **Filesystem** — `server.dataPath` for SQLite/passkey files, plugin registry state, uploaded `.mint` bundles, plugin environment snapshots, and plugin-owned files.
+1. **Database** — standard `pg_dump` / `pg_dumpall` for PostgreSQL.
+2. **Filesystem** — `server.dataPath` for plugin registry state, uploaded `.mint` bundles, plugin environment snapshots, object storage, and plugin-owned files.
 
 `snapshot.py` keeps short-lived rollback snapshots for plugin upgrades, but those aren't a backup substitute — they're a local rollback aid.
 
 ## Does MINT support SSO?
 
-Yes. Current MINT releases include built-in SWITCH edu-ID sign-in through OpenID Connect. Enable it under `sso.eduid`, set `server.externalUrl` to the public HTTPS URL, and keep SQLite or PostgreSQL enabled because SSO users need database-backed accounts.
+Yes. Current MINT releases include built-in SWITCH edu-ID sign-in through OpenID Connect. Enable it under `sso.eduid` and set `server.externalUrl` to the public HTTPS URL. User accounts are stored in the platform's required PostgreSQL database.
 
 Other identity providers can still sit in front of MINT through an organization-managed reverse proxy or access gateway, but SWITCH edu-ID is the supported in-platform SSO path today. See [Authentication](/workflow/auth-passkeys).
 

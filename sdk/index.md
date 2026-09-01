@@ -49,7 +49,7 @@ plugin class.
 
 | Concept | Read when |
 |---------|-----------|
-| [Plugin types](/sdk/concepts/plugin-types) | You need to choose `STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, or `FULL` |
+| [Plugin types](/sdk/concepts/plugin-types) | You need to choose `STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, `FULL`, or `WORKFLOW` |
 | [Plugin lifecycle](/sdk/concepts/lifecycle) | You need to know what happens during install, initialize, upgrade, and uninstall |
 | [PlatformContext](/sdk/concepts/platform-context) | Your plugin needs experiments, users, project data, settings, or plugin-owned storage |
 | [Migrations](/sdk/concepts/migrations) | Your plugin owns tables or needs production-safe schema changes |

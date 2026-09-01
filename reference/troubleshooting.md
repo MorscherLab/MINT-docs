@@ -22,7 +22,6 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Passkey prompt fails | Browser doesn't support WebAuthn, or platform is on `127.0.0.1` over HTTP from a non-localhost browser | Use a recent Chrome/Safari/Firefox/Edge; serve over HTTPS for non-loopback access |
 | SWITCH edu-ID button missing | `sso.eduid.enabled` is false or the frontend is still using cached auth config | Enable `sso.eduid`, reload the page, and confirm `/api/auth/config` returns `sso.eduid.enabled: true` |
 | edu-ID callback fails | Missing `server.externalUrl`, missing `openid` scope, or callback URL not registered with edu-ID | Set `server.externalUrl` to the public HTTPS URL and register `<externalUrl>/api/auth/sso/eduid/callback` with edu-ID |
-| edu-ID login says database is required | Platform is running with `database.mode: none` | Use SQLite or PostgreSQL; SSO users need database-backed accounts |
 | "Rate limit exceeded" on auth | More than 20 attempts in 60s from your IP | Wait 60s; if you're behind a proxy that doesn't forward `X-Forwarded-For`, configure it to do so |
 | All admins lost access | Last admin demoted by mistake | Recover by editing the database directly: set the desired user's role back to Admin (`UPDATE users SET role_id = ...`) |
 

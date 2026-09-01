@@ -1,6 +1,6 @@
 # `PlatformContext`
 
-`PlatformContext` is the single object the platform hands to a plugin. Through it, the plugin reaches every platform-side service: experiments, plugin data, users, plugin roles, the platform config, and a database session scoped to the plugin's schema.
+`PlatformContext` is the single object the platform hands to a plugin. Through it, the plugin reaches every platform-side service: experiments and their design/analysis data, users, plugin roles, the platform config, and a database session scoped to the plugin's schema.
 
 ```python
 from mint_sdk import AnalysisPlugin, PlatformContext, mint_plugin
@@ -25,8 +25,7 @@ When standalone, `context` is `None`; the plugin uses `LocalDatabase` (a `mint-s
 | `get_optional_plugin_actor_dependency()` | FastAPI `Depends` | Optional typed actor |
 | `get_job_visibility_dependency()` | FastAPI `Depends` | Yields typed job visibility for job routes |
 | `get_user_repository()` | `UserRepository \| None` | User lookups (read-only) |
-| `get_experiment_repository()` | `ExperimentRepository \| None` | Experiment access, type-gated by `PluginType` |
-| `get_plugin_data_repository()` | `PluginDataRepository \| None` | Save/load `DesignData`, `AnalysisArtifact`, and compatibility `PluginAnalysisResult` |
+| `get_experiment_repository()` | `ExperimentRepository \| None` | Experiment, `DesignData`, `AnalysisArtifact`, and compatibility `PluginAnalysisResult` access |
 | `get_plugin_role_repository()` | `PluginRoleRepository \| None` | Per-plugin user roles |
 | `require_plugin_role(*roles)` | FastAPI `Depends` | Route guard — see below |
 | `get_plugin_config()` | `dict` (`PlatformConfig`) | Persisted plugin configuration view |
@@ -34,7 +33,7 @@ When standalone, `context` is `None`; the plugin uses `LocalDatabase` (a `mint-s
 | `publish_calendar_events(...)` | async method | Durable calendar publish/cancel hook when the platform supports it |
 | `get_shared_db_session()` | async context manager | Async SQLAlchemy session scoped to your plugin's schema |
 
-Repository access is still bounded by the platform deployment and plugin type. `STATIC` and `ANALYSIS` get a read-only experiment wrapper, `EXPERIMENT_DESIGN` gets a design-scoped wrapper, and `FULL` gets full experiment access. `get_shared_db_session()` requires shared-database setup; declare `requires_shared_database=True` when your plugin owns tables.
+In integrated mode, all five plugin types receive the same visibility-scoped `ExperimentRepository`. The resolved access policy independently controls experiment CRUD, owned design-data writes, and own analysis-result/artifact writes. `STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, and `FULL` supply compatibility defaults; `WORKFLOW` is fail-closed. `PluginCapabilities.experiment_crud`, `design_data_write`, and `analysis_result_write` can override each default independently. `get_shared_db_session()` requires shared-database setup; declare `requires_shared_database=True` when your plugin owns tables.
 
 ## Authentication and Current Actor
 
@@ -121,7 +120,7 @@ Current `mint dev` / `create_plugin_app()` initializes standalone SQLite automat
 
 ## Convenience methods on `AnalysisPlugin`
 
-For the most common operations on `DesignData`, `AnalysisArtifact`, and compatibility `PluginAnalysisResult`, the plugin base class wraps `PluginDataRepository`:
+For the most common operations on `DesignData`, `AnalysisArtifact`, and compatibility `PluginAnalysisResult`, the plugin base class wraps `ExperimentRepository`:
 
 | Method | What it does | Standalone? |
 |--------|--------------|-------------|
@@ -143,7 +142,7 @@ For the most common operations on `DesignData`, `AnalysisArtifact`, and compatib
 | `await self.delete_design(experiment_id)` | Delete design | Returns `False` |
 | `await self.delete_analysis(experiment_id)` | Delete analysis | Returns `False` |
 
-These are the daily authoring API. Drop down to `context.get_plugin_data_repository()` only when you need bulk operations or have multiple plugin IDs to coordinate.
+These are the daily authoring API. Drop down to `context.get_experiment_repository()` only when you need bulk operations or have multiple plugin IDs to coordinate.
 
 For cross-plugin readers, call `load_analysis_artifacts(experiment_id, include_others=True)`, `load_analyses(experiment_id, include_others=True)`, or the matching repository methods explicitly. The default is intentionally scoped to the calling plugin so ordinary analysis plugins do not accidentally consume another plugin's output payloads.
 

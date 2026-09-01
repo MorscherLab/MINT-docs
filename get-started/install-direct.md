@@ -20,13 +20,13 @@ Both result in identical platform behavior; choose based on your operations pref
 | **Operating system** | Linux server (x86_64 or arm64) — any modern distribution with glibc 2.28+ (Debian 11+, Ubuntu 20.04+, RHEL 9+, …) |
 | **Python** | 3.12 or newer — install via the distro package manager or [`uv python install`](https://docs.astral.sh/uv/concepts/python-versions/) |
 | **uv** | Required at runtime for plugin installs and isolated plugin environments; install it somewhere the `mint` service user can run |
-| **Database** | PostgreSQL 14+ (recommended) or SQLite for single-server installs |
+| **Database** | PostgreSQL 14+ (required) |
 | **Disk** | ~2 GB for MINT + room for plugin venvs and uploaded artifacts |
 | **RAM** | 4 GB minimum, 8 GB recommended once plugins are installed |
 | **Reverse proxy** | Required for production: nginx, Caddy, or Traefik to terminate TLS |
 
-::: tip Why Postgres for shared deployments
-The plugin loader uses advisory locks so plugin schema migrations only run once across replicas. Advisory locks are a Postgres-only feature — SQLite installations work for single-server use but cannot be horizontally scaled.
+::: tip PostgreSQL is required
+MINT 1.2 uses PostgreSQL for every platform deployment. The SDK still supports SQLite for a plugin running standalone, but that local database is not a MINT platform backend.
 :::
 
 ## Install the wheel
@@ -89,7 +89,6 @@ Create `/var/lib/mint/config.json`:
     "rpId": "mint.example.org"
   },
   "database": {
-    "mode": "postgresql",
     "host": "localhost",
     "port": 5432,
     "databaseName": "mint_db"

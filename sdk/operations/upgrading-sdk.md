@@ -1,6 +1,8 @@
 # Upgrading the SDK
 
-`mint-sdk` ships independently from the platform on its own tag stream (`sdk-v*`). Plugins follow at their own pace. This page covers when to upgrade, how to upgrade safely, and how to handle SDK-major breaks.
+`mint-sdk`, `@morscherlab/mint-sdk`, and the platform share the unified `v*` release stream. Plugins still adopt each SDK release at their own pace. This page covers when to upgrade, how to upgrade safely, and how to handle breaking changes.
+
+Upgrading from 1.1? Follow the [MINT 1.2 migration guide](/sdk/operations/migrating-to-1.2) before widening your dependency range.
 
 ## When to upgrade
 
@@ -94,10 +96,7 @@ This trades plugin code complexity for compatibility breadth. Worthwhile only wh
 
 ## Reading the SDK changelog
 
-Each SDK release publishes its changelog at:
-
-- [`MINT/packages/sdk-python/CHANGELOG.md`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/CHANGELOG.md) — Python SDK
-- [`MINT/packages/sdk-frontend/CHANGELOG.md`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-frontend/CHANGELOG.md) — Frontend SDK
+SDK changes are recorded in [`MINT/packages/CHANGELOG.md`](https://github.com/MorscherLab/MINT/blob/main/packages/CHANGELOG.md). Platform-wide release notes live in the root [`CHANGELOG.md`](https://github.com/MorscherLab/MINT/blob/main/CHANGELOG.md).
 
 For breaking changes, the changelog entries follow the pattern:
 
@@ -128,44 +127,13 @@ uv run pytest -v
 A plugin built against `mint-sdk==2.0.0b1` may not work against `mint-sdk==2.0.0` if a beta-only API changes. Test against beta, ship against stable.
 :::
 
-## SDK-major break: a worked example
+## Breaking change example
 
-Suppose `mint-sdk` 2.0 renames `PlatformContext.get_plugin_data_repository()` to `PlatformContext.plugin_data_repo()`.
-
-### Single-major support
-
-```python
-# Before (1.x)
-async def initialize(self, context=None):
-    self._context = context
-    self._data_repo = context.get_plugin_data_repository() if context else None
-
-# After (2.x only)
-async def initialize(self, context=None):
-    self._context = context
-    self._data_repo = context.plugin_data_repo() if context else None
-```
-
-Bump your plugin's major; done.
-
-### Two-major support during the transition
-
-```python
-async def initialize(self, context=None):
-    self._context = context
-    if context is None:
-        self._data_repo = None
-    elif hasattr(context, "plugin_data_repo"):
-        self._data_repo = context.plugin_data_repo()         # 2.x
-    else:
-        self._data_repo = context.get_plugin_data_repository()  # 1.x
-```
-
-Ship as a minor version with the broader range. Drop the 1.x branch when you bump to a major release.
+MINT 1.2 merged experiment, design-data, analysis-result, and artifact access into one repository. See the [1.2 migration guide](/sdk/operations/migrating-to-1.2#use-the-unified-experiment-repository) for the complete before/after mapping.
 
 ## Frontend SDK upgrades
 
-The frontend SDK ships on the same tag stream, with the same major-version cadence. Frontend breaks are usually:
+The frontend SDK ships from the same tag as the Python SDK and platform. Frontend breaks are usually:
 
 - Component renames or removed components → search-and-replace + storybook visual review
 - Composable signature changes → TypeScript catches them at build time

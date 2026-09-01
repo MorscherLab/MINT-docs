@@ -17,18 +17,21 @@ Think of the plugin system as five layers:
 | **Runtime load** | Startup discovery, migrations, settings resolution, `initialize(context)`, route/job/frontend mounting |
 | **Access and services** | Plugin roles, settings, jobs, notifications, calendar feeds, and uninstall cleanup |
 
-## Four plugin types
+## Five plugin types
 
-Plugin type controls what the plugin may write through `PlatformContext`; all plugin types can still have their own routes and, when they declare migrations, their own plugin-owned tables.
+Plugin type supplies the default write policy through `PlatformContext`; all plugin types can still have their own routes and, when they declare migrations, their own plugin-owned tables.
 
-| Type | Typical role | Platform writes |
-|------|--------------|-----------------|
-| `STATIC` | Read-only reference UI, calculators, viewers | None |
-| `ANALYSIS` | Reads experiments and writes analysis outputs | Analysis artifacts and compatibility results |
-| `EXPERIMENT_DESIGN` | Creates or edits experiment design data | Experiment design data |
-| `FULL` | Combines design and analysis in one plugin | Design data, analysis artifacts, and compatibility results |
+| Type | Typical role | Experiment CRUD | Design-data writes | Analysis-result writes |
+|------|--------------|-----------------|--------------------|------------------------|
+| `STATIC` | Read-only reference UI, calculators, viewers | No | No | No |
+| `ANALYSIS` | Reads experiments and writes analysis outputs | No | No | Yes |
+| `EXPERIMENT_DESIGN` | Creates or edits experiment design data | Yes | Yes | No |
+| `FULL` | Combines design and analysis in one plugin | Yes | Yes | Yes |
+| `WORKFLOW` | Schedulers and lifecycle orchestrators | No; opt in explicitly | No | No |
 
 Authors often split a related lab capability into two plugins: a design plugin for experiment metadata and workflow, and one or more analysis plugins that read those experiments and produce results. Use `FULL` only when one plugin genuinely owns both sides.
+
+`PluginCapabilities.experiment_crud`, `design_data_write`, and `analysis_result_write` override these defaults independently. Each field accepts `True`, `False`, or `None`; `None` keeps the type default. This lets a `WORKFLOW` plugin manage experiment lifecycle without also claiming design data or analysis outputs.
 
 Analysis artifact and compatibility-result reads are scoped to the calling plugin by default in the SDK. Plugins that intentionally summarize or compare outputs from other plugins must request cross-plugin reads explicitly.
 
@@ -78,8 +81,11 @@ notifications, and calendar events.
 |-----------------|---------------------------|
 | Auth | Plugin routes inherit platform user identity when `requires_auth` is true |
 | Experiments | The plugin expects experiment repositories and experiment-scoped routes |
-| Database | The plugin needs database-backed platform mode; `database.mode: "none"` is not enough |
+| Database | The plugin needs the platform's PostgreSQL database |
 | Shared plugin DB | The plugin owns tables through `get_plugin_db_session()` / migrations |
+| Experiment CRUD | `experiment_crud` explicitly allows or denies experiment create/update/delete |
+| Design data | `design_data_write` explicitly allows or denies writes to owned design data |
+| Analysis results | `analysis_result_write` explicitly allows or denies writes to this plugin's results/artifacts |
 | Notifications | `@notify` events are routed through platform SMTP, Teams, or Slack integrations |
 | Calendar | `@calendar_event` publishes durable calendar events and user ICS subscriptions |
 

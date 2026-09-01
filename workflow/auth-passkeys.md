@@ -63,9 +63,6 @@ Minimal config:
   "server": {
     "externalUrl": "https://mint.example.org"
   },
-  "database": {
-    "mode": "postgresql"
-  },
   "sso": {
     "eduid": {
       "enabled": true,
@@ -78,7 +75,7 @@ Minimal config:
 
 Key requirements:
 
-- `database.mode` must be `sqlite` or `postgresql`; edu-ID SSO does not work in database-less mode.
+- The platform's required PostgreSQL database must be reachable so MINT can store linked user identities.
 - `server.externalUrl` must be the public HTTPS URL so MINT can build the callback URL.
 - `openid` must remain in `sso.eduid.scopes`.
 - Keep at least one local password/passkey admin account as break-glass access in case the external provider is unavailable.

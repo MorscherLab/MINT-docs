@@ -5,7 +5,7 @@ MINT reads configuration from four sources, in increasing order of precedence:
 1. **Built-in defaults** — used when no other source overrides them.
 2. **`config.json`** — `MINT_CONFIG_PATH` wins when set; otherwise MINT uses `./config.json`, or `<server.dataPath>/config.json` when `MINT_SERVER__DATA_PATH` points at a data directory and that file should be used.
 3. **`.env`** — `dotenv`-style key/value pairs in the working directory.
-4. **Environment variables** — keys prefixed `MINT_`, with nested fields joined by `__` (e.g., `MINT_DATABASE__MODE=postgresql`).
+4. **Environment variables** — keys prefixed `MINT_`, with nested fields joined by `__` (e.g., `MINT_DATABASE__HOST=postgres`).
 
 For most installations, editing `config.json` is the only configuration step. Use `MINT_CONFIG_PATH` when the config file lives outside the working directory or data path. Environment variables are useful for containerized deployments where a config file is awkward.
 
@@ -50,7 +50,7 @@ The full schema is defined in [`api/config/models.py`](https://github.com/Morsch
 When `true`:
 
 - Authentication is bypassed on every route; anyone hitting the URL is treated as admin
-- Database mode is forced to local SQLite, regardless of the configured database section
+- The configured PostgreSQL connection is unchanged
 
 ::: warning Never expose dev mode
 Dev mode is for local development and evaluation only. Never enable it on a host reachable from the network.
@@ -72,15 +72,15 @@ Dev mode is for local development and evaluation only. Never enable it on a host
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `mode` | `none` | One of `none` (auth/passkeys only; experiments/projects disabled), `sqlite`, `postgresql` |
 | `host` | `localhost` | PostgreSQL host |
 | `port` | `5432` | PostgreSQL port |
 | `databaseName` | `mint_db` | PostgreSQL database name |
 
+PostgreSQL is the only MINT platform database in 1.2. SQLite remains available only to plugins running standalone through the SDK's local-db support.
+
 ```json
 {
   "database": {
-    "mode": "postgresql",
     "host": "localhost",
     "port": 5432,
     "databaseName": "mint_db"
@@ -169,14 +169,13 @@ Built-in SSO currently covers SWITCH edu-ID through OpenID Connect:
 | `usernameClaim` | `email` | Claim used as the MINT username |
 | `identityClaim` | `swissEduIDUniqueID` | Stable edu-ID identity key stored for future logins |
 
-edu-ID SSO requires database-backed users (`database.mode` must be `sqlite` or `postgresql`) and a public `server.externalUrl`, because the callback URL is `<externalUrl>/api/auth/sso/eduid/callback`.
+edu-ID SSO stores linked users in the platform's required PostgreSQL database and needs a public `server.externalUrl`, because the callback URL is `<externalUrl>/api/auth/sso/eduid/callback`.
 
 ## `plugins`
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `loadFromEntryPoints` | `true` | Discover plugins via the `mint.plugins` entry-point group |
-| `plugins` | `[]` | Explicit plugin module/class entries from config |
 | `extraIndexUrls` | `[]` | Additional Python package indexes for plugin installs |
 | `settings` | `{}` | Centralized per-plugin settings resolved for decorator-declared config and exposed through the plugin settings store |
 
@@ -267,7 +266,6 @@ Nested keys use `__` (double underscore) as the separator, and `MINT_` as the pr
 | `devMode` | `MINT_DEV_MODE` |
 | `server.dataPath` | `MINT_SERVER__DATA_PATH` |
 | `server.trustedProxyCidrs` | `MINT_SERVER__TRUSTED_PROXY_CIDRS` |
-| `database.mode` | `MINT_DATABASE__MODE` |
 | `database.databaseName` | `MINT_DATABASE__DATABASE_NAME` |
 | `auth.jwtSecretKey` | `MINT_AUTH__JWT_SECRET_KEY` |
 | `sso.eduid.enabled` | `MINT_SSO__EDUID__ENABLED` |
@@ -286,8 +284,7 @@ The configured `server.dataPath` (default `./data`) holds platform runtime state
 
 | Subdirectory | Contents |
 |--------------|----------|
-| `mint.db` | SQLite database when `database.mode` is `sqlite` |
-| `passkeys.json` | Passkey storage in local/file-backed mode |
+| `objects/` | Local experiment object storage when no external object backend is configured |
 | `plugin_registry.json` | Persistent plugin registry metadata |
 | `marketplace/` | Marketplace registry cache |
 | `plugins/uploads/` | Uploaded `.mint` bundles and extracted install payloads |

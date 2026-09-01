@@ -59,7 +59,7 @@ JSON validated against an experiment-design plugin's schema. Describes what the 
 A plugin that owns an experiment type and its database schema. Provides the experiment's design form and CRUD logic.
 
 **Dev mode**
-`devMode: true` in `config.json`. Bypasses authentication on every route and forces local SQLite mode. For local development only — never expose.
+`devMode: true` in `config.json`. Bypasses authentication on every route while keeping the configured PostgreSQL connection. For local development only — never expose.
 
 ## E
 
@@ -139,7 +139,7 @@ Drops a plugin's tables and uploaded artifacts permanently. Irreversible.
 ## R
 
 **Repository pattern**
-The platform's data-access abstraction. Each resource (project, experiment, user, …) has a repository that hides whether the storage is files, SQLite, or Postgres.
+The platform's data-access abstraction. Each resource (project, experiment, user, …) has a repository that centralizes PostgreSQL access and permission boundaries.
 
 **Routes prefix**
 The URL path a plugin mounts under, declared with `@mint_plugin(routes_prefix="/my-plugin")` or legacy `PluginMetadata.routes_prefix`.
