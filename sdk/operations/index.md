@@ -22,6 +22,7 @@ develop ──▶ test ──▶ build ──▶ publish ──▶ install ─�
 | [CI patterns](/sdk/operations/ci-patterns) | GitHub Actions templates: build-on-PR, publish-on-tag, matrix tests |
 | [Versioning](/sdk/operations/versioning) | SemVer, `hatch-vcs`, SDK ranges, platform compatibility checks |
 | [Deploying](/sdk/operations/deploying) | Production install considerations, isolation tradeoffs, storage volumes |
+| [Migrating to MINT 1.2](/sdk/operations/migrating-to-1.2) | PostgreSQL, repository, frontend, and plugin-discovery changes from 1.1 |
 | [Upgrading the SDK](/sdk/operations/upgrading-sdk) | `mint sdk update`, handling SDK-major breaks |
 
 ## Conventions

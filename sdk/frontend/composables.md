@@ -29,12 +29,12 @@ The frontend SDK ships 60+ typed composables and helper factories. This page lis
 | `useScheduleDrag` | Drag-to-reschedule handlers | Calendar / timeline UIs |
 | `useProtocolTemplates` | Lab-protocol template engine | Step-by-step protocol UIs |
 | `useAutoGroup` | Auto-group samples by name prefix | Sample grouping helpers |
-| `usePluginConfig` | Plugin settings reactive object | Reading plugin config from the frontend |
-| `createPluginClient`, `usePluginClient` | Contract-aware plugin API client runtime | Generated `useGeneratedPluginClient()` wrappers |
+| `createPluginClient` | Contract-aware plugin API client runtime | Generated `useGeneratedPluginClient()` wrappers |
 | `buildPluginEndpointUrl`, `resolvePluginBaseUrl` | URL helpers matching generated calls | Rendering links, diagnostics, downloads, and previews |
 | `uploadPluginEndpoint`, `downloadPluginEndpoint` | Multipart and Blob helpers | Generated upload/download endpoint wrappers |
 | `usePluginEventStream` | Auth-aware SSE stream helper | Generated event-stream endpoints |
 | `usePluginSettings` | Plugin settings from platform context or standalone route | Generated `useGeneratedPluginSettings()` wrappers |
+| `usePluginJobCenter` | Active/history job-center state | Pass a `PluginJobCenterSource`, such as `usePluginJobs()` |
 | `useCurrentExperiment` | Current platform experiment | Integrated plugin pages tied to an experiment |
 | `useExperimentSelector` | Picker UI + reactive selected experiment | Experiment dropdowns |
 | `useExperimentData` | Reactive exported experiment data payload | Live experiment view |

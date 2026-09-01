@@ -16,7 +16,6 @@ When a plugin is installed via the marketplace:
 
 ```
 /var/lib/mint/                   # server.dataPath (configurable)
-├── mint.db                      # when database.mode = sqlite
 ├── plugin_registry.json
 ├── marketplace/                 # registry cache
 └── plugins/

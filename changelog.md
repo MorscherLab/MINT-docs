@@ -4,7 +4,7 @@ title: Changelog
 
 # Changelog
 
-MINT follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Platform and SDK ship on independent tag streams (`v*` for the platform, `sdk-v*` for the SDK), generated from git tags by `hatch-vcs`.
+MINT follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The platform and both SDK packages share one `v*` tag stream. Legacy `sdk-v*` tags remain in repository history but are no longer extended.
 
 ## Latest releases
 
@@ -16,9 +16,9 @@ MINT follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Platfor
 
 | Stream | Tag pattern | Source of truth |
 |--------|-------------|-----------------|
-| Platform (backend + bundled frontend) | `v1.0.0`, `v1.1.0-beta.1` | `api/_version.py` |
-| Python SDK (`mint-sdk`) | `sdk-v1.0.0`, `sdk-v1.1.0-beta.1` | `mint_sdk/_version.py` |
-| Frontend SDK (`@morscherlab/mint-sdk`) | Patched from the SDK tag | `packages/sdk-frontend/package.json` |
+| Platform (backend + bundled frontend) | `v1.2.0`, `v1.2.0-beta.1` | `api/_version.py` |
+| Python SDK (`mint-sdk`) | Same `v*` tag | `mint_sdk/_version.py` |
+| Frontend SDK (`@morscherlab/mint-sdk`) | Same `v*` tag | `packages/sdk-frontend/package.json` |
 
 - **Major** (`1.x.x`) — breaking changes to the API, plugin contract, or database schema
 - **Minor** (`1.5.x`) — new features that don't break existing plugins or data
@@ -28,7 +28,7 @@ Plugin migrations are versioned independently per plugin via `mint_sdk.migration
 
 ## Release flow
 
-The platform and SDK both follow a beta-then-graduate flow on a `*-dev` branch, with stable tags landing on the same commit as the last passing beta. See [`scripts/release.sh`](https://github.com/MorscherLab/MINT/blob/main/scripts/release.sh) for the canonical script.
+The default patch flow tags a stable release directly from `main`. Minor, major, and other high-risk releases use an optional beta train on a development branch: each fix gets a new immutable `beta.N` tag, and graduation places the stable tag on the same passing commit as the final beta. The unified tag publishes the platform and both SDK artifacts together. See [`scripts/release.sh`](https://github.com/MorscherLab/MINT/blob/main/scripts/release.sh) for the canonical script.
 
 ## Need help upgrading?
 

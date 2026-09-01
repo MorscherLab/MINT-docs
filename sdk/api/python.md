@@ -10,7 +10,7 @@ Core public symbols exported from `mint_sdk`, grouped by area. Each entry has a 
 | `PluginMetadata` | Identity + capabilities declaration |
 | `PluginNavItem` | One route/page entry shown in generated contracts and plugin navigation |
 | `PluginCapabilities` | What platform features the plugin needs |
-| `PluginType` | Enum: `STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, or `FULL` |
+| `PluginType` | Enum: `STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, `FULL`, or `WORKFLOW` |
 | `PlatformContext` | The runtime object the platform hands to plugins |
 | `mint_plugin` | Preferred class decorator for plugin metadata and runtime behavior |
 | `endpoint` | Decorator namespace for instance-method HTTP endpoints |
@@ -152,6 +152,9 @@ supports_email_notifications: bool = False
 supports_teams_notifications: bool = False
 supports_slack_notifications: bool = False
 supports_calendar_events: bool = False
+experiment_crud: bool | None = None
+design_data_write: bool | None = None
+analysis_result_write: bool | None = None
 ```
 
 ### `PluginType`
@@ -162,9 +165,10 @@ class PluginType(str, Enum):
     ANALYSIS = "analysis"
     EXPERIMENT_DESIGN = "experiment_design"
     FULL = "full"
+    WORKFLOW = "workflow"
 ```
 
-Use `ANALYSIS` for plugins that read experiments and write analysis artifacts or compatibility results, `EXPERIMENT_DESIGN` for plugins that own experiment design data, `FULL` only when one plugin must write both design data and analysis outputs, and `STATIC` for UI/reporting plugins that should not write either.
+The original four types supply compatibility defaults for experiment CRUD, design-data writes, and analysis-result writes. `WORKFLOW` is fail-closed for all three. Set `PluginCapabilities.experiment_crud`, `design_data_write`, or `analysis_result_write` to `True` or `False` to override one default without changing the other two; `None` preserves the type default.
 
 ### `PlatformContext`
 
@@ -178,7 +182,6 @@ Use `ANALYSIS` for plugins that read experiments and write analysis artifacts or
 | `get_job_visibility_dependency()` | Typed job-visibility dependency |
 | `get_user_repository()` | `UserRepository \| None` |
 | `get_experiment_repository()` | `ExperimentRepository \| None` |
-| `get_plugin_data_repository()` | `PluginDataRepository \| None` |
 | `get_plugin_role_repository()` | `PluginRoleRepository \| None` |
 | `require_plugin_role(*roles)` | FastAPI `Depends`-able |
 | `get_plugin_config()` | `PlatformConfig` (alias for `dict`) |
@@ -192,7 +195,6 @@ Use `ANALYSIS` for plugins that read experiments and write analysis artifacts or
 |--------|-------------|
 | `Experiment` | Dataclass — experiment row |
 | `DesignData` | Dataclass — per-experiment design payload |
-| `PluginExperimentData` | Backward-compat alias for `DesignData` |
 | `PluginAnalysisResult` | Dataclass — compatibility per-(experiment, plugin) analysis output |
 | `AnalysisArtifactInput` | Dataclass — one named artifact to save in an atomic batch |
 | `AnalysisArtifactSummary` | Dataclass — metadata-only artifact record |
@@ -208,14 +210,13 @@ Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/ma
 
 | Symbol | Description |
 |--------|-------------|
-| `ExperimentRepository` | `get_by_id`, `list_all`, `create`, `update`, `delete`, `has_design_data` |
-| `PluginDataRepository` | `save_experiment_data`, `get_experiment_data`, `delete_experiment_data`, compatibility `save_analysis_result` / `get_analysis_result`, plus `save_analysis_artifact`, `create_analysis_artifact`, `save_analysis_artifacts`, `list_analysis_artifacts`, `get_analysis_artifact`, `archive_analysis_artifact`, `restore_analysis_artifact` |
+| `ExperimentRepository` | Experiment CRUD; `save_design_data`, `get_design_data`, `delete_design_data`; compatibility analysis results; and named analysis artifacts |
 | `UserRepository` | `get_by_id`, `get_by_username`, `list_all` |
 | `PluginRoleRepository` | `get_role`, `set_role`, `remove_role`, `list_plugin_roles`, `list_user_roles` |
 
-All repository methods are async. `ANALYSIS` and `STATIC` plugins receive a read-only `ExperimentRepository`; `EXPERIMENT_DESIGN` plugins can create/update/delete through the design-scoped wrapper; `FULL` receives the unrestricted platform repository. Data writes are also type-gated: `ANALYSIS` can save analysis artifacts and compatibility results, `EXPERIMENT_DESIGN` can save design data, `FULL` can save both, and `STATIC` can save neither.
+All repository methods are async. Integrated plugins receive one visibility-scoped `ExperimentRepository`; the resolved access policy independently enforces experiment CRUD, owned design-data writes, and own analysis-result/artifact writes. The `PluginType` defaults match the table in [Plugin types](/sdk/concepts/plugin-types), and explicit capability fields can narrow or widen each write boundary. `WORKFLOW` must opt in to every write it needs.
 
-`PluginDataRepository.get_analysis_results(experiment_id)` and `list_analysis_artifacts(experiment_id)` return only the calling plugin's own data by default. Pass `include_others=True` only for intentional cross-plugin reader plugins whose `analysis_result_readers` declaration allows those plugin IDs. `get_analysis_result_fields(...)` and `get_analysis_artifact(..., fields=[...])` project selected top-level keys from `result`.
+`ExperimentRepository.get_analysis_results(experiment_id)` and `list_analysis_artifacts(experiment_id)` return only the calling plugin's own data by default. Pass `include_others=True` only for intentional cross-plugin reader plugins whose `analysis_result_readers` declaration allows those plugin IDs. `get_analysis_result_fields(...)` and `get_analysis_artifact(..., fields=[...])` project selected top-level keys from `result`.
 
 ## Local database (standalone)
 
@@ -279,7 +280,7 @@ from mint_sdk.testing import (
     PluginTestHarness,          # run real @job declarations through the SDK job API
     make_test_plugin,           # build a minimal AnalysisPlugin subclass inline
     build_test_app,             # turn a plugin instance into a FastAPI app
-    RecordingContext,           # in-memory PlatformContext with a working PluginDataRepository
+    RecordingContext,           # in-memory PlatformContext with a working ExperimentRepository
     write_standalone_plugin_module,  # drop a uvicorn-compatible module into tmp_path
 )
 ```

@@ -51,8 +51,6 @@ class DesignData:
 
 `data` is whatever JSON your design plugin defines. `schema_version` defaults to the value in `PluginMetadata.schema_version` — bump it when your design schema changes incompatibly.
 
-`PluginExperimentData` is a backward-compatible alias for `DesignData`.
-
 ### `PluginAnalysisResult`
 
 The compatibility result payload for one plugin on one experiment.
@@ -160,9 +158,11 @@ User ──────< UserPluginRole              (one per (user, plugin))
 
 The platform owns `Project`, `Experiment`, `User`, `DesignData`, `AnalysisArtifact`, compatibility `PluginAnalysisResult` records, and `UserPluginRole`. Design data and artifact payloads are JSON-backed; plugin-owned tables live in the plugin's own Postgres schema (integrated mode) or its own SQLite database (standalone mode).
 
-## JSONB portability
+## JSON payload storage
 
-`DesignData.data`, `AnalysisArtifact.result`, and compatibility `PluginAnalysisResult.result` are JSON-typed payloads. Postgres uses native `jsonb` (queryable, indexable); SQLite uses serialized JSON in a TEXT column. The repository layer abstracts the difference. Code that just reads / writes whole dicts works in both backends.
+`DesignData.data`, `AnalysisArtifact.result`, and compatibility `PluginAnalysisResult.result` are platform-owned PostgreSQL `jsonb` payloads. They are not mirrored into the SDK's standalone SQLite database: standalone mode has no platform `ExperimentRepository`, while `RecordingContext` supplies an in-memory repository for tests.
+
+SQLite in `mint-sdk[local-db]` stores only plugin-owned standalone tables declared through `get_shared_models()` or migrations. Keep those models and migrations portable when the same plugin tables must run in standalone SQLite and an installed PostgreSQL schema.
 
 For complex queries (e.g., "find experiments where `result.method == 'v4'`"), prefer a real column inside a plugin-owned table over JSON-key indexing — JSON expression indexes work but reduce portability.
 
@@ -171,18 +171,20 @@ For complex queries (e.g., "find experiments where `result.method == 'v4'`"), pr
 | Repository | Returns | Writes |
 |------------|---------|--------|
 | `ExperimentRepository` | `Experiment` | `Experiment` (`EXPERIMENT_DESIGN` and `FULL` plugins) |
-| `PluginDataRepository.save_experiment_data` | `DesignData` | `DesignData` |
-| `PluginDataRepository.save_analysis_result` | `PluginAnalysisResult` | `PluginAnalysisResult` compatibility payload |
-| `PluginDataRepository.save_analysis_artifact` | `AnalysisArtifact` | Named analysis artifact |
-| `PluginDataRepository.save_analysis_artifacts` | `list[AnalysisArtifact]` | Atomic batch of named artifacts |
-| `PluginDataRepository.list_analysis_artifacts` | `list[AnalysisArtifactSummary]` | — |
-| `PluginDataRepository.get_analysis_artifact` | `AnalysisArtifact \| None` | — |
-| `PluginDataRepository.archive_analysis_artifact` / `restore_analysis_artifact` | `AnalysisArtifactSummary \| None` | Artifact status |
-| `PluginDataRepository.get_analysis_results` | `list[PluginAnalysisResult]` (calling plugin by default; pass `include_others=True` for every plugin's result on one experiment) | — |
+| `ExperimentRepository.save_design_data` | `DesignData` | `DesignData` |
+| `ExperimentRepository.save_analysis_result` | `PluginAnalysisResult` | `PluginAnalysisResult` compatibility payload |
+| `ExperimentRepository.save_analysis_artifact` | `AnalysisArtifact` | Named analysis artifact |
+| `ExperimentRepository.save_analysis_artifacts` | `list[AnalysisArtifact]` | Atomic batch of named artifacts |
+| `ExperimentRepository.list_analysis_artifacts` | `list[AnalysisArtifactSummary]` | — |
+| `ExperimentRepository.get_analysis_artifact` | `AnalysisArtifact \| None` | — |
+| `ExperimentRepository.archive_analysis_artifact` / `restore_analysis_artifact` | `AnalysisArtifactSummary \| None` | Artifact status |
+| `ExperimentRepository.get_analysis_results` | `list[PluginAnalysisResult]` (calling plugin by default; `include_others=True` adds only declared `analysis_result_readers`) | — |
 | `UserRepository` | `User` | — |
 | `PluginRoleRepository` | `UserPluginRole`, `str | None` (a single role) | `UserPluginRole` |
 
 See the [API Reference → Python SDK](/sdk/api/python) for the full method list.
+
+Analysis outputs are not globally readable. A plugin can read its own result, or results from exact producer plugin IDs declared in its `analysis_result_readers`. Passing `include_others=True` expands the query only to that allowlist.
 
 ## Extending the model
 

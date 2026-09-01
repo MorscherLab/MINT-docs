@@ -28,8 +28,8 @@ An experiment combines platform fields with plugin-defined fields:
 | Identity | `id`, `experiment_code`, `name` | `experiment_code` is generated from type + sequence, e.g. `LCM-EXP-001` |
 | Classification | `experiment_type`, `status`, project link | Status is `planned`, `ongoing`, `completed`, or `cancelled` |
 | Ownership | creator, collaborators, project members | Access is resolved from platform RBAC and project membership |
-| Design data | sample layout, plate map, run sequence, treatment plan | One JSON payload written by an `EXPERIMENT_DESIGN` or `FULL` plugin |
-| Analysis artifacts | result summaries, reports, exported tables, file-backed outputs | Named records written by `ANALYSIS` or `FULL` plugins |
+| Design data | sample layout, plate map, run sequence, treatment plan | One JSON payload written when the plugin's resolved policy allows `design_data_write` |
+| Analysis artifacts | result summaries, reports, exported tables, file-backed outputs | Named records written when the plugin's resolved policy allows `analysis_result_write` |
 | File objects | RAW files, generated reports, binary analysis outputs | Stored under the configured data path or object store, referenced from artifacts |
 
 Think of the platform experiment row as the stable spine. Plugins should store highly structured or query-heavy data in their own tables, then write compact design summaries and named analysis artifacts back to the platform so the MINT UI can show status, downloads, and follow-up workflows. Legacy `PluginAnalysisResult` reads remain available for compatibility, but the user-facing result list is now driven by first-class analysis artifacts.
@@ -53,25 +53,26 @@ The experiment page groups artifacts by producing plugin. It marks active artifa
 
 ## How plugins attach data
 
-| Plugin type | Can read experiments | Can write design data | Can write analysis artifacts | Typical use |
-|-------------|----------------------|-----------------------|----------------------------|-------------|
-| `STATIC` | Yes | No | No | Reference viewers and calculators |
-| `ANALYSIS` | Yes | No | Yes | Peak picking, model fitting, report generation |
+| Plugin type | Default experiment CRUD | Default design-data writes | Default analysis-result writes | Typical use |
+|-------------|-------------------------|----------------------------|--------------------------------|-------------|
+| `STATIC` | No | No | No | Reference viewers and calculators |
+| `ANALYSIS` | No | No | Yes | Peak picking, model fitting, report generation |
 | `EXPERIMENT_DESIGN` | Yes | Yes | No | Plate maps, acquisition sequences, treatment layouts |
 | `FULL` | Yes | Yes | Yes | End-to-end workflows that own design and analysis |
+| `WORKFLOW` | No; opt in explicitly | No | No | Schedulers and lifecycle orchestration |
 
-The plugin type is declared with `@mint_plugin(plugin_type=...)` or legacy metadata. The platform enforces write boundaries through `PlatformContext`, so an analysis plugin cannot accidentally overwrite design data.
+The plugin type is declared with `@mint_plugin(plugin_type=...)` or legacy metadata. `PluginCapabilities.experiment_crud`, `design_data_write`, and `analysis_result_write` can override each default independently. The platform enforces the resolved policy through `PlatformContext`.
 
 ## Storage layers
 
 | Layer | What lives there |
 |-------|------------------|
 | Platform database | Users, roles, projects, experiments, experiment types, design data, analysis artifacts, notices, plugin role assignments, plugin migration records |
-| `server.dataPath` | SQLite/local files when used, passkeys, marketplace cache, uploaded `.mint` bundles, plugin install snapshots |
+| `server.dataPath` | Local object storage, marketplace cache, uploaded `.mint` bundles, plugin registry state, and plugin install snapshots |
 | Plugin schema or tables | Domain-specific relational data created by plugin migrations |
 | Compatibility result fields | Legacy per-plugin `analysis_results` entries still exposed through SDK compatibility methods |
 
-For production, use PostgreSQL. SQLite mode is useful for single-server evaluation installs, but plugin roles, shared plugin tables, and multi-user operations are designed around database-backed deployments. `database.mode: "none"` only keeps file-backed setup/auth basics alive; experiments and projects require SQLite or PostgreSQL.
+MINT 1.2 uses PostgreSQL for every platform deployment. A plugin running standalone can still use the SDK's local SQLite database; that storage is separate from platform users, projects, experiments, and plugin schemas.
 
 ## Lifecycle
 

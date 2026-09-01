@@ -75,6 +75,8 @@ Prereleases follow the same migration discipline as stable — migrations are fo
 
 MINT update checks do not replace deployment backups. Before platform upgrades, take a normal database and deployment backup using your lab's operating procedure.
 
+For the 1.1 to 1.2 boundary, complete the [MINT 1.2 migration guide](/sdk/operations/migrating-to-1.2) before applying the platform update.
+
 | Layer | Rollback mechanism |
 |-------|--------------------|
 | Platform | Restore the previous image/runtime artifact and database backup |

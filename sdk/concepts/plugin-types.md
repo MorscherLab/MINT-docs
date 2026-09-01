@@ -1,6 +1,6 @@
 # Plugin types
 
-Every MINT plugin declares a `PluginType`. The choice determines which platform repositories it can access and which experiment payloads it is allowed to write.
+Every MINT plugin declares a `PluginType`. The type supplies the default experiment-write policy; explicit `PluginCapabilities` fields can override each write boundary independently.
 
 ```python
 from mint_sdk import AnalysisPlugin, PluginType, mint_plugin
@@ -15,28 +15,32 @@ class MyPlugin(AnalysisPlugin):
     pass
 ```
 
-## The four types
+## The five types
 
-| Type | Use it for | Experiment repository | Design data | Analysis artifacts/results |
-|------|------------|-----------------------|-------------|------------------|
-| `PluginType.STATIC` | UI/reporting/help plugins that should not mutate experiment data | Read-only | Read-only | Read-only |
-| `PluginType.ANALYSIS` | Processing existing experiments and saving computed outputs | Read-only experiment CRUD wrapper | Read-only | Can write this plugin's artifacts and compatibility result |
-| `PluginType.EXPERIMENT_DESIGN` | Defining and editing an experiment's design payload | Design-scoped create/update/delete | Can write owned design data | Read-only |
-| `PluginType.FULL` | Rare plugins that must own both design data and analysis outputs | Full repository access | Can write | Can write |
+| Type | Use it for | Experiment CRUD | Design-data writes | Analysis-result writes |
+|------|------------|-----------------|--------------------|------------------------|
+| `PluginType.STATIC` | UI/reporting/help plugins | No | No | No |
+| `PluginType.ANALYSIS` | Processing experiments and saving computed outputs | No | No | Yes |
+| `PluginType.EXPERIMENT_DESIGN` | Defining and editing experiment designs | Yes | Yes | No |
+| `PluginType.FULL` | Workflows that own design and analysis | Yes | Yes | Yes |
+| `PluginType.WORKFLOW` | Schedulers and orchestrators | No; opt in explicitly | No | No |
 
-The class you subclass is `AnalysisPlugin` regardless of type — the name reflects the abstract base, not the runtime category. The `plugin_type` value declared through `@mint_plugin(...)` is what the platform reads. Legacy plugins may still return `PluginMetadata` from a `metadata` property, but new plugins should use the decorator.
+These are defaults, not separate repository implementations. In integrated mode, `context.get_experiment_repository()` returns the scoped repository regardless of `requires_experiments`; the resolved access policy controls which writes it accepts. The class you subclass is `AnalysisPlugin` regardless of type — the name reflects the abstract base, not the runtime category.
 
 ## Capability flags
 
-`PluginCapabilities` declares what the plugin needs from the platform. Repository accessors return `None` when a capability isn't declared.
+`PluginCapabilities` declares platform integration needs and can override the three experiment-write defaults. Each write field is tri-state: `None` preserves the `PluginType` default, while `True` or `False` explicitly grants or removes that write capability.
 
 | Field | Meaning |
 |-------|---------|
 | `requires_auth` | Plugin's routes are guarded by the platform's authenticated-user dependency |
-| `requires_experiments` | `context.get_experiment_repository()` returns a real repo (vs `None`) |
-| `requires_database` | Plugin needs the platform's database — `context.get_plugin_data_repository()` returns a real repo |
+| `requires_experiments` | Declares that the plugin integrates with experiment context; it does not gate the repository getter |
+| `requires_database` | Declares that the plugin needs the platform database |
 | `requires_shared_database` | Plugin needs its own scoped Postgres schema (for tables it owns); `context.get_shared_db_session()` works |
 | `supports_experiment_linking` | UI hint: this plugin can attach to an experiment |
+| `experiment_crud` | Allow or deny experiment create/update/delete; `None` keeps the type default |
+| `design_data_write` | Allow or deny writes to this plugin's owned design data; `None` keeps the type default |
+| `analysis_result_write` | Allow or deny writes to this plugin's results/artifacts; `None` keeps the type default |
 
 ```python
 from mint_sdk import PluginCapabilities
@@ -58,6 +62,19 @@ Pick **`ANALYSIS`** when your plugin processes existing experiments and produces
 Pick **`EXPERIMENT_DESIGN`** when your plugin defines what an experiment *is* — its design schema, the form users fill in, the metadata that travels with it. Examples: an LC-MS sequence designer that owns `LcmsSequenceTable`; a drug-response panel designer; a plate-map editor for cell culture experiments.
 
 Pick **`FULL`** only when one plugin truly needs to do both jobs: create/update design data and write analysis artifacts or compatibility results for the same workflow. A single domain capability often splits more cleanly into two plugins — one design plugin to set up the experiment plus one or more analysis plugins that act on it.
+
+Pick **`WORKFLOW`** for schedulers and orchestrators that need to manage experiment lifecycle without owning design or analysis payloads. It is fail-closed, so request only the required write explicitly:
+
+```python
+@mint_plugin(
+    analysis_type="workflow",
+    routes_prefix="/scheduler",
+    plugin_type=PluginType.WORKFLOW,
+    capabilities=PluginCapabilities(experiment_crud=True),
+)
+class SchedulerPlugin(AnalysisPlugin):
+    pass
+```
 
 ## Example: minimal pair
 

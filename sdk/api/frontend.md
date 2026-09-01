@@ -151,12 +151,12 @@ For full prop signatures, browse the source or run the local Histoire storybook.
 | `useScheduleDrag` | drag-to-reschedule | Calendar / timeline |
 | `useProtocolTemplates` | protocol step engine | Protocol UIs |
 | `useAutoGroup` | sample auto-grouping | Group by name prefix |
-| `usePluginConfig` | plugin settings | Read plugin config |
-| `createPluginClient`, `usePluginClient` | contract-aware plugin API runtime | Generated plugin clients |
+| `createPluginClient` | contract-aware plugin API runtime | Generated plugin clients |
 | `buildPluginEndpointUrl`, `resolvePluginBaseUrl` | URL helpers | Link previews and diagnostics that match generated client calls |
 | `uploadPluginEndpoint`, `downloadPluginEndpoint`, `downloadBlob` | multipart / Blob helpers | Generated upload and download endpoint wrappers |
 | `usePluginEventStream` | auth-aware SSE helper | Generated event-stream endpoint wrappers |
 | `usePluginSettings` | plugin settings helpers | Load/save plugin configuration |
+| `usePluginJobCenter` | job-center view state | Render a `PluginJobCenterSource` from `usePluginJobs()` |
 | `useCurrentExperiment` | active experiment helper | Read the experiment selected by the platform shell |
 | `useExperimentSelector` | reactive experiment picker | Experiment dropdowns |
 | `useExperimentData` | reactive experiment view | Live design + analysis |
