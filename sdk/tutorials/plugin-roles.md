@@ -1,281 +1,193 @@
-# Tutorial 4 - Plugin Roles
+# Tutorial 4 — Plugin Roles
 
-You'll add plugin-specific roles to **panel-designer** from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables) and gate panel deletion on `editor` or `admin`.
+Add `viewer`, `editor`, and `admin` roles to **panel-designer** from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables). An editor can mutate their own reusable panel drafts; a viewer cannot. Publishing still requires `experiments.edit` and a visible experiment.
 
-Platform admins automatically bypass plugin role checks. Other users need a `UserPluginRole` row for this plugin.
+This tutorial uses the v1.2 `CurrentPluginActor` dependency directly, so the role check works on ordinary `@endpoint` methods without a second router or a standalone authorization bypass.
 
-**Time:** 25-35 minutes
-**Prereqs:** Tutorial 3 complete; familiarity with `PlatformContext`
+## 1. Understand the permission boundaries
 
-## When to Use Plugin Roles
-
-Two permission systems coexist:
-
-| | Platform RBAC | Plugin roles |
+| Boundary | Answers | Example |
 |---|---|---|
-| Defined by | MINT platform | Your plugin |
-| Stored in | `User.role` plus platform permissions | `UserPluginRole` rows |
-| Scope | Platform-wide | One plugin |
-| Typical use | Projects, experiments, admin pages | Plugin-specific viewer/editor/operator/admin split |
-| Platform admin bypass | Built into platform permissions | Built into `require_plugin_role()` |
+| Plugin capabilities | May this plugin perform this kind of platform write? | `design_data_write=True` |
+| Platform permissions | May this user perform this platform action? | `experiments.edit` |
+| Plugin role | May this user perform this plugin-specific action? | `editor` |
+| Row ownership and experiment scope | Which records may this user access? | `Panel.owner_user_id == actor.user_id` |
 
-Use plugin roles when the responsibility only makes sense inside one plugin, such as `operator`, `reviewer`, `approver`, or the `viewer` / `editor` / `admin` split in this tutorial.
+Role strings are exact values stored per `(plugin_id, user_id)`. The platform enriches `CurrentPluginActor.plugin_role` from the current plugin's assignment. `actor.role` is the platform role; it is not the plugin role.
 
-## 1. Define the Role Names
+A platform admin bypasses the role check below. A plugin `admin` is simply one of the allowed plugin roles. Neither bypass removes the panel owner predicate from Tutorial 3.
+
+## 2. Define one shared write guard
 
 Create `src/mint_plugin_panel_designer/roles.py`:
 
 ```python
-from enum import StrEnum
+from fastapi import HTTPException
+from mint_sdk import PluginActor
 
 
-class PanelDesignerRole(StrEnum):
-    VIEWER = "viewer"
-    EDITOR = "editor"
-    ADMIN = "admin"
+def require_panel_editor(actor: PluginActor) -> None:
+    if not actor.is_platform_admin and actor.plugin_role not in {"editor", "admin"}:
+        raise HTTPException(status_code=403, detail="Requires plugin role: editor or admin")
 ```
 
-These strings are what admins assign in the platform and what your routes check at request time.
+The same guard protects every draft mutation. There is no implicit permission hierarchy: the permitted values are the explicit set `{"editor", "admin"}`. Add an `operator` or `reviewer` role only when its actions are defined.
 
-## 2. Add Delete Logic to the Plugin
+## 3. Guard create, replace, delete, and publish
 
-In `src/mint_plugin_panel_designer/plugin.py`, add these imports:
+Import the guard in `plugin.py`:
 
 ```python
-from fastapi import HTTPException, status
+from mint_plugin_panel_designer.roles import require_panel_editor
 ```
 
-Then add this method to `PanelDesignerPlugin`:
+Add `require_panel_editor(actor)` as the first statement in **each** of these existing methods:
 
 ```python
-async def delete_panel(self, panel_id: int) -> None:
+# At the start of create_panel(self, body, actor):
+require_panel_editor(actor)
+
+# At the start of replace_panel(self, panel_id, body, actor):
+require_panel_editor(actor)
+
+# At the start of delete_panel(self, panel_id, actor):
+require_panel_editor(actor)
+
+# At the start of publish_panel(self, panel_id, experiment, actor):
+require_panel_editor(actor)
+```
+
+Do not remove `_owned_panel(...)` from replace/delete/publish, the authenticated actor from create, or the `experiments.edit` check from publish. For example, the complete delete method becomes:
+
+```python
+@endpoint.delete("/panels/{panel_id}")
+async def delete_panel(self, panel_id: str, actor: CurrentPluginActor) -> dict[str, bool]:
+    require_panel_editor(actor)
     async with self.get_plugin_db_session() as session:
-        panel = await session.get(Panel, panel_id)
-        if panel is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Panel {panel_id} not found",
-            )
-
-        experiment_id = panel.experiment_id
+        panel = await self._owned_panel(session, panel_id, actor.user_id)
         await session.delete(panel)
-        await session.commit()
-
-    panel_count = await self.count_panels(experiment_id)
-    await self.save_design(experiment_id, {"panel_count": panel_count})
+    return {"deleted": True}
 ```
 
-The method owns the mutation. The router you add next owns authorization.
+`list_panels` remains available to authenticated users and only returns their own drafts. A user with no plugin role can therefore read their existing drafts, but cannot create, replace, delete, or publish them.
 
-## 3. Add a Role-Protected Router
+## 4. Expose effective permissions for the UI
 
-Most endpoints in Tutorial 3 used `@endpoint`. For role guards, use a small native router factory because `context.require_plugin_role(...)` is only available after the platform initializes the plugin.
-
-Create an empty `src/mint_plugin_panel_designer/routers/__init__.py` so the router package can be imported.
-
-Create `src/mint_plugin_panel_designer/routers/panel_roles.py`:
+Add a typed response model above the plugin class:
 
 ```python
-from typing import TYPE_CHECKING
+class PanelAccess(BaseModel):
+    plugin_role: str | None
+    can_edit: bool
+    can_publish: bool
+```
 
-from fastapi import APIRouter, Depends, status
-from mint_sdk import CurrentPluginActor
+`BaseModel` is already imported in Tutorial 3. Add this endpoint inside `PanelDesignerPlugin`:
 
-from mint_plugin_panel_designer.roles import PanelDesignerRole
-
-if TYPE_CHECKING:
-    from mint_plugin_panel_designer.plugin import PanelDesignerPlugin
-
-
-async def _allow_standalone() -> None:
-    return None
-
-
-def create_router(plugin: "PanelDesignerPlugin") -> APIRouter:
-    router = APIRouter(tags=["panel-roles"])
-    context = plugin.context
-
-    editor_or_admin = (
-        context.require_plugin_role(
-            PanelDesignerRole.EDITOR.value,
-            PanelDesignerRole.ADMIN.value,
-        )
-        if context is not None
-        else Depends(_allow_standalone)
+```python
+@endpoint.get("/me/access", response_model=PanelAccess)
+async def panel_access(self, actor: CurrentPluginActor) -> PanelAccess:
+    can_edit = actor.is_platform_admin or actor.plugin_role in {"editor", "admin"}
+    return PanelAccess(
+        plugin_role=actor.plugin_role,
+        can_edit=can_edit,
+        can_publish=can_edit and actor.has_permission("experiments.edit"),
     )
-
-    @router.delete(
-        "/panels/{panel_id}",
-        status_code=status.HTTP_204_NO_CONTENT,
-        dependencies=[editor_or_admin],
-    )
-    async def delete_panel(panel_id: int) -> None:
-        await plugin.delete_panel(panel_id)
-
-    @router.get("/me/role")
-    async def my_role(actor: CurrentPluginActor) -> str | None:
-        if actor.is_platform_admin:
-            return PanelDesignerRole.ADMIN.value
-        return actor.plugin_role
-
-    return router
 ```
 
-`dependencies=[editor_or_admin]` means FastAPI runs the role guard before the delete handler. In standalone mode there is no platform role repository, so the tutorial keeps deletion open for local development. For stricter local behavior, change `_allow_standalone()` to raise a 403.
+Run `mint sdk generate`, then inspect the generated client's operation for `panel_access`. Load it when the workspace opens and disable create/save/delete buttons when `can_edit` is false. Enable publishing only when `can_publish` is true and an experiment is selected. Show a short explanation such as “An editor role is required to change panels.”
 
-## 4. Mount the Router
+Keep normal request error handling: a user's role can change after the page loads. Frontend controls communicate permissions; the backend checks enforce them.
 
-In `src/mint_plugin_panel_designer/plugin.py`, add:
+## 5. Test denial and ownership together
+
+The original Tutorial 3 CRUD test uses the standalone actor, which has no plugin role. Update it to inject an editor **before its first request**:
 
 ```python
-from fastapi import APIRouter
-
-from mint_plugin_panel_designer.routers import panel_roles
+app.dependency_overrides[current_plugin_actor] = lambda: PluginActor(
+    user_id="owner", plugin_role="editor",
+)
 ```
 
-Then add this method to `PanelDesignerPlugin`:
+When testing another user's ownership boundary, give that user `plugin_role="editor"` too; otherwise the role check returns 403 before the ownership lookup can return 404. Restore the owner editor override after that check instead of calling `app.dependency_overrides.clear()`.
+
+Add `tests/test_panel_roles.py`:
 
 ```python
-def get_routers(self) -> list[tuple[APIRouter, str]]:
-    return [(panel_roles.create_router(self), "")]
-```
+from pathlib import Path
 
-`resolve_plugin_routers()` combines these native routers with the `@endpoint` handlers from Tutorial 3, so the list/create routes stay unchanged.
+from fastapi.testclient import TestClient
+from mint_sdk import PluginActor
+from mint_sdk.app import create_standalone_app
+from mint_sdk.runtime_dependencies import current_plugin_actor
+from pytest import MonkeyPatch
 
-## 5. Test the Local Fallback
+from mint_plugin_panel_designer.plugin import PanelDesignerPlugin
 
-Add a test:
 
-```python
-def test_standalone_delete_panel_uses_local_fallback() -> None:
-    with TestClient(create_plugin_app()) as client:
-        created = client.post(
-            "/api/panel-designer/panels",
-            json={
-                "experiment_id": 1,
-                "name": "Cisplatin dose-response",
-                "drugs": [{"name": "Cisplatin", "doses_uM": [0.1, 1, 10, 100]}],
-            },
+def test_roles_do_not_bypass_panel_ownership(
+    tmp_path: Path, monkeypatch: MonkeyPatch,
+) -> None:
+    plugin = PanelDesignerPlugin()
+    plugin._setup_standalone_db(storage_dir=tmp_path)
+    # Backend checks do not depend on a built frontend.
+    monkeypatch.setattr(plugin, "get_frontend_dir", lambda: None)
+    app = create_standalone_app(plugin, environ={})
+    base = "/api/panel-designer/panels"
+    body = {"name": "Pilot", "drugs": [{"name": "Cisplatin", "doses_uM": [1]}]}
+
+    with TestClient(app) as client:
+        # Standalone identity has no plugin role; writes fail closed.
+        assert client.post(base, json=body).status_code == 403
+
+        app.dependency_overrides[current_plugin_actor] = lambda: PluginActor(
+            user_id="owner", plugin_role="editor",
         )
+        created = client.post(base, json=body)
+        assert created.status_code == 201
         panel_id = created.json()["id"]
 
-        deleted = client.delete(f"/api/panel-designer/panels/{panel_id}")
+        app.dependency_overrides[current_plugin_actor] = lambda: PluginActor(
+            user_id="owner", plugin_role="viewer",
+        )
+        assert client.post(base, json=body).status_code == 403
+        assert client.put(f"{base}/{panel_id}", json=body).status_code == 403
+        assert client.delete(f"{base}/{panel_id}").status_code == 403
 
-    assert deleted.status_code == 204
+        app.dependency_overrides[current_plugin_actor] = lambda: PluginActor(
+            user_id="other", plugin_role="admin",
+        )
+        assert client.delete(f"{base}/{panel_id}").status_code == 404
+
+        app.dependency_overrides[current_plugin_actor] = lambda: PluginActor(
+            user_id="owner", plugin_role="editor",
+        )
+        assert client.delete(f"{base}/{panel_id}").status_code == 200
 ```
-
-Run:
 
 ```bash
 uv run pytest -q
+mint sdk generate
 mint doctor --strict
 ```
 
-## 6. Exercise the Route
+These overrides exist only in tests. The running standalone app has no platform role assignment store, so its write requests remain denied. To exercise real role assignments, install the plugin into a disposable MINT instance. `mint dev --platform` is a development proxy and does not supply an installed plugin context.
 
-Start the plugin:
+## 6. Assign and verify roles in MINT
 
-```bash
-mint dev
-```
+A platform admin assigns the exact role string to the user for `panel-designer` through MINT's plugin-role administration.
 
-Create a panel, then delete it:
+> [Screenshot: MINT plugin-role assignment for panel-designer showing an editor user and a viewer user]
 
-```bash
-curl -X POST http://127.0.0.1:8003/api/panel-designer/panels \
-  -H "Content-Type: application/json" \
-  -d '{
-    "experiment_id": 1,
-    "name": "Cisplatin dose-response",
-    "drugs": [{"name": "Cisplatin", "doses_uM": [0.1, 1, 10, 100]}]
-  }'
+| Assignment | Behavior in this tutorial |
+|---|---|
+| No plugin role / `viewer` | List own drafts; mutations denied |
+| `editor` | Create/replace/delete own drafts |
+| `admin` | Same draft permissions as editor; no cross-user row access |
+| Platform admin | Pass the plugin-role guard; row ownership still applies |
 
-curl -X DELETE http://127.0.0.1:8003/api/panel-designer/panels/1
-```
+Publishing additionally requires `experiments.edit`, a visible compatible experiment, and the plugin's design-write capability. Verify a real viewer gets 403, an editor can change their own draft, and another editor cannot access it.
 
-When the plugin is installed in MINT, the same `DELETE` route is protected by:
+For larger plugins using native FastAPI routers, `context.require_plugin_role("editor", "admin")` returns a ready-to-use `Depends` object with the same platform-admin bypass. It is available after platform initialization. Do not wrap it in another `Depends`, and do not replace a missing context with an “allow everyone” dependency.
 
-```python
-context.require_plugin_role("editor", "admin")
-```
-
-::: tip Installed mode matters
-`mint dev --platform` makes the plugin visible through the platform dev proxy, but the plugin process is still a standalone hot-reload server. Test real plugin-role enforcement with the plugin installed into a disposable MINT instance or with a custom `PlatformContext` fake.
-:::
-
-## 7. Assign Roles in MINT
-
-Admins assign plugin roles from the platform admin surface:
-
-> [Screenshot: plugin role assignment table for panel-designer, with a user assigned the `editor` role]
-
-Use these role strings:
-
-| Role | Meaning in this tutorial |
-|------|--------------------------|
-| `viewer` | Can list panels |
-| `editor` | Can create and delete panels |
-| `admin` | Can create and delete panels; also used as plugin power-user role |
-
-The platform stores assignments as `(plugin_id, user_id, role)` in `UserPluginRole`.
-
-## 8. Gate Frontend Actions
-
-After adding `/me/role` and `DELETE /panels/{panel_id}`, regenerate the frontend contract:
-
-```bash
-mint sdk generate
-```
-
-A frontend view can hide destructive actions unless the user has the right role:
-
-```vue
-<script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { BaseButton } from '@morscherlab/mint-sdk'
-import { useGeneratedPluginClient } from '../generated/mint-plugin'
-
-const client = useGeneratedPluginClient()
-const myRole = ref<string | null>(null)
-
-onMounted(async () => {
-  myRole.value = await client.myRole()
-})
-
-const canDelete = computed(() => {
-  return myRole.value === 'editor' || myRole.value === 'admin'
-})
-
-async function deletePanel(panelId: number): Promise<void> {
-  await client.deletePanel({ pathParams: { panelId } })
-}
-</script>
-
-<template>
-  <BaseButton
-    v-if="canDelete"
-    tone="danger"
-    @click="deletePanel(1)"
-  >
-    Delete
-  </BaseButton>
-</template>
-```
-
-Frontend hiding is only a usability hint. The backend role guard is the real protection.
-
-## Where You've Landed
-
-You now have:
-
-- Plugin-specific role constants
-- A role-protected delete route
-- A `/me/role` endpoint for frontend gating
-- Standalone fallback behavior for local development
-- Installed-mode enforcement through `PlatformContext.require_plugin_role()`
-
-## Next
-
-- [Recipes → Route permissions](/sdk/recipes/route-permissions) - focused permission patterns
-- [Reference → Permissions](/reference/permissions) - platform RBAC catalog
-- [Operations → CI patterns](/sdk/operations/ci-patterns) - add route tests to CI
+See [route permissions](/sdk/recipes/route-permissions), [platform permissions](/reference/permissions), and [CI patterns](/sdk/operations/ci-patterns).

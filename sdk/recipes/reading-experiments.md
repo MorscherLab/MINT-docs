@@ -1,124 +1,147 @@
-# Reading experiments
+# Reading and managing experiments
 
-## Goal
+MINT 1.2 exposes metadata, design data, and analysis through one scoped `ExperimentRepository`. The SDK protocol works in both in-process and isolated integrated plugins.
 
-Read experiments from inside a plugin: fetch one by ID, list with filters, paginate.
+## Read one visible experiment
 
-## Get one by ID
+For a route with an experiment ID, inject `CurrentExperiment`:
 
 ```python
-from fastapi import HTTPException, status
+from mint_sdk import AnalysisPlugin, CurrentExperiment, endpoint
 
 class MyPlugin(AnalysisPlugin):
-    async def get_experiment(self, experiment_id: int):
-        repo = self._context.get_experiment_repository()
-        experiment = await repo.get_by_id(experiment_id)
-        if experiment is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Experiment {experiment_id} not found",
-            )
-        return experiment
-```
-
-`get_by_id` returns an `Experiment` dataclass or `None`. At the route boundary, map `None` to `HTTPException` so the client gets a real 404.
-
-## List with filters
-
-```python
-class MyPlugin(AnalysisPlugin):
-    async def list_ongoing_in_project(self, project: str):
-        repo = self._context.get_experiment_repository()
-        experiments, total = await repo.list_all(
-            status="ongoing",
-            project=project,
-            skip=0,
-            limit=50,
-        )
-        return {"items": experiments, "total": total}
-```
-
-`list_all` returns `(list[Experiment], total_count)`. The available filters are:
-
-| Param | Effect |
-|-------|--------|
-| `skip`, `limit` | Pagination — default 0 / 100 |
-| `status` | `"planned"` / `"ongoing"` / `"completed"` / `"cancelled"` |
-| `experiment_type` | Match the design plugin's type string |
-| `project` | Project name (string match) |
-| `created_by` | User ID |
-| `parent_experiment_id` | For nested experiments |
-| `search` | Free-text against name and notes |
-
-The platform repository also accepts `project_id`, `sort_by`, `sort_order`, `created_after`, and `created_before`; those are not part of the public SDK protocol yet, so use them only after checking your installed platform version.
-
-## Paginate cleanly
-
-```python
-async def all_completed(repo) -> list[Experiment]:
-    out = []
-    skip = 0
-    while True:
-        page, total = await repo.list_all(status="completed", skip=skip, limit=200)
-        out.extend(page)
-        skip += len(page)
-        if skip >= total or not page:
-            break
-    return out
-```
-
-For very large result sets, prefer streaming via the platform's REST client — the in-process repo loads each page into memory.
-
-## Read with the convenience methods
-
-If you only need design data plus analysis result for a single experiment, the `AnalysisPlugin` convenience methods are shorter:
-
-```python
-class MyPlugin(AnalysisPlugin):
-    async def summarize(self, experiment_id: int):
-        design, analysis = await self.load(experiment_id)
+    @endpoint.get("/experiments/{experiment_id}/design-summary")
+    async def design_summary(self, experiment: CurrentExperiment) -> dict[str, object]:
+        design = await self.load_design(experiment.id)
         return {
-            "design": design.data if design else None,
-            "analysis": analysis.result if analysis else None,
+            "id": experiment.id,
+            "name": experiment.name,
+            "design_owner_plugin_id": experiment.design_owner_plugin_id,
+            "schema_version": design.schema_version if design else None,
+            "data": design.data if design else None,
         }
 ```
 
-`load()` returns `(DesignData | None, PluginAnalysisResult | None)` — works in both standalone (returns `(None, None)`) and integrated modes.
+The dependency checks `experiments.view` and scoped visibility/type compatibility. A missing or hidden experiment produces 404; standalone mode produces 503. The design payload can be absent even when the experiment exists.
 
-To read allowed producer results for a cross-plugin dashboard, declare their exact plugin IDs and opt in at the call site:
+## List and paginate
 
 ```python
-from mint_sdk import AnalysisPlugin, mint_plugin
+from fastapi import HTTPException, Query
+from mint_sdk import AnalysisPlugin, CurrentPluginActor, endpoint
 
-
-@mint_plugin(
-    analysis_type="dashboard",
-    routes_prefix="/dashboard",
-    analysis_result_readers=["peak-picking", "quality-control"],
-)
-class ReaderPlugin(AnalysisPlugin):
-    async def summarize_allowed_results(self, experiment_id: int):
-        results = await self.load_analyses(
-            experiment_id,
-            include_others=True,
+class MyPlugin(AnalysisPlugin):
+    @endpoint.get("/experiments")
+    async def experiments(
+        self,
+        actor: CurrentPluginActor,
+        project: str | None = None,
+        skip: int = Query(0, ge=0),
+        limit: int = Query(50, ge=1, le=200),
+    ) -> dict[str, object]:
+        if not actor.has_permission("experiments.view"):
+            raise HTTPException(403, "Missing permission: experiments.view")
+        repo = self.context.get_experiment_repository() if self.context else None
+        if repo is None:
+            raise HTTPException(503, "Experiment repository is not available")
+        items, total = await repo.list_all(
+            status="completed", project=project, skip=skip, limit=limit,
         )
-        return [
-            {"plugin": result.plugin_id, "keys": sorted(result.result.keys())}
-            for result in results
-        ]
+        return {"items": items, "total": total}
 ```
 
-Without `include_others=True`, `load_analyses()` returns only this plugin's own result. With it, the repository adds only the producer IDs declared in `analysis_result_readers`; it never returns every plugin's output. A direct `get_analysis_result(experiment_id, plugin_id)` call enforces the same producer-or-allowlist rule.
+| SDK filter | Meaning |
+|------------|---------|
+| `skip=0`, `limit=100` | Offset and page size |
+| `status` | Such as `planned`, `ongoing`, `completed`, `cancelled` |
+| `experiment_type` | Registered experiment type |
+| `project` | Project name, not numeric project ID |
+| `created_by` | Creator's numeric user ID |
+| `parent_experiment_id` | Direct children of an experiment |
+| `search` | Search text |
 
-## Notes
+The returned count and records respect visibility and type restrictions. Do not depend on SQL implementation-only arguments such as `project_id` in a portable plugin. The external [REST client](/sdk/api/client) has its own richer filter surface.
 
-- `ExperimentRepository.create / update / delete` require the resolved `experiment_crud` capability. The original type defaults deny it for `STATIC` and `ANALYSIS`, allow it for `EXPERIMENT_DESIGN` and `FULL`, and require `WORKFLOW` to opt in explicitly.
-- `Experiment.experiment_code` (the user-facing `LCM-EXP-001` / `DR-EXP-001` string) is **not** on the SDK dataclass. The repository exposes it only via the REST API. If you need to display it, query the platform's `/api/experiments/{id}` from the plugin's frontend instead.
-- `tags` and `custom_metadata` are JSON columns. They're read-only here; for write access, use a recipe that modifies the experiment via the `EXPERIMENT_DESIGN` plugin that owns the type.
+For batch processing, fetch one page at a time and advance `skip` by the received count; stop when the page is empty or `skip >= total`. Pagination is not a snapshot transaction: concurrent edits may change membership between pages.
 
-## Related
+## Create an experiment from a workflow plugin
 
-- [Concepts → PlatformContext](/sdk/concepts/platform-context) — accessor lifecycle
-- [Concepts → Data model](/sdk/concepts/data-model) — Experiment fields
-- [Recipes → Writing results](/sdk/recipes/writing-results) — the corresponding write side
-- [API Reference → Python SDK](/sdk/api/python) — `ExperimentRepository` full signature
+A scheduler can create experiment metadata without owning design or analysis data. Declare `WORKFLOW` with explicit CRUD permission:
+
+```python
+from fastapi import HTTPException
+from pydantic import BaseModel, Field
+from mint_sdk import (
+    AnalysisPlugin, CurrentPluginActor, PluginCapabilities,
+    PluginType, endpoint, mint_plugin,
+)
+
+class CreateRun(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    project: str | None = None
+
+@mint_plugin(
+    analysis_type="run-planner",
+    routes_prefix="/run-planner",
+    plugin_type=PluginType.WORKFLOW,
+    capabilities=PluginCapabilities(
+        requires_auth=True,
+        requires_experiments=True,
+        experiment_crud=True,
+        design_data_write=False,
+        analysis_result_write=False,
+    ),
+    allowed_experiment_types=["lcms_batch"],
+)
+class RunPlanner(AnalysisPlugin):
+    @endpoint.post("/experiments", status_code=201)
+    async def create_run(self, body: CreateRun, actor: CurrentPluginActor) -> dict[str, int]:
+        if not actor.has_permission("experiments.create"):
+            raise HTTPException(403, "Missing permission: experiments.create")
+        repo = self.context.get_experiment_repository() if self.context else None
+        if repo is None:
+            raise HTTPException(503, "Experiment repository is not available")
+        experiment = await repo.create(
+            name=body.name,
+            experiment_type="lcms_batch",
+            project=body.project,
+            created_by=int(actor.user_id),
+        )
+        return {"experiment_id": experiment.id}
+```
+
+The `lcms_batch` type must already exist and be enabled on the platform. The new row does not become the workflow plugin's design. The design plugin supplies its own payload later; `WORKFLOW` cannot write design/results or manage collaborators.
+
+## Update and delete metadata
+
+Within an authorized route with a resolved experiment and repository:
+
+```python
+updated = await repo.update(experiment.id, status="ongoing", notes="Acquisition started")
+deleted = await repo.delete(experiment.id)
+```
+
+These are separate examples: use update for a status action and delete only for a user-requested deletion. Check the corresponding actor permission (`experiments.edit` or `experiments.delete`) at the route boundary. The repository additionally enforces the plugin's effective `experiment_crud` capability, visibility, and type restrictions. `update()` returns `Experiment | None`; `delete()` returns `bool`.
+
+The public SDK update fields are `name`, `status`, `experiment_type`, `parent_experiment_id`, `project`, `notes`, and `tags`. For advanced platform-only metadata operations, use the public platform API instead of importing SQL models.
+
+## Read another plugin's output
+
+Declare the producer in `analysis_result_readers`, then select an artifact:
+
+```python
+artifact = await self.load_analysis_artifact(
+    experiment.id,
+    plugin_id="peak-qc",
+    artifact_key="summary",
+    fields=["score", "method"],
+)
+```
+
+`fields` projects top-level result keys. Lists of artifacts contain metadata, not every result payload. Read the selected result on demand. See [PlatformContext](/sdk/concepts/platform-context#cross-plugin-readers).
+
+## Data shape and source
+
+`Experiment` is a slots dataclass, not a live ORM row. Its `design_owner_plugin_id` identifies the existing design owner; `experiment_code` remains a REST detail field rather than an SDK dataclass field. Mutating a returned dataclass does not persist changes.
+
+Verified against [v1.2.0 repository protocol](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/repositories.py) and [request dependencies](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/runtime_dependencies.py).

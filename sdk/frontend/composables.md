@@ -1,13 +1,13 @@
 # Composables
 
-The frontend SDK ships 60+ typed composables and helper factories. This page lists the commonly used ones with a one-line summary, then deep-dives on the hooks plugin authors reach for most often: generated plugin clients, current experiment context, settings, forms, and platform-aware API calls.
+This page covers the public **1.2.0** composables and helper factories used for generated clients, experiment context, settings, forms, and platform API calls. For a complete selection-and-save page, see [Platform integration](/sdk/frontend/platform-integration).
 
 ## Full list
 
 ::: details Common composables (click to expand)
 | Composable | What it returns | When to reach for it |
 |------------|-----------------|----------------------|
-| `useApi` | Typed fetch wrapper | Any API call from the frontend |
+| `useApi` | Axios-based API wrapper | Platform routes outside the plugin contract |
 | `useAuth` | Login/logout/register/token helpers | Authentication flows |
 | `usePasskey` | WebAuthn registration / login flows | Building passkey UX |
 | `useTheme` | Theme state + toggle | Light/dark switcher |
@@ -40,6 +40,9 @@ The frontend SDK ships 60+ typed composables and helper factories. This page lis
 | `useExperimentData` | Reactive exported experiment data payload | Live experiment view |
 | `useExperimentSave` | Save/load design data and compatibility analysis results | Forms that save back to an experiment |
 | `useAppExperiment` | App-level experiment provide/inject | Plugin pages that need the active experiment |
+| `useExperimentStore` | Shared Pinia selection | Workspace picker state and resolved experiment records |
+| `useFileBrowser` | Server mount listing and selection | Read-only server paths with `FileBrowserModal` |
+| `useRequestSyncState` | Request loading/error/timestamps and cancellation | Stateful request feedback |
 :::
 
 ## Deep dives
@@ -49,29 +52,12 @@ The frontend SDK ships 60+ typed composables and helper factories. This page lis
 An Axios wrapper that reads the SDK settings store for the API base URL and adds the stored bearer token when one is available. The default API base is `/api`, so request paths are relative to that base.
 
 ```ts
-import { useApi } from '@morscherlab/mint-sdk'
+import { useApi, type ExperimentSummary } from '@morscherlab/mint-sdk'
 
-const api = useApi()
+const api = useApi({ typedErrors: true })
 
-// Plain GET — auto-typed by the type parameter
-const summary = await api.get<ExperimentSummary>('/my-plugin/experiments/1')
-
-// POST with a body
-const created = await api.post<Panel>('/my-plugin/panels', {
-  experiment_id: 1, name: 'Cisplatin', drugs: [...]
-})
-
-// Other methods on the returned object:
-await api.put<Panel>('/my-plugin/panels/1', { ... })
-await api.patch('/my-plugin/panels/1', { name: 'Renamed' })
-await api.delete(`/my-plugin/panels/${id}`)
-
-// File operations
-const result = await api.upload('/my-plugin/files', file)
-const blobUrl = await api.download(`/my-plugin/files/${id}`)
-
-// URL builders for WebSocket / SSE endpoints
-const wsUrl = api.buildWsUrl('/my-plugin/stream')
+// A platform endpoint; path is relative to /api.
+const experiment = await api.get<ExperimentSummary>('/experiments/42')
 ```
 
 The full return shape is `{ client, get, post, put, patch, delete, upload, download, buildUrl, buildWsUrl }`. `client` is the underlying Axios instance.
@@ -90,76 +76,83 @@ For plugin-scoped calls, prefer the generated client from `frontend/src/generate
 
 ```ts
 import {
-  buildGeneratedPluginEndpointUrl,
-  downloadGeneratedPluginEndpoint,
   generatedPluginEndpoints,
   useGeneratedPluginClient,
   useGeneratedPluginContract,
-  useGeneratedPluginEventStream,
-  useGeneratedPluginSettings,
 } from '../generated/mint-plugin'
 
 const pluginClient = useGeneratedPluginClient()
 const pluginContract = useGeneratedPluginContract()
-const settings = useGeneratedPluginSettings()
-
-await pluginClient.analyze({
-  pathParams: { experimentId: 42 },
-  query: { dryRun: true },
-  body: { parameters: { threshold: 0.05 } },
-})
-
-const analyzeUrl = buildGeneratedPluginEndpointUrl('analyze', {
-  pathParams: { experimentId: 42 },
-})
-
-const hasExport = pluginContract.hasEndpoint('exportReport')
+// Body-only standard scaffold endpoint.
+const result = await pluginClient.analyze({ value: 2.5 })
+const analyzeUrl = pluginContract.buildEndpointUrl('analyze')
+const definition = pluginContract.getEndpoint('analyze')
 const endpointNames = generatedPluginEndpoints
-const report = await downloadGeneratedPluginEndpoint('downloadReport', undefined, 'report.csv')
-
-const stream = useGeneratedPluginEventStream('events', {
-  parseJson: true,
-  onMessage(message) {
-    console.log(message.data)
-  },
-})
 ```
 
-Generated clients accept the structured shape `{ pathParams, query, body }` for endpoints that combine route params, query params, and request bodies. For older code, flat payload fields still work, but the structured form is clearer and avoids name collisions.
+Generated signatures depend on the endpoint:
+
+| Backend route shape | Generated call shape |
+|---------------------|----------------------|
+| JSON body only | `client.analyze({ value: 2.5 })` |
+| Path/query parameters and JSON body | `client.method({ pathParams: { ... }, query: { ... }, body: { ... } })` |
+| Path/query parameters without a body | `client.method({ pathParams: { ... }, query: { ... } })` |
+| No parameters or body | `client.method()` |
+
+Omit unused parameter groups. Use the exact field names and endpoint names from `mint docs contract .`; the frontend parameter names may differ from Python's snake_case names. Mixed endpoints also accept flattened parameters for compatibility. Do not wrap a body-only call in `{ body: ... }`.
+
+Generated upload/download helpers accept the endpoint name and its payload. Use `useGeneratedPluginEventStream(name, payload, options)` for a parameterized stream; parameterless streams also accept `(name, options)`. These helpers only work for routes declared by your plugin.
 
 Use `pluginContract.endpointDefinitions`, `pluginContract.getEndpoint(name)`, and `pluginContract.buildEndpointUrl(name, payload)` when you need diagnostics or a link preview without making the request. Use `pluginContract.adaptRequest()` / `adaptResponse()` only at domain-model boundaries where your local UI model is intentionally narrower than the generated API shape.
 
-### `useCurrentExperiment`
+### Typed HTTP errors in 1.2
 
-Reads the active experiment from platform injection or the current route, then optionally fetches the full experiment payload. Use it in integrated plugin pages instead of asking users to type an experiment id.
+Generated clients normalize HTTP failures to `MintApiError`. Raw `useApi()` keeps the legacy error behavior unless called with `{ typedErrors: true }`. Network failures can still be ordinary errors, so keep a fallback:
 
 ```ts
-import { computed } from 'vue'
-import { useCurrentExperiment } from '@morscherlab/mint-sdk'
+import { ref } from 'vue'
+import { MintApiError } from '@morscherlab/mint-sdk'
 import { useGeneratedPluginClient } from '../generated/mint-plugin'
 
-const currentExperiment = useCurrentExperiment()
-const pluginClient = useGeneratedPluginClient()
+const client = useGeneratedPluginClient()
+const errorMessage = ref<string | null>(null)
 
-const canRun = computed(() => currentExperiment.hasExperiment.value)
-
-async function run() {
-  const experimentId = currentExperiment.requireExperimentId()
-  await pluginClient.analyze({
-    pathParams: { experimentId },
-    body: { parameters: {} },
-  })
+async function run(value: number): Promise<void> {
+  errorMessage.value = null
+  try {
+    await client.analyze({ value })
+  } catch (error) {
+    if (error instanceof MintApiError) {
+      const reference = error.requestId ? ` (request ${error.requestId})` : ''
+      errorMessage.value = `${error.message}${reference}`
+    } else {
+      errorMessage.value = error instanceof Error ? error.message : 'Analysis failed'
+    }
+  }
 }
+```
+
+Render `errorMessage` in an `AlertBox`. The error exposes `code`, `status`, `requestId`, `details`, legacy `detail`, original `body`, and `cause`. Branch on `code`/`status` for program behavior; use `requestId` to correlate a report with server logs. An expired authenticated request raises `AuthenticationRequiredError`, a `MintApiError` with status 401. Do not blindly retry a state-changing request after a timeout.
+
+`useRequestSyncState()` supplies `loading`, `error`, and success timestamps when a message is sufficient. Its `run()` rethrows failures after recording them; catch at the UI boundary. Its stale-request guard protects those shared refs, not arbitrary result assignments inside your callback.
+
+### `useCurrentExperiment`
+
+Reads an experiment ID from platform injection or the current URL, then fetches its payload by default. Set `{ immediate: false }` to wait for an explicit `fetch()`/`refresh()`. This helper does not track `ExperimentSelectorModal` selection; use `useExperimentStore()` for that flow.
+
+```ts
+import { useCurrentExperiment } from '@morscherlab/mint-sdk'
+
+const currentExperiment = useCurrentExperiment()
+// Throws when the page has no experiment context.
+const id = currentExperiment.requireExperimentId()
 ```
 
 The generated client can infer `experimentId` for route params named `experimentId` when the platform context contains it, but passing it explicitly keeps examples and tests easier to read.
 
 ### `usePluginSettings`
 
-Generated clients expose `useGeneratedPluginSettings()` when the backend
-declares `@mint_plugin(config=SettingsModel)`. It loads from platform plugin
-config when installed, or from the plugin-local `/settings` route in standalone
-mode.
+Use `useGeneratedPluginSettings()` with backend settings declared by `@mint_plugin(config=SettingsModel)`. The generated helper binds the settings schema and plugin identity. Platform context determines whether to use platform config routes or the plugin's managed `/settings` route; standalone uses the plugin route.
 
 ```ts
 import { useGeneratedPluginSettings } from '../generated/mint-plugin'
@@ -167,13 +160,14 @@ import { useGeneratedPluginSettings } from '../generated/mint-plugin'
 const settings = useGeneratedPluginSettings()
 
 settings.values.value.threshold = 0.05
-await settings.save()
+const saved = await settings.save()
+// Show success only when saved is true; render settings.error otherwise.
 
 // Ready for PluginWorkspaceView / AppTopBar:
 const settingsConfig = settings.settingsConfig
 ```
 
-The return shape includes `settings`, `values`, `config`, `settingsConfig`, `isLoading`, `isSaving`, `error`, `isDirty`, `load()`, `save()`, `reset()`, and `setValues()`.
+The return shape includes `settings`, `values`, `config`, `settingsConfig`, `isLoading`, `isSaving`, `error`, `lastLoadedAt`, `lastSavedAt`, `isDirty`, `load()`, `save()`, `reset()`, and `setValues()`. Load the saved values before editing. The helper tracks revisions internally, sends changed fields through platform PATCH routes, and uses `If-Match` for managed plugin PUT saves. Surface conflicts; do not discard unsaved edits with an automatic reload.
 
 ### `useAuth`
 
@@ -189,8 +183,8 @@ const authStore = useAuthStore()
 const { userInfo, isAuthenticated, isLoading, error } = storeToRefs(authStore)
 
 // Reactively gate UI
-const canEdit = computed(() =>
-  userInfo.value?.role === 'admin' || userInfo.value?.role === 'member'
+const canConfigurePlugins = computed(() =>
+  authStore.hasPermission('plugins.configure')
 )
 
 // Programmatic logout
@@ -237,7 +231,7 @@ watch(theme, (mode) => {
 notify('Panel saved', 'success')
 ```
 
-The return shape is `{ context, isIntegrated, plugin, user, theme, features, navigate, notify, sendToPlatform }`. For the current experiment in integrated plugin views, use `useCurrentExperiment()` or the `currentExperimentId` helper returned by `useExperimentSave()`.
+The return shape is `{ context, isIntegrated, plugin, user, theme, features, navigate, notify, sendToPlatform }`. It does not expose `login()` or the selected experiment. Use the [state selection guide](/sdk/frontend/platform-integration#choose-the-right-source-of-state) to choose between URL context and shared picker state.
 
 ### `useExperimentSelector`
 
@@ -267,12 +261,11 @@ const {
   fetchFilterOptions,
 } = useExperimentSelector({ /* options */ })
 
-// To search, mutate filters.search and call fetch():
+// Search is watched and debounced by the composable.
 filters.search = 'TCA'
-await fetch()
 ```
 
-The selected experiment is `selectedExperiment` (not `selected`); the search input is `filters.search`; re-fetch is `fetch()` (not `refresh`). Pair with the `ExperimentSelectorModal` component for a picker UI, or render `experiments` yourself.
+The selected experiment is `selectedExperiment` (not `selected`); the search input is `filters.search`; explicit re-fetch is `fetch()` (not `refresh`). Its `select()` only changes this composable's local selection. For the standard modal, use `ExperimentSelectorModal` directly; it owns its list and commits records to `useExperimentStore()`.
 
 For plugins mounted on an experiment-specific view, use `useCurrentExperiment()` when you need the experiment payload or `useExperimentSave().currentExperimentId` when you only need the current id for persistence.
 
@@ -373,6 +366,28 @@ For lower-level layouts, `useControlSchema()` gives you `formSchema`, `settingsS
 | `useTextSearch`, `useSortedItems` | Client-side filtering and sorting |
 | `useExpansionSet` | Expand/collapse state for trees and grouped lists |
 | `useBioTemplateWorkspace` | Template-driven controls, preview, and component bindings |
+| `useFileBrowser` | Server mount browsing, refresh, search, sort, path selection, and error state |
+
+### Plotly results
+
+Use `PlotlyChart` for native Plotly traces instead of owning the library lifecycle in each plugin:
+
+```vue
+<script setup lang="ts">
+import { PlotlyChart } from '@morscherlab/mint-sdk'
+</script>
+
+<template>
+  <PlotlyChart
+    title="QC intensity"
+    aria-label="Peak intensity by injection number"
+    :data="[{ type: 'scatter', mode: 'lines+markers', x: [1, 2, 3], y: [100, 98, 102] }]"
+    :layout="{ xaxis: { title: { text: 'Injection' } }, yaxis: { title: { text: 'Intensity' } } }"
+  />
+</template>
+```
+
+Props include `data`, `layout`, `config`, `title`, `description`, `loading`, `empty`, `emptyMessage`, and `ariaLabel`. The component lazily imports Plotly, updates with `Plotly.react`, tracks theme and container size, and purges on unmount. Set `empty` explicitly when there is no result. Keep axis labels and units in the supplied layout. Use `ChartContainer` for another rendering library.
 
 ## Notes
 

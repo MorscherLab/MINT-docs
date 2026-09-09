@@ -1,6 +1,6 @@
 # Tutorial 2 - Adding a Frontend
 
-You'll build **hello-standard**, a `standard` mode plugin with a FastAPI-style backend and a Vue 3 workspace. Use this path when `generated` mode is too constrained for the interaction you need.
+You'll build **hello-standard** with MINT SDK **1.2.0**: a `standard` mode plugin with a FastAPI-style backend and a Vue 3 workspace. Use this path when your plugin needs custom interaction, results, or navigation. Generated mode remains the shorter path for Python parameters and standard result views.
 
 By the end you will have:
 
@@ -10,7 +10,7 @@ By the end you will have:
 - Backend and frontend checks that can run in CI
 
 **Time:** 40-50 minutes
-**Prereqs:** Python 3.12+, `uv`, Bun, and the `mint` CLI from `mint-sdk`
+**Prereqs:** Python 3.12+, `uv`, Bun, and the `mint` CLI from `mint-sdk[cli]` 1.2.0.
 
 ## 1. Scaffold in Standard Mode
 
@@ -57,12 +57,15 @@ Checkpoint:
 
 ```bash
 mint doctor --strict
-uv run pytest -q
 cd frontend
 bun run type-check
 bun run test
+bun run build
 cd ..
+uv run pytest -q
 ```
+
+Build the initial frontend before this scaffold checkpoint: the 1.2.0 standard scaffold may contain an empty `frontend/dist` placeholder, which the runtime rejects until it contains a build. For backend-only route tests, disable frontend discovery as shown below.
 
 ## 2. Inspect the Backend
 
@@ -126,6 +129,7 @@ The scaffold tests the real SDK runtime app:
 ```python
 from fastapi.testclient import TestClient
 from mint_sdk.runtime import create_plugin_app
+from pytest import MonkeyPatch
 
 from mint_plugin_hello_standard.plugin import HelloStandardPlugin
 
@@ -134,10 +138,12 @@ def test_plugin_metadata_uses_scaffolded_name() -> None:
     assert HelloStandardPlugin().metadata.name == "hello-standard"
 
 
-def test_analyze_route_returns_a_real_result() -> None:
+def test_analyze_route_returns_a_real_result(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(HelloStandardPlugin, "get_frontend_dir", lambda self: None)
     with TestClient(create_plugin_app()) as client:
         response = client.post("/api/hello-standard/analyze", json={"value": 2.5})
 
+    assert response.status_code == 200
     assert response.json() == {"input": 2.5, "doubled": 5.0}
 ```
 
@@ -254,11 +260,77 @@ async function runAnalysis(formValues: Record<string, unknown>): Promise<void> {
   ).catch(() => undefined)
 }
 </script>
+
+<template>
+  <FormBuilder
+    v-model="values"
+    :model="analysisModel"
+    :loading="loading"
+    @submit="runAnalysis"
+  />
+  <AlertBox v-if="error" type="error">{{ error }}</AlertBox>
+  <AlertBox v-else-if="result" type="success" title="Analysis result">
+    {{ result.input }} × 2 = {{ result.doubled }}
+  </AlertBox>
+</template>
 ```
 
 For this endpoint, the generated call is direct because `/analyze` has only a JSON body. If an endpoint has path or query parameters, run `mint docs contract .` and follow the call shape printed there.
 
+The complete request path is: `FormBuilder @submit` → typed `client.analyze(body)` → Vite `/api` proxy → `/api/hello-standard/analyze` → Pydantic request validation → `AnalyzeResponse` → reactive result alert. Authentication and URL selection stay in the SDK client.
+
+`useRequestSyncState.run()` records loading/error state and rethrows; the example catches that rejection after the visible error has been populated. For status-specific handling and a request ID, use `MintApiError` as shown in [Composables](/sdk/frontend/composables#typed-http-errors-in-1-2).
+
 Do not edit `frontend/src/generated/*` by hand. Regenerate after backend route, schema, settings, or navigation changes.
+
+### Add a backend operation without hand-writing a client
+
+Add these models above the plugin class and the method inside it:
+
+```python
+class ScaleRequest(BaseModel):
+    values: list[float] = Field(min_length=1)
+    factor: float = Field(2.0, gt=0)
+
+
+class ScaleResponse(BaseModel):
+    values: list[float]
+
+
+# Inside HelloStandardPlugin:
+@endpoint.post("/scale", response_model=ScaleResponse)
+async def scale(self, request: ScaleRequest) -> ScaleResponse:
+    return ScaleResponse(values=[value * request.factor for value in request.values])
+```
+
+Regenerate from the plugin root:
+
+```bash
+mint sdk generate
+mint docs contract .
+mint sdk generate --check
+```
+
+The workspace can now call `await client.scale({ values: [1, 2, 3], factor: 2 })` and receives a typed `{ values: number[] }` response. Keep this synchronous request for short calculations; use `@job` and the SDK job client for long-running analyses.
+
+Add one route check to `tests/test_plugin.py`:
+
+```python
+def test_scale_route_validates_and_calculates(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(HelloStandardPlugin, "get_frontend_dir", lambda self: None)
+    with TestClient(create_plugin_app()) as client:
+        result = client.post(
+            "/api/hello-standard/scale",
+            json={"values": [1, 2, 3], "factor": 2},
+        )
+        invalid = client.post(
+            "/api/hello-standard/scale",
+            json={"values": [], "factor": 2},
+        )
+    assert result.status_code == 200
+    assert result.json() == {"values": [2.0, 4.0, 6.0]}
+    assert invalid.status_code == 422
+```
 
 ## 6. Run the Workspace
 
@@ -276,6 +348,10 @@ Frontend  http://localhost:5175/hello-standard/
 ```
 
 Open the frontend URL and submit the form. The Vite dev server proxies `/api` to the backend, so the workspace can call `client.analyze()` without hard-coding a host.
+
+Keep the scaffold's `resolve.alias`/`resolve.dedupe` entries for Vue and Pinia: the SDK and plugin must use the same runtime instances. Keep Vite `base: '/hello-standard/'` aligned with the plugin route prefix so built assets resolve when installed. The standard single-page scaffold has no router dependency; add Vue Router only when your workspace needs separate routes.
+
+For platform-specific work, continue with [Platform integration](/sdk/frontend/platform-integration). It covers `mint dev --platform`, real installed-plugin verification, authentication, experiment selection, design saves, and server file inputs.
 
 > [Screenshot: hello-standard workspace with a numeric Value field and Analysis result alert]
 
@@ -322,4 +398,6 @@ You now have a standard-mode plugin that:
 
 - [Component Library](/sdk/components/) - choose SDK UI pieces before writing custom controls
 - [Frontend → Composables](/sdk/frontend/composables) - platform-aware state and API helpers
+- [Frontend → Platform integration](/sdk/frontend/platform-integration) - experiment selection, auth, save/load, and server mounts
+- [Frontend → FormBuilder](/sdk/frontend/form-builder) - share controls across forms, sidebars, and settings
 - [Tutorial 3 - Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) - add plugin-owned database tables

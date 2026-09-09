@@ -2,7 +2,7 @@
 
 `MINTClient` is the synchronous Python client for the MINT platform REST API. Use it from external scripts, CI jobs, or notebooks; from inside a plugin process, prefer `PlatformContext` accessors which avoid the network round-trip.
 
-Source: [`mint_sdk/client/client.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/client/client.py).
+Source: [`mint_sdk/client/client.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/client/client.py).
 
 ## Construction
 
@@ -19,7 +19,7 @@ with MINTClient(base_url="https://mint.example.org",
     me = client.whoami()
 
 # 3. Env-aware (no arguments) — reads MINT_URL and MINT_TOKEN, falling back
-#    to credentials stored by `mint auth login` at ~/.config/mint/credentials.json
+#    to credentials stored by `mint platform auth login` at ~/.config/mint/credentials.json
 with MINTClient() as client:
     ...
 ```
@@ -27,22 +27,25 @@ with MINTClient() as client:
 `MINTClient` is **synchronous** — uses plain `with`, not `async with`. The constructor signature:
 
 ```python
-MINTClient(
+def __init__(
+    self,
     base_url: str | None = None,
     token: str | None = None,
     username: str | None = None,
     password: str | None = None,
-    timeout: float = 30.0,
-)
+    timeout: float | None = None,
+) -> None: ...
 ```
 
 When `base_url` is `None`, the resolution order is:
 
 1. `MINT_URL` env var
-2. Stored credentials at `~/.config/mint/credentials.json` (written by `mint auth login`; honors `XDG_CONFIG_HOME`)
+2. Stored credentials at `~/.config/mint/credentials.json` (written by `mint platform auth login`; honors `XDG_CONFIG_HOME`)
 3. Otherwise raise `MINTAPIError`
 
 When `token` is `None`, the same fallback chain runs for the JWT (env: `MINT_TOKEN`).
+
+When `timeout=None`, the client uses the shared platform transport policy: `MINT_PLATFORM_TIMEOUT` / `MINT_PLATFORM_CONNECT_TIMEOUT`, defaulting to 30 s / 10 s. An explicit timeout overrides that policy for this client.
 
 ## Convenience auth methods
 
@@ -66,11 +69,12 @@ These are thin wrappers over `client.auth`.
 | `client.plugins` | `PluginsAPI` | List loaded plugins |
 | `client.admin` | `AdminAPI` | Admin diagnostics, users, roles, plugin-role assignments |
 | `client.updates` | `UpdatesAPI` | Platform/plugin update checks, GitHub release installs |
+| `client.objects` | `ObjectsAPI` | Typed object upload, download, list, existence and deletion |
 
-Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk/client/resources).
+Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/MINT/tree/v1.2.0/packages/sdk-python/src/mint_sdk/client/resources).
 
 ::: warning Not exposed
-Earlier docs claimed `client.users` and `client.artifacts` — those don't exist. There is no `MINTClient.from_env()` factory; use the env-aware constructor (option 3 above).
+Earlier docs claimed `client.users` and `client.artifacts` — those don't exist. First-class artifact readers live at `client.experiments.artifacts`, and raw object operations at `client.objects`. There is no `MINTClient.from_env()` factory; use the env-aware constructor (option 3 above).
 :::
 
 ## Experiments
@@ -136,13 +140,40 @@ with MINTClient() as client:
 
 Backward-compatible flat methods still exist: `get_data`, `save_data`, `delete_data`, `get_data_tree`, `get_data_summary`, `export_data`, `get_results`, `get_result`, `save_result`, and `delete_result`.
 
+## First-class artifact downloads
+
+```python
+from mint_sdk import MINTClient
+
+with MINTClient() as client:
+    artifacts = client.experiments.artifacts.list(42)
+    report = client.experiments.artifacts.resolve(
+        42, plugin_id="peak-qc", artifact_key="report",
+    )
+    client.experiments.artifacts.download_file(
+        42, "report.csv", plugin_id="peak-qc", artifact_key="report",
+    )
+```
+
+| Artifact method | Purpose |
+|-----------------|---------|
+| `list(experiment_id, include_archived=False)` | Metadata-only records |
+| `get(experiment_id, artifact_id)` | Detail by numeric artifact ID |
+| `resolve(experiment_id, plugin_id=..., artifact_key=..., ...)` | Resolve by stable producer/key identity |
+| `get_file_bytes(..., max_bytes=..., ...)` | Bounded buffered file read |
+| `download_file(experiment_id, path, plugin_id=..., artifact_key=..., ...)` | Streaming download with validated size/checksum and atomic destination replacement |
+
+These readers are available in v1.2.0. There is no artifact write method in this client namespace; publish artifacts inside the producing plugin with the [persistence helpers](/sdk/recipes/writing-results).
+
+Raw objects use `client.objects.list/put_bytes/put_file/get_bytes/get_ref/download_file/exists/delete`, with an experiment ID and explicit `plugin_id`. These are public REST operations using the authenticated user's platform permissions; they do not impersonate an installed plugin. Uploading an object alone does not create a visible analysis artifact.
+
 ## Errors
 
 The client raises `MINTAPIError` (and `mint_sdk.exceptions` subclasses where applicable) on non-2xx responses, parsed from the platform's structured error body:
 
 ```python
 from mint_sdk import MINTClient
-from mint_sdk.client._exceptions import MINTAPIError
+from mint_sdk.client import MINTAPIError
 
 with MINTClient() as client:
     try:
@@ -151,13 +182,13 @@ with MINTClient() as client:
         print(f"failed: {e}")
 ```
 
-Network / timeout errors raise `httpx` exceptions — wrap in your own retry logic if needed.
+Connection/timeout failures are wrapped as `MINTConnectionError`. Non-2xx responses have typed subclasses including `AuthenticationError`, `MINTPermissionError`, `NotFoundError`, `ConflictError`, `MINTValidationError`, `RateLimitError`, and `ServerError`. Errors expose `status_code` (also `status`), `code`, `message`, `request_id`, and `details`. Import them from `mint_sdk.client`.
 
 ## Token refresh
 
 `MINTClient` wires a refresh callback at construction. When a request returns 401 with an expired token, the client attempts `auth.refresh()` once before re-raising. Long-running scripts get refresh for free; explicit triggers aren't needed.
 
-For genuinely long jobs (CI runs that span days), prefer service-account tokens with longer TTL — generate from **Admin -> People -> Users -> Service accounts** in the platform UI.
+For automation, use the deployment’s supported service-account credentials and handle authentication failures explicitly; a refresh attempt is not a guarantee that an expired or revoked session can continue.
 
 ## Pagination
 
@@ -175,13 +206,13 @@ with MINTClient() as client:
         skip += len(batch)
 ```
 
-For very large result sets, prefer querying only what you need — full pulls hit memory limits and lock the platform's connection pool.
+For very large result sets, prefer querying only what you need — accumulating every page in a list can exhaust client memory.
 
 ## Notes
 
 - `MINTClient` instances are not thread-safe. Use one per thread.
-- Inside a plugin, prefer `PlatformContext` accessors over `MINTClient` — they share the platform's connection pool, avoid the network hop in shared mode, and short-circuit auth checks for the plugin's user.
-- The credentials file (`~/.config/mint/credentials.json`, or `$XDG_CONFIG_HOME/mint/credentials.json`) is the user's responsibility to secure (`chmod 600`); `mint auth login` sets that automatically.
+- Inside a plugin, prefer `PlatformContext` accessors over `MINTClient` — they avoid the public REST hop in shared mode and preserve plugin capability, owner, reader, type, and actor visibility checks. An isolated context implements the same protocol over internal HTTP.
+- The credentials file (`~/.config/mint/credentials.json`, or `$XDG_CONFIG_HOME/mint/credentials.json`) is the user's responsibility to secure (`chmod 600`); `mint platform auth login` sets that automatically.
 
 ## Related
 

@@ -11,13 +11,15 @@ Core public symbols exported from `mint_sdk`, grouped by area. Each entry has a 
 | `PluginNavItem` | One route/page entry shown in generated contracts and plugin navigation |
 | `PluginCapabilities` | What platform features the plugin needs |
 | `PluginType` | Enum: `STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, `FULL`, or `WORKFLOW` |
-| `PlatformContext` | The runtime object the platform hands to plugins |
+| `PlatformContext` | Long-lived runtime context; repositories retain request-scoped access |
+| `CurrentPluginActor`, `CurrentExperiment`, `CurrentPluginRuntime` | Typed request dependencies |
+| `PluginAccessPolicy`, `resolve_plugin_access_policy` | Effective CRUD/design/analysis write policy |
 | `mint_plugin` | Preferred class decorator for plugin metadata and runtime behavior |
 | `endpoint` | Decorator namespace for instance-method HTTP endpoints |
 | `generated_ui` | Class decorator that opts into the SDK-managed generated workspace |
 | `job` | Decorator for typed managed jobs |
 
-Source: [`mint_sdk/plugin.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/plugin.py), [`mint_sdk/models.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/models.py), [`mint_sdk/context.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/context.py).
+Source: [`mint_sdk/plugin.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/plugin.py), [`mint_sdk/models.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/models.py), [`mint_sdk/context.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/context.py).
 
 ### `AnalysisPlugin`
 
@@ -43,8 +45,8 @@ Optional lifecycle hooks (default to no-op):
 | Method | When called |
 |--------|-------------|
 | `check_health()` | Periodically by the platform and surfaced in **Admin -> Platform -> Server** |
-| `@on_event("experiment.before_save")` or legacy `on_before_experiment_save(...)` | Before any experiment write |
-| `@on_event("experiment.after_save")` or legacy `on_after_experiment_save(...)` | After a successful experiment write |
+| `@on_event("experiment.before_save")` or legacy `on_before_experiment_save(...)` | Before platform-service design-data save |
+| `@on_event("experiment.after_save")` or legacy `on_after_experiment_save(...)` | After platform-service design-data save |
 | `@on_event("experiment.status_changed")` or legacy `on_experiment_status_change(...)` | On status flip |
 | `@on_config_change(...)` / `apply_settings(settings)` | When plugin settings are applied |
 | `get_migrations_package()` | Returns dotted path; `None` (default) means no migrations |
@@ -60,7 +62,9 @@ Convenience methods:
 | `save_analysis(experiment_id, result)` | Save / update `PluginAnalysisResult` |
 | `save_analysis_artifact(experiment_id, result, *, artifact_key="default", display_name=None, note=None)` | Save / update one named `AnalysisArtifact` |
 | `save_analysis_artifacts(experiment_id, artifacts)` | Atomically save multiple `AnalysisArtifactInput` records |
-| `save_analysis_file_artifact(experiment_id, data, *, filename=None, artifact_key=None, kind="file", ...)` | Upload or reuse a file object and save a file-backed analysis artifact |
+| `save_analysis_file_artifact(experiment_id, data, *, filename=None, artifact_key=None, kind="file", ...)` | Create-only file artifact; existing key conflicts |
+| `update_analysis_file_artifact(experiment_id, artifact_key, data, *, expected_object_key=None, ...)` | CAS-replace an active file artifact; returns artifact and cleanup status |
+| `save_managed_job_artifact(...)` | Publish a managed job output as a durable artifact |
 | `load_analysis(experiment_id, fields=None)` | Load this plugin's `PluginAnalysisResult`; optionally project selected top-level result keys |
 | `load_analysis_artifact(experiment_id, *, artifact_key="default", plugin_id=None, fields=None)` | Load one active named artifact |
 | `load_analysis_file_artifact(experiment_id, path, *, artifact_key="default", plugin_id=None)` | Stream a file-backed artifact to a local path |
@@ -69,7 +73,7 @@ Convenience methods:
 | `restore_analysis_artifact(experiment_id, *, artifact_key="default")` | Restore one of this plugin's archived artifacts |
 | `load_artifacts(experiment_id)` | Legacy helper: load only `result["artifacts"]` (or a custom key) from `PluginAnalysisResult` |
 | `load_analyses(experiment_id, include_others=False)` | Load analysis results; defaults to this plugin's own result only |
-| `save(experiment_id, *, design=..., analysis=...)` | Save both at once |
+| `save(experiment_id, *, design=..., analysis=...)` | Sequential design and compatibility result saves; not atomic |
 | `load(experiment_id)` | Load both |
 | `delete_design(experiment_id)` | Delete design |
 | `delete_analysis(experiment_id)` | Delete analysis result |
@@ -87,7 +91,8 @@ Settings:
 | `@mint_plugin(config=SettingsModel)` | Preferred declaration for typed settings |
 | `settings` (property) | Current settings instance |
 | `apply_settings(dict)` | Validate + populate settings |
-| `save_settings_transactionally(dict_or_model, expected_revision=...)` | Persist a full settings replacement against an optional opaque revision |
+| `save_settings_transactionally(dict_or_model, expected_revision=...)` | Persist a full settings replacement; supply the opaque revision for a concurrency-safe edit |
+| `settings_revision` | Current opaque content revision |
 | `patch_settings_transactionally({...})` | Persist a shallow partial settings update with bounded CAS retries |
 | `get_configurable_settings()` | Auto-derived from decorator-owned config |
 
@@ -95,7 +100,7 @@ Standalone helpers:
 
 | Method | Purpose |
 |--------|---------|
-| `_setup_standalone_db(storage_dir=None)` | Initialize local SQLite |
+| `ensure_standalone_database(storage_dir=None)` | Public async standalone database initialization |
 | `_teardown_standalone_db()` | Close local SQLite |
 | `is_standalone` (property) | True when `_context is None` |
 
@@ -120,6 +125,8 @@ nav_items: list[PluginNavItem] = []
 analysis_result_readers: list[str] = []
 allowed_experiment_types: list[str] | None = None
 schema_version: str = "1.0"
+design_schema: dict[str, Any] | None = None
+design_schema_version: str | None = None
 dependencies: list[str] = []  # plugin slugs that must load first
 ```
 
@@ -168,7 +175,7 @@ class PluginType(str, Enum):
     WORKFLOW = "workflow"
 ```
 
-The original four types supply compatibility defaults for experiment CRUD, design-data writes, and analysis-result writes. `WORKFLOW` is fail-closed for all three. Set `PluginCapabilities.experiment_crud`, `design_data_write`, or `analysis_result_write` to `True` or `False` to override one default without changing the other two; `None` preserves the type default.
+Legacy defaults are read-only metadata plus analysis writes for `ANALYSIS`, CRUD/design for `EXPERIMENT_DESIGN`, all three for `FULL`, and no writes for `STATIC`. Explicit `PluginCapabilities` boolean fields override each corresponding default; `None` preserves it. `WORKFLOW` defaults to no writes and must request `experiment_crud=True` with design and analysis writes disabled. It does not own experiment designs or manage collaborators. See [Plugin types](/sdk/concepts/plugin-types).
 
 ### `PlatformContext`
 
@@ -181,10 +188,15 @@ The original four types supply compatibility defaults for experiment CRUD, desig
 | `get_optional_plugin_actor_dependency()` | Optional typed `PluginActor` dependency |
 | `get_job_visibility_dependency()` | Typed job-visibility dependency |
 | `get_user_repository()` | `UserRepository \| None` |
-| `get_experiment_repository()` | `ExperimentRepository \| None` |
+| `get_experiment_repository()` | Unified `ExperimentRepository \| None` |
+| `get_allowed_experiment_types()` | Effective type allowlist; `None` unrestricted, `[]` blocked |
+| `get_data_store(experiment_id, plugin_id=None)` | Scoped object store |
+| `get_file_browser()` | Read-only configured server mounts |
+| `actor_scope(actor)` | Async context manager for a trusted actor |
+| `get_plugin_data_repository()` | MINT 1.1 compatibility adapter over the experiment repository |
 | `get_plugin_role_repository()` | `PluginRoleRepository \| None` |
 | `require_plugin_role(*roles)` | FastAPI `Depends`-able |
-| `get_plugin_config()` | `PlatformConfig` (alias for `dict`) |
+| `get_plugin_config()` | `PlatformConfig` or awaitable, host-dependent; prefer typed `settings` |
 | `enqueue_notifications(...)` | Durable notification enqueue hook for supported platform integrations |
 | `publish_calendar_events(...)` | Durable calendar event publish/cancel hook for supported platform integrations |
 | `get_shared_db_session()` (async ctx) | SQLAlchemy session scoped to plugin's schema |
@@ -195,6 +207,7 @@ The original four types supply compatibility defaults for experiment CRUD, desig
 |--------|-------------|
 | `Experiment` | Dataclass — experiment row |
 | `DesignData` | Dataclass — per-experiment design payload |
+| `PluginExperimentData` | Backward-compat alias for `DesignData` |
 | `PluginAnalysisResult` | Dataclass — compatibility per-(experiment, plugin) analysis output |
 | `AnalysisArtifactInput` | Dataclass — one named artifact to save in an atomic batch |
 | `AnalysisArtifactSummary` | Dataclass — metadata-only artifact record |
@@ -204,17 +217,18 @@ The original four types supply compatibility defaults for experiment CRUD, desig
 | `UserPluginRole` | Dataclass — per-(user, plugin) role row |
 | `PlatformConfig` | Type alias `dict[str, Any]` for platform config view |
 
-Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/repositories.py).
+Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/repositories.py).
 
 ## Repository protocols
 
 | Symbol | Description |
 |--------|-------------|
-| `ExperimentRepository` | Experiment CRUD; `save_design_data`, `get_design_data`, `delete_design_data`; compatibility analysis results; and named analysis artifacts |
+| `ExperimentRepository` | CRUD plus `save_design_data`, `get_design_data`, `delete_design_data`, and all analysis/artifact methods below |
+| `PluginDataRepository` | `save_experiment_data`, `get_experiment_data`, `delete_experiment_data`, compatibility `save_analysis_result` / `get_analysis_result`, plus `save_analysis_artifact`, `create_analysis_artifact`, `save_analysis_artifacts`, `list_analysis_artifacts`, `get_analysis_artifact`, `archive_analysis_artifact`, `restore_analysis_artifact` |
 | `UserRepository` | `get_by_id`, `get_by_username`, `list_all` |
 | `PluginRoleRepository` | `get_role`, `set_role`, `remove_role`, `list_plugin_roles`, `list_user_roles` |
 
-All repository methods are async. Integrated plugins receive one visibility-scoped `ExperimentRepository`; the resolved access policy independently enforces experiment CRUD, owned design-data writes, and own analysis-result/artifact writes. The `PluginType` defaults match the table in [Plugin types](/sdk/concepts/plugin-types), and explicit capability fields can narrow or widen each write boundary. `WORKFLOW` must opt in to every write it needs.
+All repository methods are async. MINT 1.2 uses one scoped experiment repository governed by the effective write capabilities, actor visibility, experiment-type restrictions, data ownership, and reader declarations. Even `FULL` is scoped. `PluginDataRepository` retains the old design-method names for MINT 1.1 compatibility; new code should use the experiment repository or convenience helpers.
 
 `ExperimentRepository.get_analysis_results(experiment_id)` and `list_analysis_artifacts(experiment_id)` return only the calling plugin's own data by default. Pass `include_others=True` only for intentional cross-plugin reader plugins whose `analysis_result_readers` declaration allows those plugin IDs. `get_analysis_result_fields(...)` and `get_analysis_artifact(..., fields=[...])` project selected top-level keys from `result`.
 
@@ -225,7 +239,7 @@ All repository methods are async. Integrated plugins receive one visibility-scop
 | `LocalDatabase` | Local SQLite database used by standalone plugins |
 | `LocalDatabaseConfig` | `storage_dir` and other configuration |
 
-Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/local_database.py).
+Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/local_database.py).
 
 ## Lifecycle types
 
@@ -241,7 +255,7 @@ Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/
 |--------|-------------|
 | `get_plugin_logger(name)` | Structured logger with auto-attached fields |
 
-Source: [`mint_sdk/logging.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/logging.py).
+Source: [`mint_sdk/logging.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/logging.py).
 
 ## Exceptions
 
@@ -258,7 +272,7 @@ See [Exceptions](/sdk/api/exceptions) for the full taxonomy with constructor sig
 | `ConflictException` | Duplicate or state conflict |
 | `PluginLifecycleException` | Startup/shutdown/health failure |
 
-In FastAPI route handlers, use `HTTPException` when you need a specific HTTP status, or catch these SDK exceptions and translate them yourself.
+MINT 1.2 SDK hosts map typed exceptions to the canonical HTTP envelope automatically. `HTTPException` remains useful for an explicit status. See [Exceptions](/sdk/api/exceptions) for mapping and ownership/type-conflict subclasses.
 
 ## Migrations
 
@@ -295,6 +309,8 @@ See [Recipes → Testing plugins](/sdk/recipes/testing-plugins) for usage. Prefe
 | `auto_json_to_csv(data)` | Generic dict → flat CSV string |
 | `auto_json_to_summary(data)` | Generic dict → `{metadata, sections}` |
 | `ANALYSIS_ARTIFACTS_KEY` | Legacy conventional result key (`"artifacts"`) for references inside `PluginAnalysisResult` |
+| `DataObjectRef`, `ExperimentDataStore` | Typed object reference and storage protocol |
+| `design_schema_from_model(Model)` | JSON Schema from a Pydantic design model |
 
 `AnalysisPlugin.export_tree`, `export_summary`, `export_csv` use these by default; override on the plugin to customize.
 
@@ -308,7 +324,7 @@ See [Recipes → Testing plugins](/sdk/recipes/testing-plugins) for usage. Prefe
 | `PluginDependency` | Helper for declaring plugin-aware FastAPI deps |
 | `require_context` | FastAPI dependency that yields the active `PlatformContext` |
 
-Source: [`mint_sdk/app.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/app.py).
+Source: [`mint_sdk/app.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/app.py).
 
 Current `mint init` projects use the SDK-owned runtime target `mint_sdk.runtime:create_plugin_app`, which discovers the current project's single `mint.plugins` entry point and passes it to `create_standalone_app()`. Use `create_standalone_app(MyPlugin)` directly in tests or custom hosts when you already have the plugin class.
 
@@ -324,7 +340,7 @@ See [REST client](/sdk/api/client) for full signatures.
 
 - The package version is `mint_sdk.__version__`. With `hatch-vcs`, this is derived from the git tag at build time.
 - Modules prefixed with `_` (`mint_sdk._discover`, `mint_sdk._version`, `mint_sdk._prompt`) are internal and may break without notice. Use only the symbols documented in `__init__.py`.
-- For testing, see [`mint_sdk.testing`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk/testing) — exports may evolve faster than the main SDK; check the testing module's `__init__.py` in your installed version.
+- For testing, see [`mint_sdk.testing`](https://github.com/MorscherLab/MINT/tree/v1.2.0/packages/sdk-python/src/mint_sdk/testing) — exports may evolve faster than the main SDK; check the testing module's `__init__.py` in your installed version.
 
 ## Related
 

@@ -94,7 +94,7 @@ Before `initialize()` runs, `MigrationRunner` applies the plugin's pending migra
 - Compares applied revisions in `plugin_schema_migrations` with the on-disk revisions
 - Runs each pending migration in order
 
-A failure here puts the plugin in **Failed** state — its routes don't mount, and the admin UI surfaces the error. Fix the migration in a new plugin release; on next startup, the runner picks up where it left off.
+A failure here puts the plugin in **Failed** state — its routes don't mount, and the admin UI surfaces the error. Fix the failure in a new plugin release. The pending migration batch runs in one transaction; a failure rolls back that batch, which is retried on the next startup. Previously committed revisions remain applied.
 
 See [Migrations](/sdk/concepts/migrations) for the migration framework itself.
 
@@ -127,7 +127,7 @@ mode.
 The platform calls `await plugin.initialize(context)`:
 
 - `context` is a `PlatformContext` when integrated, or `None` when standalone
-- Use this hook to: stash the context, open external clients, populate caches, set up plugin-specific config
+- Use this hook to: stash the context, open external clients, populate caches, use already validated typed settings
 - The hook is awaited synchronously; routes don't mount until it returns
 - Raise `PluginLifecycleException` (or any exception) to abort initialization
 - You only override it when the plugin owns startup resources. The SDK default stores the context.
@@ -137,7 +137,7 @@ from mint_sdk import PluginLifecycleException
 
 class MyPlugin(AnalysisPlugin):
     async def initialize(self, context=None):
-        self._context = context
+        await super().initialize(context)
         if not self._validate_config():
             raise PluginLifecycleException(
                 "MyPlugin requires 'thresholds' in plugin settings",
@@ -168,8 +168,8 @@ While ready, the platform or SDK runtime may also call:
 | Hook | When |
 |------|------|
 | `@health_check` / `check_health()` | Periodically and on demand from admin status |
-| `@on_event("experiment.before_save")` | Before an experiment write; may veto the write |
-| `@on_event("experiment.after_save")` | After a successful experiment write |
+| `@on_event("experiment.before_save")` | Before platform design-data save; may veto the write |
+| `@on_event("experiment.after_save")` | After platform design-data save |
 | `@on_event("experiment.status_changed")` | Status flip such as `ongoing -> completed` |
 | `@on_config_change` | When platform plugin settings are saved/reset or applied at startup |
 | `@notify` | When plugin code returns a typed notification event |
@@ -202,7 +202,7 @@ The admin chooses one of three modes:
 | Mode | Effect on plugin-owned data |
 |------|-----------------------------|
 | **keep** (default) | Tables and rows remain. Reinstalling the plugin restores access. |
-| **archive** | Tables renamed with an `archived_<timestamp>_` prefix. Unreachable but recoverable via raw SQL. |
+| **archive** | Plugin schema is renamed to an archived schema; recovery requires administrator database work. |
 | **purge** | Tables, rows, and uploaded artifacts dropped. Irreversible. |
 
 The browser UI and normal CLI path use the safe default: remove the package and
@@ -210,13 +210,71 @@ keep plugin-owned data. The plugin manager also tracks unfinished cleanup for
 manifest, notification, and calendar data so interrupted uninstalls can be
 finalized later.
 
+## Shutdown and resource cleanup
+
+When the host stops or unloads the plugin, close plugin-owned clients and tasks in `shutdown()`. Call the base `initialize()` when overriding it so persistence and context helpers retain their normal behavior.
+
+```python
+import httpx
+from mint_sdk import AnalysisPlugin, PlatformContext
+
+class MyPlugin(AnalysisPlugin):
+    async def initialize(self, context: PlatformContext | None = None) -> None:
+        await super().initialize(context)
+        self._http = httpx.AsyncClient(timeout=20.0)
+
+    async def shutdown(self) -> None:
+        await self._http.aclose()
+```
+
+## Typed events and their limits
+
+Use decorators for new handlers. A before-save validator should scope itself to its own design payload, because the platform broadcasts experiment events:
+
+```python
+from mint_sdk import BeforeExperimentSave, LifecycleHookResult, on_event
+
+@on_event("experiment.before_save")
+async def validate_design(self, event: BeforeExperimentSave) -> LifecycleHookResult:
+    if event.data.get("plugin_id") != self.metadata.name:
+        return LifecycleHookResult(success=True)
+    payload = event.data.get("data", {})
+    if not payload.get("samples"):
+        return LifecycleHookResult(success=False, message="Add at least one sample")
+    return LifecycleHookResult(success=True)
+```
+
+For platform design saves, `event.data` contains `{ "plugin_id": ..., "data": ... }`; it is not the inner design payload directly. Typed events also provide `experiment_id` and optional `experiment`, `request_id`, and `actor` information. Do not assume optional context is present for every host or legacy path.
+
+`experiment.before_save` is blocking. SDK decorator dispatch converts vetoes and handler failures into a rejected operation. After-save/status handlers are isolated observers; their failures do not roll back the completed operation. Legacy overridden methods remain migration paths and have different error-isolation behavior, so do not rely on an exception in a legacy before-save method as a validator.
+
+These are platform-service events, not database triggers. Direct scoped repository writes and `self.save_design()` do not automatically traverse every platform service hook. Enforce invariants that must apply to every design write with `design_schema`; perform operation-specific validation before calling a repository. Keep hooks fast and avoid saving the same design recursively from its own event handler.
+
+For plugin-local events, use a namespaced name with `await self.emit_event("my-plugin.refreshed", payload)` and a matching `@on_event` observer. This is not a durable job queue or a cross-plugin message bus.
+
+## Settings revisions and runtime changes
+
+`@on_config_change()` receives a `ConfigChange[Settings]` with the current typed settings, previous settings when available, source, and explicitly supplied fields. Startup hooks run before `initialize()`; later saves run the same side effects. Avoid hooks that require a client not yet opened by `initialize()`.
+
+```python
+candidate = self.settings.model_copy(update={"min_signal": 1500})
+await self.save_settings_transactionally(
+    candidate, expected_revision=self.settings_revision,
+)
+
+# For a shallow partial update, read/retry against the latest durable snapshot:
+await self.patch_settings_transactionally({"min_signal": 1500})
+```
+
+Revisions are opaque content ETag/CAS tokens, not increasing migration numbers. A stale full replacement conflicts; it does not merge or retry automatically. A patch is shallow, so a supplied nested object replaces that field rather than deep-merging it. Settings revisions, package versions, SQL migration integers, and design payload schema versions solve different problems.
+
 ## Failed state
 
 A plugin reaches **Failed** when:
 
 - A migration raises during `Migrating`
 - `initialize()` raises during `Initializing`
-- `check_health()` consistently returns `HealthStatus.UNHEALTHY`
+- Typed startup configuration or its change hook fails
 
 Failed plugins are surfaced in admin status with the failure reason. They do
 not accept plugin HTTP traffic. Ship a fixed plugin release or fix the
@@ -237,6 +295,10 @@ configuration, then restart/reload the server so startup can retry.
 | `@on_config_change(...)` | no | Requires a `@mint_plugin(config=...)` model |
 | `get_migrations_package()` | no | Returns `None` (no migrations) |
 | `get_shared_models()` | no | Returns `[]` (no tables) |
+
+Health is a runtime diagnostic; an unhealthy report alone should not be described as an automatic route unload. Inspect the admin error and logs for the actual startup/runtime failure.
+
+Verified against [v1.2.0 plugin lifecycle](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/plugin.py), [settings](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/plugin_settings.py), and [platform design-save service](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/services/experiment_service.py).
 
 ## Next
 

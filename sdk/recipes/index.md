@@ -19,13 +19,13 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 
 | Recipe | When |
 |--------|------|
-| [Route permissions](/sdk/recipes/route-permissions) | `require_plugin_role`, combining with platform permissions |
+| [Route permissions](/sdk/recipes/route-permissions) | Typed actors, SDK permission guards and experiment visibility |
 
 ## Reliability
 
 | Recipe | When |
 |--------|------|
-| [Error handling](/sdk/recipes/error-handling) | Use `HTTPException` at route boundaries; keep SDK exceptions in service code |
+| [Error handling](/sdk/recipes/error-handling) | Typed SDK errors, HTTP envelopes and request IDs |
 | [Logging & tracing](/sdk/recipes/logging-tracing) | Structured logs via `get_plugin_logger`; request-scoped fields |
 | [Testing plugins](/sdk/recipes/testing-plugins) | In-memory repos, fixtures, end-to-end tests with TestClient |
 

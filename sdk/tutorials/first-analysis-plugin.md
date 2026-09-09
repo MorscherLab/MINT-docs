@@ -10,10 +10,10 @@ By the end you will have:
 - A `.mint` bundle ready to install
 
 **Time:** 20-30 minutes
-**Prereqs:** Python 3.12+, `uv`, and the `mint` CLI from `mint-sdk`
+**Prereqs:** Python 3.12+, `uv`, and the MINT v1.2 SDK. Install the CLI with `uv tool install "mint-sdk[cli]==1.2.0"`; the generated project has its own environment.
 
 ::: info Current CLI shape
-MINT v1.1.9 does not have `mint add job`. Start a job-based plugin with `mint init --mode generated`, or add `@job` methods directly to an existing plugin class.
+MINT v1.2.0 does not have `mint add job`. Start a job-based plugin with `mint init --mode generated`, or add `@job` methods directly to an existing plugin class.
 :::
 
 ## 1. Scaffold the Project
@@ -48,9 +48,10 @@ hello-mint/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml
-│       └── release.yml
+│       ├── release.yml
+│       └── sdk-auto-update.yml
 ├── .gitignore
-├── CLAUDE.md
+├── CLAUDE.md                 # Default; --ai-assistant codex emits Codex guidance
 ├── README.md
 ├── pyproject.toml
 ├── src/
@@ -110,7 +111,9 @@ Three decorators do the work:
 | `@generated_ui()` | The plugin uses the SDK-managed form/result workspace |
 | `@job(...)` | A typed calculation the runtime can submit, track, cancel, and render |
 
-The package name and dependency versions still live in `pyproject.toml`. Do not duplicate package identity inside the class.
+The package name and dependency constraints live in `pyproject.toml`. The scaffold uses `dynamic = ["version"]` with `hatch-vcs`; Git tags supply the package version, with `0.1.0` as the fallback before a tag exists. Do not duplicate package identity inside the class. See [packaging](/sdk/operations/packaging) for bundle and release versioning.
+
+`PluginCapabilities()` uses the `ANALYSIS` default write policy: it can write its own analysis results when integrated, but cannot create experiments or change design data. The sample calculation uses no platform repository and saves no experiment artifact. Add `requires_auth=True` and the required platform capabilities when connecting real data; a generated form alone does not authorize access to experiments.
 
 ## 3. Run the Job Test
 
@@ -139,37 +142,64 @@ uv run pytest -q
 
 ## 4. Make the Job More Real
 
-Replace `analyze()` with a small normalization example:
+Replace `analyze()` with a normalization example that accepts finite, nonnegative intensities. Add these imports at the top of `plugin.py`:
+
+```python
+from typing import Annotated
+
+from pydantic import Field
+
+Intensity = Annotated[float, Field(ge=0, allow_inf_nan=False)]
+```
+
+Then replace the method inside `HelloMintPlugin`:
 
 ```python
 @job(
     title="Normalize intensities",
-    description="Divide every value by the largest value in the submitted list.",
+    description="Divide every value by the largest submitted intensity.",
     cpu=1,
 )
-def analyze(self, values: list[float] | None = None) -> dict[str, object]:
-    submitted = values or [1.0, 2.0, 4.0]
-    maximum = max(submitted) if submitted else 0.0
-    normalized = [value / maximum for value in submitted] if maximum else []
+def analyze(
+    self,
+    values: Annotated[list[Intensity], Field(min_length=1)],
+) -> dict[str, object]:
+    maximum = max(values)
+    normalized = [value / maximum if maximum else 0.0 for value in values]
     return {
-        "count": len(submitted),
+        "count": len(values),
         "maximum": maximum,
         "normalized": normalized,
     }
 ```
 
-Then update the test:
+The job schema rejects empty lists, negative intensities, and non-finite values. All-zero inputs produce zeros instead of a division error. Nothing replaces an explicitly submitted empty list with sample data.
+
+Update `tests/test_plugin.py`:
 
 ```python
-def test_generated_manifest_exposes_job() -> None:
-    with PluginTestHarness(HelloMintPlugin) as harness:
-        completed = harness.run("analyze", values=[2.0, 4.0, 8.0])
+import pytest
+from mint_sdk.testing import PluginTestHarness
 
-    assert completed.value == {
-        "count": 3,
-        "maximum": 8.0,
-        "normalized": [0.25, 0.5, 1.0],
-    }
+from mint_plugin_hello_mint.plugin import HelloMintPlugin
+
+
+@pytest.mark.parametrize(
+    ("values", "expected"),
+    [
+        ([2.0, 4.0, 8.0], {
+            "count": 3, "maximum": 8.0, "normalized": [0.25, 0.5, 1.0],
+        }),
+        ([0.0, 0.0], {
+            "count": 2, "maximum": 0.0, "normalized": [0.0, 0.0],
+        }),
+    ],
+)
+def test_normalization(values: list[float], expected: dict[str, object]) -> None:
+    with PluginTestHarness(HelloMintPlugin) as harness:
+        completed = harness.run("analyze", values=values)
+
+    assert completed.value == expected
 ```
 
 Checkpoint:
@@ -216,7 +246,7 @@ mint build .
 The bundle lands in:
 
 ```text
-dist/hello-mint-<version>.mint
+dist/mint-plugin-hello-mint-<version>.mint
 ```
 
 A `.mint` bundle contains the plugin wheel, manifest, and any bundled frontend assets. Generated-mode plugins usually have no `frontend/` directory because the UI is supplied by the SDK.

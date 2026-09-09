@@ -1,138 +1,102 @@
-# Querying plugin data
+# Querying plugin-owned tables
 
-## Goal
+Use `get_plugin_db_session()` for the SQLModel tables returned by your plugin's `get_shared_models()`. This recipe uses the owner-scoped `Panel` model from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables).
 
-Run SQL queries against the plugin's own tables — the ones declared via migrations or `get_shared_models()`.
-
-## Open a session
+## Read within a scoped session
 
 ```python
-from sqlalchemy import select
-from my_plugin.models import Panel
+from mint_sdk import CurrentPluginActor, endpoint
+from sqlmodel import select
+from mint_plugin_panel_designer.models import Panel
+from mint_plugin_panel_designer.plugin import PanelOutput
 
-class MyPlugin(AnalysisPlugin):
-    async def list_panels(self, experiment_id: int):
-        async with self.get_plugin_db_session() as session:
-            result = await session.execute(
-                select(Panel).where(Panel.experiment_id == experiment_id)
-            )
-            return result.scalars().all()
-```
-
-`get_plugin_db_session()` is the **mode-portable** way to get a session: it uses the platform's shared schema in integrated mode and `LocalDatabase` (SQLite) in standalone. Use it instead of `self._context.get_shared_db_session()` directly so your plugin keeps working under tests.
-
-## Filtering with `WHERE`
-
-```python
-async def find_by_drug(plugin, drug_name: str):
-    async with plugin.get_plugin_db_session() as session:
+# Method on PanelDesignerPlugin:
+@endpoint.get("/recent-panels", response_model=list[PanelOutput])
+async def recent_panels(self, actor: CurrentPluginActor) -> list[PanelOutput]:
+    async with self.get_plugin_db_session() as session:
         result = await session.execute(
             select(Panel)
-            .where(Panel.drugs.contains([{"name": drug_name}]))
-            .order_by(Panel.created_at.desc())
+            .where(Panel.owner_user_id == actor.user_id)
+            .order_by(Panel.name, Panel.id)
             .limit(50)
         )
-        return result.scalars().all()
+        return [PanelOutput.model_validate(panel) for panel in result.scalars()]
 ```
 
-For JSON-key matching (Postgres `@>` containment), use SQLAlchemy's JSON column ops. SQLite doesn't have a native equivalent — if you need the same query in standalone mode, either accept slower table scans or extract the field into a relational column.
+The session is an SQLAlchemy `AsyncSession`: use `await session.execute(...)`, then `result.scalars()` for ORM rows. Do not assume the SQLModel synchronous `session.exec()` convenience method is available.
 
-## Aggregations
+PostgreSQL integrated sessions set the plugin schema search path. Standalone sessions use SQLite. An installed isolated subprocess has no shared database session in 1.2.0, so this capability requires in-process deployment.
+
+Schema scoping is table ownership, not user authorization. The platform cannot infer ownership rules for arbitrary rows. Filter every read/update/delete by the trusted actor or an explicitly authorized experiment. `requires_auth=True` authenticates the caller; it does not add SQL predicates. Build response objects while the session is open to avoid detached objects or lazy-loading surprises.
+
+## Insert, replace JSON, and commit
+
+```python
+# Inside a handler that receives a validated PanelInput body and trusted actor:
+async with self.get_plugin_db_session() as session:
+    panel = Panel(owner_user_id=actor.user_id, **body.model_dump(mode="json"))
+    session.add(panel)
+    await session.flush()
+    result = PanelOutput.model_validate(panel)
+# Successful exit commits the row.
+return result
+```
+
+Both standalone and in-process session context managers commit on successful exit and roll back on exception. Use `flush()` to send writes and surface constraint errors before producing the response; use `refresh()` when you need server-generated values. Explicit `commit()` is possible, but commits earlier: a later exception cannot undo work already committed.
+
+For a batch, use one context and `session.add_all(panels)`. Let exceptions propagate out of the context if the batch must roll back. Catch and translate expected database errors **outside** the context; otherwise the context may attempt to commit a failed transaction.
+
+For JSON columns, assign a replacement value:
+
+```python
+panel.drugs = body.model_dump(mode="json")["drugs"]
+```
+
+In-place changes such as `panel.drugs.append(...)` are not automatically tracked by a plain SQLAlchemy JSON column. Use replacement assignment, or explicitly configure/test SQLAlchemy mutable tracking when the application needs it.
+
+## Parameterized raw SQL
+
+Inside an ordinary plugin session, unqualified `panels` resolves through the scoped PostgreSQL search path. Bind user-controlled values:
+
+```python
+import sqlalchemy as sa
+
+async with self.get_plugin_db_session() as session:
+    result = await session.execute(
+        sa.text("SELECT id, name FROM panels WHERE owner_user_id = :owner ORDER BY name"),
+        {"owner": actor.user_id},
+    )
+    rows = [dict(row) for row in result.mappings()]
+```
+
+Migration raw SQL has a different search-path rule: use `op.qualified_table("panels")` there. Do not interpolate user input into table names, column names, sort clauses, or SQL values.
+
+## Aggregation and indexes
 
 ```python
 from sqlalchemy import func
 
-async def summary_by_experiment(plugin):
-    async with plugin.get_plugin_db_session() as session:
-        result = await session.execute(
-            select(
-                Panel.experiment_id,
-                func.count(Panel.id).label("count"),
-                func.max(Panel.created_at).label("last_modified"),
-            )
-            .group_by(Panel.experiment_id)
-        )
-        return [
-            {"experiment_id": row.experiment_id,
-             "count": row.count,
-             "last_modified": row.last_modified}
-            for row in result
-        ]
+async with self.get_plugin_db_session() as session:
+    result = await session.execute(
+        select(func.count(Panel.id)).where(Panel.owner_user_id == actor.user_id)
+    )
+    panel_count = int(result.scalar_one())
 ```
 
-## Inserts and updates
+Use indexes that match actual filters. The tutorial declares `owner_user_id` as indexed in both the model and initial migration. If you add a composite index later, add it to current model metadata as well as the next migration so model-created fresh databases have it too. Validate the PostgreSQL query plan when optimizing production queries.
 
-The session is async; commit before the context closes:
+Generic `sa.JSON` is useful for portable storage, but JSON containment semantics are not portable. Do not assume `.contains(...)` on that column becomes PostgreSQL `JSONB @>` or works identically on SQLite. For frequent drug-name lookup, consider a normalized child table with an indexed drug-name column. If using PostgreSQL-specific JSONB operators, declare the type deliberately and test the SQLite alternative separately.
 
-```python
-async def add_panel(plugin, *, experiment_id: int, name: str, drugs: list):
-    async with plugin.get_plugin_db_session() as session:
-        panel = Panel(experiment_id=experiment_id, name=name, drugs=drugs)
-        session.add(panel)
-        await session.commit()
-        await session.refresh(panel)
-        return panel
-```
+## Relating rows to platform experiments
 
-For batch inserts, use a single transaction:
+An `experiment_id` field alone proves nothing about access. Use `CurrentExperiment` on an endpoint with an `{experiment_id}` path parameter, then filter the plugin rows by that resolved experiment ID. It checks view permission and resolves the experiment through the visible/type-scoped repository. Mutating endpoints need the corresponding explicit user permission as well as the plugin's allowed write capability.
 
-```python
-async def bulk_add(plugin, panels: list[Panel]):
-    async with plugin.get_plugin_db_session() as session:
-        session.add_all(panels)
-        await session.commit()
-```
+MINT does not automatically cascade platform experiment deletion into arbitrary plugin tables. Decide whether to retain an audit record, react to a supported lifecycle event, or delete related rows through an explicit cleanup workflow. Avoid direct cross-schema writes to platform tables.
 
-## Soft deletes
+## Sharing with other plugins
 
-If you need restorable deletes, add a `deleted_at` column in a migration and filter explicitly:
+Do not query another plugin's SQL schema. Publish supported design data, analysis results/artifacts, or an authorized API contract. Cross-plugin analysis reads require an explicit `analysis_result_readers` allowlist on the consuming plugin; published results are not unconditionally visible to all plugins or users.
 
-```python
-async def list_active(plugin, experiment_id: int):
-    async with plugin.get_plugin_db_session() as session:
-        result = await session.execute(
-            select(Panel).where(
-                Panel.experiment_id == experiment_id,
-                Panel.deleted_at.is_(None),
-            )
-        )
-        return result.scalars().all()
-```
+Use `load_analysis(experiment_id, plugin_id="producer-id")` through the SDK for allowed analysis-result reads, and object-store APIs for referenced data. Platform services enforce the permitted producer identity and experiment access. See [PlatformContext](/sdk/concepts/platform-context) and [Data model](/sdk/concepts/data-model).
 
-The platform doesn't impose a soft-delete model on plugin tables — choose what fits your data.
-
-## Indexing for performance
-
-Add indexes via migrations. Common patterns:
-
-| Pattern | Recipe |
-|---------|--------|
-| Look up by experiment | `create_index("idx_panels_exp", "panels", ["experiment_id"])` |
-| Look up by created_at desc | `create_index("idx_panels_created_at", "panels", ["created_at"])` (Postgres handles desc reads on ascending indexes) |
-| Composite filter | `create_index("idx_panels_exp_created", "panels", ["experiment_id", "created_at"])` |
-| Unique constraint | `create_index("uq_panels_name", "panels", ["experiment_id", "name"], unique=True)` |
-
-Add indexes lazily — only when you have a query plan that needs them. Excess indexes slow writes.
-
-## Cross-plugin queries
-
-A plugin's tables live in its own Postgres schema, isolated from other plugins. Cross-plugin reads are not supported through `get_shared_db_session()`. If two plugins need to share data, the right model is:
-
-1. The producer plugin saves a `PluginAnalysisResult` or named analysis artifact.
-2. The consumer declares the producer's exact plugin ID with `@mint_plugin(..., analysis_result_readers=["producer-plugin"])`.
-3. The consumer reads it via `ExperimentRepository.get_analysis_result(experiment_id, "producer-plugin")`, or passes `include_others=True` to the matching list method.
-
-Without that declaration, the repository exposes only the consumer's own outputs and rejects direct reads of another plugin's result. `include_others=True` means “include declared readers,” not “include every plugin.” This keeps data ownership clear and avoids tight coupling between plugin schemas.
-
-## Notes
-
-- The session's `search_path` (Postgres) or working schema (SQLite) is set automatically — unqualified table names resolve to your plugin's schema.
-- Don't hold sessions across `await` boundaries longer than necessary — they tie up a connection from the pool.
-- Plugin sessions don't auto-roll-back on exception. Use `async with` so the context manager handles cleanup, and call `await session.commit()` explicitly when ready.
-- For raw SQL, use `await session.execute(text("..."))`. Parameterize values; never f-string user input into SQL.
-
-## Related
-
-- [Concepts → Migrations](/sdk/concepts/migrations) — adding columns and indexes
-- [Recipes → Backfill migrations](/sdk/recipes/backfill-migration) — chunked data updates
-- [Tutorials → Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) — full example with CRUD
+Use [Migrations](/sdk/concepts/migrations) for schema evolution and [Backfill migrations](/sdk/recipes/backfill-migration) for historical row updates.

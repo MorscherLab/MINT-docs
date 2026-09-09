@@ -1,8 +1,43 @@
 # CLI reference
 
-The `mint` CLI ships with `mint-sdk`. This page summarizes the subcommands and primary flags from `mint_sdk/cli.py`. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
+The `mint` CLI ships with `mint-sdk`. This page documents the released **v1.2.0** command surface. Run `mint <command> --help` for the complete options on your installed version. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
 
-Source: [`mint_sdk/cli.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/cli.py) and [`mint_sdk/cli_commands/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk/cli_commands).
+Source: [`mint_sdk/cli.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/cli.py) and [`mint_sdk/cli_commands/`](https://github.com/MorscherLab/MINT/tree/v1.2.0/packages/sdk-python/src/mint_sdk/cli_commands).
+
+## Install and choose the environment
+
+```bash
+uv tool install 'mint-sdk[cli]==1.2.0'
+mint --version
+mint --help
+```
+
+Python 3.12+ is required. The `[cli]` extra supplies Typer; the bare runtime
+package does not guarantee a usable CLI. `mint init` creates a project dev
+group with `[cli,server]`; after `uv sync`, prefer `uv run mint ...` inside the
+project to use its selected SDK. Database plugins also need `[local-db]`.
+
+## A complete development loop
+
+```bash
+mint init lab-qc --mode standard --type analysis --ai-assistant codex --yes
+cd lab-qc
+uv run mint dev
+# Stop the dev server with Ctrl+C before continuing.
+uv run mint docs contract .
+uv run mint sdk generate
+uv run mint sdk generate --check
+uv run mint doctor --strict
+uv run pytest
+uv run mint build .
+uv run mint verify .
+```
+
+`verify` requires Docker and exercises installation/restart/plugin loading in a
+disposable platform. `deploy` and `plugin upload` instead change a running
+platform. Use [the deployment guide](/sdk/operations/deploying) for that step.
+For generated UI choose `--mode generated --type analysis`. Other types require
+standard mode in v1.2.0.
 
 ## Top-level
 
@@ -89,13 +124,29 @@ Administer plugins on a running platform. These commands call platform APIs and 
 | `mint plugin github install <repo-or-url> [--tag TAG] [--asset-pattern GLOB] [--force] [--json]` | Install a GitHub release asset |
 | `mint plugin github releases <repo-or-url> [--asset-pattern GLOB] [--json]` | List releases and matching plugin assets |
 | `mint plugin config get <plugin-name>` | Print plugin settings |
-| `mint plugin config set <plugin-name> --json-config JSON` | Replace plugin settings |
-| `mint plugin config set <plugin-name> --file settings.json` | Replace plugin settings from a file |
+| `mint plugin config set <plugin-name> --revision REV --json-config JSON` | Replace plugin settings |
+| `mint plugin config set <plugin-name> --revision REV --file settings.json` | Replace plugin settings from a file |
 | `mint plugin config update <plugin-name> --json-config JSON` | Patch plugin settings |
 | `mint plugin index list [--json]` | List extra package index URLs |
 | `mint plugin index set <url> [<url> ...] [--json]` | Replace extra package index URLs |
 
-(Read `plugin_cmd.py` for the exact flag list.)
+`config get` returns the opaque revision required by a full `config set`.
+Copy that revision unchanged; a stale full replacement fails with a conflict.
+Use `config update --json-config JSON` or `--file settings.json` for a shallow
+patch. Preserve managed secret references returned by the platform instead of
+substituting masked values. See [platform settings](/sdk/concepts/platform-context).
+
+Runtime registration is also available:
+
+| Subcommand | Purpose |
+|---|---|
+| `mint plugin runtime external <name> <url> [--prefix PATH] [--base-path PATH] [--rewrite\|--pass-through]` | Register an already running plugin server |
+| `mint plugin runtime docker <name> <image> [--container-port N] [--host-port N] [--platform-url URL] [--network NAME]` | Register a container runtime for the platform to start |
+
+These operate on the platform host; paths and URLs must be reachable there.
+See [isolation](/sdk/concepts/isolation) for runtime support and limitations.
+
+Source: [plugin commands](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/cli_commands/plugin_cmd.py).
 
 ### `mint admin`
 
@@ -146,7 +197,7 @@ mint init [DIRECTORY] [flags]
 | `DIRECTORY` (positional) | Target directory (default `.`) |
 | `--name`, `-n` | Plugin name (human-readable) |
 | `--description`, `-d` | One-line description |
-| `--type`, `-t` | Plugin type: `analysis`, `experiment-design`, `static`, or `full` |
+| `--type`, `-t` | Plugin type: `analysis`, `experiment-design`, `workflow`, `static`, or `full` |
 | `--mode` | Plugin mode: `generated` (SDK-managed UI + `@job`) or `standard` (FastAPI-style `@endpoint` + Vue workspace) |
 | `--no-install` | Skip `uv sync` and `bun install` |
 | `--no-git` | Skip `git init` |
@@ -157,6 +208,8 @@ mint init [DIRECTORY] [flags]
 | `--email` | Override `git config user.email` |
 
 Without `--yes`, missing fields are prompted interactively. With `--yes`, the AI-assistant file defaults to `claude`, which creates `CLAUDE.md`. If `mint doctor` says that file is missing current SDK guidance, run `mint doctor --fix` once to refresh it. `--ai-assistant none` skips assistant files, but the current `mint doctor` check still expects one of those files; run `mint doctor --fix` if you later want a passing doctor report.
+
+The v1.2.0 parser accepts `workflow`, although `init --help` still omits it from its type description. Generated mode accepts only `analysis`; use standard mode for the other types.
 
 Use `generated` mode for the first plugin unless you know you need a custom Vue workspace. Use `standard` mode when the UI needs custom layout, custom controls, or multiple interactive views.
 
@@ -205,7 +258,7 @@ mint build [PATH] [flags]
 | `--no-frontend` | Skip the frontend build step |
 | `--vendor-deps` | Include dependency wheels in the bundle (opt-in) |
 | `--output-dir` | Output directory (default `dist`) |
-| `--include-wheel` | Include the built wheel alongside the `.mint` bundle output |
+| `--include-wheel PATH` | Vendor an existing extra `.whl`; repeat for multiple wheels |
 
 Output: `dist/<name>-<version>.mint`. Note the `.mint` extension.
 
@@ -266,7 +319,7 @@ Add common plugin pieces to an existing project.
 | `mint add data-template-pack [pack] [--list] [--json] [--generate] [--page] [--path PATH]` | Add a curated data-template pack |
 | `mint add data-template-preset [preset] [--list] [--json] [--page] [--path PATH]` | Add a ready-to-save data-template preset |
 
-There is no `mint add job` command in MINT v1.1.9. Use `mint init --mode generated` for the current job scaffold, or add `@job` methods by hand.
+There is no `mint add job` command in MINT v1.2.0. Use `mint init --mode generated` for the current job scaffold, or add `@job` methods by hand.
 
 ### `mint verify`
 
@@ -283,10 +336,10 @@ Common flags:
 | `PATH` (positional) | Plugin project directory (default `.`) |
 | `--image` | Platform image to verify against |
 | `--channel` | Platform channel to verify against |
-| `--force` | Replace an existing installed copy |
+| `--force` | Skip ordinary dependency conflict checks; platform/SDK compatibility constraints still apply |
 | `--no-frontend` | Skip frontend build |
 | `--vendor-deps` | Vendor dependency wheels into the bundle |
-| `--include-wheel` | Include the built wheel alongside the bundle |
+| `--include-wheel PATH` | Vendor an existing extra `.whl` (repeatable) |
 | `--bundle` | Reuse an existing `.mint` bundle |
 | `--timeout` | Verification timeout |
 | `--keep` | Keep the verification environment for inspection |
@@ -305,11 +358,11 @@ Common flags:
 |------|--------|
 | `PATH` (positional) | Plugin project directory (default `.`) |
 | `--to` | Target platform URL |
-| `--force` | Replace an existing installed copy |
+| `--force` | Skip ordinary dependency conflict checks; platform/SDK compatibility constraints still apply |
 | `--restart` / `--no-restart` | Restart platform/plugin process after deploy |
 | `--no-frontend` | Skip frontend build |
 | `--vendor-deps` | Vendor dependency wheels into the bundle |
-| `--include-wheel` | Include the built wheel alongside the bundle |
+| `--include-wheel PATH` | Vendor an existing extra `.whl` (repeatable) |
 | `--bundle` | Deploy an existing `.mint` bundle |
 | `--timeout` | Deploy timeout |
 | `--json` | Output machine-readable results |
@@ -339,10 +392,18 @@ mint sdk unlink
 Refresh SDK pins.
 
 ```bash
-mint sdk update [--scope patch|minor|major] [--dry-run] [--no-sync]
+mint sdk update [PATH] [--scope patch|minor|major] [--channel stable|beta]
+                [--version VERSION] [--dry-run] [--no-sync] [--verify]
 ```
 
-`--scope` controls the maximum version-bump kind allowed; `--dry-run` previews; `--no-sync` skips the post-update lockfile sync.
+The default is the stable patch channel. `--version 1.2.0` selects one exact
+release; Python and frontend lockfiles resolve to the same release. The newest candidate is selected first, then checked against Python upper
+bounds, exclusions and `requires_mint`; an excluded candidate fails rather
+than falling back to an older allowed release. A valid Python
+compatibility floor is preserved, so raise it explicitly for newly required
+APIs. `--dry-run` previews changes, `--no-sync` skips installs/lock validation,
+and `--verify` chains Docker verification against the stable/beta channel.
+See [upgrading to 1.2](/sdk/operations/upgrading-sdk).
 
 ### `mint sdk generate`
 
@@ -361,6 +422,29 @@ Generated frontend plugins get:
 
 The TypeScript file exports `useGeneratedPluginClient()`, `useGeneratedPluginContract()`, typed endpoint metadata, page selector items, settings helpers when a backend declares `@mint_plugin(config=SettingsModel)`, and upload/download/SSE helpers for matching endpoints.
 
+## Platform daemon commands
+
+These require a configured platform installation on the local host; they do
+not scaffold a platform or contact the remote CLI authentication target.
+
+| Command | Purpose |
+|---|---|
+| `mint daemon --platform-dir PATH [--host HOST] [--port N]` | Run the platform in the foreground (default port `8001`) |
+| `mint platform daemon start --platform-dir PATH` | Start a background platform daemon |
+| `mint platform daemon status --platform-dir PATH` | Inspect its state |
+| `mint platform daemon logs --platform-dir PATH` | Read its logs |
+| `mint platform daemon restart --platform-dir PATH` | Restart it |
+| `mint platform daemon stop --platform-dir PATH` | Stop it |
+
+`mint dev` serves a plugin, while these commands serve the platform. Production
+platform setup remains a [Linux administration task](/get-started/install-direct).
+
+## Version-specific boundaries
+
+In released v1.2.0 there is no `mint add job` or `mint db` command. Define jobs
+in Python, and create table migrations with `mint add migration`. Migration
+execution is handled during plugin startup; see [migrations](/sdk/concepts/migrations).
+
 ## Configuration files
 
 | Path | Purpose |
@@ -371,7 +455,7 @@ The TypeScript file exports `useGeneratedPluginClient()`, `useGeneratedPluginCon
 
 ## Notes
 
-- The `mint` CLI is the user-facing binary; `mint_sdk.cli:main` is the entry point. Don't import the CLI module from your plugin code.
+- The `mint` CLI is the user-facing binary; `mint_sdk.cli_entry:main` is the console entry point. Don't import the CLI module from your plugin code.
 - For programmatic platform access, use `MINTClient` — the CLI itself uses it under the hood.
 - Plugin discovery uses the `mint.plugins` entry-point group.
 

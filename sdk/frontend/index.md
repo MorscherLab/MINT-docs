@@ -1,13 +1,25 @@
 # Frontend SDK
 
-`@morscherlab/mint-sdk` is the Vue 3 component library and composable set used by every plugin frontend. It ships about 90 component exports, 60+ public composables/helpers, a Vue install plugin, generated-contract clients, compact control schemas, and a comprehensive design-token system — all tuned to the platform's design language so plugin frontends feel native without per-plugin theming.
+`@morscherlab/mint-sdk` **1.2.0** provides Vue 3 components, composables, generated-contract clients, compact control schemas, and design tokens for custom plugin frontends. Use `mint init --mode standard` for a Vue workspace; choose `--mode generated` when Python parameters and SDK-rendered results cover the interface.
+
+## Choose a frontend path
+
+| Your plugin needs | Start with |
+|-------------------|------------|
+| A Python calculation, parameter form, and standard result views | `generated` mode; no custom frontend build |
+| A custom results page with a small form | `standard` mode and its `PluginWorkspaceView` + `FormBuilder` scaffold |
+| A full page driven by shared controls, settings, and sidebar values | `defineControlModel()` + `ControlWorkspaceView` |
+| A built-in biological data template | `BioTemplatePresetWorkspaceView` or `BioTemplatePackWorkspaceView` |
+| A custom top bar, sidebar, or navigation arrangement | `PluginWorkspaceView` slots; use `AppLayout` directly only when needed |
+
+Follow [Adding a frontend](/sdk/tutorials/adding-a-frontend) for the complete backend-to-Vue tutorial, then [Platform integration](/sdk/frontend/platform-integration) for login state, experiment selection, persistence, and server files.
 
 ## What's in the package
 
 | Category | Surface | Detail |
 |----------|---------|--------|
-| Components | 90+ component exports | [Component Library](/sdk/components/) documents each export and embeds a playground on each component page |
-| Composables | 60+ typed composables/helpers | [Composables](/sdk/frontend/composables) — `useApi`, `useGeneratedPluginClient`, `useCurrentExperiment`, `usePluginSettings`, `defineControlModel`, … |
+| Components | Workspace, form, data, and biology components | [Component Library](/sdk/components/) provides component pages and playgrounds |
+| Composables | Typed state and API helpers | [Composables](/sdk/frontend/composables) — generated clients, `useCurrentExperiment`, `usePluginSettings`, `defineControlModel`, … |
 | Design tokens | 500+ CSS custom properties | [Design tokens](/sdk/frontend/design-tokens) — colors, spacing, motion, focus rings |
 | Theming | Light/dark/density support | [Theming](/sdk/frontend/theming) — `prefers-reduced-motion`, palette overrides, accessibility |
 | FormBuilder + controls | Schema-driven forms from either full schemas or compact controls | [FormBuilder](/sdk/frontend/form-builder) — shared form/settings/sidebar definitions |
@@ -18,7 +30,7 @@ If you scaffolded with `mint init --mode standard`, all of this is already done.
 
 1. **Install**
    ```bash
-   bun add @morscherlab/mint-sdk
+   bun add @morscherlab/mint-sdk@^1.2.0
    ```
 
 2. **Import design tokens** in your app entry:
@@ -40,9 +52,11 @@ If you scaffolded with `mint init --mode standard`, all of this is already done.
    createApp(App).use(MINTSdk).use(createPinia()).mount('#app')
    ```
 
-4. **Use the plugin workspace shell** in your root component. The current scaffold wraps route content in `PluginWorkspaceView` and `AppContainer`, and reads page-selector data from `frontend/src/generated/mint-plugin.ts`.
+4. **Keep the scaffold's Vite configuration**: Vue/Pinia aliases and deduplication, the `/api` proxy to port 8003, and the plugin route prefix as `base`. The single-page standard scaffold does not need Vue Router; add routing when you add pages.
 
-5. **Regenerate the typed contract** after backend route or metadata changes:
+5. **Use the plugin workspace shell** in your root component. The standard scaffold wraps `WorkspaceView` in `PluginWorkspaceView` and `AppContainer`. For additional pages, use the generated contract's page-selector metadata.
+
+6. **Regenerate the typed contract** after backend route or metadata changes:
    ```bash
    mint sdk generate
    ```
@@ -62,24 +76,26 @@ For plugin API calls, start with the generated client instead of hand-building U
 import {
   useGeneratedPluginClient,
   useGeneratedPluginContract,
-  useGeneratedPluginSettings,
 } from './generated/mint-plugin'
 
 const pluginClient = useGeneratedPluginClient()
 const pluginContract = useGeneratedPluginContract()
-const settings = useGeneratedPluginSettings()
-
-await pluginClient.analyze({
-  pathParams: { experimentId: 42 },
-  body: { parameters: { threshold: 0.05 } },
-})
-
-const analyzeUrl = pluginContract.buildEndpointUrl('analyze', {
-  pathParams: { experimentId: 42 },
-})
+// The standard scaffold's /analyze endpoint takes only a JSON body.
+const result = await pluginClient.analyze({ value: 2.5 })
+const analyzeUrl = pluginContract.buildEndpointUrl('analyze')
 ```
 
 The generated file exports endpoint names, endpoint metadata, route/API prefixes, page selector items, settings helpers, URL builders, and upload/download/SSE helpers. Drop down to `useApi()` only for platform APIs that are not part of your plugin contract.
+
+Body-only endpoints take the body directly. Endpoints combining parameters and a body use `{ pathParams, query, body }` with the exact generated field names. Run `mint docs contract .` to inspect your plugin's signatures. Generated calls throw `MintApiError` for HTTP failures; see [typed errors](/sdk/frontend/composables#typed-http-errors-in-1-2).
+
+## New and updated 1.2 patterns
+
+- **Experiment selection:** `ExperimentSelectorModal` writes to `useExperimentStore()`; `PluginWorkspaceView experiment-shell` uses the same store. Read `current`, `currentId`, `isResolving`, and `error` instead of retaining a duplicate record.
+- **Charts:** `PlotlyChart` renders native Plotly `data`/`layout`/`config`, loads Plotly lazily, follows theme and container size, and handles empty/loading/error states.
+- **Server files:** `useFileBrowser()` + `FileBrowserModal` browse configured read-only mounts and return path references. `FileUploader` remains the local browser-file picker.
+- **Access rules:** use nested `access: { permissions: [...] }` on access-aware controls and actions. Flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields are deprecated in 1.2.
+- **HTTP errors:** generated clients use `MintApiError`; raw `useApi({ typedErrors: true })` opts into the same normalized error shape.
 
 ## Component library
 
@@ -123,7 +139,7 @@ Treat the showcase as the public component reference. The pages here cover patte
 
 ## Source
 
-[`MINT/packages/sdk-frontend`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend) — the full source. When this manual seems out of date, the source is authoritative.
+[`MINT v1.2.0/packages/sdk-frontend`](https://github.com/MorscherLab/MINT/tree/v1.2.0/packages/sdk-frontend) — the release source used for this guide. Use `mint docs frontend <Name>` against your installed SDK for exact local signatures.
 
 ## Next
 

@@ -16,7 +16,7 @@ What happens:
 2. Run `uv run pytest`; packaging stops if the test suite fails
 3. If `frontend/` exists (and `--no-frontend` isn't set), run the detected JS package manager's `install` and `run build` commands to produce `frontend/dist/`
 4. Warn if `pyproject.toml` does not force-include `frontend/dist/` in the wheel
-5. Read `[tool.mint].requires_mint`; if omitted, derive a floor from the current `mint-sdk` version
+5. Read `[tool.mint].requires_mint`; if omitted, derive a floor from the SDK dependency requirement, falling back to the build SDK
 6. Build the Python wheel via `uv build --wheel`
 7. (If `--vendor-deps`) Resolve and download dependency wheels alongside the main wheel
 8. Assemble: `manifest.json` + wheel + dependency wheels into a zip
@@ -28,8 +28,19 @@ What happens:
 |------|--------|
 | `PATH` (positional) | Plugin project directory (default `.`) |
 | `--no-frontend` | Skip the frontend build step. Use for backend-only plugins or fast iteration on the Python side. |
+| `--include-wheel PATH` | Vendor an existing extra wheel; repeat for multiple files. This does not export the main wheel separately. |
 | `--output-dir` | Override the default `dist/` directory. |
 | `--vendor-deps` | Include dependency wheels in the bundle (opt-in). Without it, the marketplace expects the platform to install dependencies from PyPI. |
+
+The frontend build verifies that Python `mint-sdk` and frontend
+`@morscherlab/mint-sdk` resolve to the same release. Use `mint sdk update
+--version 1.2.0` and commit both lockfiles before packaging. `--no-frontend`
+skips building and marks the bundle without a frontend; do not use it as a
+substitute for building the UI you intend to ship.
+
+For an offline target, build/download wheels compatible with that target's
+Linux architecture and Python ABI. Host-native vendoring from another OS does
+not guarantee an installable Linux bundle.
 
 ## Bundle structure
 
@@ -61,7 +72,7 @@ The frontend's `dist/` is *not* a separate top-level directory in the bundle —
     "name": "my-plugin",
     "version": "1.0.0",
     "description": "Drug-response panel design",
-    "requires_mint": ">=1.0.0",
+    "requires_mint": ">=1.2.0,<1.3",
     "has_frontend": true
   },
   "wheels": {
@@ -77,7 +88,7 @@ Set the MINT compatibility floor deliberately in `pyproject.toml`:
 
 ```toml
 [tool.mint]
-requires_mint = ">=1.1.0"
+requires_mint = ">=1.2.0,<1.3"
 ```
 
 The platform checks this specifier when installing a `.mint` bundle. It also
@@ -112,13 +123,9 @@ packages = ["src/my_plugin"]
 
 ## Reproducible builds
 
-Pin every build dependency:
-
-```toml
-[build-system]
-requires = ["hatchling==1.21.0", "hatch-vcs==0.4.0"]
-build-backend = "hatchling.build"
-```
+Commit Python/frontend lockfiles and use a reviewed build-backend version policy.
+For exact reproducibility, pin the build backend versions your release CI has
+verified and build from a clean tagged checkout.
 
 Use `bun.lock` (committed) for the frontend. CI builds should fail if the lockfile is out of date:
 

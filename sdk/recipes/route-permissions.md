@@ -1,137 +1,114 @@
 # Route permissions
 
-## Goal
+Authenticate the caller, check the action, and resolve the resource on the backend. MINT 1.2's typed dependencies work for installed, isolated, and standalone SDK hosts without capturing a context before startup.
 
-Gate plugin routes by who's calling them. The SDK's plugin-facing mechanism is `PlatformContext.require_plugin_role(*roles)`. Platform RBAC permissions such as `experiments.edit` are enforced by platform routes, not by plugin code.
-
-## Use a router factory for role guards
-
-`require_plugin_role(*roles)` returns a FastAPI `Depends` object. Because route dependencies are bound when routers are mounted, create role-protected routers from the initialized plugin instance:
+## Authentication and resource visibility
 
 ```python
-# my_plugin/routers/admin.py
-from typing import TYPE_CHECKING
+from fastapi import HTTPException
+from mint_sdk import (
+    AnalysisPlugin, CurrentExperiment, CurrentPluginActor,
+    PluginCapabilities, endpoint, mint_plugin,
+)
 
-from fastapi import APIRouter, Depends, status
+@mint_plugin(
+    analysis_type="qc", routes_prefix="/peak-qc",
+    capabilities=PluginCapabilities(requires_auth=True),
+)
+class PeakQcPlugin(AnalysisPlugin):
+    @endpoint.get("/me")
+    async def me(self, actor: CurrentPluginActor) -> dict[str, object]:
+        return {"user_id": actor.user_id, "plugin_role": actor.plugin_role}
 
-if TYPE_CHECKING:
-    from my_plugin.plugin import MyPlugin
-
-
-async def _allow_standalone() -> None:
-    return None
-
-
-def create_router(plugin: "MyPlugin") -> APIRouter:
-    router = APIRouter(tags=["admin"])
-    context = getattr(plugin, "_context", None)
-    admin_only = (
-        context.require_plugin_role("admin")
-        if context is not None
-        else Depends(_allow_standalone)
-    )
-
-    @router.post(
-        "/admin/rebuild",
-        status_code=status.HTTP_202_ACCEPTED,
-        dependencies=[admin_only],
-    )
-    async def rebuild_index() -> dict[str, str]:
-        await plugin.rebuild_index()
-        return {"status": "queued"}
-
-    return router
+    @endpoint.post("/experiments/{experiment_id}/review")
+    async def review(
+        self, experiment: CurrentExperiment, actor: CurrentPluginActor,
+    ) -> dict[str, int]:
+        if not actor.is_platform_admin and actor.plugin_role not in {"reviewer", "owner"}:
+            raise HTTPException(403, "A reviewer or owner role is required")
+        await self.save_analysis_artifact(
+            experiment.id,
+            {"reviewed_by": actor.user_id},
+            artifact_key="review",
+        )
+        return {"experiment_id": experiment.id}
 ```
 
-Then mount it from the plugin:
+`requires_auth` is inherited by ordinary routes; a route can explicitly use `auth=True` or `auth=False`. `CurrentPluginActor` provides `user_id` (string), `username`, platform `role`, `permissions`, and `plugin_role`. Use `actor.has_permission("experiments.edit")` for a platform permission; use the separate plugin role for plugin-specific actions.
+
+`CurrentExperiment` checks `experiments.view`, visibility, and the effective experiment-type allowlist. It returns 404 for an inaccessible or missing experiment and 503 without platform integration. Knowing an experiment ID or holding a plugin role does not bypass this check.
+
+## Experiment-scoped endpoint groups
+
+For several actions under the same resource, put them in a mixin:
 
 ```python
-# my_plugin/plugin.py
-from fastapi import APIRouter
-from my_plugin.routers import admin
+from mint_sdk import AnalysisPlugin, CurrentExperiment, endpoint
 
+@endpoint.group("/runs", scope="experiment", tags=["runs"])
+class RunEndpoints:
+    @endpoint.get("/latest")
+    async def latest(self, experiment: CurrentExperiment) -> dict[str, object]:
+        result = await self.load_analysis_artifact(experiment.id, artifact_key="summary")
+        return {"result": result.result if result else None}
+
+class PeakQcPlugin(RunEndpoints, AnalysisPlugin):
+    pass
+```
+
+The group mounts below `/experiments/{experiment_id}/runs`, under the plugin API prefix. The SDK also supplies the common experiment GET for experiment-scoped groups.
+
+## Native FastAPI router role guards
+
+Use native routers for WebSockets or other FastAPI-specific needs. Resolve the context when the dependency runs, because standalone and isolated hosts may create routers before lifespan initialization:
+
+```python
+from fastapi import APIRouter, Depends, HTTPException
+from mint_sdk import (
+    AnalysisPlugin, CurrentPluginActor, CurrentPluginRuntime,
+)
+
+async def require_owner(
+    runtime: CurrentPluginRuntime, actor: CurrentPluginActor,
+) -> None:
+    if runtime.platform is None:
+        raise HTTPException(503, "This action requires platform integration")
+    if not actor.is_platform_admin and actor.plugin_role != "owner":
+        raise HTTPException(403, "Plugin owner role required")
+
+router = APIRouter()
+
+@router.get("/owner/status", dependencies=[Depends(require_owner)])
+async def owner_status() -> dict[str, str]:
+    return {"status": "ready"}
 
 class MyPlugin(AnalysisPlugin):
-    async def initialize(self, context=None):
-        self._context = context
-
     def get_routers(self) -> list[tuple[APIRouter, str]]:
-        return [(admin.create_router(self), "")]
+        return [(router, "")]
 ```
 
-In installed platform mode, the platform initializes the plugin before calling `get_routers()`, so `context.require_plugin_role(...)` is available. In standalone mode, the stub keeps local development simple.
+The SDK host binds `CurrentPluginRuntime` for mounted plugin routers. Native routers inherit plugin authentication; use `PluginRouterMount(router, auth=False)` only for routes with a deliberate public or separate-token contract.
 
-## Authenticated user only
+`context.require_plugin_role("owner", "admin")` remains supported and returns a `Depends` guard with a platform-admin bypass. It is suitable when a custom host guarantees the context is already initialized at router construction. The typed request dependency above also works when router construction happens earlier.
 
-When a route only needs "logged in" rather than a plugin role, use the same pattern:
+## Plugin writes versus actor permissions
 
-```python
-async def _optional_standalone_user() -> None:
-    return None
+These are separate checks. A plugin with `experiment_crud=True` may call the CRUD protocol, but a user-facing metadata route should still check the corresponding `experiments.create`, `experiments.edit`, or `experiments.delete` permission. The scoped repository adds visibility, type restrictions, plugin ownership, and reader declarations. It is not a replacement for every application-specific authorization rule.
 
+For plugin-owned tables, filter queries by the authorized experiment or owner. A schema-scoped SQL session isolates plugin tables; it does not add per-user row authorization automatically.
 
-def create_router(plugin: "MyPlugin") -> APIRouter:
-    router = APIRouter(tags=["profile"])
-    context = getattr(plugin, "_context", None)
-    current_user = (
-        context.get_current_user_dependency()
-        if context is not None
-        else _optional_standalone_user
-    )
+## Standalone and background work
 
-    @router.get("/me/preferences")
-    async def my_prefs(user: dict | None = Depends(current_user)):
-        if user is None:
-            return {"theme": "system"}
-        return await plugin.load_preferences(int(user["sub"]))
+Standalone requests receive a deliberate `standalone` actor, not a platform login. Require `runtime.platform` or `CurrentExperiment` for actions that must not run locally. Keep local demonstration behavior explicit.
 
-    return router
-```
+Do not cache an actor or role on `self`; concurrent users share the instance. Managed jobs/finalizers have SDK-owned actor propagation. For custom trusted host-side work, `async with context.actor_scope(actor)` binds an already resolved actor for the operation. Never construct a privileged actor from request-body fields.
 
-Use `get_optional_user_dependency()` when anonymous requests should be allowed in integrated mode.
+## Verification and source
 
-## Platform admin bypass
+Test an anonymous caller, an authenticated allowed caller, a caller with the right plugin role but no experiment visibility, an incompatible experiment type, and standalone mode. `RecordingContext` helps exercise persistence but does not replace platform RBAC integration tests.
 
-`require_plugin_role()` automatically lets platform admins through. A user with platform role `admin` passes any plugin role guard even without a `UserPluginRole` row.
+Verified against [v1.2.0 dependencies](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/runtime_dependencies.py), [actors](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/actors.py), and [scoped repository](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/repositories/scoped_experiment_repository.py).
 
-Do not add hardcoded user IDs or duplicate admin checks in every handler. Put the guard on the route and let the platform context handle the bypass.
-
-## Standalone fallback
-
-Standalone mode has no platform auth or plugin role repository. Choose the fallback deliberately:
-
-```python
-from fastapi import HTTPException, status
-
-
-async def _allow_standalone() -> None:
-    return None
-
-
-async def _deny_standalone() -> None:
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Role-protected route is disabled in standalone mode.",
-    )
-```
-
-Use `_allow_standalone` for tutorial and UI iteration routes. Use `_deny_standalone` when you are testing a sensitive path and want local behavior to fail closed.
-
-## Patterns to avoid
-
-- Do not read the `Authorization` header yourself. The platform auth dependency owns JWT, session cookie, MFA, and SSO handling.
-- Do not import `api.dependencies.permissions` in plugin code. That is platform-internal.
-- Do not rely on frontend-only hiding for destructive actions. Hide buttons for UX, but enforce roles on the backend route.
-- Do not cache plugin role checks in the plugin process. Role assignments can change while the plugin is running.
-
-## Notes
-
-- A user without a plugin role assignment has role `None`; `require_plugin_role()` rejects them unless they are a platform admin.
-- `RecordingContext` does not include a fake `PluginRoleRepository`. Use a platform integration test or a custom context fake for full role assertions.
-- To show the current user's role in a frontend, expose a small `/me/role` route as in [Tutorial 4](/sdk/tutorials/plugin-roles).
-
-## Related
-
-- [Tutorials - Plugin roles](/sdk/tutorials/plugin-roles) - end-to-end role setup
-- [Concepts - PlatformContext](/sdk/concepts/platform-context) - `require_plugin_role`
-- [Reference - Permissions](/reference/permissions) - platform RBAC catalog
+- [Plugin roles tutorial](/sdk/tutorials/plugin-roles)
+- [Platform permissions](/reference/permissions)
+- [Error handling](/sdk/recipes/error-handling)

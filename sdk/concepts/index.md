@@ -1,35 +1,30 @@
 # Concepts
 
-The Concepts section explains how the MINT plugin model is organized, what runs where, and why. Read these pages first if you're new to MINT plugin development; everything in [Tutorials](/sdk/tutorials/), [Recipes](/sdk/recipes/), and [API Reference](/sdk/api/) assumes the vocabulary introduced here.
+Learn how MINT 1.2 plugins declare their permissions, receive platform services,
+and own data. Start with the type guide, then read the pages relevant to your
+plugin before following the [tutorials](/sdk/tutorials/).
 
-## Reading order
+| Page | What you will learn |
+|---|---|
+| [Plugin types](/sdk/concepts/plugin-types) | Static, analysis, design, workflow and full plugins; explicit write policies |
+| [Lifecycle](/sdk/concepts/lifecycle) | Discovery, startup, settings, events, shutdown and uninstall |
+| [Isolation](/sdk/concepts/isolation) | In-process, subprocess, external and container runtime boundaries |
+| [PlatformContext](/sdk/concepts/platform-context) | Scoped repositories, authenticated actors, files and settings |
+| [Data model](/sdk/concepts/data-model) | Experiments, design ownership, artifacts, projects and roles |
+| [Migrations](/sdk/concepts/migrations) | Creating and upgrading plugin-owned SQL tables |
 
-| # | Page | What you'll learn |
-|---|------|-------------------|
-| 1 | [Plugin types](/sdk/concepts/plugin-types) | Static, analysis, experiment-design, full, and workflow plugins; what each owns and writes |
-| 2 | [Plugin lifecycle](/sdk/concepts/lifecycle) | The phases a plugin moves through, from registration to uninstall |
-| 3 | [Isolation](/sdk/concepts/isolation) | How conflicting plugins run in their own venvs and subprocesses |
-| 4 | [PlatformContext](/sdk/concepts/platform-context) | The single object that gives a plugin access to platform services |
-| 5 | [Data model](/sdk/concepts/data-model) | Experiments, projects, design data, analysis artifacts, plugin roles |
-| 6 | [Migrations](/sdk/concepts/migrations) | Per-plugin schema evolution with `mint_sdk.migrations` |
+## Standalone and integrated execution
 
-Allow ~30 minutes for the full set; each page is short and standalone.
+| Execution | Context | Storage and permissions |
+|---|---|---|
+| Standalone development | `context=None` | Optional local SQLite; no automatic platform experiment access |
+| Installed in-process | Scoped `PlatformContext` | Platform repositories and, when declared, a plugin PostgreSQL schema |
+| Installed subprocess | `RemotePlatformContext` | Scoped remote repositories; direct shared-table sessions are unavailable in 1.2 |
 
-## Two run modes
+Code must handle its actual environment. A local SQL session can use SQLite,
+but saving a platform analysis artifact requires integration. Authentication
+and resource visibility need installed-platform checks as well as local tests.
 
-A `mint-sdk`-based plugin can run in two complementary modes:
-
-| Mode | When | Storage | Auth |
-|------|------|---------|------|
-| **Standalone** | Plugin author developing locally; small single-user deployments; CI tests | Plugin-owned tables in SQLite via `LocalDatabase`; no platform experiment repository | Skipped (or fake) |
-| **Integrated** | Real platform install — production lab use | Plugin's schema inside the platform's PostgreSQL | Real users via `PlatformContext` |
-
-The platform hands the plugin a `PlatformContext` when integrated; in standalone mode `context` is `None`. Only `get_plugin_db_session()` and plugin-owned models/migrations route to local SQLite. Platform experiment, design-data, analysis-result, and artifact repositories are unavailable standalone; use `RecordingContext` when tests need those contracts.
-
-## Where to go next
-
-- **Want to build something now?** → [Plugin Development Guide](/sdk/) — start with [First analysis plugin](/sdk/tutorials/first-analysis-plugin)
-- **Need a specific pattern?** → [Recipes](/sdk/recipes/)
-- **Looking up an exact symbol?** → [API Reference](/sdk/api/)
-- **Frontend / UI?** → [Frontend](/sdk/frontend/)
-- **Shipping a release?** → [Operations](/sdk/operations/)
+These execution modes are separate from the `generated`/`standard` UI choice
+and `PluginType`. Follow the [development guide](/sdk/) for a learning path or
+use the [recipes](/sdk/recipes/) for one concrete task.

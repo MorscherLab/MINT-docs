@@ -1,12 +1,22 @@
 # Exceptions reference
 
-Every SDK exception inherits from `PluginException` and carries a machine-readable `code`, a human-readable `message`, and optional `details`.
+The runtime exception family below inherits from `PluginException` and carries a machine-readable `code`, a human-readable `message`, and optional `details`.
 
-::: warning Current HTTP behavior
-Current plugin route handling does not automatically map uncaught SDK exceptions to HTTP status codes. In user-facing FastAPI routes, raise `fastapi.HTTPException` when you need a specific status such as 400, 403, 404, or 409, or catch `PluginException` and translate it yourself. Use the SDK exception classes for service/repository boundaries where structured Python errors are useful.
-:::
+MINT 1.2 SDK hosts automatically translate `PluginException` subclasses into HTTP responses. `create_standalone_app()` registers the shared handlers, and integrated platform middleware uses the same envelope. A custom FastAPI host must register the SDK handlers or supply an equivalent mapping.
 
-Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/main/packages/sdk-python/src/mint_sdk/exceptions.py).
+| Exception | HTTP status |
+|-----------|-------------|
+| `ValidationException` | 400 |
+| `PermissionException`, `UnsupportedExperimentTypeException` | 403 |
+| `NotFoundException` | 404 |
+| `ConflictException`, `DesignDataOwnershipConflictException` | 409 |
+| `EventVetoException` | 422 |
+| `PlatformCompatibilityError` | 426 |
+| Other `PluginException` subclasses | 500 |
+
+FastAPI request-model validation is 422; it is distinct from service-layer `ValidationException` (400). `HTTPException` retains its explicit status.
+
+Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/exceptions.py).
 
 ## Hierarchy
 
@@ -14,10 +24,14 @@ Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/main
 PluginException
 ├── ValidationException
 ├── PermissionException
+│   └── UnsupportedExperimentTypeException
 ├── ConfigurationException
 ├── RepositoryException
 │   ├── NotFoundException
 │   └── ConflictException
+│       └── DesignDataOwnershipConflictException
+├── EventVetoException
+├── PlatformCompatibilityError
 └── PluginLifecycleException
 ```
 
@@ -136,7 +150,7 @@ try:
     await session.commit()
 except DatabaseError as exc:
     raise RepositoryException(
-        f"Failed to save panel: {exc}",
+        "Failed to save panel",
         operation="save",
         entity="panel",
     ) from exc
@@ -146,7 +160,7 @@ except DatabaseError as exc:
 
 ## `NotFoundException`
 
-Subclass of `RepositoryException`. Use it when a repository or service lookup misses. If this crosses a FastAPI route boundary, translate it to `HTTPException(status_code=404, ...)`.
+Subclass of `RepositoryException`. Use it when a repository or service lookup misses. SDK hosts translate this to HTTP 404.
 
 ```python
 class NotFoundException(RepositoryException):
@@ -225,6 +239,17 @@ async def initialize(self, context=None):
 
 `code = "LIFECYCLE_ERROR"`.
 
+## MINT 1.2 ownership, type, and event errors
+
+| Exception | Constructor / meaning |
+|-----------|-----------------------|
+| `UnsupportedExperimentTypeException(experiment_type, allowed_experiment_types, message=None, details=None)` | `EXPERIMENT_TYPE_NOT_ALLOWED`; write targets a disallowed type |
+| `DesignDataOwnershipConflictException(*, experiment_id, current_owner_plugin_id, requested_owner_plugin_id)` | `DESIGN_DATA_OWNERSHIP_CONFLICT`; another plugin already owns this design |
+| `EventVetoException(message=..., details=None)` | `EVENT_VETO`; reject a blocking before-save event |
+| `PlatformCompatibilityError(message, sdk_api_version=None, platform_api_version=None, details=None)` | Internal platform/SDK API mismatch; HTTP code is `plugin.api_version_mismatch` |
+
+A veto in an observer event is a failed observer, not a rollback of an already committed experiment. A settings CAS conflict or artifact replacement conflict is a `ConflictException`; reload the authoritative state before creating a new edit.
+
 ## Migration-specific errors
 
 Defined in `mint_sdk.migrations.errors`:
@@ -236,7 +261,7 @@ Defined in `mint_sdk.migrations.errors`:
 | `SchemaVersionAheadError` | DB has revisions the plugin doesn't ship |
 | `DestructiveMigrationError` | A `drop_table` / `drop_column` ran without explicit allow |
 
-These don't currently inherit from `PluginException` — they're caught by the migration runner specifically. See [Migrations reference](/sdk/api/migrations#errors).
+These don't currently inherit from `PluginException` — they're caught by the migration runner specifically. See [Migrations reference](/sdk/api/migrations#exceptions).
 
 ## Serializing errors
 
@@ -253,9 +278,25 @@ If you catch a `PluginException`, `to_dict()` gives you:
 }
 ```
 
+The HTTP envelope wraps the Python exception's fields and adds transport context:
+
+```json
+{
+  "code": "CONFLICT",
+  "message": "Artifact changed; reload before replacing it",
+  "status": 409,
+  "request_id": "example-request-id",
+  "details": null,
+  "detail": {"error": "CONFLICT", "message": "Artifact changed; reload before replacing it"},
+  "error": "CONFLICT"
+}
+```
+
+`X-Request-ID` carries the same request ID. Treat `details` as client-visible data, not a private logging channel. The frontend and Python client can inspect `code`, `status`, and `request_id` without parsing prose.
+
 ## Notes
 
-- In FastAPI route handlers, use `HTTPException` for user-facing HTTP statuses unless you have registered your own `PluginException` handler.
+- Use SDK exception classes for structured application failures; use `HTTPException` when an explicit HTTP status is appropriate.
 - Use `raise ... from exc` for low-level failures so the logs keep the original traceback.
 - Don't put secrets or PII in `details` — it ends up in client-visible JSON.
 - For non-`PluginException` errors that escape, the middleware returns 500 and the platform's auto-issue feature decides whether to file a GitHub bug.

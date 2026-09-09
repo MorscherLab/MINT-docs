@@ -1,6 +1,6 @@
 # FormBuilder
 
-`FormBuilder` is a schema-driven form engine in the frontend SDK. It can render a full `FormSchema`, a compact `controls` object, or a `defineControlModel()` workspace model. Experiment-design plugins use it to eliminate per-plugin form boilerplate while keeping enough flexibility for custom field types and conditional logic.
+`FormBuilder` in SDK **1.2.0** renders a full `FormSchema`, a compact `controls` object, or a `defineControlModel()` workspace model. Use the same model and value object for forms, settings, and sidebars so every control edits the same state.
 
 ## When to use FormBuilder vs. hand-rolled forms
 
@@ -144,6 +144,22 @@ const workspaceModel = defineControlModel({
 />
 ```
 
+`ControlWorkspaceView` already provides the page shell. Do not nest it inside a second workspace shell. Its default content is a `FormBuilder`; enable `show-form-actions` and handle `@submit` to run an analysis. Set `form-loading` while submitting and `form-disabled` when required experiment/input state is absent.
+
+When several surfaces share defaults, put overrides in `controlOptions.initialValues`:
+
+```vue
+<ControlWorkspaceView
+  v-model="values"
+  :model="workspaceModel"
+  :control-options="{ initialValues: { threshold: 0.1 } }"
+  :show-form-actions="true"
+  title="Analysis"
+/>
+```
+
+Control definitions use `default`; full `FormFieldSchema` definitions use `defaultValue`. Values loaded from an experiment override those defaults. Do not reapply defaults on each render or replace values after a failed load.
+
 Use a full `FormSchema` when you need exact JSON schema-like control over every section, wizard step, conditional rule, or custom field.
 
 ## Field types
@@ -151,6 +167,8 @@ Use a full `FormSchema` when you need exact JSON schema-like control over every 
 | Type | Backed by | Notes |
 |------|-----------|-------|
 | `text` | `BaseInput` | Single-line text |
+| `email`, `password`, `tel`, `url`, `search` | `BaseInput` | Native input semantics |
+| `secret` | SDK secret field | Managed secret-reference editing |
 | `textarea` | `BaseTextarea` | Auto-grow multi-line |
 | `number` | `NumberInput` | Numeric with min/max/step |
 | `checkbox` | `BaseCheckbox` | Boolean checkbox |
@@ -169,6 +187,7 @@ Use a full `FormSchema` when you need exact JSON schema-like control over every 
 | `concentration` | `ConcentrationInput` + `useConcentrationUnits` | Value + unit picker |
 | `unit` | `UnitInput` | Value + unit picker |
 | `file` | `FileUploader` | Single or multi-file |
+| `path` | SDK path field | Path input defined by the form schema |
 
 The canonical list is `FormFieldType` in `packages/sdk-frontend/src/types/form-builder.ts`. The internal registry is readable through `getFieldRegistryEntry(type)` from `@morscherlab/mint-sdk/composables`.
 
@@ -200,6 +219,7 @@ const schema: FormSchema = {
         {
           name: 'replicates',
           type: 'number',
+          label: 'Replicates',
           validation: { required: true, min: 1, max: 12 },
         },
       ],
@@ -234,11 +254,30 @@ For custom rules, pass TypeScript-only `enhancements`:
 const enhancements = {
   fields: {
     name: {
-      validate: (value) => isDuplicate(value) ? 'Name already exists' : null,
+      validate: (value: unknown) =>
+        value === 'untitled' ? 'Choose a descriptive name' : null,
     },
   },
 }
 ```
+
+Bind this as `:enhancements="enhancements"` on `FormBuilder`. Keep Pydantic validation on the backend as well; browser validation does not protect an endpoint from malformed requests.
+
+## Access-aware controls in 1.2
+
+Use nested `access` rules on fields/sections and other SDK access-aware UI definitions:
+
+```ts
+const adminField = {
+  name: 'batch_limit',
+  type: 'number' as const,
+  label: 'Batch limit',
+  defaultValue: 100,
+  access: { permissions: ['plugins.configure'] },
+}
+```
+
+The old flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields are deprecated in 1.2; the nested policy wins if both forms are supplied. These rules control visibility, not server authorization. Settings endpoints must still require the corresponding backend permission.
 
 ## Conditional fields
 
@@ -321,21 +360,27 @@ Initial data overrides per-field defaults — that's intentional for editing flo
 For experiment-design plugins, pair FormBuilder with `useExperimentSave`:
 
 ```ts
-import { useExperimentSave } from '@morscherlab/mint-sdk'
+import { useExperimentSave, useExperimentStore } from '@morscherlab/mint-sdk'
 import { useFormBuilder } from '@morscherlab/mint-sdk/composables'
 
 const builder = useFormBuilder(schema, existingDesignData ?? {})
-const { save, isSaving, lastSavedAt, error } = useExperimentSave({
+const selection = useExperimentStore()
+const { saveDesign, isSaving, lastSavedAt, error } = useExperimentSave({
   pluginId: 'my-plugin',
 })
 
 async function handleSave() {
   if (!builder.validate()) return
-  await save(1, { design: builder.form.data })
+  const id = selection.current?.id
+  if (id === undefined) return
+  const saved = await saveDesign(id, builder.form.data)
+  if (!saved) return // Keep the form; render error and let the user retry.
 }
 ```
 
 `useExperimentSave` exposes `isSaving`, `isLoading`, `error`, `lastLoadedAt`, and `lastSavedAt` refs, plus explicit helpers for design data, compatibility analysis results, and current-experiment saves.
+
+This save path requires a platform experiment and permission to write design data. For a complete page that loads data when picker selection changes and handles missing/failed loads, see [Platform integration](/sdk/frontend/platform-integration#select-load-edit-and-save-an-experiment). For plugin-owned SQL tables, submit through your generated plugin client instead of the experiment design endpoint.
 
 ## Notes
 

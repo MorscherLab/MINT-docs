@@ -1,144 +1,141 @@
-# Deploying
+# Deploying and verifying a plugin
 
-Plugin authors don't deploy the platform — that's the lab admin's job. But what you ship affects how it runs in production. This page covers the ops considerations a plugin author should keep in mind.
+Build a `.mint` bundle, verify it on a disposable MINT platform, then install
+that same artifact on the intended server. These instructions target MINT
+**1.2.0**; the platform requires PostgreSQL. A standalone plugin's SQLite file
+is development storage, not the platform database.
 
-## Deployment targets
+## 1. Check and build locally
 
-| Target | Plugin author concerns |
-|--------|------------------------|
-| Direct Linux wheel install | Filesystem paths must be portable; native deps must match the host's libc |
-| Docker image (`ghcr.io/morscherlab/mint`) | Native deps must be in the image (Python, R, system libs); plugin's heavy deps blow up image size |
-| Kubernetes (multi-replica) | Plugin migrations must use advisory locks correctly; long-running tasks need idempotency |
-
-## What gets installed where
-
-When a plugin is installed via the marketplace:
-
-```
-/var/lib/mint/                   # server.dataPath (configurable)
-├── plugin_registry.json
-├── marketplace/                 # registry cache
-└── plugins/
-    ├── manifest.json            # dynamically installed plugin restore manifest
-    ├── uploads/                 # uploaded .mint bundles and temporary extraction dirs
-    ├── snapshots/               # Python environment snapshots
-    └── my-plugin/
-        ├── venv/                # isolated mode only
-        └── ...
+```bash
+uv run mint doctor --strict
+uv run mint sdk generate --check
+uv run pytest
+uv run mint build .
 ```
 
-Plugin Python code lives in:
+For a frontend plugin, run its tests and type check as well. `mint build` runs
+Python tests and the frontend build, validates SDK release alignment and
+packages frontend assets into the wheel. See [packaging](/sdk/operations/packaging).
 
-- **Shared mode**: alongside platform code in the platform's venv (`/opt/mint/.venv` or wherever)
-- **Isolated mode**: in a per-plugin venv under `<server.dataPath>/plugins/<plugin>/venv/`
+## 2. Verify the real installation path
 
-Frontend assets:
-
-- Bundled inside the wheel under `<plugin>/frontend/dist/` and read at runtime via `get_frontend_dir()`
-
-## Native dependencies
-
-If your plugin depends on system libraries (R, native compilers, GDAL, ImageMagick, …), the deployment image / host must have them.
-
-| Pattern | Where it lives |
-|---------|----------------|
-| Python wheels with vendored binaries (`numpy`, `scipy`) | Just work; pip / uv resolves the right wheel |
-| Pure Python | Just work |
-| C extensions you build (rare) | Provide manylinux wheels; CI builds for the platform's target |
-| External binaries (`Rscript`, `magick`) | Document in your README; advise admins to install in the host or image |
-
-Document any non-Python deps in your plugin's README under a "Runtime requirements" section. Admins read this before installing.
-
-## Multi-replica considerations
-
-When the platform runs as multiple replicas (e.g., Kubernetes with `replicas: 3`):
-
-| Concern | Behavior |
-|---------|----------|
-| Migrations | Advisory-locked — only one replica applies them; others wait. Postgres-only. |
-| Plugin install | Coordinated through the platform; no plugin-author concern |
-| In-process state | Each replica has its own — don't cache request-scoped data in module globals (see [Recipes → Logging & tracing](/sdk/recipes/logging-tracing)) |
-| Scheduled jobs | The SDK `JobRegistry` helper is in-memory and process-local; use your own durable queue for production jobs that must survive restarts or multiple replicas |
-| Filesystem writes | Use platform/plugin storage under `server.dataPath` on shared storage (NFS, etc.) — never write to local disk paths assuming a single replica |
-
-Plugins that need request-affinity (e.g., session-bound state in WebSocket connections) should declare it; the platform's reverse proxy can route to a stable replica via session affinity but not by default.
-
-## Migrations under load
-
-Long-running migrations block plugin start. For deployments where downtime matters:
-
-1. Use the **online migration** pattern from [Recipes → Backfill migrations](/sdk/recipes/backfill-migration) — split schema and backfill into separate revisions
-2. Ship the schema-add migration in release N
-3. Backfill in release N+1 (when every replica has the schema-add)
-4. Tighten constraints in release N+2
-
-This means a backwards-incompatible schema change takes 2-3 plugin releases to land. Trade off against the cost of brief downtime.
-
-## Resource consumption
-
-The platform doesn't enforce per-plugin resource quotas (CPU, RAM, disk). Plugin authors should:
-
-- **CPU**: long-running endpoints should be cancellation-aware (`asyncio.CancelledError` handling). Don't hog the event loop with CPU-bound work — spawn a subprocess or use a thread-pool for that.
-- **RAM**: stream large responses rather than buffering. Read DataFrames in chunks.
-- **Disk**: clean up old artifacts and cache files. The platform doesn't auto-prune plugin-owned files under `server.dataPath`.
-
-For heavy compute (multi-minute analyses), avoid blocking request handlers. Declare managed work with `@job`; the SDK mounts the standard job API and generated UI support when jobs are present:
-
-```python
-from mint_sdk import AnalysisPlugin, job
-
-
-class MyPlugin(AnalysisPlugin):
-    @job(cpu=2)
-    def analyze(self, experiment_id: int) -> dict[str, int | str]:
-        return {"experiment_id": experiment_id, "status": "completed"}
+```bash
+uv run mint verify . --bundle dist/my-plugin-0.2.0.mint
 ```
 
-The default job runtime is process-local. That is fine for generated-mode plugins, tests, and small workflows. For production work that must survive restarts or multi-replica deployments, keep the `@job` public contract but connect the actual computation to your durable worker or queue backend.
+Replace the filename with the bundle you built. Docker verification creates a
+throwaway platform and PostgreSQL service, completes initial setup, uploads the
+bundle, waits for restart/loading and then tears down the environment. Defaults
+use the stable platform image; use `--channel beta` for a prerelease or `--image
+IMAGE` to choose a particular platform image. `--keep` preserves the environment
+for inspection.
 
-## Configuration and secrets
+To include your plugin's own API smoke checks:
 
-Two layers matter for plugin-authored settings:
+```toml
+[tool.mint]
+verify_command = "uv run pytest tests/smoke -x"
+```
 
-1. **Defaults** baked into the plugin (`@mint_plugin(config=SettingsModel)`, plus any defaults your code supplies)
-2. **Platform config** (`config.json` → `plugins.settings.<name>`, edited through Admin UI or `mint plugin config`)
+The runner supplies `MINT_VERIFY_URL`, `MINT_VERIFY_USERNAME` and
+`MINT_VERIFY_PASSWORD`. Use these only for the temporary verification instance;
+do not log credentials. Write the smoke suite before enabling this setting.
 
-Secrets:
+A fresh install is not an upgrade test. For a database plugin, also install the
+previous release on a staging platform, create representative data, upgrade to
+the new bundle and verify that data after restart.
 
-- **Don't** hardcode in the wheel
-- **Don't** commit to the manifest
-- **Do** use the platform's settings store (`@mint_plugin(config=...)`, `@on_config_change`, `save_settings_transactionally()`, `patch_settings_transactionally()`) and have admins set values from the UI or CLI
-- **Do** document any deployment-specific environment variables your plugin reads directly
+## 3. Deploy to a test platform
 
-For per-user secrets (an external-service API token tied to a user's identity), use a plugin-owned table with appropriate access checks — not the platform `User` record.
+```bash
+mint auth login --url http://127.0.0.1:18020
+mint status
+mint deploy . --to http://127.0.0.1:18020 --bundle dist/my-plugin-0.2.0.mint
+mint plugin list --json
+```
 
-## Observability
+The URL must identify your intended test platform. `deploy` uploads the bundle
+and, by default, performs the restart/load workflow. `--no-restart` leaves any
+required restart to the administrator. The equivalent upload-only path is:
 
-Plugins inherit the platform's observability automatically:
+```bash
+mint plugin upload dist/my-plugin-0.2.0.mint
+```
 
-- Structured logs via `get_plugin_logger`
-- OTel traces via `tracer.start_as_current_span`
-- Auto-issued GitHub bug reports for unhandled exceptions (when `errorReporting.enabled` is on)
+Platform permissions govern installation. `--force` skips ordinary dependency
+conflict preflight; it does not override `requires_mint` or the platform SDK
+version constraint. It is not a normal "replace old version" flag.
 
-For per-plugin metrics dashboards (Grafana), publish via OTel's metrics SDK — the platform's exporter forwards them. Define a few key metrics rather than instrumenting every line.
+`mint plugin install SOURCE` resolves a package, Git URL or path on the
+**server**. `plugin upload` sends a local file from your machine. Settings use
+the runtime plugin name, while upgrade/uninstall commands take the installed
+package name; `plugin list --json` shows both.
 
-## Backups
+## 4. Check behavior after installation
 
-The platform owns:
+| Check | What it proves |
+|---|---|
+| Open the plugin through the platform, then reload its nested route | Packaged assets and frontend routing work |
+| Sign in as the expected member and as a restricted user | Backend resource and role checks work |
+| Select an experiment; save, reload and export | Data ownership and persistence work |
+| Run a job and inspect the saved artifact | Computation and platform result integration work |
+| Change a setting and restart | Validated settings survive restart |
+| Upgrade existing tables and inspect old rows | The migration path preserves data |
 
-- Postgres database backups (lab-managed, e.g., `pg_dump` on a schedule)
-- `server.dataPath` backups (if the volume isn't already on a backed-up filesystem)
+Read diagnostics with `mint debug summary` / `mint debug logs`, or the platform
+admin logs. Use [typed errors and request IDs](/sdk/recipes/error-handling) to
+connect frontend failures with backend logs.
 
-Plugin authors don't need to implement backup logic. Document any plugin-specific recovery steps, such as which plugin bundle version is compatible with a restored database snapshot and whether any plugin-owned artifact directories must be restored together.
+## Runtime choices and storage
 
-## Notes
+| Runtime | Appropriate use | Important boundary |
+|---|---|---|
+| In-process plugin | Standard wheel using compatible dependencies | Required for platform shared-table sessions in 1.2 |
+| Isolated subprocess | Conflicting/heavy Python dependency sets | Remote scoped repositories; no direct shared SQL sessions |
+| External server | An already running plugin service | Platform must reach its URL; the service owns its process lifecycle |
+| Docker runtime | Plugin with a containerized runtime | Container image, networking and native libraries must be provided |
 
-- Plugin Docker images are not a thing — the platform itself is the container, plugins install into it. Don't try to ship a separate Dockerfile for your plugin.
-- For air-gapped deployments, the registry should be self-hosted on the same network. The platform reads one `marketplace.registryUrl`; use an aggregate registry file when you need to combine private and public entries.
-- Don't rely on outbound network from a plugin — many lab deployments restrict it. Document any required outbound calls in your README.
+External and Docker runtimes can be registered using `mint plugin runtime
+external` / `docker`; see the [CLI reference](/sdk/api/cli-reference) and
+[isolation guide](/sdk/concepts/isolation). Runtime isolation is distinct from
+`generated`/`standard` UI modes and from the plugin's data-access type.
 
-## Related
+Keep code/assets in the wheel. Use context-provided data directories, plugin
+schema sessions or managed artifact storage for persistent data; do not write
+beside installed Python source. In the scaffold, `frontend/dist` is mapped into
+`<plugin_module>/frontend` inside the wheel. The loader serves it through the
+plugin's frontend mount.
 
-- [Operations → Versioning](/sdk/operations/versioning) — release cadence and the deploy story
-- [Recipes → Backfill migrations](/sdk/recipes/backfill-migration) — multi-step schema change pattern
-- [Workflow → Updates](/workflow/updates) — admin-side upgrade flow
+## Native libraries and offline installs
+
+Declare scientific Python dependencies in your package. The SDK supplies the
+framework stack, but it does not install `Rscript`, operating-system libraries
+or hardware drivers. Document and verify these on the target Linux host/image.
+
+`mint build --vendor-deps` includes dependency wheels; `--include-wheel PATH`
+adds a wheel you already built. Native wheels must match the target OS,
+architecture and Python ABI. Vendoring on macOS is not proof that a bundle can
+install offline on Linux. Use a matching Linux build/verification environment.
+
+## Migrations, long jobs and recovery
+
+Migrations run during plugin loading and can delay startup. Numbered plugin
+migrations and PostgreSQL advisory locks coordinate the schema update; they do
+not make the entire deployment a distributed transaction. For large backfills,
+use [staged schema changes](/sdk/recipes/backfill-migration).
+
+Declare managed computations with `@job` rather than blocking an HTTP handler.
+The default standalone job runtime is process-local; do not promise restart
+recovery or multi-replica execution solely because an endpoint uses `@job`.
+Verify the actual platform execution mode and storage setup for durable work.
+In-memory caches and local files are not automatically shared between replicas.
+
+Before production upgrades, preserve the previous bundle plus matching
+PostgreSQL and object/file-storage backups. Reinstalling old code does not
+reverse database migrations. Either retain backward-compatible schema changes,
+ship a forward fix, or restore the corresponding data snapshot. Document any
+plugin-specific restore requirements with the release.
+
+Source: [verification runner](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/verify_command.py),
+[deployment command](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/deploy_command.py).

@@ -1,179 +1,140 @@
-# `PlatformContext`
+# PlatformContext
 
-`PlatformContext` is the single object the platform hands to a plugin. Through it, the plugin reaches every platform-side service: experiments and their design/analysis data, users, plugin roles, the platform config, and a database session scoped to the plugin's schema.
+MINT 1.2 gives an integrated plugin one long-lived `PlatformContext`. Use its scoped `ExperimentRepository` for experiment metadata, design data, analysis results, and artifacts. User identity is resolved separately for each request; never store the current user on the plugin instance.
+
+## Choose the right integration boundary
+
+| Runtime | Context | Platform data | Plugin-owned SQL tables |
+|---------|---------|---------------|-------------------------|
+| Installed, in process | Platform `PlatformContext` implementation | Async scoped repositories | `get_plugin_db_session()` with shared database capability |
+| Installed, isolated subprocess | SDK `RemotePlatformContext` | Same async protocol over trusted internal HTTP | Shared SQL sessions unavailable |
+| Standalone (`mint dev` without platform binding) | `None` | No platform repositories; selected helpers return empty values | SDK-managed local SQLite when declared |
+| External notebook, script, CI | No plugin context | Synchronous `MINTClient` using the caller's credentials | Use platform APIs |
+
+An isolated plugin is still **integrated**: `context is not None`. Do not construct a `RemotePlatformContext` or forge forwarded user headers in application code. The platform host establishes its trusted binding and checks internal API compatibility at startup.
 
 ```python
-from mint_sdk import AnalysisPlugin, PlatformContext, mint_plugin
+from mint_sdk import AnalysisPlugin, PlatformContext
 
-
-@mint_plugin(analysis_type="custom", routes_prefix="/my-plugin")
 class MyPlugin(AnalysisPlugin):
     async def initialize(self, context: PlatformContext | None = None) -> None:
         await super().initialize(context)
+        # Open only resources this plugin owns here.
 ```
 
-When standalone, `context` is `None`; the plugin uses `LocalDatabase` (a `mint-sdk`-managed local SQLite) instead. When integrated, `context` is a real `PlatformContext` instance and every accessor below is live.
+Use the public `self.context` property after initialization. `initialize()` is optional when no extra resources are needed.
 
-## Accessors
+## Request-scoped access
 
-| Accessor | Returns | Notes |
-|----------|---------|-------|
-| `is_authenticated` (property) | `bool` | True if the active request has an authenticated user |
-| `get_current_user_dependency()` | FastAPI `Depends` | Inject as `user = Depends(context.get_current_user_dependency())` |
-| `get_optional_user_dependency()` | FastAPI `Depends` | As above but `None`-tolerant |
-| `get_plugin_actor_dependency()` | FastAPI `Depends` | Yields typed `PluginActor` with platform role, plugin role, and permissions |
-| `get_optional_plugin_actor_dependency()` | FastAPI `Depends` | Optional typed actor |
-| `get_job_visibility_dependency()` | FastAPI `Depends` | Yields typed job visibility for job routes |
-| `get_user_repository()` | `UserRepository \| None` | User lookups (read-only) |
-| `get_experiment_repository()` | `ExperimentRepository \| None` | Experiment, `DesignData`, `AnalysisArtifact`, and compatibility `PluginAnalysisResult` access |
-| `get_plugin_role_repository()` | `PluginRoleRepository \| None` | Per-plugin user roles |
-| `require_plugin_role(*roles)` | FastAPI `Depends` | Route guard — see below |
-| `get_plugin_config()` | `dict` (`PlatformConfig`) | Persisted plugin configuration view |
-| `enqueue_notifications(...)` | async method | Durable notification enqueue hook when the platform supports it |
-| `publish_calendar_events(...)` | async method | Durable calendar publish/cancel hook when the platform supports it |
-| `get_shared_db_session()` | async context manager | Async SQLAlchemy session scoped to your plugin's schema |
-
-In integrated mode, all five plugin types receive the same visibility-scoped `ExperimentRepository`. The resolved access policy independently controls experiment CRUD, owned design-data writes, and own analysis-result/artifact writes. `STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, and `FULL` supply compatibility defaults; `WORKFLOW` is fail-closed. `PluginCapabilities.experiment_crud`, `design_data_write`, and `analysis_result_write` can override each default independently. `get_shared_db_session()` requires shared-database setup; declare `requires_shared_database=True` when your plugin owns tables.
-
-## Authentication and Current Actor
-
-For ordinary `@endpoint` methods, use the typed request dependencies exported by the SDK:
+Use `CurrentExperiment` to resolve a route's `experiment_id`, and `CurrentPluginActor` for the trusted caller:
 
 ```python
-from mint_sdk import AnalysisPlugin, CurrentPluginActor, endpoint, mint_plugin
+from mint_sdk import (
+    AnalysisPlugin, CurrentExperiment, CurrentPluginActor,
+    PluginCapabilities, endpoint, mint_plugin,
+)
 
-
-@mint_plugin(analysis_type="custom", routes_prefix="/my-plugin")
-class MyPlugin(AnalysisPlugin):
-    @endpoint.get("/me", auth=True)
-    async def me(self, actor: CurrentPluginActor) -> dict[str, str | None]:
+@mint_plugin(
+    analysis_type="qc",
+    routes_prefix="/peak-qc",
+    capabilities=PluginCapabilities(requires_auth=True, requires_experiments=True),
+)
+class PeakQcPlugin(AnalysisPlugin):
+    @endpoint.get("/experiments/{experiment_id}/summary")
+    async def summary(
+        self, experiment: CurrentExperiment, actor: CurrentPluginActor,
+    ) -> dict[str, object]:
+        design = await self.load_design(experiment.id)
         return {
-            "user_id": actor.user_id,
-            "username": actor.username,
-            "plugin_role": actor.plugin_role,
+            "experiment_id": experiment.id,
+            "requested_by": actor.user_id,
+            "design_owner": experiment.design_owner_plugin_id,
+            "design": design.data if design else None,
         }
 ```
 
-Standalone mode returns a deliberate `standalone` actor. Integrated mode resolves the actor from the platform request and includes platform permissions plus the current plugin role when available.
+`CurrentExperiment` checks `experiments.view`, resolves the actor-visible, type-compatible experiment, and returns 404 when the scoped lookup cannot see it. It returns 503 when no experiment repository exists. This avoids treating missing platform integration as an empty successful response.
 
-## Plugin role guard
+## What the platform enforces
 
-`require_plugin_role(*roles)` returns a dependency that:
+Access is the intersection of these rules:
 
-- Resolves the current user via the same auth dependency
-- Reads the user's plugin role from `PluginRoleRepository`
-- Allows the request through only if the role is in `roles`
-- **Bypasses** the check for platform admins automatically
+1. **Plugin write policy**: `experiment_crud`, `design_data_write`, and `analysis_result_write`, with defaults derived from `PluginType`.
+2. **Experiment compatibility**: the plugin's declared types plus any tighter platform/admin restriction. `None` means unrestricted; `[]` blocks all types.
+3. **Actor visibility**: deployment visibility settings, project membership, experiment ownership/collaboration, and platform administrator access.
+4. **Data ownership**: writes use the calling plugin's ID. A plugin cannot overwrite another plugin's design or artifacts.
+5. **Declared readers**: cross-plugin analysis reads require exact IDs in `analysis_result_readers`.
 
-```python
-from fastapi import APIRouter, Depends
+These rules also apply over isolated-plugin internal HTTP. Even `FULL` receives scoped access. Plugin roles and route-specific permissions add checks; a plugin role alone does not grant visibility to every experiment. See [Route permissions](/sdk/recipes/route-permissions).
 
+## Context services
 
-async def _allow_standalone():
-    return None
+| API | Use |
+|-----|-----|
+| `get_experiment_repository()` | Unified experiment CRUD, design, analysis, and artifact protocol |
+| `get_plugin_data_repository()` | MINT 1.1 compatibility adapter; design methods retain `*_experiment_data` names |
+| `get_user_repository()` | Read user records |
+| `get_plugin_role_repository()` | Roles scoped to the current plugin |
+| `get_plugin_actor_dependency()` | Native FastAPI dependency returning a typed actor |
+| `get_optional_plugin_actor_dependency()` | Optional actor dependency |
+| `require_plugin_role(*roles)` | `Depends` guard; platform admins bypass the plugin-role check |
+| `get_allowed_experiment_types()` | Effective type restrictions |
+| `get_data_store(experiment_id, plugin_id=None)` | Experiment/plugin-scoped object storage |
+| `get_file_browser()` | Read-only access to configured server mounts |
+| `get_shared_db_session()` | In-process SQL session for declared plugin-owned tables |
+| `get_plugin_config()` | Persisted settings; can return a dict or an awaitable depending on host |
+| `actor_scope(actor)` | Bind an already trusted actor around host-side async work |
+| `enqueue_notifications(...)`, `publish_calendar_events(...)` | Host integration hooks normally called by SDK decorators |
 
+Use `self.settings`, `@on_config_change`, and transactional settings helpers for typed configuration, rather than calling low-level config hooks. See [Lifecycle](/sdk/concepts/lifecycle).
 
-def create_admin_router(plugin: MyPlugin) -> APIRouter:
-    router = APIRouter(tags=["admin"])
-    context = getattr(plugin, "_context", None)
-    admin_or_owner = (
-        context.require_plugin_role("admin", "owner")
-        if context is not None
-        else Depends(_allow_standalone)
-    )
+## Persistence helpers and standalone behavior
 
-    @router.get("/admin/settings", dependencies=[admin_or_owner])
-    async def settings():
-        return {"settings": "..."}
+The base class supplies the plugin ID and delegates to the same repository:
 
-    return router
-```
+| Helper | Integrated result | No repository |
+|--------|-------------------|---------------|
+| `save_design()`, `load_design()` | `DesignData` or missing read | `None` |
+| `save_analysis()`, `load_analysis()` | Compatibility `PluginAnalysisResult` | `None` |
+| `save_analysis_artifact()`, `load_analysis_artifact()` | Named JSON artifact | `None` |
+| `save_analysis_artifacts()` | Atomic batch in input order | Nonempty batch raises `RuntimeError`; empty batch returns `[]` |
+| `save_analysis_file_artifact()` | Create-only file artifact | `None` |
+| `update_analysis_file_artifact()` | CAS replacement and cleanup status | `None` |
+| `load_analysis_artifacts()`, `load_analyses()` | Own outputs by default | `[]` |
+| `archive_analysis_artifact()`, `restore_analysis_artifact()` | Changed metadata or no match | `None` |
+| `delete_design()`, `delete_analysis()` | Whether a record was deleted | `False` |
 
-See [Recipes → Route permissions](/sdk/recipes/route-permissions) for the full pattern.
+These empty return values do **not** persist to standalone SQLite. Use local tables/files for deliberate standalone persistence, or require platform integration at the route boundary. `get_plugin_db_session()` handles local versus shared SQL, but cannot provide shared tables in isolated mode.
 
-## Database session
+## Cross-plugin readers
 
-`get_shared_db_session()` is the canonical way for a plugin to talk to its own tables. The session has its `search_path` set to the plugin's schema, so unqualified table names resolve correctly:
-
-```python
-from sqlalchemy import select
-
-class MyPlugin(AnalysisPlugin):
-    async def list_panels(self):
-        async with self._context.get_shared_db_session() as session:
-            result = await session.execute(select(PanelModel))
-            return result.scalars().all()
-```
-
-Standalone mode has its own equivalent — `AnalysisPlugin.get_plugin_db_session()` (an instance method on the plugin itself, not the context) routes to `LocalDatabase` when no context is present:
-
-```python
-class MyPlugin(AnalysisPlugin):
-    async def list_panels(self):
-        async with self.get_plugin_db_session() as session:
-            ...   # works in both modes
-```
-
-Prefer `self.get_plugin_db_session()` over the context method directly — it gives you mode-portable plugin code.
-
-Current `mint dev` / `create_plugin_app()` initializes standalone SQLite automatically for plugins with a shared-database contract. If you build a custom host, call `await plugin.ensure_standalone_database()` before using `get_plugin_db_session()` in standalone mode.
-
-## Convenience methods on `AnalysisPlugin`
-
-For the most common operations on `DesignData`, `AnalysisArtifact`, and compatibility `PluginAnalysisResult`, the plugin base class wraps `ExperimentRepository`:
-
-| Method | What it does | Standalone? |
-|--------|--------------|-------------|
-| `await self.save_design(experiment_id, data)` | Save / update design data | Returns `None` |
-| `await self.load_design(experiment_id)` | Load design data | Returns `None` |
-| `await self.save_analysis_artifact(experiment_id, result, artifact_key="default")` | Save / update one named artifact for this plugin | Returns `None` |
-| `await self.save_analysis_artifacts(experiment_id, artifacts)` | Atomically save multiple named artifacts | Raises without context |
-| `await self.save_analysis_file_artifact(experiment_id, data, ...)` | Save an uploaded/reused file object as a managed artifact | Returns `None` |
-| `await self.load_analysis_artifact(experiment_id, artifact_key="default")` | Load one active artifact for this plugin | Returns `None` |
-| `await self.load_analysis_artifacts(experiment_id, include_others=False)` | Load artifact metadata; defaults to this plugin's own artifacts | Returns `[]` |
-| `await self.archive_analysis_artifact(experiment_id, artifact_key="default")` | Archive one artifact owned by this plugin | Returns `None` |
-| `await self.restore_analysis_artifact(experiment_id, artifact_key="default")` | Restore one archived artifact owned by this plugin | Returns `None` |
-| `await self.save_analysis(experiment_id, result)` | Compatibility path: save / update `PluginAnalysisResult` for this plugin | Returns `None` |
-| `await self.load_analysis(experiment_id, fields=None)` | Compatibility path: load this plugin's result, optionally projecting top-level result keys | Returns `None` |
-| `await self.load_artifacts(experiment_id)` | Legacy helper: load only `result["artifacts"]` from this plugin's compatibility result | Returns `None` |
-| `await self.load_analyses(experiment_id, include_others=False)` | Load compatibility results; defaults to this plugin's own result | Returns `[]` |
-| `await self.save(experiment_id, design=..., analysis=...)` | Save both at once | Returns `(None, None)` |
-| `await self.load(experiment_id)` | Load both | Returns `(None, None)` |
-| `await self.delete_design(experiment_id)` | Delete design | Returns `False` |
-| `await self.delete_analysis(experiment_id)` | Delete analysis | Returns `False` |
-
-These are the daily authoring API. Drop down to `context.get_experiment_repository()` only when you need bulk operations or have multiple plugin IDs to coordinate.
-
-For cross-plugin readers, call `load_analysis_artifacts(experiment_id, include_others=True)`, `load_analyses(experiment_id, include_others=True)`, or the matching repository methods explicitly. The default is intentionally scoped to the calling plugin so ordinary analysis plugins do not accidentally consume another plugin's output payloads.
-
-## What `PlatformContext` is *not*
-
-- **Not** a request-scoped object you `Depends`-inject. It's a long-lived object set during `initialize()` and stored on the plugin instance.
-- **Not** a synchronous interface. Every accessor returning data uses async I/O. The shared-mode and isolated-mode variants both honor this.
-- **Not** a container for user state. The user comes from the FastAPI auth dependency (`get_current_user_dependency()`), not from the context object directly.
-
-## Standalone fallback pattern
-
-For mode-portable code:
+Declare exact, case-sensitive producing plugin IDs:
 
 ```python
-class MyPlugin(AnalysisPlugin):
-    async def initialize(self, context=None):
-        await super().initialize(context)
-
-    def get_experiment_id_from_request(self, request_body):
-        # Use convenience methods — they no-op cleanly when standalone
-        return request_body.get("experiment_id", 1)
-
-    async def fetch(self, experiment_id):
-        # Works in both modes
-        return await self.load_design(experiment_id)
+@mint_plugin(
+    analysis_type="qc-dashboard",
+    routes_prefix="/qc-dashboard",
+    analysis_result_readers=["peak-qc", "calibration"],
+)
+class DashboardPlugin(AnalysisPlugin):
+    @endpoint.get("/experiments/{experiment_id}/outputs")
+    async def outputs(self, experiment: CurrentExperiment) -> list[dict[str, object]]:
+        artifacts = await self.load_analysis_artifacts(
+            experiment.id, include_others=True,
+        )
+        return [
+            {"plugin_id": item.plugin_id, "key": item.artifact_key,
+             "name": item.display_name}
+            for item in artifacts
+        ]
 ```
 
-The convenience methods (`save_design`, `load_design`, …) return `None`/`False` in standalone mode rather than raising — your plugin can carry on with empty results in development without branching code.
+`include_others=True` includes the calling plugin and declared readers only. It does not grant write access. Archived artifacts are restricted to the owning plugin; do not combine `include_others=True` and `include_archived=True`.
 
-## Next
+## Source and next steps
 
-→ [Data model](/sdk/concepts/data-model) — what the repos return
-→ [Recipes → Reading experiments](/sdk/recipes/reading-experiments) — concrete `ExperimentRepository` patterns
-→ [Recipes → Route permissions](/sdk/recipes/route-permissions) — using the plugin role guard
+Verified against [v1.2.0 context](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/context.py), [remote context](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/remote_context.py), and [platform scope enforcement](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/repositories/scoped_experiment_repository.py).
+
+- [Reading and managing experiments](/sdk/recipes/reading-experiments)
+- [Writing results and files](/sdk/recipes/writing-results)
+- [Plugin-owned tables](/sdk/recipes/querying-plugin-data)

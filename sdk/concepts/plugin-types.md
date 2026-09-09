@@ -1,126 +1,122 @@
-# Plugin types
+# Plugin Types and Capabilities
 
-Every MINT plugin declares a `PluginType`. The type supplies the default experiment-write policy; explicit `PluginCapabilities` fields can override each write boundary independently.
+MINT v1.2 separates **how you build the UI**, **the plugin's category**, and **which platform data it can write**. Choose each explicitly when starting a plugin.
+
+## 1. Choose a development mode
+
+| Mode | Scaffold | Use it for |
+|---|---|---|
+| `generated` | Python `@job` methods, SDK-managed forms and result views, runtime tests | Typed analysis inputs and outputs without maintaining Vue |
+| `standard` | Python `@endpoint` methods, Vue 3 workspace, generated TypeScript client, backend/frontend tests | Custom layouts, interactive design tools, dashboards, orchestration |
+
+In the v1.2 CLI, **generated mode only scaffolds `analysis`**. Standard mode supports all five types. Mode does not grant database access, authentication, or write permissions. Both modes subclass `AnalysisPlugin`; that base-class name does not force an analysis-only role.
+
+## 2. Choose a category
+
+This table shows the **default** write policy when the three explicit write capabilities are `None`:
+
+| `PluginType` | CLI `--type` | Experiment create/update/delete | Own design payload | Own analysis results/artifacts | Typical purpose |
+|---|---|---|---|---|---|
+| `STATIC` | `static` | No | No | No | Help, dashboards, read-only reports |
+| `ANALYSIS` | `analysis` | No | No | Yes | Process existing experiments and save computed outputs |
+| `EXPERIMENT_DESIGN` | `experiment-design` | Yes | Yes | No | Define experiment inputs, plate maps, acquisition plans |
+| `WORKFLOW` | `workflow` | No | No | No | Coordinate experiments without owning their scientific payloads |
+| `FULL` | `full` | Yes | Yes | Yes | One plugin owns both design and analysis |
+
+`WORKFLOW` starts with no writes. The **workflow scaffold** explicitly adds `experiment_crud=True`, `design_data_write=False`, and `analysis_result_write=False`. An otherwise empty `PluginCapabilities()` on a workflow plugin grants none of these writes.
+
+Read access still depends on the current user's visibility and the platform's configured experiment-type allowlist. `FULL` does not bypass these checks or allow modifying another plugin's design data or results.
+
+## 3. Declare explicit write capabilities
+
+New in v1.2, three fields independently override the category defaults:
+
+| Field | `True` enables | `False` does | `None` does |
+|---|---|---|---|
+| `experiment_crud` | Create, update, delete experiment records | Denies experiment CRUD | Uses category default |
+| `design_data_write` | Save/delete this plugin's design data | Denies design writes | Uses category default |
+| `analysis_result_write` | Save/manage this plugin's analysis results and artifacts | Denies result writes | Uses category default |
+
+For example, an orchestrator needs experiment CRUD, but should leave a plate designer's payload and a quantification plugin's results to their owners:
 
 ```python
-from mint_sdk import AnalysisPlugin, PluginType, mint_plugin
+from mint_sdk import AnalysisPlugin, PluginCapabilities, PluginType, mint_plugin
 
 
 @mint_plugin(
-    analysis_type="metabolomics",
-    routes_prefix="/my-plugin",
-    plugin_type=PluginType.ANALYSIS,
+    analysis_type="workflow",
+    routes_prefix="/batch-coordinator",
+    plugin_type=PluginType.WORKFLOW,
+    capabilities=PluginCapabilities(
+        requires_auth=True,
+        requires_experiments=True,
+        experiment_crud=True,
+        design_data_write=False,
+        analysis_result_write=False,
+    ),
 )
-class MyPlugin(AnalysisPlugin):
+class BatchCoordinatorPlugin(AnalysisPlugin):
     pass
 ```
 
-## The five types
+An `ANALYSIS` plugin can opt out of persistence with `analysis_result_write=False`. Existing plugins that omit the new fields retain their previous category defaults. A `WORKFLOW` category does not create a scheduler, background job, or cross-plugin execution graph; you implement those interactions explicitly.
 
-| Type | Use it for | Experiment CRUD | Design-data writes | Analysis-result writes |
-|------|------------|-----------------|--------------------|------------------------|
-| `PluginType.STATIC` | UI/reporting/help plugins | No | No | No |
-| `PluginType.ANALYSIS` | Processing experiments and saving computed outputs | No | No | Yes |
-| `PluginType.EXPERIMENT_DESIGN` | Defining and editing experiment designs | Yes | Yes | No |
-| `PluginType.FULL` | Workflows that own design and analysis | Yes | Yes | Yes |
-| `PluginType.WORKFLOW` | Schedulers and orchestrators | No; opt in explicitly | No | No |
+## 4. Declare platform needs
 
-These are defaults, not separate repository implementations. In integrated mode, `context.get_experiment_repository()` returns the scoped repository regardless of `requires_experiments`; the resolved access policy controls which writes it accepts. The class you subclass is `AnalysisPlugin` regardless of type — the name reflects the abstract base, not the runtime category.
+| Capability | Purpose |
+|---|---|
+| `requires_auth` | Requires an authenticated actor for ordinary plugin routes |
+| `requires_experiments` | Declares that the plugin integrates with platform experiments |
+| `requires_database` | Declares platform database usage |
+| `requires_shared_database` | Declares plugin-owned tables in a platform-managed schema; pair with table/migration declarations |
+| `supports_experiment_linking` | Declares that the plugin can be linked to an experiment |
+| `supports_email_notifications`, `supports_teams_notifications`, `supports_slack_notifications`, `supports_calendar_events` | Declares optional integrations; delivery still needs platform configuration |
 
-## Capability flags
+These feature declarations are separate from the three write permissions. Setting `requires_database=True` does not permit design writes; setting `experiment_crud=True` does not create plugin tables. Do not use repository presence as an authorization check: the integrated v1.2 context supplies scoped repositories, and their operations enforce the effective write policy and data scope. Standalone plugins have `context=None`.
 
-`PluginCapabilities` declares platform integration needs and can override the three experiment-write defaults. Each write field is tri-state: `None` preserves the `PluginType` default, while `True` or `False` explicitly grants or removes that write capability.
-
-| Field | Meaning |
-|-------|---------|
-| `requires_auth` | Plugin's routes are guarded by the platform's authenticated-user dependency |
-| `requires_experiments` | Declares that the plugin integrates with experiment context; it does not gate the repository getter |
-| `requires_database` | Declares that the plugin needs the platform database |
-| `requires_shared_database` | Plugin needs its own scoped Postgres schema (for tables it owns); `context.get_shared_db_session()` works |
-| `supports_experiment_linking` | UI hint: this plugin can attach to an experiment |
-| `experiment_crud` | Allow or deny experiment create/update/delete; `None` keeps the type default |
-| `design_data_write` | Allow or deny writes to this plugin's owned design data; `None` keeps the type default |
-| `analysis_result_write` | Allow or deny writes to this plugin's results/artifacts; `None` keeps the type default |
+For a design plugin with its own tables:
 
 ```python
-from mint_sdk import PluginCapabilities
-
-PluginCapabilities(
+capabilities=PluginCapabilities(
     requires_auth=True,
     requires_experiments=True,
     requires_database=True,
-    requires_shared_database=False,    # set True if you declare tables
+    requires_shared_database=True,
+    experiment_crud=True,
+    design_data_write=True,
+    analysis_result_write=False,
 )
 ```
 
-## Choosing a type
+See [plugin-owned tables](/sdk/tutorials/design-plugin-with-tables) for `get_shared_models()`, migrations, local SQLite, and installed PostgreSQL behavior.
 
-Pick **`STATIC`** when your plugin only presents UI, dashboards, documentation, or read-only summaries. Static plugins can still expose routes and frontend pages, but the platform blocks design-data and analysis-output writes.
+## 5. Apply user and data permissions too
 
-Pick **`ANALYSIS`** when your plugin processes existing experiments and produces results. Examples: a peak-picking analysis that reads RAW files from an experiment and writes back peak tables; a drug-response prediction analysis that consumes panel design data and writes back IC50 estimates; a quality-control analysis that flags problematic samples.
+Plugin capabilities describe what the **plugin** may do. They do not mean every user may invoke every mutation.
 
-Pick **`EXPERIMENT_DESIGN`** when your plugin defines what an experiment *is* — its design schema, the form users fill in, the metadata that travels with it. Examples: an LC-MS sequence designer that owns `LcmsSequenceTable`; a drug-response panel designer; a plate-map editor for cell culture experiments.
+- Resolve the request actor with `CurrentPluginActor`; check the relevant platform permission or a plugin role for sensitive actions.
+- Use `context.get_experiment_repository()` for platform records so experiment visibility and configured type restrictions apply.
+- Keep design writes and result writes under your own entry-point plugin ID. Reading another plugin's analysis payload requires its exact ID in `analysis_result_readers`.
+- Authorize access to rows in plugin-owned tables yourself. A private schema isolates plugins; it does not automatically isolate users or experiments within your tables.
+- Treat standalone execution as a separate mode. Return a clear 503 for features that require the platform; do not silently substitute privileged platform access.
 
-Pick **`FULL`** only when one plugin truly needs to do both jobs: create/update design data and write analysis artifacts or compatibility results for the same workflow. A single domain capability often splits more cleanly into two plugins — one design plugin to set up the experiment plus one or more analysis plugins that act on it.
+See [PlatformContext](/sdk/concepts/platform-context), [route permissions](/sdk/recipes/route-permissions), and [plugin roles](/sdk/tutorials/plugin-roles).
 
-Pick **`WORKFLOW`** for schedulers and orchestrators that need to manage experiment lifecycle without owning design or analysis payloads. It is fail-closed, so request only the required write explicitly:
+## Scaffold each type
 
-```python
-@mint_plugin(
-    analysis_type="workflow",
-    routes_prefix="/scheduler",
-    plugin_type=PluginType.WORKFLOW,
-    capabilities=PluginCapabilities(experiment_crud=True),
-)
-class SchedulerPlugin(AnalysisPlugin):
-    pass
+Run these from a parent directory; each command creates a separate project:
+
+```bash
+mint init hello-mint --name "Hello MINT" --mode generated --type analysis --yes
+mint init peak-review --name "Peak Review" --mode standard --type analysis --yes
+mint init panel-designer --name "Panel Designer" --mode standard --type experiment-design --yes
+mint init lab-help --name "Lab Help" --mode standard --type static --yes
+mint init batch-coordinator --name "Batch Coordinator" --mode standard --type workflow --yes
+mint init assay-workbench --name "Assay Workbench" --mode standard --type full --yes
 ```
 
-## Example: minimal pair
+The standard scaffold starts with the same example calculation endpoint and Vue workspace for each type. `--type` changes metadata and policy; replace the example with your actual workflow. In v1.2, the `--type` help text still lists only four categories, but `workflow` is accepted by the command implementation.
 
-::: code-group
+Continue with [first analysis plugin](/sdk/tutorials/first-analysis-plugin), [custom frontend](/sdk/tutorials/adding-a-frontend), [design plugin with tables](/sdk/tutorials/design-plugin-with-tables), or [workflow plugin](/sdk/tutorials/plugin-types-workflow).
 
-```python [Design plugin]
-from mint_sdk import AnalysisPlugin, PluginCapabilities, PluginType, mint_plugin
-
-
-@mint_plugin(
-    analysis_type="metabolomics",
-    routes_prefix="/lcms-sequence",
-    plugin_type=PluginType.EXPERIMENT_DESIGN,
-    capabilities=PluginCapabilities(
-        requires_auth=True,
-        requires_experiments=True,
-        requires_database=True,
-        requires_shared_database=True,
-    ),
-)
-class LcmsSequenceDesignPlugin(AnalysisPlugin):
-    pass
-```
-
-```python [Analysis plugin]
-from mint_sdk import AnalysisPlugin, PluginCapabilities, PluginType, mint_plugin
-
-
-@mint_plugin(
-    analysis_type="metabolomics",
-    routes_prefix="/peak-picking",
-    plugin_type=PluginType.ANALYSIS,
-    capabilities=PluginCapabilities(
-        requires_auth=True,
-        requires_experiments=True,
-        requires_database=True,
-    ),
-)
-class PeakPickingPlugin(AnalysisPlugin):
-    pass
-```
-
-:::
-
-## Next
-
-→ [Plugin lifecycle](/sdk/concepts/lifecycle) — what happens between `register` and `uninstall`
-→ [PlatformContext](/sdk/concepts/platform-context) — what each capability gets you
-→ [Tutorials → First analysis plugin](/sdk/tutorials/first-analysis-plugin) — build one end-to-end
+Source: [v1.2 capability model](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/models.py), [scaffold implementation](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/init_command.py), and [scoped experiment repository](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/repositories/scoped_experiment_repository.py).

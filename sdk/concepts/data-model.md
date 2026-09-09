@@ -1,6 +1,6 @@
 # Data model
 
-The `mint-sdk` data classes mirror the platform's core entities — but exposed as immutable dataclasses with the fields plugins typically read or write. Repositories return these dataclasses; the platform owns the underlying SQLAlchemy models.
+The `mint-sdk` data classes mirror the platform's core entities — but exposed as slots dataclasses with the fields plugins typically read or write. Repositories return these dataclasses; the platform owns the underlying SQLAlchemy models.
 
 ## Entities
 
@@ -23,6 +23,7 @@ class Experiment:
     custom_metadata: dict = field(default_factory=dict)
     start_date: date | None = None
     end_date: date | None = None
+    design_owner_plugin_id: str | None = None
 ```
 
 | Field | Notes |
@@ -32,6 +33,7 @@ class Experiment:
 | `status` | Usually `planned`, `ongoing`, `completed`, or `cancelled` |
 | `tags`, `custom_metadata` | Free-form JSON columns plugins can read but generally should not mutate unless their plugin type owns the experiment update path |
 | `parent_experiment_id` | For nested experiments / sub-runs |
+| `design_owner_plugin_id` | Existing design owner; `None` before a design payload establishes ownership |
 
 ### `DesignData`
 
@@ -49,7 +51,35 @@ class DesignData:
     updated_at: datetime
 ```
 
-`data` is whatever JSON your design plugin defines. `schema_version` defaults to the value in `PluginMetadata.schema_version` — bump it when your design schema changes incompatibly.
+`data` is the JSON your design plugin defines. MINT 1.2 keeps **one design owner per experiment**. The first save establishes the owner; another plugin's replacement or deletion fails with `DesignDataOwnershipConflictException` (409), even if that plugin can write designs. Workflow CRUD does not establish design ownership.
+
+`save_design()` defaults to `metadata.schema_version`. A declared `design_schema_version` replaces the protocol default `"1.0"`; an explicit non-default version wins. Version labels describe stored payloads and do not transform older data automatically.
+
+Declare a schema for platform-enforced validation:
+
+```python
+from pydantic import BaseModel, Field
+from mint_sdk import AnalysisPlugin, PluginType, design_schema_from_model, mint_plugin
+
+class Sample(BaseModel):
+    name: str = Field(min_length=1)
+
+class BatchDesign(BaseModel):
+    samples: list[Sample] = Field(min_length=1)
+
+@mint_plugin(
+    analysis_type="lcms_batch", routes_prefix="/batch-designer",
+    plugin_type=PluginType.EXPERIMENT_DESIGN,
+    design_schema=design_schema_from_model(BatchDesign),
+    design_schema_version="2.0",
+)
+class BatchDesigner(AnalysisPlugin):
+    pass
+```
+
+The JSON Schema contract is opt-in; existing plugins without `design_schema` keep free-form JSON. Schema validation is separate from SQL migrations and typed administrator settings.
+
+`PluginExperimentData` is a backward-compatible alias for `DesignData`.
 
 ### `PluginAnalysisResult`
 
@@ -158,11 +188,17 @@ User ──────< UserPluginRole              (one per (user, plugin))
 
 The platform owns `Project`, `Experiment`, `User`, `DesignData`, `AnalysisArtifact`, compatibility `PluginAnalysisResult` records, and `UserPluginRole`. Design data and artifact payloads are JSON-backed; plugin-owned tables live in the plugin's own Postgres schema (integrated mode) or its own SQLite database (standalone mode).
 
-## JSON payload storage
+## File objects and ownership
 
-`DesignData.data`, `AnalysisArtifact.result`, and compatibility `PluginAnalysisResult.result` are platform-owned PostgreSQL `jsonb` payloads. They are not mirrored into the SDK's standalone SQLite database: standalone mode has no platform `ExperimentRepository`, while `RecordingContext` supplies an in-memory repository for tests.
+An artifact is a discoverable result record; a `DataObjectRef` identifies bytes in object storage. File-backed artifacts link the two using `ANALYSIS_FILE_ARTIFACT_SCHEMA`. Store large CSVs, images, and binary results as objects rather than embedding them in JSON.
 
-SQLite in `mint-sdk[local-db]` stores only plugin-owned standalone tables declared through `get_shared_models()` or migrations. Keep those models and migrations portable when the same plugin tables must run in standalone SQLite and an installed PostgreSQL schema.
+Use `self.get_data_store(experiment_id)` for raw object operations (`put_bytes`, `put_file`, `get_bytes`, `download_file`, `list`, `delete`). An integrated store is scoped to experiment and plugin; another plugin's read scope requires a reader declaration and does not allow mutation. Standalone object storage is local; it does not create platform artifact records.
+
+`save_analysis_file_artifact()` creates a new artifact and rejects a reused key. `update_analysis_file_artifact()` replaces an active file using compare-and-swap and reports deferred old-object cleanup. JSON artifact saves remain upserts. See [Writing results](/sdk/recipes/writing-results).
+
+## JSONB portability
+
+`DesignData.data`, `AnalysisArtifact.result`, and compatibility `PluginAnalysisResult.result` are JSON-typed payloads. Postgres uses native `jsonb` (queryable, indexable); SQLite uses serialized JSON in a TEXT column. The repository layer abstracts the difference. Code that just reads / writes whole dicts works in both backends.
 
 For complex queries (e.g., "find experiments where `result.method == 'v4'`"), prefer a real column inside a plugin-owned table over JSON-key indexing — JSON expression indexes work but reduce portability.
 
@@ -170,21 +206,22 @@ For complex queries (e.g., "find experiments where `result.method == 'v4'`"), pr
 
 | Repository | Returns | Writes |
 |------------|---------|--------|
-| `ExperimentRepository` | `Experiment` | `Experiment` (`EXPERIMENT_DESIGN` and `FULL` plugins) |
-| `ExperimentRepository.save_design_data` | `DesignData` | `DesignData` |
-| `ExperimentRepository.save_analysis_result` | `PluginAnalysisResult` | `PluginAnalysisResult` compatibility payload |
-| `ExperimentRepository.save_analysis_artifact` | `AnalysisArtifact` | Named analysis artifact |
-| `ExperimentRepository.save_analysis_artifacts` | `list[AnalysisArtifact]` | Atomic batch of named artifacts |
-| `ExperimentRepository.list_analysis_artifacts` | `list[AnalysisArtifactSummary]` | — |
-| `ExperimentRepository.get_analysis_artifact` | `AnalysisArtifact \| None` | — |
-| `ExperimentRepository.archive_analysis_artifact` / `restore_analysis_artifact` | `AnalysisArtifactSummary \| None` | Artifact status |
-| `ExperimentRepository.get_analysis_results` | `list[PluginAnalysisResult]` (calling plugin by default; `include_others=True` adds only declared `analysis_result_readers`) | — |
+| `ExperimentRepository` | Experiment, design, result, and artifact records | Effective `experiment_crud`, `design_data_write`, and `analysis_result_write` capabilities |
+| `ExperimentRepository.save_design_data` | `DesignData` | Owner-scoped design upsert |
+| `PluginDataRepository.save_experiment_data` | `DesignData` | `DesignData` |
+| `PluginDataRepository.save_analysis_result` | `PluginAnalysisResult` | `PluginAnalysisResult` compatibility payload |
+| `PluginDataRepository.save_analysis_artifact` | `AnalysisArtifact` | Named analysis artifact |
+| `PluginDataRepository.save_analysis_artifacts` | `list[AnalysisArtifact]` | Atomic batch of named artifacts |
+| `PluginDataRepository.list_analysis_artifacts` | `list[AnalysisArtifactSummary]` | — |
+| `PluginDataRepository.get_analysis_artifact` | `AnalysisArtifact \| None` | — |
+| `PluginDataRepository.archive_analysis_artifact` / `restore_analysis_artifact` | `AnalysisArtifactSummary \| None` | Artifact status |
+| `PluginDataRepository.get_analysis_results` | `list[PluginAnalysisResult]` (calling plugin by default; pass `include_others=True` for every plugin's result on one experiment) | — |
 | `UserRepository` | `User` | — |
 | `PluginRoleRepository` | `UserPluginRole`, `str | None` (a single role) | `UserPluginRole` |
 
-See the [API Reference → Python SDK](/sdk/api/python) for the full method list.
+MINT 1.2 consolidates these methods on `ExperimentRepository`. `PluginDataRepository` remains a MINT 1.1 adapter, including its old `save_experiment_data` / `get_experiment_data` / `delete_experiment_data` names. New code should use `save_design_data` / `get_design_data` / `delete_design_data` on the experiment repository or the plugin convenience helpers.
 
-Analysis outputs are not globally readable. A plugin can read its own result, or results from exact producer plugin IDs declared in its `analysis_result_readers`. Passing `include_others=True` expands the query only to that allowlist.
+See the [API Reference → Python SDK](/sdk/api/python) for the method map.
 
 ## Extending the model
 
@@ -194,6 +231,8 @@ Plugins extend the data model in two complementary ways:
 2. **Plugin-owned tables** — declare via `get_shared_models()` and/or migrations. Best for queryable, relational data the plugin owns end-to-end.
 
 Pick (1) when the data is tightly coupled to one experiment and never queried across experiments by anyone else. Pick (2) when you need indexes, cross-experiment queries, or relational integrity.
+
+Verified against [v1.2.0 data models and protocols](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/repositories.py) and [design ownership enforcement](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/repositories/sql_experiment_repository.py).
 
 ## Next
 

@@ -238,8 +238,12 @@ jobs:
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         uses: oven-sh/setup-bun@v2
 
-      - name: Upgrade mint-sdk within the declared range
-        run: uv run mint sdk update --scope minor
+      - name: Install frontend dependencies
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: cd frontend && bun install
+
+      - name: Update aligned SDKs on the supported minor line
+        run: uv run mint sdk update --scope patch
 
       - name: Run tests
         run: uv run pytest -v
@@ -272,7 +276,7 @@ jobs:
           content-filepath: sdk-compat-failure.md
 ```
 
-`mint sdk update` ignores prereleases and defaults to patch updates. Use `--scope minor` for routine forward-compatibility checks. The command runs `uv sync` and, when a frontend SDK update is needed, the detected JS package manager's install command; set up Bun before the command in Bun-based projects. For new SDK majors, edit dependency ranges deliberately and run a separate migration branch.
+`mint sdk update` defaults to stable patch updates; `--channel beta` opts into prerelease testing. Use `--scope patch` for a fixed minor support line. The updater selects the newest candidate before checking bounds; `--scope minor` fails if that candidate is excluded. Review wider bounds on a separate upgrade branch. The command runs `uv sync` and, when a frontend SDK update is needed, the detected JS package manager's install command; set up Bun before the command in Bun-based projects. For new SDK majors, edit dependency ranges deliberately and run a separate migration branch.
 
 ## Caching
 

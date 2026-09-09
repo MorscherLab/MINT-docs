@@ -7,6 +7,16 @@ The `mint` command-line interface ships with the **`mint-sdk`** package (PyPI). 
 | **Plugin development** | Scaffold, run, build, and manage plugin projects | [Plugin Development → CLI reference](/sdk/api/cli-reference) |
 | **Platform-data CLI** | Talk to a running platform (auth, list experiments, create projects, check status) | [Platform commands](/cli/platform) |
 
+## Install the 1.2 CLI
+
+```bash
+uv tool install 'mint-sdk[cli]==1.2.0'
+```
+
+The `[cli]` extra is required for command-line tooling. Plugin projects created
+with `mint init` also include the `[server]` development extra; use `uv run mint`
+inside the project after `uv sync`.
+
 ## Verifying the install
 
 ```bash
@@ -15,7 +25,7 @@ mint --version
 mint --help
 ```
 
-If the command isn't found, the install location isn't on your `PATH`. With `uv tool install mint-sdk`, run `uv tool update-shell`. With `pip install --user mint-sdk`, add `~/.local/bin` to `PATH`.
+If the command isn't found, the install location isn't on your `PATH`. With `uv tool install 'mint-sdk[cli]==1.2.0'`, run `uv tool update-shell`. With `pip install --user 'mint-sdk[cli]'`, add `~/.local/bin` to `PATH`.
 
 ## Command index
 
@@ -45,17 +55,19 @@ These commands act on a plugin project (cd into the plugin's directory first):
 | `mint dev logs` | Tail logs from a running plugin process |
 | `mint build` | Package the plugin into a `.mint` bundle |
 | `mint doctor` | Validate the plugin project structure |
+| `mint add` | Add routes, schemas, migrations, artifacts and frontend pages |
+| `mint verify / deploy` | Test a disposable installation or deploy to a running platform |
 | `mint info` | Print the plugin's metadata |
 | `mint docs` | Browse SDK reference documentation from the CLI |
-| `mint sdk link / unlink / update` | Manage the plugin's SDK pin |
+| `mint sdk link / unlink / update / generate` | Manage aligned SDK releases and generate typed frontend clients |
 
 Full details — subcommands and primary flags: [Plugin Development → CLI reference](/sdk/api/cli-reference).
 
 ## What `mint` is not
 
-- **Not a generic platform launcher.** `mint serve` doesn't exist. Direct installs usually run the ASGI factory with `uvicorn api.main:create_app --factory`; runtime/source deployments can use `mint daemon` when they need the 1.1 job/session host worker.
+- **Not a generic platform launcher.** `mint serve` doesn't exist. Direct installs usually run the ASGI factory with `uvicorn api.main:create_app --factory`; runtime/source deployments can use `mint daemon` when they need the job/session host worker.
 - **Not a local `pip install <plugin>` replacement.** `mint plugin install` asks the running platform server to install a package or server-visible source, and `mint plugin upload` sends a `.mint` bundle to that server. For day-to-day use, admins usually use the Marketplace or Admin UI.
-- **Not the production daemon by default.** `mint dev` is for plugin hot reload, while `mint daemon` is the foreground runtime command used by Docker/Linux/WSL deployments.
+- **Not the production daemon by default.** `mint dev` is for plugin hot reload, while `mint daemon` is the foreground runtime command used by Linux deployments.
 
 ## Next
 

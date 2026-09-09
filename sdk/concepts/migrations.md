@@ -1,233 +1,148 @@
-# Migrations
+# Plugin tables and migrations
 
-Plugins that own database tables evolve their schema through `mint_sdk.migrations`. Each plugin maintains its own migration history, independent of the platform's. The platform's `MigrationRunner` applies pending migrations on startup, advisory-locked so two replicas can't race.
+MINT 1.2.0 supports plugin-owned SQLModel/SQLAlchemy tables with a versioned Python migration package. Use tables for structured drafts, run metadata, or application records that need queries and constraints. Use platform design/results repositories and object storage for data that belongs in the experiment workflow; see [Data model](/sdk/concepts/data-model).
 
-## When to use migrations
+This page describes the **v1.2.0 release**: `get_shared_models()`, `get_migrations_package()`, `PluginMigration`, and `MigrationRunner`. It does not describe an Alembic-based `mint db` workflow.
 
-Use migrations when:
-
-- Your plugin declares tables it queries with SQL (not JSON columns inside `DesignData`)
-- You want indexes, foreign keys, or unique constraints
-- You want production deployments to upgrade safely without manual SQL
-- You want CI to verify schema changes apply cleanly to a fresh install AND to an upgrade from any prior version
-
-Skip migrations when:
-
-- All your plugin's data fits inside `DesignData.data`, `AnalysisArtifact.result`, or compatibility `PluginAnalysisResult.result` JSON
-- You only need ephemeral state (caches, queues) that can be regenerated
-
-For the simpler "just create the tables" case where you don't need version history, override `get_shared_models()` instead — the platform calls `create_all()` on startup. Migrations and `get_shared_models()` are mutually exclusive: use one or the other, not both.
-
-## Architecture
-
-```mermaid
-flowchart LR
-    A[Plugin source] -->|declares| B(get_migrations_package)
-    B -->|imports| C[migrations package]
-    C --> M1[v001_initial.py]
-    C --> M2[v002_add_index.py]
-    C --> M3[v003_add_column.py]
-    R[MigrationRunner] -->|reads| C
-    R -->|reads| D[plugin_schema_migrations table]
-    R -->|applies pending| DB[(plugin's schema)]
-    R -->|writes| D
-```
-
-`plugin_schema_migrations` (Postgres) / `_plugin_migrations` (SQLite) is a platform-managed tracking table. Each row records `(plugin_name, version, name, applied_at, checksum, success, error_message)`. The runner compares it against the on-disk migrations package and runs anything missing, ordered by `version`.
-
-## Declaring migrations
-
-Three pieces:
-
-1. A migrations package inside your plugin
-2. One module per migration, each containing one or more `PluginMigration` subclasses
-3. The plugin overrides `get_migrations_package()` to point at the package
-
-```
-my_plugin/
-├── __init__.py
-├── plugin.py
-└── migrations/
-    ├── __init__.py
-    ├── v001_initial.py
-    ├── v002_add_lot_index.py
-    └── v003_add_concentration_column.py
-```
+## The database contract
 
 ```python
-# my_plugin/plugin.py
-from mint_sdk import AnalysisPlugin, PluginCapabilities, PluginType, mint_plugin
+from mint_sdk import AnalysisPlugin, PluginCapabilities, mint_plugin
+from my_plugin.models import Panel
 
 
 @mint_plugin(
-    analysis_type="experiment-design",
+    analysis_type="drug-response",
     routes_prefix="/my-plugin",
-    plugin_type=PluginType.EXPERIMENT_DESIGN,
-    capabilities=PluginCapabilities(
-        requires_database=True,
-        requires_experiments=True,
-        requires_shared_database=True,
-    ),
+    capabilities=PluginCapabilities(requires_shared_database=True),
 )
 class MyPlugin(AnalysisPlugin):
+    def get_shared_models(self) -> list[type]:
+        return [Panel]
+
     def get_migrations_package(self) -> str:
         return "my_plugin.migrations"
 ```
 
+These two methods are **complementary**:
+
+| Declaration | Responsibility |
+|---|---|
+| `requires_shared_database=True` | Requests the platform-owned PostgreSQL schema and declares the runtime requirement |
+| `get_shared_models()` | Current table definitions; local creation and model/schema checks |
+| `get_migrations_package()` | Import path to append-only revisions that evolve existing tables |
+| `get_plugin_db_session()` | Async session for this plugin's schema or standalone SQLite database |
+
+Without a migration package, MINT creates missing model tables. It cannot turn a changed model into `ALTER TABLE` automatically. Once persistent users exist, add migrations before shipping schema changes.
+
+Do not import platform ORM tables into `get_shared_models()` or hard-code a PostgreSQL schema on models. MINT derives the schema from the plugin identity (`panel-designer` becomes `panel_designer`). Use SDK repositories for platform data.
+
+## Runtime support
+
+| Runtime | Storage | Migration behavior |
+|---|---|---|
+| `mint dev` / standalone app | SQLite under `~/.mint/plugins/<plugin>/` by default | SDK creates missing model tables, runs or stamps revisions, then checks conformance |
+| Installed in-process plugin | PostgreSQL plugin schema | Platform prepares schema and runs migration package before calling `initialize()` in the entry-point loading path |
+| Installed isolated subprocess | `RemotePlatformContext` | Shared database capability is rejected; there is no remote SQL-session bridge |
+| `mint dev --platform` | Local standalone storage behind a proxy | Does not install the plugin or migrate platform PostgreSQL |
+
+Explicit module/class loading and development proxying are not substitutes for testing the normal installed entry-point lifecycle. SQLite tests also do not validate PostgreSQL-specific DDL.
+
+## Write migrations
+
+```text
+src/my_plugin/
+├── models.py
+├── plugin.py
+└── migrations/
+    ├── __init__.py
+    ├── v001_initial.py
+    └── v002_add_notes.py
+```
+
 ```python
-# my_plugin/migrations/v001_initial.py
+# src/my_plugin/migrations/v002_add_notes.py
 import sqlalchemy as sa
-from mint_sdk.migrations import PluginMigration, MigrationOps
+from mint_sdk.migrations import MigrationOps, PluginMigration
 
 
-class CreatePanelsTable(PluginMigration):
-    version = 1
-    name = "create_panels_table"
-
-    async def upgrade(self, op: MigrationOps) -> None:
-        await op.create_table(
-            "panels",
-            sa.Column("id", sa.Integer, primary_key=True),
-            sa.Column("experiment_id", sa.Integer, nullable=False),
-            sa.Column("name", sa.String(200), nullable=False),
-            sa.Column("drugs", sa.JSON, nullable=False),
-        )
-        await op.create_index("idx_panels_experiment", "panels", ["experiment_id"])
-```
-
-`PluginMigration` requires two class attributes: `version: int` (used for ordering and tracking) and `name: str` (a short snake_case label that appears in logs and the tracking table). The class name itself is arbitrary; the runner discovers any subclass with an integer `version`.
-
-Use the file-naming convention `vNNN_<short_name>.py` so modules are valid Python import paths and file ordering matches version ordering. Only the class's `version` value is authoritative.
-
-## `MigrationOps`
-
-`MigrationOps` is the portable DDL surface. It emits idempotent SQL for the active backend (Postgres in production, SQLite for standalone tests).
-
-| Method | Purpose |
-|--------|---------|
-| `add_column(table, column)` | Add a column. `column` is a `sa.Column` instance. |
-| `drop_column(table, column)` | Drop a column. Requires the migration's `destructive=True`. |
-| `rename_column(table, old, new)` | Rename a column. |
-| `alter_column(table, column_name, ...)` | Alter type / constraints (read source for full signature). |
-| `create_table(name, *columns)` | Create a table. `columns` are positional `sa.Column` args. |
-| `drop_table(name)` | Drop a table. Requires `destructive=True`. |
-| `create_index(name, table, columns, *, unique=False)` | Create an index. |
-| `drop_index(name)` | Drop an index. |
-| `backfill(table, column, default)` | Set `column` to `default` where currently NULL. |
-| `execute(stmt)` | Run a raw SQLAlchemy statement. |
-
-Columns are constructed with `sa.Column(...)` directly — there is no `MigrationOps.column()` factory. Use SQLAlchemy types: `sa.Integer`, `sa.String(N)`, `sa.JSON`, `sa.DateTime`, `sa.Boolean`, etc.
-
-Postgres-specific types come from `sqlalchemy.dialects.postgresql` (e.g., `JSONB`, `UUID`, `TSVECTOR`); they map to TEXT / JSON on SQLite.
-
-For non-portable work, gate on `op._dialect`:
-
-```python
-import sqlalchemy as sa
-from sqlalchemy import text
-from mint_sdk.migrations import PluginMigration, MigrationOps
-
-
-class AddPanelSearchVector(PluginMigration):
-    version = 4
-    name = "add_panel_search_vector"
+class AddNotes(PluginMigration):
+    version = 2
+    name = "add_notes"
 
     async def upgrade(self, op: MigrationOps) -> None:
-        if op._dialect == "postgresql":
-            await op.execute(text(
-                "ALTER TABLE panels ADD COLUMN search_vec tsvector "
-                "GENERATED ALWAYS AS (to_tsvector('english', name)) STORED"
-            ))
-            await op.create_index("idx_panels_search_vec", "panels", ["search_vec"])
+        await op.add_column("panels", sa.Column("notes", sa.Text, nullable=True))
 ```
 
-## Destructive operations
+Add the corresponding `notes: str | None = None` field to the current model. Keep each revision number unique and increasing. Discovery imports modules in the named package and finds `PluginMigration` subclasses; `version` controls order, not the filename. The `depends_on` attribute exists but v1.2.0 does not use it to resolve dependencies or sort revisions.
 
-`drop_table`, `drop_column`, and other destructive ops require the migration to opt in:
+For a populated table, add nullable columns or suitable server defaults first. An ORM `default_factory` runs in Python; it does not backfill database rows. Follow the [backfill recipe](/sdk/recipes/backfill-migration) when adding derived or required values.
 
-```python
-class DropLegacyColumn(PluginMigration):
-    version = 7
-    name = "drop_legacy_column"
-    destructive = True   # required for drop_column / drop_table
+## Fresh installs and stamping
 
-    async def upgrade(self, op: MigrationOps) -> None:
-        await op.drop_column("panels", "legacy_field")
-```
+`MigrationRunner.run(..., tables_already_exist=True)` stamps every supplied revision **only if no history exists**. A stamp records a checksum and success without executing `upgrade()`.
 
-Without `destructive = True`, calling a drop op raises `DestructiveMigrationError`.
+On standalone startup, the SDK first creates missing model tables. If the schema conforms, a history-free database can be stamped. If history exists, pending revisions execute even when `tables_already_exist=True`.
 
-## Running migrations
+For installed PostgreSQL plugins that declare migrations, initial schema setup skips model table creation. The migration runner normally builds a fresh schema by executing the revisions. An existing schema with no history can instead be stamped if every declared model table and column is already present. The platform then repairs missing model tables and runs conformance checks. This baseline detection is not evidence that arbitrary data backfills, indexes, or seed inserts have run.
 
-You don't run migrations manually in production — the platform calls `MigrationRunner.run(...)` on every startup before `initialize()`:
+Consequences:
 
-1. Acquires a Postgres advisory lock (or SQLite equivalent) keyed by `plugin_name`
-2. Ensures the tracking table exists
-3. Sorts the discovered migrations by `version`
-4. Validates checksums against any already-applied migrations
-5. Runs each pending migration's `upgrade(ops)` inside the same transaction as a tracking-table insert
+- Keep models aligned with the final migration state.
+- Test both a fresh database and upgrades from each supported deployed version.
+- Do not put indispensable fresh-install seed data only in `upgrade()`; a stamped installation skips it.
+- Do not delete migration history to resolve a failure. That can convert an incomplete upgrade into a misleading baseline.
 
-For local development, distinguish the two modes:
+## Execution, locks, and failure behavior
 
-```bash
-# Starts the dev proxy and standalone plugin process.
-# Useful for frontend/API integration, but it does not install the plugin
-# as an entry-point plugin or apply its migrations to the platform database.
-mint dev --platform
-```
+The runner opens **one transaction for the entire run**, including migration history writes. It validates versions/checksums, then applies pending revisions in integer order. PostgreSQL uses a transaction-scoped advisory lock keyed by plugin name and a 30-second lock timeout.
 
-Use a migration unit test with `MigrationRunner` for quick feedback, or install the plugin into a disposable platform environment when you need to verify the real startup path.
+The released SQLite implementation uses `engine.begin()`; despite the locking module's descriptive comments, it does not issue `BEGIN EXCLUSIVE`. Do not rely on it for production multi-process migration coordination.
 
-For a standalone platform start (no plugin attached), the migration runner runs as part of the normal `uvicorn api.main:create_app --factory` startup — there is no "migrate only" mode.
+A migration exception raises `MigrationError`. Earlier pending work in the same run is subject to the transaction rollback; verify SQLite DDL behavior with the actual driver. The v1.2.0 runner does **not** insert a new failed-history row, even though the tracking schema contains `success` and `error_message` columns. The platform records `migration_error` in plugin status; do not infer successful migration from process startup alone. Database-session conformance checks can also reject access to a mismatched schema.
 
-## Append-only discipline
+All revisions in a run share the connection and transaction. A loop of 5,000-row updates does not create separate transactions or release the migration lock between batches.
 
-Once a migration has been applied to a deployment, **never edit the file**. The runner stores a SHA-256 checksum of the migration class's source code; an edit triggers `MigrationChecksumError` on the next startup, blocking the plugin until the original source is restored.
+## History and version checks
 
-To change schema after a migration is shipped, write a new migration. Backwards-incompatible schema changes (drop a column other code might depend on) deserve a major version bump on the plugin.
+PostgreSQL stores history in `public.plugin_schema_migrations`; SQLite uses `_plugin_migrations`. Records contain plugin name, integer version, label, timestamp, source checksum, success, and optional error text.
 
-## Failure handling
+| Guard | Meaning and response |
+|---|---|
+| `MigrationChecksumError` | A successfully applied class's source differs. Restore the released source and append a new revision. |
+| `SchemaVersionAheadError` | Recorded database version exceeds the highest supplied revision. Restore a compatible plugin; do not install an older wheel over a newer schema. |
+| `DestructiveMigrationError` | A drop helper was used without `destructive = True`; inside the runner it is wrapped in `MigrationError`. |
+| Model/schema mismatch | A declared table or column is missing. Compare current models, actual schema, and migration history. |
 
-A migration that raises rolls back the transaction and the runner records the failure in the tracking table (`success=False`, `error_message`). The plugin enters a failed state visible to admins via the platform's status endpoints. The `MigrationResult` returned by `run()` exposes `current_version`, `applied`, `stamped`, and `errors`.
+Keep revisions immutable after release. Checksums cover the **migration class source**, not the entire module or external helpers: preserve helper behavior and constants too. Unique revision numbering and keeping the full shipped history are author responsibilities; the runner is not a migration graph validator.
 
-Common failure causes:
+The v1.2.0 conformance checks only detect missing tables and columns. They do not validate types, nullability, keys, indexes, defaults, constraints, or transformed data. Verify those explicitly in upgrade tests.
 
-| Error | Likely cause |
-|-------|--------------|
-| `MigrationChecksumError` | A previously-applied migration file was edited |
-| `SchemaVersionAheadError` | The DB has a version the plugin doesn't ship — usually a downgrade attempt |
-| `DestructiveMigrationError` | The migration called `drop_table`/`drop_column` without setting `destructive = True` |
-| Generic SQL error | The migration body raised — inspect the message and fix in a follow-up migration |
+## Package, design, and SQL versions
 
-## Idempotency for backfill data migrations
+The built package version identifies the plugin release; the scaffold derives it from Git through `hatch-vcs` and records it in wheel metadata. `schema_version` on `@mint_plugin` labels persisted design data. `PluginMigration.version` is the SQL revision. None automatically advances another.
 
-Migrations sometimes need to backfill data alongside schema changes. Use `op.backfill()` for the simple "default a NULL column" case; for complex updates, use `op.execute()` with idempotent SQL:
+When releasing a schema change: update the current model, append a migration, update the plugin package version, and test both fresh install and upgrade. Preserve design-data compatibility separately if its payload changes. A `downgrade()` override is available on a migration class, but the v1.2.0 runner only executes upgrades and the CLI has no automatic downgrade command. Treat rollback as a tested backup/restore or forward-fix procedure.
+
+## Raw SQL and backend differences
+
+Migration operations qualify plugin tables themselves. Raw SQL must do so explicitly because the PostgreSQL runner resets `search_path` to `public`:
 
 ```python
 import sqlalchemy as sa
-from sqlalchemy import text
-from mint_sdk.migrations import PluginMigration, MigrationOps
 
-
-class BackfillNormalizedName(PluginMigration):
-    version = 5
-    name = "backfill_normalized_name"
-
-    async def upgrade(self, op: MigrationOps) -> None:
-        await op.add_column(
-            "panels",
-            sa.Column("normalized_name", sa.String(200), nullable=True),
-        )
-        await op.execute(text(
-            "UPDATE panels SET normalized_name = LOWER(name) "
-            "WHERE normalized_name IS NULL"
-        ))
+# Inside upgrade(op): table name is a fixed developer-owned identifier.
+table = op.qualified_table("panels")
+await op.execute(
+    sa.text(f"UPDATE {table} SET notes = :value WHERE notes IS NULL")
+    .bindparams(value="Imported panel")
+)
 ```
 
-For larger backfills, chunk them — see [Recipes → Backfill migrations](/sdk/recipes/backfill-migration).
+Parameterize values; never interpolate request data into SQL. Prefer generic SQLAlchemy types for portable migrations. PostgreSQL `JSONB`, `UUID`, and `TSVECTOR` do **not** automatically map to SQLite types in this migration API. `alter_column(table, column, type_)` changes a type only; it has no `nullable=` option.
 
-## Next
+`drop_table`, `drop_column`, and `drop_index` require `destructive = True`. SQLite rename/type/drop-column operations use table recreation and reject tables with composite primary keys or incoming/outgoing foreign keys. Use carefully tested explicit DDL or an additive change when those limitations apply.
 
-→ [Tutorials → Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) — see migrations end-to-end
-→ [Recipes → Backfill migrations](/sdk/recipes/backfill-migration) — patterns for chunked backfills
-→ [API Reference → Migrations](/sdk/api/migrations) — exact symbol signatures
+Continue with the [table tutorial](/sdk/tutorials/design-plugin-with-tables), [backfill tests](/sdk/recipes/backfill-migration), and [exact API signatures](/sdk/api/migrations).
+
+Release sources: [SDK database lifecycle](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/plugin_database.py), [migration runner](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/migrations/runner.py), and [platform schema setup](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/plugins/plugin_schema_setup.py).

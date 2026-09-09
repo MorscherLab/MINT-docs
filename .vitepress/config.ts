@@ -140,6 +140,7 @@ export default defineConfig({
             { text: 'First analysis plugin', link: '/sdk/tutorials/first-analysis-plugin' },
             { text: 'Adding a frontend', link: '/sdk/tutorials/adding-a-frontend' },
             { text: 'Design plugin with tables', link: '/sdk/tutorials/design-plugin-with-tables' },
+            { text: 'Types & workflow plugin', link: '/sdk/tutorials/plugin-types-workflow' },
             { text: 'Plugin roles', link: '/sdk/tutorials/plugin-roles' },
           ],
         },
@@ -180,6 +181,7 @@ export default defineConfig({
           text: 'Frontend',
           items: [
             { text: 'Overview', link: '/sdk/frontend/' },
+            { text: 'Platform integration', link: '/sdk/frontend/platform-integration' },
             { text: 'Composables', link: '/sdk/frontend/composables' },
             { text: 'Design tokens', link: '/sdk/frontend/design-tokens' },
             { text: 'Theming', link: '/sdk/frontend/theming' },
@@ -196,7 +198,7 @@ export default defineConfig({
             { text: 'Versioning', link: '/sdk/operations/versioning' },
             { text: 'Deploying', link: '/sdk/operations/deploying' },
             { text: 'Migrate to 1.2', link: '/sdk/operations/migrating-to-1.2' },
-            { text: 'Upgrading the SDK', link: '/sdk/operations/upgrading-sdk' },
+            { text: 'Upgrade to SDK 1.2', link: '/sdk/operations/upgrading-sdk' },
           ],
         },
         {

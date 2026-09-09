@@ -1,172 +1,162 @@
-# Upgrading the SDK
+# Upgrading to MINT SDK 1.2
 
-`mint-sdk`, `@morscherlab/mint-sdk`, and the platform share the unified `v*` release stream. Plugins still adopt each SDK release at their own pace. This page covers when to upgrade, how to upgrade safely, and how to handle breaking changes.
+This guide targets **MINT v1.2.0**, released on 8 September 2026. Platform,
+Python SDK and frontend SDK releases use the same `v1.2.0` release tag. Your
+plugin has its own version. Read the [platform upgrade notes](https://github.com/MorscherLab/MINT/blob/v1.2.0/CHANGELOG.md)
+and [shared SDK changelog](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/CHANGELOG.md)
+before changing dependencies.
 
-Upgrading from 1.1? Follow the [MINT 1.2 migration guide](/sdk/operations/migrating-to-1.2) before widening your dependency range.
+For the platform configuration and legacy API mapping, also read the
+[MINT 1.2 migration guide](/sdk/operations/migrating-to-1.2).
 
-## When to upgrade
+## 1. Prepare the project and target platform
 
-| Trigger | Action |
-|---------|--------|
-| New SDK feature you need | Bump the floor in your `mint-sdk` range; release a minor version |
-| SDK security fix | Bump the floor; release a patch |
-| New SDK major (breaking) | Plan a migration; release a major version of your plugin |
-| Routine maintenance | Bump the ceiling when a new SDK minor lands and you've tested |
+Create a development branch and preserve the previous bundle, lockfiles and
+production database backup. Verify the current plugin tests before upgrading.
+The platform requires PostgreSQL in 1.2; local SQLite is still supported for
+standalone plugin development. Platform upgrades and plugin SDK upgrades are
+separate operations.
 
-You don't have to upgrade on every SDK release. Pinning to `mint-sdk>=1.0.0,<2.0.0` and staying there for the lifetime of SDK 1.x is a perfectly reasonable strategy.
-
-## Routine upgrade flow
-
-```bash
-# In your plugin project
-mint sdk update
-```
-
-This:
-
-1. Reads `pyproject.toml` and bumps the first `mint-sdk` version in the dependency spec to the latest stable patch by default
-2. Reads `frontend/package.json` and updates `@morscherlab/mint-sdk` similarly
-3. Runs `uv sync` and `bun install` to apply the changes
-4. Re-renders generated AI-assistant instructions when the project has one of the scaffolded files
-
-After running:
+Use a 1.2 CLI to perform the upgrade, even if the project's environment still
+contains SDK 1.1:
 
 ```bash
-uv run pytest -v
-mint doctor
-mint dev    # smoke test
+uv tool install 'mint-sdk[cli]==1.2.0'
+mint --version
 ```
 
-Commit the lockfile changes. The next CI run validates the new version against your test suite.
+For an existing uv tool installation, use `uv tool install --force
+'mint-sdk[cli]==1.2.0'`. Project commands below use `uv run mint` after dependency
+synchronization, so they run the SDK selected by that project's environment.
 
-Use `mint sdk update --scope minor` when you want the newest SDK minor in the same major, or `--dry-run` to preview. For SDK-major upgrades, edit the full dependency range manually; if your spec has an upper bound such as `<2.0.0`, a mechanical version replacement is not enough.
-
-## Bumping the ceiling for a new SDK major
-
-When `mint-sdk` 2.0 lands, your `>=1.0.0,<2.0.0` range excludes it. To opt in:
-
-1. Read the SDK changelog for breaking changes
-2. Update your plugin code to handle the breaks
-3. Bump the range to `>=2.0.0,<3.0.0`
-4. Release a major version of your plugin (since the floor is now 2.0)
-
-```toml
-# pyproject.toml — before
-[project]
-dependencies = [
-  "mint-sdk>=1.0.0,<2.0.0",
-]
-```
-
-```toml
-# pyproject.toml — after
-[project]
-dependencies = [
-  "mint-sdk>=2.0.0,<3.0.0",
-]
-```
-
-Release `2.0.0` of your plugin alongside.
-
-## Supporting two SDK majors
-
-Some plugins want to keep working under both old and new SDK majors during a transition window. Pattern:
+Check compatibility declarations. A project constrained to `<1.2` must have
+that ceiling changed deliberately before selecting 1.2. For a plugin that now
+requires the released 1.2 APIs, use:
 
 ```toml
 [project]
-dependencies = [
-  "mint-sdk>=1.5.0,<3.0.0",   # spans two majors
+dependencies = ["mint-sdk>=1.2.0,<1.3"]
+
+[dependency-groups]
+dev = [
+  "mint-sdk[cli,server]>=1.2.0,<1.3",
+  "pytest>=8.0.0",
+  "pytest-asyncio>=0.23.0",
 ]
+
+[tool.mint]
+requires_mint = ">=1.2.0,<1.3"
 ```
 
-In code, branch on SDK version where APIs differ:
+Merge these entries into the scaffold; keep your plugin's scientific and other
+application dependencies. Use `mint-sdk[local-db]` in runtime dependencies if
+you own SQLModel tables. The SDK supplies its FastAPI/Pydantic/HTTPX stack;
+`[cli]` supplies Typer and `[server]` supplies Uvicorn. Do not duplicate their
+version policy in the plugin.
 
-```python
-import mint_sdk
+## 2. Select one SDK release
 
-if mint_sdk.__version__.startswith("2."):
-    from mint_sdk import NewAccessor
-    accessor = NewAccessor()
-else:
-    from mint_sdk import OldAccessor
-    accessor = OldAccessor()
+```bash
+mint sdk update . --version 1.2.0 --dry-run
+mint sdk update . --version 1.2.0
 ```
 
-This trades plugin code complexity for compatibility breadth. Worthwhile only when you have users you can't easily move forward.
+The updater selects a common release available on PyPI and npm when both SDKs
+are declared. It synchronizes Python and frontend lockfiles to that release,
+normalizes supported legacy Python pins, removes redundant SDK-owned framework
+dependencies, and refreshes scaffolded assistant guidance. Review those changes
+before committing.
 
-## Reading the SDK changelog
+**The update target and compatibility floor are different.** Updating the
+installed SDK does not automatically raise an existing valid Python `>=` floor.
+Raise it yourself when your code begins using a new API. The updater rejects a
+target excluded by Python upper bounds/exclusions or `[tool.mint].requires_mint`.
 
-SDK changes are recorded in [`MINT/packages/CHANGELOG.md`](https://github.com/MorscherLab/MINT/blob/main/packages/CHANGELOG.md). Platform-wide release notes live in the root [`CHANGELOG.md`](https://github.com/MorscherLab/MINT/blob/main/CHANGELOG.md).
+| Command option | Use |
+|---|---|
+| `--scope patch` | Default: select a patch in the current minor |
+| `--scope minor` | Select the newest candidate within the current major; fail if excluded by declared bounds |
+| `--scope major` | Select across majors; fail if the candidate violates declared bounds |
+| `--version 1.2.0` | Select this exact release instead of the newest candidate |
+| `--channel stable` | Default release channel |
+| `--channel beta` | Allow prereleases for a development branch |
+| `--dry-run` | Preview file changes without applying them |
+| `--no-sync` | Change declarations without installing or validating lockfiles |
+| `--verify` | Also run Docker verification against the selected stable/beta channel |
 
-For breaking changes, the changelog entries follow the pattern:
+`--verify` selects a **channel image**, not an exact image matching `--version`.
+Use `mint verify --image IMAGE` when your test must use one particular platform
+build. If synchronization or chained verification fails, the updater restores
+the dependency/guidance files it snapshotted; restoring installed environments
+is best effort. Re-sync before continuing after a failure.
 
-```
-### Removed (BREAKING)
-- `OldAccessor.foo()` — replaced by `NewAccessor.foo()` in v2.0. Migration: replace `Old` with `New` and the API is otherwise identical.
-```
+The updater selects the newest candidate first, then checks bounds; it does
+not search backward for the newest allowed version. A plugin declaring `<1.3`
+can therefore fail with `--scope minor` once 1.3 exists. Use patch updates for
+a fixed 1.2 support line, or review/widen bounds on an upgrade branch.
 
-## Beta SDK testing
+## 3. Migrate the plugin code
 
-When the SDK ships a `2.0.0-beta.1`, opt your plugin into the beta channel:
+| Surface | Action for 1.2 | Detailed guide |
+|---|---|---|
+| Package discovery | Declare one `mint.plugins` entry point; derive identity from package metadata | [Versioning](/sdk/operations/versioning) |
+| Type and writes | Consider `WORKFLOW`; explicitly review experiment CRUD, design writes and analysis writes | [Plugin types](/sdk/concepts/plugin-types) |
+| Platform data | Use the unified experiment repository and first-class analysis artifacts | [PlatformContext](/sdk/concepts/platform-context), [writing results](/sdk/recipes/writing-results) |
+| Routes | Use `@endpoint`, typed actors and resource checks; replace custom role guards with SDK guards where appropriate | [Route permissions](/sdk/recipes/route-permissions) |
+| Lifecycle | Use typed `@on_event` handlers; subprocess plugins now receive platform experiment events | [Lifecycle](/sdk/concepts/lifecycle) |
+| Settings | Keep runtime effects in `@on_config_change`; preserve secret references and revision checks | [PlatformContext](/sdk/concepts/platform-context) |
+| Errors | Handle the typed envelope and request IDs; generated frontend clients use typed errors | [Error handling](/sdk/recipes/error-handling) |
+| Tables | Keep released `get_shared_models()` and numbered `Migration` revisions | [Migrations](/sdk/concepts/migrations) |
+| Frontend | Regenerate contracts and check renamed/changed public imports | [Adding a frontend](/sdk/tutorials/adding-a-frontend) |
 
-```toml
-[project]
-dependencies = [
-  "mint-sdk>=2.0.0b1,<3.0.0",
-]
-```
+The 1.2 SDK retains some 1.1 APIs as adapters. `mint doctor` helps identify
+legacy usage; retaining an adapter does not make it the recommended API for new
+code. Do not copy migration commands from unreleased source into a 1.2 plugin:
+`mint db` is not a v1.2.0 command.
+
+## 4. Regenerate, test and install
 
 ```bash
 uv sync
-uv run pytest -v
+uv run mint sdk generate
+uv run mint sdk generate --check
+uv run mint doctor --strict
+uv run pytest
 ```
 
-`mint sdk update` only selects stable semver releases, so beta testing starts by editing the dependency range explicitly. Run your full test suite. File any issues against [`MorscherLab/MINT`](https://github.com/MorscherLab/MINT). Once 2.0 stable lands, drop the `b1` from your range.
-
-::: warning Don't ship plugin releases against SDK betas
-A plugin built against `mint-sdk==2.0.0b1` may not work against `mint-sdk==2.0.0` if a beta-only API changes. Test against beta, ship against stable.
-:::
-
-## Breaking change example
-
-MINT 1.2 merged experiment, design-data, analysis-result, and artifact access into one repository. See the [1.2 migration guide](/sdk/operations/migrating-to-1.2#use-the-unified-experiment-repository) for the complete before/after mapping.
-
-## Frontend SDK upgrades
-
-The frontend SDK ships from the same tag as the Python SDK and platform. Frontend breaks are usually:
-
-- Component renames or removed components → search-and-replace + storybook visual review
-- Composable signature changes → TypeScript catches them at build time
-- Token renames → grep for the old variable name in `.css` and Vue templates
+For a standard plugin, also run from `frontend/`:
 
 ```bash
-cd frontend
-bun update @morscherlab/mint-sdk
-bun run type-check   # surfaces breaks immediately
+bun install --frozen-lockfile
+bun run test
+bun run type-check
 bun run build
 ```
 
-For visual review, run your frontend's Histoire (if you have one) or `bun run dev` and click through the affected pages.
+Then build and exercise the real installation path:
 
-## Skipping SDK majors
-
-It's fine to skip an SDK major if its features don't matter to you:
-
-```
-mint-sdk 1.x ──► your plugin 1.x ─┐
-mint-sdk 2.x  (skip)              │
-mint-sdk 3.x ──► your plugin 2.x ◄┘
+```bash
+uv run mint build .
+uv run mint verify . --bundle dist/my-plugin-0.2.0.mint
 ```
 
-Your plugin can jump from `mint-sdk>=1.0.0,<2.0.0` directly to `>=3.0.0,<4.0.0`. Read the cumulative changelogs (1→2 + 2→3) to know what to migrate.
+Replace the bundle filename with the artifact actually produced. Docker must be
+running for `verify`. Test both a fresh database and a copy of the previous
+plugin schema when migrations change. Check login, experiment selection,
+forbidden operations, saved results, settings and reload after installation;
+a successful frontend build alone does not verify platform integration.
 
-## Notes
+Commit source changes, generated contracts and the updated lockfiles together.
+Release the plugin under its own next version after these checks. Updating the
+SDK does not publish the plugin or upgrade a running platform.
 
-- The SDK's internal modules (`mint_sdk._discover`, `mint_sdk._version`, etc.) are private. Don't import them — they break without notice. Stick to the symbols documented in `mint_sdk/__init__.py`.
-- A plugin pinned to `mint-sdk==1.5.3` is fragile. The marketplace registry does not infer compatibility from `pyproject.toml`, so test the plugin against supported platform releases and set `min_platform_version` deliberately in the registry entry.
-- For long-lived plugins, schedule a quarterly "upgrade SDK" task — the longer you wait, the bigger the diff and the harder the migration.
+## Local SDK development
 
-## Related
+`mint sdk link --sdk-path PATH` links local SDK sources; `mint sdk unlink`
+restores published dependencies. Inspect the command's workspace discovery
+before using it in a multi-plugin workspace. Use linked sources to develop SDK
+changes, then unlink, synchronize and repeat build/install verification against
+the published release before distributing a plugin.
 
-- [Versioning](/sdk/operations/versioning) — bumping your plugin's version when the SDK changes
-- [CI patterns → SDK-compatibility check](/sdk/operations/ci-patterns#sdk-compatibility-check) — automated detection
+Source: [update implementation](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/update_command.py),
+[dependency policy](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/dependency_policy.py).

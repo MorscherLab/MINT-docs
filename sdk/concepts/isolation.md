@@ -1,148 +1,62 @@
-# Isolation
+# Runtime isolation and storage
 
-MINT runs plugins with as little process overhead as possible while still
-tolerating incompatible Python dependencies and plugin crashes. Version
-compatibility is checked first; runtime isolation is only considered after a
-plugin is allowed to install on the current platform.
+MINT 1.2.0 can run an installed plugin in the platform process or in a separate Python subprocess. Choose a compatible dependency/runtime arrangement **and** check that it supports the services your plugin needs. Process isolation does not make every `PlatformContext` method remotely available.
 
-## When each kicks in
+## Runtime comparison
 
-```mermaid
-flowchart TD
-    A[Plugin install] --> B{MINT version<br/>compatible?}
-    B -->|No| X[Block install<br/>or require force]
-    B -->|Yes| C[Read wheel and<br/>declared dependencies]
-    C --> D{Dependency/runtime<br/>isolation needed?}
-    D -->|No| E[Shared mode<br/>platform venv]
-    D -->|Yes| F[Isolated mode<br/>uv-managed venv]
-    E --> G[Mount routers in-process]
-    F --> H[Run plugin in subprocess<br/>plus HTTP proxy]
-```
+| Runtime | Platform access | Plugin-owned SQL tables | Typical use |
+|---|---|---|---|
+| Installed in-process | Direct platform context and repositories | PostgreSQL schema through `get_plugin_db_session()` | Plugins requiring shared database access |
+| Installed isolated subprocess | Remote context over authenticated internal HTTP APIs | No shared SQL-session bridge | Plugins with isolated dependencies using supported platform service adapters |
+| Standalone `mint dev` | No integrated context | Local SQLite | Plugin API/UI development and local database tests |
+| `mint dev --platform` | Development proxy into the standalone server | Local SQLite | Testing platform URL/proxy behavior during development |
 
-The version gate checks two sources:
+The **table-owning plugin tutorial must be deployed in-process** for PostgreSQL. `requires_shared_database=True` combined with `RemotePlatformContext` fails validation with `ConfigurationException`. Calling the remote context's `get_shared_db_session()` directly raises `NotImplementedError`; the SDK does not silently switch an installed remote plugin to SQLite.
 
-| Source | Checked against |
-|--------|-----------------|
-| Marketplace `min_platform_version` | The running MINT platform version |
-| Bundle `[tool.mint].requires_mint` / manifest `requires_mint` | The running MINT platform version |
+## In-process plugins
 
-The platform and `mint-sdk` are version-locked. Shared installs use a
-constraints file so a plugin cannot silently upgrade or downgrade the platform
-SDK. Isolated installs also pin the plugin venv to the platform's exact
-`mint-sdk` version; if the plugin wheel declares a range that excludes that
-version, the install fails before the resolver produces a confusing error.
+MINT installs compatible dependencies into the platform environment and mounts the plugin's routers in the platform FastAPI application. Calls to SDK repository adapters reach platform services directly.
 
-After version compatibility passes, the dependency/runtime decision determines
-whether the plugin can run in-process or must use a subprocess runtime.
+The session returned by `get_plugin_db_session()` uses the schema derived from the plugin entry-point identity, such as `panel_designer` for `panel-designer`. On the normal installed entry-point startup path, MINT prepares that schema and runs declared migrations before plugin initialization. See [Migrations](/sdk/concepts/migrations) for baseline stamping, conformance checks, and failure reporting.
 
-## Shared mode
+Do not use the shared connection to query platform tables directly. The repository APIs carry experiment visibility and plugin capability checks; an arbitrary SQL query does not acquire those checks automatically. Schema scoping is a data-organization mechanism, not a sandbox for untrusted Python code.
 
-When a plugin's dependencies don't clash, MINT installs the wheel into the platform's environment and mounts the plugin's routers directly inside the FastAPI app. There's no extra process, no extra port, no proxy hop.
+An ordinary route exception can be handled as an HTTP failure. A process crash, blocking code, or excessive resource use can still affect the platform process. Do not treat exception middleware as process containment.
 
-| | Shared mode |
-|---|---|
-| Startup cost | None — plugin code is imported in-process |
-| Per-request cost | Zero — direct function call |
-| Crash blast radius | Wrapped by `api/plugins/middleware.py` — a route exception becomes a 500 for that route only |
-| Visible to user | Identical to native platform routes |
+## Isolated subprocess plugins
 
-This is the default and the right choice for the vast majority of plugins. Keep
-your `mint-sdk` dependency range honest and avoid pinning common libraries too
-tightly unless your plugin really needs it.
+MINT provisions a plugin environment, starts an SDK-owned server on a local port, and proxies the plugin's public routes. The public URL remains the plugin's platform route; the separate process does not need a new user-facing address.
 
-## Isolated mode
+The subprocess receives platform connection details and a plugin-scoped internal credential. `RemotePlatformContext` adapts supported SDK services to the platform's `/api/internal` HTTP surface. User identity is propagated through the trusted runtime path; never accept arbitrary identity headers from a plugin's own browser UI as proof of authentication.
 
-When a plugin is installed as a subprocess runtime, MINT provisions a
-per-plugin venv via `uv`, caches the trusted wheel bundle under
-`server.dataPath`, records the runtime in the plugin manifest, and runs the
-plugin on a dedicated local port.
+Experiment repositories, supported data/result operations, and other implemented remote adapters can use this path. The adapters do **not** expose an arbitrary SQLAlchemy session or shared Python objects. Check the specific API's remote implementation when introducing another platform service.
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant P as Platform :8001
-    participant M as proxy.py
-    participant S as Plugin subprocess :8003
+Treat platform repositories as the interface between processes. If an isolated analysis plugin needs durable experiment results, use the platform's analysis/artifact/object-store APIs instead of assuming the SQL-table API works remotely. If its application genuinely needs plugin-owned PostgreSQL tables, arrange an in-process installation with compatible dependencies.
 
-    U->>P: GET /api/my-plugin/run
-    P->>M: route prefix matches /my-plugin
-    M->>S: forward HTTP (auth headers + request ID)
-    S->>S: AnalysisPlugin handler runs
-    S-->>M: response
-    M-->>P: response
-    P-->>U: response
-```
+Admins can inspect running subprocess plugins in server status. Use the platform's reported runtime, process health, logs, and SDK compatibility state to diagnose an installation; a successful wheel build alone does not verify that runtime path.
 
-| | Isolated mode |
-|---|---|
-| Startup cost | One subprocess + one venv per isolated plugin |
-| Per-request cost | One extra HTTP hop (loopback) |
-| Crash blast radius | Subprocess crash; `subprocess_manager.py` restarts it |
-| Visible to user | Identical URL — the proxy is transparent |
+## Version compatibility comes first
 
-The proxy forwards:
-- Request method, path, query string, body
-- Auth headers (the platform's JWT cookie / bearer token)
-- The `X-Request-Id` for log correlation
-- The plugin internal-token (issued by the platform, scoped per plugin) so the plugin can call back to the platform's internal API for things like reading experiments
+The plugin bundle's `[tool.mint].requires_mint`/manifest requirement is checked against the running platform, and marketplace metadata may declare a minimum platform version. The platform constrains `mint-sdk` to its installed version during plugin dependency installation. A plugin dependency range that excludes the platform's SDK version cannot be solved by assuming isolation supplies an unrelated SDK version.
 
-## Communication back to the platform
+Keep the plugin package version, declared platform compatibility, and actual tested SDK version accurate. See [Versioning](/sdk/operations/versioning) and [Deploying](/sdk/operations/deploying) for release/install steps.
 
-An isolated plugin doesn't share memory with the platform — it talks back over HTTP using the platform's `/api/internal` surface, authenticated by the per-plugin internal token. `PlatformContext` hides this from plugin code: when integrated and isolated, the context's `get_experiment_repository()` returns a wrapper that issues HTTP calls; when integrated and shared, the wrapper points at the in-process repository.
+## Development proxy limitations
 
-Plugin code is identical in both modes.
-
-Admins can inspect active subprocess runtimes in the server status view's
-**Plugin processes** card. It lists plugin name, status, port, start time, and
-restart count. If no subprocess plugins are active, the card says that no
-plugin subprocesses are isolated on separate ports.
-
-## Dev mode proxy
-
-In development, plugins are typically run as standalone subprocesses with `mint dev --platform` so the developer can hot-reload either side independently. `api/plugins/dev_proxy.py` consumes a `config.dev.toml` that maps route prefixes to localhost URLs:
+`mint dev --platform` is a development workflow. The platform forwards matching plugin paths to your local standalone server, allowing API/frontend hot reload. A proxy entry may look like:
 
 ```toml
-# MINT/config.dev.toml
+# Platform config.dev.toml
 [proxy]
-"/hello-mint"    = "http://localhost:8003"
-"/peak-picking"  = "http://localhost:8004"
+"/panel-designer" = "http://localhost:8003"
 ```
 
-The dev proxy preserves the production URL shape and forwards normal request headers, including user identity headers when the request has a bearer token. It does not install the plugin into the platform process and does not set `MINT_PLATFORM_URL` / `MINT_PLUGIN_TOKEN` for the dev server. Code that needs a full `PlatformContext` should still be tested with the plugin installed in a disposable MINT instance or with explicit SDK test harnesses.
+This does not install the entry-point plugin into the platform process, run its PostgreSQL migrations, or automatically supply the full `MINT_PLATFORM_URL` / `MINT_PLUGIN_TOKEN` integration contract to the standalone process. A request-dependent platform operation such as `CurrentExperiment` can still be unavailable in standalone mode.
 
-## Trade-offs and guidance
+Use a disposable MINT installation for the final integration check. Verify both a fresh install and an upgrade with saved plugin data; if targeting subprocess deployment, exercise the actual installed subprocess rather than only the development proxy.
 
-| Concern | Shared | Isolated |
-|---------|--------|----------|
-| Startup time | Fastest | Adds 200–500 ms per plugin (venv creation amortized after first run) |
-| Cold-call latency | ~0 ms | ~1–3 ms localhost overhead |
-| Memory | Shared with platform | Each subprocess has its own Python runtime (~30–80 MB base) |
-| Debugger attach | Attach once to platform | Attach to platform AND plugin process |
-| Logs | Single stream | Per-process; `subprocess_manager.py` aggregates with a prefix |
+## Configuration scope
 
-**Default to shared.** Reach for isolation when:
+Plugin loading lives under `plugins` in `config.json`: `loadFromEntryPoints`, explicit `plugins` entries, `extraIndexUrls`, and durable `settings`. The released user configuration does not expose `forceIsolated` or `forceShared` switches. Do not add guessed options to configuration to work around a runtime mismatch.
 
-- A plugin pins to a major version of a library the platform also uses
-- A plugin links a native binary that's incompatible with another plugin's
-- A plugin is unstable enough that you want crashes contained as separate processes (rare — middleware already covers route-level errors)
-
-## Configuration
-
-Plugin loading configuration lives under `plugins` in `config.json`:
-
-| Key | Use |
-|-----|-----|
-| `loadFromEntryPoints` | Discover installed `mint.plugins` entry points on startup |
-| `plugins` | Add explicit module/class plugin entries for local or special deployments |
-| `extraIndexUrls` | Additional Python package indexes used during plugin installs |
-| `settings` | Durable per-plugin settings resolved for decorator-declared config |
-
-Current user-facing configuration does not expose `forceIsolated` or
-`forceShared` switches. To exercise subprocess behavior during development,
-test an installed bundle in a disposable MINT instance, or run a standalone
-plugin behind the development proxy with `mint dev --platform`.
-
-## Next
-
-→ [PlatformContext](/sdk/concepts/platform-context) — how plugins reach platform services from either mode
-→ [Operations → Deploying](/sdk/operations/deploying) — production considerations when isolation kicks in
+Release sources: [runtime database validation](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/plugin_database.py), [remote context](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/remote_context.py), and [platform plugin loader](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/plugins/loader.py).

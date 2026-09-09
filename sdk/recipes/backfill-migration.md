@@ -1,185 +1,120 @@
 # Backfill migrations
 
-## Goal
+Add a new column and populate existing rows without overwriting values users already supplied. This recipe uses the `panels` table from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables) and the released MINT 1.2.0 migration API.
 
-Apply a schema change AND populate the new columns from existing data — safely, idempotently, and in chunks for large tables.
+## Add a nullable value first
 
-## The simple case
-
-When the table is small (< 100k rows), a one-shot `UPDATE` is fine:
+Add `notes: str | None = None` to the current `Panel` model, then create `src/mint_plugin_panel_designer/migrations/v002_add_notes.py`:
 
 ```python
-# my_plugin/migrations/v005_normalize_panel_names.py
 import sqlalchemy as sa
-
 from mint_sdk.migrations import MigrationOps, PluginMigration
 
 
-class NormalizePanelNames(PluginMigration):
-    version = 5
-    name = "normalize_panel_names"
+class AddNotes(PluginMigration):
+    version = 2
+    name = "add_notes"
 
-    async def upgrade(self, ops: MigrationOps) -> None:
-        await ops.add_column(
-            "panels",
-            sa.Column("normalized_name", sa.String, nullable=True),
-        )
-        await ops.execute(
-            sa.text(
-                "UPDATE panels SET normalized_name = LOWER(name) "
-                "WHERE normalized_name IS NULL"
-            )
-        )
-        await ops.create_index("idx_panels_normalized", "panels", ["normalized_name"])
+    async def upgrade(self, op: MigrationOps) -> None:
+        await op.add_column("panels", sa.Column("notes", sa.Text, nullable=True))
+        await op.backfill("panels", "notes", "Imported from an earlier version")
 ```
 
-The `WHERE normalized_name IS NULL` makes it idempotent — re-running on a partial application picks up only the rows that didn't update last time.
+`add_column` skips a column that already exists. `backfill` updates only NULL values. Rows with an existing note keep it. If notes should appear in HTTP responses, update the request/response models separately and regenerate the frontend contract.
 
-## Chunked backfill for large tables
+A Python default on the SQLModel field does not update old rows. A `server_default` affects database inserts; it is also different from explicitly backfilling historical data. Choose the meaning you want for old rows before assigning a value.
 
-`UPDATE` on millions of rows holds a long transaction and can lock the table. Chunk it:
+A fresh standalone database may be created from current models and migration history stamped. That skips this backfill, so NULL must remain a valid fresh-install value. Put required reference-data initialization in a separately tested idempotent lifecycle step instead of relying exclusively on a stamped migration.
+
+## Derive a value from existing columns
+
+Use a fixed, schema-qualified table name and bound values. PostgreSQL migration SQL runs with `search_path=public`, so unqualified raw SQL can target the wrong schema.
 
 ```python
-# my_plugin/migrations/v006_backfill_panel_dose_units.py
+# Inside upgrade(op), after adding normalized_name to the schema:
+table = op.qualified_table("panels")
+await op.execute(
+    sa.text(
+        f"UPDATE {table} SET normalized_name = LOWER(name) "
+        "WHERE normalized_name IS NULL"
+    )
+)
+```
+
+If a query needs values, use `.bindparams(...)` on the statement. `MigrationOps.execute()` accepts one statement argument, not a second parameters dictionary.
+
+## Large datasets and transaction boundaries
+
+The v1.2.0 runner executes all pending revisions within **one transaction** and, on PostgreSQL, one advisory lock. A loop with `LIMIT 5000` bounds each statement's work, but does not commit between batches or release locks. Splitting the loop across revisions in the same startup run does not change that transaction boundary.
+
+For small, measured migrations, a single update is often sufficient. For a large live table, use staged releases:
+
+1. Add a nullable column; deploy code that tolerates old NULL values and writes the new value.
+2. Run a restartable administrative/background backfill with a short transaction per batch. Limit each update to rows still needing work, and persist progress if computing the value is expensive.
+3. Verify no required values are missing, then enforce the constraint in a later release using tested backend-specific DDL where necessary.
+
+Do not call `commit()` on the runner's private connection inside `upgrade()`. There is no released `mint db backfill` or migration-only CLI command. A custom maintenance command must use normal plugin sessions and explicit authorization; its lifecycle is separate from startup migrations.
+
+`alter_column()` only changes the column type in 1.2.0. It does not accept `nullable=False`. PostgreSQL `ALTER ... SET NOT NULL` and SQLite table rebuilding need their own integration checks. Schema changes can acquire database locks; do not describe adding a column or constraint as lock-free.
+
+## Test the real upgrade path
+
+Add `tests/test_panel_migrations.py`. This test creates the old schema from its original migration, inserts historical data, runs the new revision, checks the rows, and confirms a second run is a no-op. It deliberately bypasses model-based fresh-install stamping.
+
+```python
+import asyncio
+from pathlib import Path
+
 import sqlalchemy as sa
-
-from mint_sdk.migrations import MigrationOps, PluginMigration
-
-
-CHUNK_SIZE = 5_000
-
-
-class BackfillDoseUnits(PluginMigration):
-    version = 6
-    name = "backfill_panel_dose_units"
-
-    async def upgrade(self, ops: MigrationOps) -> None:
-        # Schema change first
-        await ops.add_column(
-            "panels",
-            sa.Column("dose_units", sa.String, nullable=True),
-        )
-
-        # Chunked backfill
-        while True:
-            result = await ops.execute(
-                sa.text(
-                    """
-                WITH batch AS (
-                    SELECT id FROM panels
-                    WHERE dose_units IS NULL
-                    LIMIT :limit
-                )
-                UPDATE panels
-                SET dose_units = 'uM'
-                WHERE id IN (SELECT id FROM batch)
-                RETURNING id
-                """
-                ).bindparams(limit=CHUNK_SIZE),
-            )
-            rows = result.fetchall() if hasattr(result, "fetchall") else result
-            if not rows:
-                break
-
-        # Now that every row has dose_units, add the read-side index.
-        # Enforce NOT NULL in a follow-up migration once every deployment has backfilled.
-        await ops.create_index("idx_panels_dose_units", "panels", ["dose_units"])
-```
-
-Key techniques:
-
-- **`LIMIT :limit`** — bounds each transaction's row count.
-- **`RETURNING id`** — lets the loop know whether it did any work this iteration.
-- **Tighten constraints later** — add `NOT NULL` only after the data is correct everywhere, otherwise you risk failing on the first inconsistent row.
-
-For a high-contention Postgres deployment, you can add `FOR UPDATE SKIP LOCKED` to the batch selector after testing against Postgres. Do not put that clause in migrations you expect to run under SQLite.
-
-## Splitting schema and data into separate revisions
-
-For very large datasets, separate the schema from the backfill so the schema change is fast and the backfill can take its time:
-
-```
-006_add_dose_units_column.py        # add nullable column + ship a release
-007_backfill_dose_units.py          # backfill in chunks; idempotent
-008_make_dose_units_required.py     # NOT NULL + index, only after 007 has run everywhere
-```
-
-Each migration becomes a small, easy-to-review change. The plugin author can also run `007` manually outside startup if needed (e.g., during a maintenance window).
-
-## Online backfill
-
-If the plugin is actively writing while the backfill runs, your migration must coexist with the application:
-
-| Phase | Application code | Migration |
-|-------|------------------|-----------|
-| 1: Add nullable column | Reads tolerate NULL; writes leave column NULL | `add_column` (fast, no lock) |
-| 2: App starts double-writing | Writes fill the new column with the computed value | (no migration) |
-| 3: Backfill old rows | (no change) | Chunked `UPDATE` |
-| 4: Make column required | App ensures every code path writes the column | `ALTER ... SET NOT NULL` |
-| 5: Drop the old column | Reads use the new column only | `drop_column` (use carefully) |
-
-This is a 5-step migration; ship as 5 separate plugin releases or 5 separate revisions in one release. Each step is reversible.
-
-## Testing chunked backfills
-
-Use a temporary SQLite engine and drive `MigrationRunner` directly:
-
-```python
-# tests/test_migrations.py
-import pytest
-from importlib import import_module
 from sqlalchemy.ext.asyncio import create_async_engine
-from mint_sdk.migrations import MigrationRunner
+from mint_sdk.migrations import MigrationRunner, SchemaVersionAheadError
 
-CreatePanelsTable = import_module(
-    "my_plugin.migrations.v001_initial"
-).CreatePanelsTable
-NormalizePanelNames = import_module(
-    "my_plugin.migrations.v005_normalize_panel_names"
-).NormalizePanelNames
-BackfillDoseUnits = import_module(
-    "my_plugin.migrations.v006_backfill_panel_dose_units"
-).BackfillDoseUnits
+from mint_plugin_panel_designer.migrations.v001_initial import CreatePanels
+from mint_plugin_panel_designer.migrations.v002_add_notes import AddNotes
 
 
-@pytest.mark.asyncio
-async def test_006_handles_partial_application(tmp_path):
-    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'test.db'}")
-    runner = MigrationRunner(engine, plugin_name="my_plugin", dialect="sqlite")
+def test_panel_upgrade_preserves_data(tmp_path: Path) -> None:
+    async def check() -> None:
+        engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'upgrade.db'}")
+        try:
+            runner = MigrationRunner(engine, "panel-designer", "sqlite")
+            assert (await runner.run([CreatePanels()])).applied == [1]
+            async with engine.begin() as connection:
+                await connection.execute(
+                    sa.text(
+                        "INSERT INTO panels (id, owner_user_id, name, drugs) "
+                        "VALUES (:id, :owner, :name, :drugs)"
+                    ),
+                    {"id": "old-panel", "owner": "alice", "name": "Pilot", "drugs": "[]"},
+                )
+            migrations = [CreatePanels(), AddNotes()]
+            upgraded = await runner.run(migrations)
+            assert upgraded.applied == [2]
+            assert upgraded.current_version == 2
+            async with engine.connect() as connection:
+                row = (await connection.execute(sa.text(
+                    "SELECT name, notes FROM panels WHERE id = 'old-panel'"
+                ))).one()
+                assert tuple(row) == ("Pilot", "Imported from an earlier version")
+            assert (await runner.run(migrations)).applied == []
+            try:
+                await runner.run([CreatePanels()])
+            except SchemaVersionAheadError:
+                pass
+            else:
+                raise AssertionError("An older plugin must not accept the newer schema")
+        finally:
+            await engine.dispose()
 
-    # Apply up to 005
-    result = await runner.run([CreatePanelsTable(), NormalizePanelNames()])
-    assert result.applied == [1, 5]
-
-    # Insert ~12,500 rows directly via SQL
-    # (helper omitted for brevity)
-
-    # Apply 006 — backfill kicks in
-    result = await runner.run([
-        CreatePanelsTable(),
-        NormalizePanelNames(),
-        BackfillDoseUnits(),
-    ])
-    assert result.applied == [6]
-    assert not result.errors
+    asyncio.run(check())
 ```
 
-SQLite-backed tests verify correctness and idempotency. If you add Postgres-specific locking clauses, cover that migration with a Postgres integration test too.
-
-For SQLite async tests, include `greenlet` in your dev dependencies:
+Run with the scaffold's test setup:
 
 ```bash
-uv add --dev greenlet
+uv run pytest tests/test_panel_migrations.py -q
 ```
 
-## Notes
+Also test a fresh standalone app against the updated model. For production, run the same old-data upgrade scenario on a disposable PostgreSQL database with the actual plugin schema and the normal installed plugin startup. SQLite passing does not prove PostgreSQL identity columns, JSON queries, constraints, or lock behavior are correct.
 
-- Backfills inside a single `PluginMigration.upgrade` hold the migration lock until the method returns. For very large datasets, split the work across separate migrations/releases or move the heavy data rewrite into an application background job.
-- `ops.execute` returns whatever SQLAlchemy returns — `Result` for queries, `CursorResult` for DML. Check the docs of the Result API for the version of SQLAlchemy `mint-sdk` ships against.
-- For backfills that depend on application-level logic (e.g., complex computed values), consider a separate background task instead of an in-migration loop. Migrations should focus on schema; complex data work belongs in the application.
-
-## Related
-
-- [Concepts → Migrations](/sdk/concepts/migrations) — append-only discipline, the runner
-- [Recipes → Querying plugin data](/sdk/recipes/querying-plugin-data) — the read side
-- [API Reference → Migrations](/sdk/api/migrations) — `MigrationOps` method signatures
+See [Migrations](/sdk/concepts/migrations) for checksums and recovery, and [Querying plugin data](/sdk/recipes/querying-plugin-data) for ordinary application sessions.

@@ -13,8 +13,8 @@ You'll need:
 | **Python** | 3.12 or newer |
 | **uv** | Used by generated plugin projects |
 | **Bun** | latest (for frontend tutorials) |
-| **`mint` CLI** | Installed from `mint-sdk`; see [CLI overview](/cli/overview) |
-| **A running platform** | Optional for the first pass; `mint dev --platform` can start one for integrated smoke tests |
+| **`mint` CLI** | Installed from `mint-sdk[cli]==1.2.0`; see [CLI overview](/cli/overview) |
+| **A running platform** | Optional for local code; real integration needs an installed plugin on a configured PostgreSQL-backed MINT platform |
 
 You do not need to read the whole SDK reference first. When a tutorial introduces a concept, it links to the deeper page.
 
@@ -41,7 +41,7 @@ The first two tutorials are intentionally separate projects. `generated` mode is
 ## How tutorials are structured
 
 - Command blocks are **runnable** as written. Code blocks are either full replacements or explicitly marked as partial snippets.
-- File paths are **absolute relative to the plugin project root** unless noted.
+- File paths are **relative to the plugin project root** unless noted.
 - When directory matters, the surrounding text tells you where to run the command.
 - Output expected from each command is shown with `→` markers.
 - After each section there's a **Checkpoint** — a one-liner you can run to verify your project is in the expected state before moving on.
@@ -55,3 +55,9 @@ When your plugin works locally:
 - Add CI from [CI patterns](/sdk/operations/ci-patterns).
 - Use [Recipes](/sdk/recipes/) for specific tasks such as reading experiments, writing results, route permissions, testing, and R integration.
 - Use [API Reference](/sdk/api/) only when you need exact signatures.
+
+## Create other plugin types
+
+Continue with [Types and a workflow plugin](/sdk/tutorials/plugin-types-workflow)
+to scaffold all five plugin types and implement experiment lifecycle operations
+without owning design data. UI mode and data permissions are separate choices.
