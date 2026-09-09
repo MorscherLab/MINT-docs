@@ -1,4 +1,5 @@
 ---
+aside: false
 title: AutoGroupModal
 description: "AutoGroupModal is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends."
 ---
@@ -10,7 +11,8 @@ description: "AutoGroupModal is a lab widgets component exported by @morscherlab
 AutoGroupModal is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
 
 <div class="mint-component-reference__actions">
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/main/packages/sdk-frontend/src/components/AutoGroupModal.vue">Source</a>
+  <a class="mint-showcase-button" href="#props">Props</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/AutoGroupModal.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AutoGroupModal" />
@@ -34,8 +36,6 @@ Recent grouping behavior:
 
 The applied result includes `groups`, `experimentalGroups`, `qcGroups`, `metadata`, `excludedSamples`, and `groupTree`. Use `groupTree` with `SampleHierarchyTree` when you want to render the same hierarchy outside the modal.
 
-For prop-level detail, open the source file.
-
 ## Smart Group Components
 
 The smart grouping UI is also exported as composable pieces:
@@ -47,5 +47,30 @@ The smart grouping UI is also exported as composable pieces:
 | `SmartGroupManual` | Manual cohort builder only |
 
 Use `AutoGroupModal` when you want the existing sample auto-grouping integration. Use the `SmartGroup*` components when a plugin needs to own more of the modal shell, route the mode switch itself, or embed one grouping mode inside a larger workflow.
+
+<!-- sdk-props:start -->
+## Props
+
+MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/AutoGroupModal.vue).
+
+| Prop | Type | Required | Default | Description |
+|---|---|---|---|---|
+| ` modelValue ` | ` boolean ` | Yes | — | — |
+| ` samples ` | ` string[] ` | No | ` () => [] ` | — |
+| ` groups ` | ` SampleGroup[] ` | No | ` () => [] ` | — |
+| ` initialMode ` | ` GroupingWorkflow ` | No | ` 'auto' ` | — |
+| ` experimentId ` | ` number ` | No | ` undefined ` | — |
+| ` designData ` | ` Record<string, unknown> ` | No | ` undefined ` | Pre-fetched design data — bypasses API fetch when provided |
+
+Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Related types
+
+| Type | Definition / accepted values |
+|---|---|
+| [` SampleGroup `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L162) | See the linked SDK type definition. |
+| [` GroupingWorkflow `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/AutoGroupModal.vue#L34) | See the linked SDK type definition. |
+
+<!-- sdk-props:end -->
 
 [Back to component library](/sdk/components/)

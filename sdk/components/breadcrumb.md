@@ -1,4 +1,5 @@
 ---
+aside: false
 title: Breadcrumb
 description: "Breadcrumb is a layout component exported by @morscherlab/mint-sdk for plugin frontends."
 ---
@@ -10,7 +11,8 @@ description: "Breadcrumb is a layout component exported by @morscherlab/mint-sdk
 Breadcrumb is a layout component exported by @morscherlab/mint-sdk for plugin frontends.
 
 <div class="mint-component-reference__actions">
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/main/packages/sdk-frontend/src/components/Breadcrumb.vue">Source</a>
+  <a class="mint-showcase-button" href="#props">Props</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/Breadcrumb.vue">Source</a>
 </div>
 
 <ComponentPlayground name="Breadcrumb" />
@@ -21,8 +23,24 @@ Breadcrumb is a layout component exported by @morscherlab/mint-sdk for plugin fr
 import { Breadcrumb } from "@morscherlab/mint-sdk/components"
 ```
 
-## Usage Notes
+<!-- sdk-props:start -->
+## Props
 
-This component page gives the stable import path, source entry, and embedded playground location. For prop-level detail, open the source file.
+MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/Breadcrumb.vue).
+
+| Prop | Type | Required | Default | Description |
+|---|---|---|---|---|
+| ` items ` | ` BreadcrumbItemInput[] ` | Yes | — | — |
+| ` separator ` | ` string ` | No | ` '/' ` | — |
+
+Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Related types
+
+| Type | Definition / accepted values |
+|---|---|
+| [` BreadcrumbItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L436) | See the linked SDK type definition. |
+
+<!-- sdk-props:end -->
 
 [Back to component library](/sdk/components/)

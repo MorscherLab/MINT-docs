@@ -1,4 +1,5 @@
 ---
+aside: false
 title: FileBrowserModal
 description: "Select mount-relative paths from read-only server storage with the SDK file browser."
 ---
@@ -33,27 +34,51 @@ const input: FileSelection = {
 
 `mount_id` is a configured logical mount and `path` is a mount-relative POSIX path. The backend must resolve and authorize that reference using the filesystem service. Never treat a frontend path as permission to open arbitrary server files.
 
+<!-- sdk-props:start -->
 ## Props
 
-| Prop | Type | Purpose |
-|------|------|---------|
-| `modelValue` | `boolean` | Required open state (`v-model`) |
-| `mounts` | `ServerMount[]` | Mount list, including offline/nested mounts |
-| `mountId`, `path` | `string` | Displayed location |
-| `parent` | `string \| null` | Parent directory; `null` at root |
-| `entries`, `breadcrumbs` | `FileEntry[]`, `FilePathCrumb[]` | Listing rows and path trail |
-| `selected` | `FileSelection[]` | Controlled selection (`v-model:selected`) |
-| `search` | `string` | Search text (`v-model:search`) |
-| `sort` | `'name' \| 'size' \| 'modified'` | Sort selection (`v-model:sort`) |
-| `typeRules` | `string[]` | Extensions of interest; unmatched entries remain visible |
-| `totalCount`, `matchCount` | `number \| null` | Directory/matching item counts |
-| `truncated` | `boolean` | Whether the server capped the listing |
-| `loading`, `error` | `boolean`, `string \| null` | Request status |
-| `title`, `subtitle`, `contextCode` | `string` | Heading and experiment context |
-| `dimNonMatching` | `boolean` | Default `true` |
-| `showLocalPicker` | `boolean` | Default `true`; emits a hand-off event, not an upload |
-| `confirmLabel` | `string` | Override the generated selection-count label |
-| `size` | `ModalSize` | Default `full` |
+MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/FileBrowserModal.vue).
+
+| Prop | Type | Required | Default | Description |
+|---|---|---|---|---|
+| ` modelValue ` | ` boolean ` | Yes | — | — |
+| ` mounts ` | ` ServerMount[] ` | No | ` () => [] ` | Mounts in the location strip; nested children follow their parent. |
+| ` mountId ` | ` string ` | No | ` '' ` | Mount the listing belongs to. |
+| ` path ` | ` string ` | No | ` '' ` | Mount-relative path of the directory being shown. |
+| ` parent ` | ` string \| null ` | No | ` null ` | Parent path, or null at a mount root. |
+| ` entries ` | ` FileEntry[] ` | No | ` () => [] ` | — |
+| ` breadcrumbs ` | ` FilePathCrumb[] ` | No | ` () => [] ` | — |
+| ` selected ` | ` FileSelection[] ` | No | ` () => [] ` | Controlled selection, mirroring DataFrame's selectedKeys contract. |
+| ` typeRules ` | ` string[] ` | No | ` () => [] ` | Extensions the caller cares about, shown as a chip in the toolbar. |
+| ` search ` | ` string ` | No | ` '' ` | — |
+| ` sort ` | ` FileBrowserSortKey ` | No | ` 'name' ` | — |
+| ` totalCount ` | ` number \| null ` | No | ` null ` | Directory size before any search filter. |
+| ` matchCount ` | ` number \| null ` | No | ` null ` | How many entries satisfy the type rules. |
+| ` truncated ` | ` boolean ` | No | ` false ` | True when the server capped the listing. |
+| ` loading ` | ` boolean ` | No | ` false ` | — |
+| ` error ` | ` string \| null ` | No | ` null ` | — |
+| ` title ` | ` string ` | No | ` 'Select data' ` | — |
+| ` subtitle ` | ` string ` | No | ` '' ` | Free-form context line, e.g. the experiment this data is for. |
+| ` contextCode ` | ` string ` | No | ` '' ` | Monospace prefix on the context line, e.g. an experiment code. |
+| ` dimNonMatching ` | ` boolean ` | No | ` true ` | Dim entries that fail the type rules instead of showing them plainly. |
+| ` showLocalPicker ` | ` boolean ` | No | ` true ` | Offer the hand-off to the system file picker for local, never-uploaded files. |
+| ` confirmLabel ` | ` string ` | No | ` '' ` | — |
+| ` size ` | ` ModalSize ` | No | ` 'full' ` | — |
+
+Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Related types
+
+| Type | Definition / accepted values |
+|---|---|
+| [` ServerMount `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L15) | See the linked SDK type definition. |
+| [` FileEntry `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L34) | See the linked SDK type definition. |
+| [` FilePathCrumb `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L28) | See the linked SDK type definition. |
+| [` FileSelection `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L71) | See the linked SDK type definition. |
+| [` FileBrowserSortKey `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L12) | ` 'name' \| 'size' \| 'modified' ` |
+| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L32) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
+
+<!-- sdk-props:end -->
 
 ## Events
 

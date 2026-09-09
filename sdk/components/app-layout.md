@@ -1,4 +1,5 @@
 ---
+aside: false
 title: AppLayout
 description: "Lower-level application shell with topbar, sidebar, and content slots."
 ---
@@ -10,7 +11,8 @@ description: "Lower-level application shell with topbar, sidebar, and content sl
 Lower-level application shell with topbar, sidebar, and content slots.
 
 <div class="mint-component-reference__actions">
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/main/packages/sdk-frontend/src/components/AppLayout.vue">Source</a>
+  <a class="mint-showcase-button" href="#props">Props</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/AppLayout.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AppLayout" />
@@ -21,8 +23,24 @@ Lower-level application shell with topbar, sidebar, and content slots.
 import { AppLayout } from "@morscherlab/mint-sdk/components"
 ```
 
-## Usage Notes
+<!-- sdk-props:start -->
+## Props
 
-This component page gives the stable import path, source entry, and embedded playground location. For prop-level detail, open the source file.
+MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/AppLayout.vue).
+
+| Prop | Type | Required | Default | Description |
+|---|---|---|---|---|
+| ` sidebarPosition ` | ` 'left' \| 'right' ` | No | ` 'left' ` | Position of sidebar (left or right side of screen) |
+| ` sidebarWidth ` | ` string ` | No | ` 'auto' ` | Width of sidebar (use 'auto' to fit content) |
+| ` floating ` | ` boolean ` | No | ` false ` | When true, topbar/sidebar/main render as floating cards with gaps |
+| ` responsiveSidebar ` | ` boolean ` | No | ` false ` | Convert the sidebar into a mobile overlay with built-in toggle and backdrop below 1024px. |
+| ` sidebarOpen ` | ` boolean ` | No | ` undefined ` | Controlled mobile sidebar open state. Desktop sidebar remains visible. |
+| ` defaultSidebarOpen ` | ` boolean ` | No | ` false ` | Initial mobile sidebar open state when sidebarOpen is uncontrolled. |
+| ` sidebarToggleLabel ` | ` string ` | No | ` 'Open sidebar' ` | Accessible label for the mobile sidebar toggle. |
+| ` sidebarCloseLabel ` | ` string ` | No | ` 'Close sidebar' ` | Accessible label used when the mobile sidebar is open. |
+
+Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+<!-- sdk-props:end -->
 
 [Back to component library](/sdk/components/)

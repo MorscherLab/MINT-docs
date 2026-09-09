@@ -1,4 +1,5 @@
 ---
+aside: false
 title: PlotlyChart
 description: "Render native Plotly traces with SDK theme, sizing, loading, empty, and error states."
 ---
@@ -31,18 +32,26 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
 </template>
 ```
 
+<!-- sdk-props:start -->
 ## Props
 
-| Prop | Type | Default / purpose |
-|------|------|-------------------|
-| `data` | `Plotly.Data[]` | Required traces |
-| `layout` | `Partial<Plotly.Layout>` | `{}`; axes, annotations, limits, and layout |
-| `config` | `Partial<Plotly.Config>` | `{}`; mode bar, export, and interaction options |
-| `title`, `description` | `string` | Optional chart header |
-| `loading` | `boolean` | `false`; show loading state |
-| `empty` | `boolean` | `false`; explicitly show empty state |
-| `emptyMessage` | `string` | `No data available` |
-| `ariaLabel` | `string` | `Interactive Plotly chart`; provide a meaningful plot description |
+MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/PlotlyChart.vue).
+
+| Prop | Type | Required | Default | Description |
+|---|---|---|---|---|
+| ` data ` | ` PlotlyType.Data[] ` | Yes | — | — |
+| ` layout ` | ` Partial<PlotlyType.Layout> ` | No | ` () => ({}) ` | — |
+| ` config ` | ` Partial<PlotlyType.Config> ` | No | ` () => ({}) ` | — |
+| ` title ` | ` string ` | No | ` undefined ` | — |
+| ` description ` | ` string ` | No | ` undefined ` | — |
+| ` loading ` | ` boolean ` | No | ` false ` | — |
+| ` empty ` | ` boolean ` | No | ` false ` | — |
+| ` emptyMessage ` | ` string ` | No | ` 'No data available' ` | — |
+| ` ariaLabel ` | ` string ` | No | ` 'Interactive Plotly chart' ` | — |
+
+Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+<!-- sdk-props:end -->
 
 The component defaults to responsive rendering and hides the Plotly logo. Your `layout` and `config` override those defaults. Input traces/layout are copied before Plotly receives them, so Plotly's mutations do not modify caller-owned reactive state.
 

@@ -78,6 +78,25 @@ Every push to `main` triggers `.github/workflows/deploy.yml`, which builds the s
 2. Add an entry to the relevant `sidebar` group in `.vitepress/config.ts`.
 3. Optionally link to it from the home page or other pages.
 
+## Updating component props
+
+Component pages use `aside: false` to give examples and API tables more space.
+Their props sections are generated from the released SDK's Vue/TypeScript
+declarations, including imported props, `withDefaults`, and `defineModel`.
+
+Use a clean SDK checkout at the release matching the installed frontend package:
+
+```bash
+bun scripts/update-component-props.ts /path/to/MINT/packages/sdk-frontend
+bun run build
+```
+
+The script uses the installed Vue compiler and the SDK's public export catalog;
+no additional package is needed. It checks representative prop signatures and
+default values before writing. Review changes when updating the SDK release.
+Edit explanatory prose outside the `sdk-props:start` / `sdk-props:end` markers;
+fix generated types/defaults in the SDK source before regenerating.
+
 ## Contributing
 
 Edits welcome — every page has an "Edit on GitHub" link in the footer that takes you straight to the source. Or open a PR.

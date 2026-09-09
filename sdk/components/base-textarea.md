@@ -1,4 +1,5 @@
 ---
+aside: false
 title: BaseTextarea
 description: "Multi-line input for notes, descriptions, and longer user-entered text."
 ---
@@ -10,7 +11,8 @@ description: "Multi-line input for notes, descriptions, and longer user-entered 
 Multi-line input for notes, descriptions, and longer user-entered text.
 
 <div class="mint-component-reference__actions">
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/main/packages/sdk-frontend/src/components/BaseTextarea.vue">Source</a>
+  <a class="mint-showcase-button" href="#props">Props</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/BaseTextarea.vue">Source</a>
 </div>
 
 <ComponentPlayground name="BaseTextarea" />
@@ -21,8 +23,26 @@ Multi-line input for notes, descriptions, and longer user-entered text.
 import { BaseTextarea } from "@morscherlab/mint-sdk/components"
 ```
 
-## Usage Notes
+<!-- sdk-props:start -->
+## Props
 
-This component page gives the stable import path, source entry, and embedded playground location. For prop-level detail, open the source file.
+MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/BaseTextarea.vue).
+
+| Prop | Type | Required | Default | Description |
+|---|---|---|---|---|
+| ` modelValue ` | ` string ` | No | ` undefined ` | — |
+| ` placeholder ` | ` string ` | No | ` undefined ` | — |
+| ` disabled ` | ` boolean ` | No | ` false ` | — |
+| ` readonly ` | ` boolean ` | No | ` false ` | — |
+| ` error ` | ` boolean ` | No | ` false ` | — |
+| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
+| ` rows ` | ` number ` | No | ` 3 ` | — |
+| ` resize ` | ` 'none' \| 'vertical' \| 'horizontal' \| 'both' ` | No | ` 'vertical' ` | — |
+| ` maxlength ` | ` number ` | No | ` undefined ` | — |
+| ` ariaDescribedby ` | ` string ` | No | ` undefined ` | — |
+
+Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+<!-- sdk-props:end -->
 
 [Back to component library](/sdk/components/)
