@@ -9,7 +9,7 @@ develop ──▶ test ──▶ build ──▶ publish ──▶ install ─�
                        │           │           │           │
                        │           │           │           └─▶ deploying.md
                        │           │           └─▶ marketplace registry submission
-                       │           └─▶ publishing.md (PyPI / npm / registry)
+                       │           └─▶ publishing.md (.mint release asset)
                        └─▶ packaging.md (.mint bundle)
 ```
 
@@ -18,7 +18,7 @@ develop ──▶ test ──▶ build ──▶ publish ──▶ install ─�
 | Page | Covers |
 |------|--------|
 | [Packaging](/sdk/operations/packaging) | `mint build`, the `.mint` bundle structure, what gets included |
-| [Publishing](/sdk/operations/publishing) | PyPI publish for the wheel, marketplace registry submission |
+| [Publishing](/sdk/operations/publishing) | Publish `.mint` release assets and optionally register them in a marketplace |
 | [CI patterns](/sdk/operations/ci-patterns) | GitHub Actions templates: build-on-PR, publish-on-tag, matrix tests |
 | [Versioning](/sdk/operations/versioning) | SemVer, `hatch-vcs`, SDK ranges, platform compatibility checks |
 | [Deploying](/sdk/operations/deploying) | Production install considerations, isolation tradeoffs, storage volumes |

@@ -29,15 +29,6 @@ jobs:
       - name: Set up Python
         run: uv python install 3.12
 
-      - name: Install dependencies
-        run: uv sync
-
-      - name: Lint
-        run: uv run ruff check .
-
-      - name: Test
-        run: uv run pytest -v
-
       - name: Check for frontend
         id: frontend
         run: |
@@ -46,10 +37,6 @@ jobs:
           else
             echo "HAS_FRONTEND=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Verify generated frontend contract
-        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: uv run mint sdk generate --check
 
       - name: Setup Bun
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
@@ -67,12 +54,29 @@ jobs:
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         run: cd frontend && bun run build
 
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Verify generated frontend contract
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: uv run mint sdk generate --check
+
+      - name: Test
+        run: uv run pytest -v
+
       - name: Validate plugin structure
         run: uv run mint doctor
 
       - name: Build .mint bundle
         run: uv run mint build . --output-dir _ci_build
 ```
+
+The frontend is built before `uv sync` and backend checks because the standard
+plugin wheel includes `frontend/dist`. This also gives runtime tests real assets
+in a fresh checkout.
 
 Key choices:
 
@@ -85,7 +89,8 @@ If your team commits `uv.lock` and `frontend/bun.lock`, change install steps to 
 
 ## Publish on tag
 
-Tag a release, then build the PyPI wheel and `.mint` bundle as separate artifacts.
+Tag a release, then build and attach the `.mint` bundle to its GitHub Release.
+The checksum is optional supporting metadata; `.mint` is the plugin release artifact.
 
 ```yaml
 # .github/workflows/release.yml
@@ -97,7 +102,6 @@ on:
 
 permissions:
   contents: write       # GitHub Release
-  id-token: write       # PyPI Trusted Publishing
 
 jobs:
   build-and-publish:
@@ -112,9 +116,6 @@ jobs:
 
       - name: Set up Python
         run: uv python install 3.12
-
-      - name: Install dependencies
-        run: uv sync
 
       - name: Check for frontend
         id: frontend
@@ -137,20 +138,19 @@ jobs:
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         run: cd frontend && bun run type-check
 
-      - name: Frontend build for PyPI wheel assets
+      - name: Frontend build before backend runtime checks
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         run: cd frontend && bun run build
 
-      - name: Build PyPI wheel
-        run: uv build --wheel --out-dir dist/wheel
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Verify generated frontend contract
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: uv run mint sdk generate --check
 
       - name: Build .mint bundle
         run: uv run mint build . --output-dir dist
-
-      - name: Publish wheel to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist/wheel/
 
       - name: Compute checksum
         run: |
@@ -164,13 +164,17 @@ jobs:
             dist/*.mint
             dist/plugin-bundle.sha256
           generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          fail_on_unmatched_files: true
 ```
 
-Setup:
+The workflow uses the repository's `GITHUB_TOKEN` with `contents: write` to
+attach release assets. Keep release artifacts limited to `dist/*.mint` and the
+optional checksum file. Python wheels and built frontend files stay inside
+the bundle.
 
-- Configure [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/) for your repo so no `PYPI_TOKEN` is required.
-- If you use a PyPI token instead, store it as `PYPI_TOKEN` and pass it to the PyPI publish action's `password` input.
-- Keep the PyPI wheel in `dist/wheel/`; do not point PyPI upload tools at the directory containing `.mint` files.
+Before pushing a release tag, run the [bundle verification flow](/sdk/operations/publishing#build-and-verify-the-release).
+The workflow's build checks do not replace a real install/upgrade test.
 
 ## Submit to a registry on release
 
@@ -242,14 +246,12 @@ jobs:
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         run: cd frontend && bun install
 
+      - name: Build initial frontend assets
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: cd frontend && bun run build
+
       - name: Update aligned SDKs on the supported minor line
         run: uv run mint sdk update --scope patch
-
-      - name: Run tests
-        run: uv run pytest -v
-
-      - name: mint doctor
-        run: uv run mint doctor
 
       - name: Frontend type check
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
@@ -258,6 +260,12 @@ jobs:
       - name: Frontend build
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         run: cd frontend && bun run build
+
+      - name: Run tests
+        run: uv run pytest -v
+
+      - name: mint doctor
+        run: uv run mint doctor
 
       - name: Write failure report
         if: failure()

@@ -111,6 +111,10 @@ CRUD on projects.
 
 ### `mint plugin`
 
+Published plugins are `.mint` bundles. Install them with `mint plugin upload`
+or `mint plugin github install`; package-index settings below concern
+server-side dependency/source administration, not plugin publishing.
+
 Administer plugins on a running platform. These commands call platform APIs and require the matching server-side plugin permissions.
 
 | Subcommand | Purpose |

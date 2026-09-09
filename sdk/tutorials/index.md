@@ -51,7 +51,7 @@ The first two tutorials are intentionally separate projects. `generated` mode is
 When your plugin works locally:
 
 - Run [Packaging](/sdk/operations/packaging) to produce a `.mint` bundle.
-- Use [Publishing](/sdk/operations/publishing) when you are ready for PyPI or a marketplace registry.
+- Use [Publishing](/sdk/operations/publishing) to release a `.mint` bundle and optionally list it in a marketplace.
 - Add CI from [CI patterns](/sdk/operations/ci-patterns).
 - Use [Recipes](/sdk/recipes/) for specific tasks such as reading experiments, writing results, route permissions, testing, and R integration.
 - Use [API Reference](/sdk/api/) only when you need exact signatures.

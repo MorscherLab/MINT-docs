@@ -1,6 +1,6 @@
 # Packaging
 
-`mint build` produces a single `.mint` bundle containing your plugin's wheel, frontend assets, and a manifest. The bundle is what the marketplace serves and what the platform's admin/API install flow consumes.
+`mint build` produces the plugin's release artifact: a single `.mint` bundle containing its Python wheel, frontend assets, and a manifest. The bundle is what the marketplace serves and what the platform's admin/API install flow consumes.
 
 ## Build
 
@@ -30,7 +30,7 @@ What happens:
 | `--no-frontend` | Skip the frontend build step. Use for backend-only plugins or fast iteration on the Python side. |
 | `--include-wheel PATH` | Vendor an existing extra wheel; repeat for multiple files. This does not export the main wheel separately. |
 | `--output-dir` | Override the default `dist/` directory. |
-| `--vendor-deps` | Include dependency wheels in the bundle (opt-in). Without it, the marketplace expects the platform to install dependencies from PyPI. |
+| `--vendor-deps` | Include dependency wheels in the bundle (opt-in). Without it, the platform resolves dependencies from its configured package indexes. |
 
 The frontend build verifies that Python `mint-sdk` and frontend
 `@morscherlab/mint-sdk` resolve to the same release. Use `mint sdk update
@@ -165,7 +165,7 @@ mint plugin upload dist/my-plugin-1.0.0.mint
 For very large plugins, consider:
 
 - Splitting into multiple smaller plugins
-- Skipping `--vendor-deps` (the default) so the platform pulls deps from PyPI instead of bundling them
+- Skipping `--vendor-deps` (the default) so the platform resolves dependencies from its configured package indexes
 - Lazy-loading frontend chunks via Vite's dynamic imports
 
 ## Notes
@@ -176,6 +176,6 @@ For very large plugins, consider:
 
 ## Related
 
-- [Publishing](/sdk/operations/publishing) — uploading the bundle to PyPI / marketplace
+- [Publishing](/sdk/operations/publishing) — publishing the `.mint` asset and registering it in a marketplace
 - [CI patterns](/sdk/operations/ci-patterns) — automating the build
 - [Versioning](/sdk/operations/versioning) — choosing the next version number

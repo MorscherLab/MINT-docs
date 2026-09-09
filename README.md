@@ -72,6 +72,13 @@ Every push to `main` triggers `.github/workflows/deploy.yml`, which builds the s
 1. Add a CNAME record `mint-docs.morscherlab.org` → `morscherlab.github.io` at your DNS provider.
 2. In the repo's GitHub Pages settings: Source = "GitHub Actions", custom domain = `mint-docs.morscherlab.org`, enable "Enforce HTTPS".
 
+## Plugin release format
+
+Plugins are published as `.mint` bundles. GitHub Releases host those bundles;
+Marketplace registries catalog them. The Python wheel and frontend assets are
+bundle contents. Keep plugin publishing examples and CI focused on `.mint`;
+SDK/dependency installation from package indexes is a separate concern.
+
 ## Adding a page
 
 1. Create a new `.md` file under `get-started/`, `workflow/`, `cli/`, `sdk/`, or `reference/`.

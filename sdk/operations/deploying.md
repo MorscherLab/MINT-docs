@@ -67,8 +67,9 @@ Platform permissions govern installation. `--force` skips ordinary dependency
 conflict preflight; it does not override `requires_mint` or the platform SDK
 version constraint. It is not a normal "replace old version" flag.
 
-`mint plugin install SOURCE` resolves a package, Git URL or path on the
-**server**. `plugin upload` sends a local file from your machine. Settings use
+`plugin upload` sends the published `.mint` file from your machine. For a
+GitHub-hosted release, use `mint plugin github install REPO --tag TAG` to fetch
+its `.mint` asset. Settings use
 the runtime plugin name, while upgrade/uninstall commands take the installed
 package name; `plugin list --json` shows both.
 
@@ -91,7 +92,7 @@ connect frontend failures with backend logs.
 
 | Runtime | Appropriate use | Important boundary |
 |---|---|---|
-| In-process plugin | Standard wheel using compatible dependencies | Required for platform shared-table sessions in 1.2 |
+| In-process plugin | `.mint` bundle with compatible Python dependencies | Required for platform shared-table sessions in 1.2 |
 | Isolated subprocess | Conflicting/heavy Python dependency sets | Remote scoped repositories; no direct shared SQL sessions |
 | External server | An already running plugin service | Platform must reach its URL; the service owns its process lifecycle |
 | Docker runtime | Plugin with a containerized runtime | Container image, networking and native libraries must be provided |
@@ -132,7 +133,7 @@ Verify the actual platform execution mode and storage setup for durable work.
 In-memory caches and local files are not automatically shared between replicas.
 
 Before production upgrades, preserve the previous bundle plus matching
-PostgreSQL and object/file-storage backups. Reinstalling old code does not
+PostgreSQL and object/file-storage backups. Installing a previous `.mint` bundle does not
 reverse database migrations. Either retain backward-compatible schema changes,
 ship a forward fix, or restore the corresponding data snapshot. Document any
 plugin-specific restore requirements with the release.

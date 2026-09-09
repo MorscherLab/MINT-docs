@@ -138,7 +138,7 @@ fresh table creation and upgrade from the last deployed schema: they take
 different paths. See [migrations](/sdk/concepts/migrations) and the
 [table tutorial](/sdk/tutorials/design-plugin-with-tables).
 
-Reinstalling an older wheel does not undo schema/data changes. For rollback,
+Installing an older `.mint` bundle does not undo schema/data changes. For rollback,
 verify the older code is compatible with the new schema or restore the matching
 database/storage backup. Prefer a forward corrective release when practical.
 

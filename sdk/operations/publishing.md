@@ -1,78 +1,150 @@
 # Publishing
 
-Three publishing channels coexist:
+MINT plugins are published as **`.mint` bundles**. Publish the file produced by
+`mint build`: it contains the manifest, the plugin's Python wheel, bundled
+frontend assets and any vendored dependencies. The wheel is an internal part
+of the bundle, not a separate plugin release artifact.
 
-| Channel | What it serves | Who installs it |
-|---------|----------------|-----------------|
-| **PyPI** | The plugin's Python wheel | Direct `pip install` users; CI pipelines that vendor plugins |
-| **`@morscherlab` npm** | Frontend SDK and helper packages (rare for plugin authors) | Other plugin authors |
-| **Marketplace registry** | The `.mint` bundle + manifest | The platform's install flow (browser-based) |
+The standard release flow is:
 
-Most plugins publish to **PyPI + Marketplace**; the npm channel is only relevant if your plugin exposes a JS library others should consume.
-
-## PyPI
-
-Set up once: register on PyPI and configure either Trusted Publishing for your GitHub repository or a project-scoped token stored as `PYPI_TOKEN`.
-
-Publish per release (manually or via CI):
-
-```bash
-# If the plugin has frontend/, build frontend/dist before the PyPI wheel
-cd frontend && bun install && bun run build && cd ..
-
-# Build the PyPI wheel separately from the .mint bundle
-uv build --wheel --out-dir dist/wheel
-twine upload dist/wheel/*.whl
+```text
+version tag → build .mint → verify bundle → GitHub Release asset
+                                                ↓
+                                   optional Marketplace registry entry
 ```
 
-The PyPI publish is just the wheel — without the `.mint` wrapper. `mint build` also builds a wheel internally, but that wheel is packed inside the `.mint` file; build a separate wheel output for PyPI so upload tools do not see the `.mint` artifact. If your `pyproject.toml` force-includes `frontend/dist/`, the wheel still contains the frontend assets; backend-only plugins can skip that step.
+Generated and standard plugins use the same release format. A plugin does not
+need to be listed in a marketplace before an administrator can install its
+`.mint` file directly.
 
-::: tip Backend-only on PyPI is fine
-A common pattern: ship a backend-only PyPI release for users who don't need the UI (CI consumers, automated jobs), AND a full `.mint` to the marketplace for browser-based installs. Both can build from the same source on the same tag.
-:::
+## Build and verify the release
+
+Use the plugin's own version tag and build from a clean checkout. The
+`mint init` scaffold uses `hatch-vcs` to derive the package version from Git;
+see [versioning](/sdk/operations/versioning).
+
+For a standard plugin, build the frontend before running backend runtime tests
+that serve its assets:
+
+```bash
+cd frontend
+bun install
+bun run type-check
+bun run test
+bun run build
+cd ..
+```
+
+Generated plugins with no `frontend/` directory skip that step. Then, from the
+plugin root:
+
+```bash
+uv sync
+uv run mint doctor --strict
+uv run mint build . --output-dir dist
+```
+
+If the project has a generated frontend client, also run
+`uv run mint sdk generate --check` before building. Review warnings and test
+failures before proceeding.
+
+Verify the exact bundle that will be published:
+
+```bash
+uv run mint verify . --bundle dist/my-plugin-0.2.0.mint
+```
+
+Use the actual filename emitted by `mint build`; its prefix comes from
+`[project].name`. `verify` needs Docker. For plugins with tables, also test an
+upgrade from the previous release on a disposable platform with representative
+data. See [deploying and verifying](/sdk/operations/deploying).
+
+## Publish the `.mint` asset
+
+The scaffold's release workflow runs when a `v*` tag is pushed and attaches
+`dist/*.mint` to the corresponding GitHub Release. Use the
+[CI example](/sdk/operations/ci-patterns#publish-on-tag) to configure that flow.
+
+For a manual release, open **Releases → Draft a new release** in the plugin's
+GitHub repository, select the version tag, attach the verified `.mint` file,
+write the release notes and publish it. A SHA-256 checksum may accompany the
+bundle to let administrators verify their download.
+
+Include these details in the release notes:
+
+- Supported MINT versions and runtime requirements.
+- New features, fixes and changed analysis behavior.
+- Database migrations, upgrade steps and recovery requirements.
+
+Keep the artifact for a published version immutable. If a release needs a fix,
+build and publish a new version rather than replacing an existing asset under
+the same tag.
+
+## Install the published bundle
+
+Administrators can download the `.mint` asset and upload it through the
+platform's plugin administration UI or CLI:
+
+```bash
+mint auth login --url https://mint.example.org
+mint plugin upload ./my-plugin-0.2.0.mint
+```
+
+For a GitHub-hosted release, the platform can fetch the matching asset:
+
+```bash
+mint plugin github install your-org/my-plugin --tag v0.2.0 --asset-pattern '*.mint'
+```
+
+Installation requires the matching platform permissions and may require a
+restart before the plugin loads. GitHub-hosted downloads must be reachable by
+the platform; use a local `.mint` upload when that is not possible.
 
 ## Marketplace registry
 
-The marketplace registry is a JSON feed plus the bundle URLs it points at. Hosting options:
+A marketplace registry is a catalog of plugins and their GitHub release sources.
+The **catalog** can be hosted on GitHub Pages or another HTTPS host. The
+**plugin artifact** remains the `.mint` asset attached to its GitHub Release.
 
-| Approach | When |
-|----------|------|
-| **Morscher Lab registry** (`MorscherLab/mint-registry`) | First-party plugins; lab plugins shared publicly |
-| **Self-hosted on GitHub Pages** | Internal lab registries; private or org-only plugins |
-| **Self-hosted on S3 / nginx / any HTTPS host** | Any of the above |
-
-The platform polls the registry's `registry.json`. Each entry points to a GitHub release source (`github_repo` + `asset_pattern`), and the platform downloads the matching `.mint` asset from that release. There's no central authority — point `marketplace.registryUrl` at whichever registry you trust.
+The platform reads `marketplace.registryUrl`. A plugin entry supplies
+`source.github_repo` and `source.asset_pattern`, allowing the platform to locate
+the release bundle. Listing a plugin in the catalog adds discovery and update
+information; it does not create another package format.
 
 Two compatibility declarations matter:
 
 | Declaration | Lives in | Checked when |
-|-------------|----------|--------------|
-| `min_platform_version` | Registry entry | Catalog listing, install/update button state, marketplace install |
-| `[tool.mint].requires_mint` | Plugin `pyproject.toml`, copied into `.mint` manifest | Bundle upload or marketplace bundle install |
+|---|---|---|
+| `min_platform_version` | Registry entry | Catalog compatibility and marketplace installation |
+| `[tool.mint].requires_mint` | Plugin `pyproject.toml`, copied into the bundle manifest | Bundle upload or marketplace bundle installation |
 
-Keep them consistent. `min_platform_version` is a simple floor used by the
-catalog; `requires_mint` is a PEP 440 specifier used by the bundle installer.
+Keep them consistent. `min_platform_version` is a version floor;
+`requires_mint` is a PEP 440 specifier. For example:
 
-### Submission to the Morscher Lab registry
-
-1. Open a PR against [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry) adding your plugin to `registry.json`
-2. Include the plugin's GitHub release source and asset pattern (for example `*.mint`)
-3. Maintainers review; on merge, the registry updates automatically
-
-### Self-hosted registry
-
-A registry is just a static directory:
-
+```toml
+[tool.mint]
+requires_mint = ">=1.2.1,<1.3"
 ```
-my-registry/
-└── registry.json              # list of plugins and release sources
-```
+
+### Register a release
+
+1. Publish the verified `.mint` asset on GitHub.
+2. Add or update the plugin entry in your marketplace's registry.
+3. Check that its repository, asset pattern, version and compatibility floor
+   match the published release.
+4. Test discovery and installation from that registry on a disposable platform.
+
+For the Morscher Lab catalog, submit the entry to
+[`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry).
+
+### Registry example
+
+A `registry.json` file can contain:
 
 ```json
-// registry.json
 {
   "schema_version": 1,
-  "generated_at": "2026-05-07T12:00:00Z",
+  "generated_at": "2026-09-09T12:00:00Z",
   "plugins": [
     {
       "name": "my-plugin",
@@ -84,81 +156,48 @@ my-registry/
         "github_repo": "your-org/my-plugin",
         "asset_pattern": "*.mint"
       },
-      "latest_version": "1.1.0",
-      "min_platform_version": "1.0.0",
+      "latest_version": "0.2.0",
+      "min_platform_version": "1.2.1",
       "tags": ["lcms"]
     }
   ]
 }
 ```
 
-Reference implementation: [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry). Use it as a starting point for self-hosted registries.
+The platform reads one registry URL. Host an aggregate catalog if a deployment
+needs entries from several catalogs.
 
-## GitHub Releases as the bundle host
+## Versions and prereleases
 
-A common shortcut: build the `.mint` in CI, attach to a GitHub Release, point the registry at the release URL.
+`mint build` uses the plugin's package version for the bundle manifest. With
+the scaffold's Git-based versioning, the tag determines that version. A file
+rename does not change the manifest or installed version.
 
-```yaml
-# Snippet from CI (full template in /sdk/operations/ci-patterns)
-- name: Upload bundle to release
-  uses: softprops/action-gh-release@v2
-  with:
-    files: dist/*.mint
-```
+| Git tag | Version recorded by the Python package | Release usage |
+|---|---|---|
+| `v0.2.0-beta.1` | `0.2.0b1` | Prerelease for testing |
+| `v0.2.0-rc.1` | `0.2.0rc1` | Release candidate |
+| `v0.2.0` | `0.2.0` | Stable release |
 
-The release URL `https://github.com/<owner>/<repo>/releases/download/<tag>/my-plugin-<ver>.mint` is stable and CDN-backed — fine for medium-traffic registries.
+Mark beta/RC GitHub Releases as prereleases. GitHub-source update checks use
+`includePrereleases`; only advertise a prerelease as a catalog's latest version
+when that catalog is intended for testing.
 
-## npm publish (frontend-only packages)
+## Before publishing
 
-Most plugin authors don't publish to npm — your frontend is bundled inside the `.mint` and consumed by the platform, not by other npm packages. The exception is when you're shipping a reusable component library or shared composables.
+- [ ] Tests, `mint doctor` and generated-client checks pass.
+- [ ] The exact `.mint` bundle installs and loads on a supported MINT platform.
+- [ ] Schema changes work on both fresh and previously installed databases.
+- [ ] The package version, manifest and release tag correspond.
+- [ ] Compatibility declarations and runtime requirements are accurate.
+- [ ] Release notes explain changes and any migration/recovery steps.
+- [ ] The GitHub Release contains the `.mint` file and any optional checksum.
 
-```bash
-# After bun run build in the package
-cd packages/my-shared-frontend
-npm publish --access public
-```
-
-Set `NPM_TOKEN` as a GitHub secret with `@morscherlab` scope (or your own scope) for CI publishes.
-
-## Versioning the bundle vs the wheel
-
-The `.mint` bundle's version comes from the manifest. The wheel inside has its own version (read from `pyproject.toml` / `hatch-vcs` from the git tag). They should match.
-
-`mint build` enforces this — it reads the wheel version and writes the same version into `manifest.json`. If you tag `v1.2.1`, both your wheel and your bundle are `1.2.1`.
-
-## Pre-release labels
-
-Beta releases follow Python's PEP 440 + npm's SemVer:
-
-| Tag (git) | Wheel version | Registry behavior |
-|-----------|---------------|-------------------|
-| `v1.0.0-beta.1` | `1.0.0b1` | Only advertise deliberately, usually from a test registry |
-| `v1.0.0-rc.1` | `1.0.0rc1` | Only advertise deliberately, usually from a test registry |
-| `v1.0.0` | `1.0.0` | Normal stable release |
-
-For platform and GitHub-source plugin checks, prerelease inclusion is controlled by `includePrereleases`. Marketplace registries should only set `latest_version` to a prerelease when that registry is meant for testing.
-
-## Checklist before publishing
-
-- [ ] `uv run mint doctor .` passes on the plugin project
-- [ ] `uv run mint sdk generate --check` passes if the plugin has a generated frontend client
-- [ ] Tests pass on the supported Python versions (matrix in CI)
-- [ ] Migrations apply cleanly to a fresh DB AND to a DB on the previous version
-- [ ] Frontend builds without warnings (`bun run build`)
-- [ ] Changelog updated (`CHANGELOG.md`)
-- [ ] Version tag matches the wheel and the manifest
-- [ ] Registry `min_platform_version` is the lowest platform you support
-- [ ] `[tool.mint].requires_mint` in `pyproject.toml` matches the bundle's real platform requirement
-- [ ] `pyproject.toml`'s `mint-sdk` range covers the SDK versions you build against
-- [ ] Bundle size is reasonable (see [Packaging](/sdk/operations/packaging#sizes))
-
-## Notes
-
-- Publishing is one-way; PyPI yanks an old version, but most users have it cached. Don't rely on yanks for security fixes — release a new version.
-- Some labs run a private registry that mirrors the public one with extra plugins. The current platform reads one `marketplace.registryUrl`; host an aggregate registry if you need to combine sources.
+Source: [bundle builder](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/cli_build_cmd.py),
+[scaffolded release workflow](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/init_workflow_templates.py).
 
 ## Related
 
-- [Packaging](/sdk/operations/packaging) — building the bundle
-- [CI patterns](/sdk/operations/ci-patterns) — automating publish on tag
-- [Versioning](/sdk/operations/versioning) — choosing the next version number
+- [Packaging](/sdk/operations/packaging) — build and inspect the bundle
+- [CI patterns](/sdk/operations/ci-patterns) — publish `.mint` assets on tags
+- [Versioning](/sdk/operations/versioning) — versions, compatibility and schema changes

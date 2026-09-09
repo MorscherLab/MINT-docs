@@ -70,12 +70,15 @@ Project status values are `active`, `archived`, and `completed`.
 
 ## Plugins
 
+Published plugins are `.mint` bundles. Install them with `mint plugin upload`
+or `mint plugin github install`; package-index settings below concern
+server-side dependency/source administration, not plugin publishing.
+
 Plugin commands are for administrators and other users with matching server-side plugin permissions.
 
 ```bash
 mint plugin list
 mint plugin upload ./dist/my-plugin-1.0.0.mint
-mint plugin install my-plugin-package
 mint plugin github install MorscherLab/my-plugin --tag v1.0.0
 mint plugin config get my-plugin
 mint plugin config update my-plugin --file settings.json

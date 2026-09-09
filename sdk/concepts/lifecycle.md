@@ -37,7 +37,7 @@ stateDiagram-v2
 
 ### Registered
 
-Your plugin's wheel is published (PyPI, internal index, or a `.mint` bundle) and declares an entry point in the `mint.plugins` group:
+Your plugin is published as a `.mint` bundle. Its internal Python wheel declares an entry point in the `mint.plugins` group:
 
 ```toml
 # pyproject.toml
@@ -74,11 +74,11 @@ The platform discovers entry points on every startup when `plugins.loadFromEntry
 Triggered by **Admin -> Plugins -> Registry -> Install**, bundle upload,
 or an admin install request through the platform API. The platform:
 
-1. Resolves the registry entry, upload, wheel, or `.mint` bundle.
+1. Resolves the `.mint` bundle from an upload or a registry-linked GitHub Release.
 2. Checks marketplace `min_platform_version` and bundle `[tool.mint].requires_mint`.
 3. Pins plugin installs to the platform's own `mint-sdk` version.
 4. Checks dependency conflicts before changing the environment.
-5. Installs the wheel or bundle and records the source artifact in the plugin manifest.
+5. Installs the Python wheel from the bundle and records the source artifact in the plugin manifest.
 6. Keeps a best-effort Python environment snapshot for rollback.
 
 Most successful installs report that a server restart is required. Until that
