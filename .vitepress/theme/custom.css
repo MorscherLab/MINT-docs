@@ -1,6 +1,16 @@
+/* JetBrains/JetBrainsMono@19371302b95d218af43299bce79ddbddd0bc364d; SIL OFL-1.1. */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono/JetBrainsMono-variable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+}
+
 /* MINT brand palette — keep in sync with packages/sdk-frontend/src/styles/variables.css in the mld repo.
    Primary indigo (UI surfaces, links) + orange CTA gradient (hero accents). */
 :root {
+  --vp-font-family-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --vp-c-brand-1: #4F46E5;       /* indigo-600 */
   --vp-c-brand-2: #4338CA;       /* indigo-700 */
   --vp-c-brand-3: #3730A3;       /* indigo-800 */
@@ -21,6 +31,12 @@
 
 .VPHero .name {
   letter-spacing: -0.02em;
+}
+
+/* Override the SDK's global code font for documentation examples and props. */
+.vp-doc :is(code, pre) {
+  font-family: var(--vp-font-family-mono);
+  font-variant-ligatures: none;
 }
 
 /* Keep long API names from pushing Markdown table columns out of view. */
