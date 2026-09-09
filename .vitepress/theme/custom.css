@@ -23,6 +23,26 @@
   letter-spacing: -0.02em;
 }
 
+/* Keep long API names from pushing Markdown table columns out of view. */
+.vp-doc table:not([class]) :is(th, td) {
+  min-width: 6rem;
+  padding: 8px;
+  overflow-wrap: anywhere;
+}
+
+.vp-doc table:not([class]) code {
+  padding-inline: 2px;
+}
+
+.vp-doc table:not([class])::-webkit-scrollbar {
+  height: 8px;
+}
+
+.vp-doc table:not([class])::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: var(--vp-c-text-3);
+}
+
 .mint-showcase-hero {
   margin: 0 0 2rem;
   padding: 1.25rem;
