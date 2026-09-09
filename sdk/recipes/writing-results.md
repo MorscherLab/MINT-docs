@@ -53,7 +53,7 @@ saved = await self.save_analysis_artifacts(experiment.id, [
 ])
 ```
 
-In **v1.2.0**, the batch commits every member or restores the repository to its pre-call state and raises the member failure. Results preserve input order. Duplicate keys in a batch are rejected. Empty batches return `[]`; nonempty batches require a context and an atomic-capable platform repository.
+In **v1.2.1**, the batch commits every member or restores the repository to its pre-call state and raises the member failure. Results preserve input order. Duplicate keys in a batch are rejected. Empty batches return `[]`; nonempty batches require a context and an atomic-capable platform repository.
 
 This transaction covers this artifact batch, not preceding uploads, design saves, external computation, or writes to a different experiment. A loop across experiments consists of separate commits.
 
@@ -152,7 +152,7 @@ Lists return metadata; load a selected artifact to read its result. The experime
 
 ## Source and related guides
 
-Verified against [v1.2.0 persistence helpers](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/plugin_persistence.py) and [repository contract](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/repositories.py).
+Verified against [v1.2.1 persistence helpers](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/plugin_persistence.py) and [repository contract](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/repositories.py).
 
 - [Data model and ownership](/sdk/concepts/data-model)
 - [Plugin-owned tables](/sdk/recipes/querying-plugin-data)

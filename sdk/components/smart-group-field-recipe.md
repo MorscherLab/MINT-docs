@@ -12,7 +12,7 @@ description: "Auto grouping view that turns parsed sample-name fields into group
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.vue">Source</a>
 </div>
 
 <ComponentPlayground name="SmartGroupFieldRecipe" />
@@ -43,7 +43,7 @@ Use this component when a plugin already owns the outer modal shell and only nee
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroup.types.ts).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroup.types.ts).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -70,11 +70,11 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SmartGroupSampleRecord `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.groups.ts#L22) | See the linked SDK type definition. |
-| [` SmartGroupField `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.groups.ts#L10) | See the linked SDK type definition. |
-| [` QcRoute `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.groups.ts#L32) | ` 'Overlay only' \| 'Exclude' \| 'Mix into groups' ` |
-| [` FieldRecipeGroup `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.groups.ts#L25) | See the linked SDK type definition. |
-| [` FieldRecipeQcChip `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroup.types.ts#L33) | See the linked SDK type definition. |
+| [` SmartGroupSampleRecord `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.groups.ts#L22) | See the linked SDK type definition. |
+| [` SmartGroupField `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.groups.ts#L10) | See the linked SDK type definition. |
+| [` QcRoute `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.groups.ts#L32) | ` 'Overlay only' \| 'Exclude' \| 'Mix into groups' ` |
+| [` FieldRecipeGroup `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.groups.ts#L25) | See the linked SDK type definition. |
+| [` FieldRecipeQcChip `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroup.types.ts#L33) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

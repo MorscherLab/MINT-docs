@@ -1,13 +1,13 @@
 # CLI reference
 
-The `mint` CLI ships with `mint-sdk`. This page documents the released **v1.2.0** command surface. Run `mint <command> --help` for the complete options on your installed version. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
+The `mint` CLI ships with `mint-sdk`. This page documents the released **v1.2.1** command surface. Run `mint <command> --help` for the complete options on your installed version. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
 
-Source: [`mint_sdk/cli.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/cli.py) and [`mint_sdk/cli_commands/`](https://github.com/MorscherLab/MINT/tree/v1.2.0/packages/sdk-python/src/mint_sdk/cli_commands).
+Source: [`mint_sdk/cli.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/cli.py) and [`mint_sdk/cli_commands/`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-python/src/mint_sdk/cli_commands).
 
 ## Install and choose the environment
 
 ```bash
-uv tool install 'mint-sdk[cli]==1.2.0'
+uv tool install 'mint-sdk[cli]==1.2.1'
 mint --version
 mint --help
 ```
@@ -37,7 +37,7 @@ uv run mint verify .
 disposable platform. `deploy` and `plugin upload` instead change a running
 platform. Use [the deployment guide](/sdk/operations/deploying) for that step.
 For generated UI choose `--mode generated --type analysis`. Other types require
-standard mode in v1.2.0.
+standard mode in v1.2.1.
 
 ## Top-level
 
@@ -146,7 +146,7 @@ Runtime registration is also available:
 These operate on the platform host; paths and URLs must be reachable there.
 See [isolation](/sdk/concepts/isolation) for runtime support and limitations.
 
-Source: [plugin commands](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/cli_commands/plugin_cmd.py).
+Source: [plugin commands](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/cli_commands/plugin_cmd.py).
 
 ### `mint admin`
 
@@ -209,7 +209,7 @@ mint init [DIRECTORY] [flags]
 
 Without `--yes`, missing fields are prompted interactively. With `--yes`, the AI-assistant file defaults to `claude`, which creates `CLAUDE.md`. If `mint doctor` says that file is missing current SDK guidance, run `mint doctor --fix` once to refresh it. `--ai-assistant none` skips assistant files, but the current `mint doctor` check still expects one of those files; run `mint doctor --fix` if you later want a passing doctor report.
 
-The v1.2.0 parser accepts `workflow`, although `init --help` still omits it from its type description. Generated mode accepts only `analysis`; use standard mode for the other types.
+The v1.2.1 parser accepts `workflow`, although `init --help` still omits it from its type description. Generated mode accepts only `analysis`; use standard mode for the other types.
 
 Use `generated` mode for the first plugin unless you know you need a custom Vue workspace. Use `standard` mode when the UI needs custom layout, custom controls, or multiple interactive views.
 
@@ -319,7 +319,7 @@ Add common plugin pieces to an existing project.
 | `mint add data-template-pack [pack] [--list] [--json] [--generate] [--page] [--path PATH]` | Add a curated data-template pack |
 | `mint add data-template-preset [preset] [--list] [--json] [--page] [--path PATH]` | Add a ready-to-save data-template preset |
 
-There is no `mint add job` command in MINT v1.2.0. Use `mint init --mode generated` for the current job scaffold, or add `@job` methods by hand.
+There is no `mint add job` command in MINT v1.2.1. Use `mint init --mode generated` for the current job scaffold, or add `@job` methods by hand.
 
 ### `mint verify`
 
@@ -396,7 +396,7 @@ mint sdk update [PATH] [--scope patch|minor|major] [--channel stable|beta]
                 [--version VERSION] [--dry-run] [--no-sync] [--verify]
 ```
 
-The default is the stable patch channel. `--version 1.2.0` selects one exact
+The default is the stable patch channel. `--version 1.2.1` selects one exact
 release; Python and frontend lockfiles resolve to the same release. The newest candidate is selected first, then checked against Python upper
 bounds, exclusions and `requires_mint`; an excluded candidate fails rather
 than falling back to an older allowed release. A valid Python
@@ -441,7 +441,7 @@ platform setup remains a [Linux administration task](/get-started/install-direct
 
 ## Version-specific boundaries
 
-In released v1.2.0 there is no `mint add job` or `mint db` command. Define jobs
+In released v1.2.1 there is no `mint add job` or `mint db` command. Define jobs
 in Python, and create table migrations with `mint add migration`. Migration
 execution is handled during plugin startup; see [migrations](/sdk/concepts/migrations).
 

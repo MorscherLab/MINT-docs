@@ -103,4 +103,4 @@ with MINTClient() as client:
 
 SDK-created apps install the handlers automatically. For a custom host, use the shared `mint_sdk.api_errors.register_api_error_handlers(app)` integration or implement the same contract explicitly.
 
-Verified against [v1.2.0 error handlers](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/api_errors.py), [exception mapping](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/exceptions.py), and [client exceptions](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/client/_exceptions.py).
+Verified against [v1.2.1 error handlers](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/api_errors.py), [exception mapping](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/exceptions.py), and [client exceptions](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/client/_exceptions.py).

@@ -8,7 +8,7 @@ description: "Select mount-relative paths from read-only server storage with the
 
 # FileBrowserModal
 
-Available in **1.2.0**. A controlled picker for read-only server mounts. `FileBrowserModal` renders the UI; `useFileBrowser()` fetches the platform's `/api/filesystem` routes and owns listing/selection state. Picking a path does not copy or upload its data.
+Available since **1.2.0**. A controlled picker for read-only server mounts. `FileBrowserModal` renders the UI; `useFileBrowser()` fetches the platform's `/api/filesystem` routes and owns listing/selection state. Picking a path does not copy or upload its data.
 
 The platform must configure mounts and grant `filesystem.browse`. See [the complete server-file example](/sdk/frontend/platform-integration#browse-server-files) for fetch, selection, confirmation, error, and retry wiring.
 
@@ -37,7 +37,7 @@ const input: FileSelection = {
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/FileBrowserModal.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/FileBrowserModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -71,12 +71,12 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ServerMount `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L15) | See the linked SDK type definition. |
-| [` FileEntry `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L34) | See the linked SDK type definition. |
-| [` FilePathCrumb `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L28) | See the linked SDK type definition. |
-| [` FileSelection `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L71) | See the linked SDK type definition. |
-| [` FileBrowserSortKey `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L12) | ` 'name' \| 'size' \| 'modified' ` |
-| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L32) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
+| [` ServerMount `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L15) | See the linked SDK type definition. |
+| [` FileEntry `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L34) | See the linked SDK type definition. |
+| [` FilePathCrumb `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L28) | See the linked SDK type definition. |
+| [` FileSelection `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L71) | See the linked SDK type definition. |
+| [` FileBrowserSortKey `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/fileBrowserTypes.ts#L12) | ` 'name' \| 'size' \| 'modified' ` |
+| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L32) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
 
 <!-- sdk-props:end -->
 
@@ -97,4 +97,4 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 Disable `show-local-picker` if your plugin only supports server data. For local files, [FileUploader](/sdk/components/file-uploader) emits browser `File[]`; any upload is a separate plugin action.
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/FileBrowserModal.vue) · [Platform integration](/sdk/frontend/platform-integration) · [Component library](/sdk/components/)
+[Release source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/FileBrowserModal.vue) · [Platform integration](/sdk/frontend/platform-integration) · [Component library](/sdk/components/)

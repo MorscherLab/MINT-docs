@@ -12,7 +12,7 @@ Sectioned sidebar for plugin-specific navigation and grouped tools.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/AppSidebar.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/AppSidebar.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AppSidebar" />
@@ -23,22 +23,35 @@ Sectioned sidebar for plugin-specific navigation and grouped tools.
 import { AppSidebar } from "@morscherlab/mint-sdk/components"
 ```
 
+## Changes in 1.2.1
+
+Sections now render as flat groups instead of nested cards. The effective default
+density is compact; use `density="comfortable"` for more spacing. The old
+`variant` prop has been removed, and `dense` is deprecated. Use `collapsible`
+explicitly when you need a collapse button; it defaults to `false` on AppSidebar.
+
+When AppLayout owns placement, pass `:floating="false"` to the sidebar:
+
+```vue
+<AppSidebar :panels="panels" active-view="analysis" :floating="false" density="compact" />
+```
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/AppSidebar.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/AppSidebar.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` title ` | ` string ` | No | ` undefined ` | Optional chrome title rendered above generated sections. |
 | ` subtitle ` | ` string ` | No | ` undefined ` | Optional secondary chrome copy rendered below title. |
 | ` badge ` | ` string \| number ` | No | ` undefined ` | Optional compact badge/count rendered in the chrome header. |
-| ` variant ` | ` 'default' \| 'analysis' ` | No | ` 'default' ` | Visual preset for common plugin sidebars. analysis preserves the LEAF-style MINT analysis sidebar design language. |
 | ` panels ` | ` Record<string, SidebarToolSection[]> ` | No | ` () => ({}) ` | Map of view IDs to their tool sections |
 | ` activeView ` | ` string ` | No | ` '' ` | Which view's panels to display. Defaults to the first non-empty panel view. |
-| ` floating ` | ` boolean ` | No | ` undefined ` | Floating variant with absolute positioning. Defaults to false for analysis variant. |
-| ` dense ` | ` boolean ` | No | ` false ` | Compact layout: smaller headers, tighter spacing, no icon backgrounds |
-| ` width ` | ` string ` | No | ` undefined ` | Width when visible. Defaults to 20rem for analysis variant, otherwise 280px. |
+| ` floating ` | ` boolean ` | No | ` true ` | Floating shell with absolute positioning. Prefer letting AppLayout own this; it stays for standalone use. |
+| ` density ` | ` 'compact' \| 'comfortable' ` | No | ` undefined ` | Section density. compact (default) is the 36px header row; comfortable restores the roomier spacing. |
+| ` dense ` | ` boolean ` | No | ` undefined ` | @deprecated Compact is now the default. Pass density="comfortable" for the roomier layout. |
+| ` width ` | ` string ` | No | ` '280px' ` | Width when visible. |
 | ` side ` | ` 'left' \| 'right' ` | No | ` 'left' ` | Position sidebar on left or right side |
 | ` toggleState ` | ` Record<string, boolean> ` | No | ` () => ({}) ` | Toggle state map: sectionId → boolean |
 | ` forms ` | ` Record<string, FormSchema> ` | No | ` () => ({}) ` | Optional FormBuilder schemas keyed by section ID. Used when no section slot is provided. |
@@ -58,7 +71,7 @@ MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` formDisabled ` | ` boolean ` | No | ` false ` | Disabled state for auto-rendered section forms |
 | ` formReadonly ` | ` boolean ` | No | ` false ` | Readonly state for auto-rendered section forms |
 | ` formSize ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'sm' ` | Size passed to auto-rendered section forms |
-| ` collapsible ` | ` boolean ` | No | ` undefined ` | Show a built-in collapse/expand button in the sidebar chrome. Defaults to true for analysis variant. |
+| ` collapsible ` | ` boolean ` | No | ` false ` | Show a built-in collapse/expand button in the sidebar chrome. |
 | ` collapsed ` | ` boolean ` | No | ` undefined ` | Controlled collapsed state. |
 | ` defaultCollapsed ` | ` boolean ` | No | ` false ` | Initial collapsed state when collapsed is uncontrolled. |
 | ` collapsedWidth ` | ` string ` | No | ` '3rem' ` | Width when collapsed. |
@@ -71,14 +84,14 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SidebarToolSection `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L136) | See the linked SDK type definition. |
-| [` FormSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/form-builder.ts#L133) | See the linked SDK type definition. |
-| [` PillNavItem `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L198) | See the linked SDK type definition. |
-| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
-| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
-| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
-| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/form-builder.ts#L164) | See the linked SDK type definition. |
+| [` SidebarToolSection `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L159) | See the linked SDK type definition. |
+| [` FormSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/form-builder.ts#L135) | See the linked SDK type definition. |
+| [` PillNavItem `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L221) | See the linked SDK type definition. |
+| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
+| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
+| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
+| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

@@ -2,7 +2,7 @@
 
 Build a `.mint` bundle, verify it on a disposable MINT platform, then install
 that same artifact on the intended server. These instructions target MINT
-**1.2.0**; the platform requires PostgreSQL. A standalone plugin's SQLite file
+**1.2.1**; the platform requires PostgreSQL. A standalone plugin's SQLite file
 is development storage, not the platform database.
 
 ## 1. Check and build locally
@@ -137,5 +137,5 @@ reverse database migrations. Either retain backward-compatible schema changes,
 ship a forward fix, or restore the corresponding data snapshot. Document any
 plugin-specific restore requirements with the release.
 
-Source: [verification runner](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/verify_command.py),
-[deployment command](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/deploy_command.py).
+Source: [verification runner](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/verify_command.py),
+[deployment command](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/deploy_command.py).

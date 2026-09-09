@@ -16,7 +16,7 @@ MINT 1.2 SDK hosts automatically translate `PluginException` subclasses into HTT
 
 FastAPI request-model validation is 422; it is distinct from service-layer `ValidationException` (400). `HTTPException` retains its explicit status.
 
-Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/exceptions.py).
+Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/exceptions.py).
 
 ## Hierarchy
 

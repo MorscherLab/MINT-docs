@@ -12,7 +12,7 @@ TagsInput is a forms component exported by @morscherlab/mint-sdk for plugin fron
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/TagsInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/TagsInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="TagsInput" />
@@ -26,7 +26,7 @@ import { TagsInput } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/TagsInput.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/TagsInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -47,8 +47,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TagSuggestion `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/TagsInput.vue#L7) | See the linked SDK type definition. |
-| [` TagCategory `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/TagsInput.vue#L12) | See the linked SDK type definition. |
+| [` TagSuggestion `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/TagsInput.vue#L7) | See the linked SDK type definition. |
+| [` TagCategory `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/TagsInput.vue#L12) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

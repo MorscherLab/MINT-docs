@@ -119,4 +119,4 @@ The standard scaffold starts with the same example calculation endpoint and Vue 
 
 Continue with [first analysis plugin](/sdk/tutorials/first-analysis-plugin), [custom frontend](/sdk/tutorials/adding-a-frontend), [design plugin with tables](/sdk/tutorials/design-plugin-with-tables), or [workflow plugin](/sdk/tutorials/plugin-types-workflow).
 
-Source: [v1.2 capability model](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/models.py), [scaffold implementation](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/init_command.py), and [scoped experiment repository](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/repositories/scoped_experiment_repository.py).
+Source: [v1.2 capability model](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/models.py), [scaffold implementation](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/init_command.py), and [scoped experiment repository](https://github.com/MorscherLab/MINT/blob/v1.2.1/api/repositories/scoped_experiment_repository.py).

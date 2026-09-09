@@ -12,7 +12,7 @@ Calendar is a forms component exported by @morscherlab/mint-sdk for plugin front
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/Calendar.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/Calendar.vue">Source</a>
 </div>
 
 <ComponentPlayground name="Calendar" />
@@ -26,7 +26,7 @@ import { Calendar } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/Calendar.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/Calendar.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -51,8 +51,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` CalendarSelectionMode `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L329) | ` 'none' \| 'single' \| 'range' \| 'multiple' ` |
-| [` CalendarMarker `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L332) | See the linked SDK type definition. |
+| [` CalendarSelectionMode `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L352) | ` 'none' \| 'single' \| 'range' \| 'multiple' ` |
+| [` CalendarMarker `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L355) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

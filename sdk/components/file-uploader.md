@@ -12,7 +12,7 @@ Drag-and-drop file picker with accept, size, multiple, and error handling.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/FileUploader.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/FileUploader.vue">Source</a>
 </div>
 
 <ComponentPlayground name="FileUploader" />
@@ -37,7 +37,7 @@ import { FileUploader } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/FileUploader.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/FileUploader.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -48,6 +48,8 @@ MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 | ` mode ` | ` 'file' \| 'folder' \| 'file+folder' ` | No | ` 'file' ` | — |
 | ` showFiles ` | ` boolean ` | No | ` true ` | Hide the selection list when a parent presents the files itself. |
+| ` files ` | ` File[] ` | No | ` undefined ` | Restore selections owned by a parent form; omitted for internal selection state. |
+| ` rootName ` | ` string ` | No | ` undefined ` | — |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 

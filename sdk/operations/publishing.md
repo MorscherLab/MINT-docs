@@ -124,7 +124,7 @@ Set `NPM_TOKEN` as a GitHub secret with `@morscherlab` scope (or your own scope)
 
 The `.mint` bundle's version comes from the manifest. The wheel inside has its own version (read from `pyproject.toml` / `hatch-vcs` from the git tag). They should match.
 
-`mint build` enforces this — it reads the wheel version and writes the same version into `manifest.json`. If you tag `v1.2.0`, both your wheel and your bundle are `1.2.0`.
+`mint build` enforces this — it reads the wheel version and writes the same version into `manifest.json`. If you tag `v1.2.1`, both your wheel and your bundle are `1.2.1`.
 
 ## Pre-release labels
 

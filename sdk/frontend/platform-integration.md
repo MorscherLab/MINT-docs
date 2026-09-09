@@ -1,6 +1,6 @@
 # Frontend platform integration
 
-This guide targets MINT **1.2.0**. Start with the [standard frontend tutorial](/sdk/tutorials/adding-a-frontend); it already installs Vue, Pinia, the SDK, styles, and a generated API client.
+This guide targets MINT **1.2.1**. Start with the [standard frontend tutorial](/sdk/tutorials/adding-a-frontend); it already installs Vue, Pinia, the SDK, styles, and a generated API client.
 
 ## Choose the right source of state
 
@@ -222,7 +222,7 @@ Send the selected `{ mount_id, path, ... }` records to a plugin endpoint only af
 
 ## Release source
 
-- [Platform context and message validation](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/usePlatformContext.ts)
-- [Shared experiment selection](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/stores/experiment.ts)
-- [Experiment data persistence](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/useExperimentSave.ts)
-- [Server file browser API](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/useFileBrowser.ts)
+- [Platform context and message validation](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/usePlatformContext.ts)
+- [Shared experiment selection](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/stores/experiment.ts)
+- [Experiment data persistence](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/useExperimentSave.ts)
+- [Server file browser API](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/useFileBrowser.ts)

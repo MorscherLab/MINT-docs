@@ -12,7 +12,7 @@ ScheduleCalendar is a workflow component exported by @morscherlab/mint-sdk for p
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/ScheduleCalendar.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/ScheduleCalendar.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ScheduleCalendar" />
@@ -26,7 +26,7 @@ import { ScheduleCalendar } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/ScheduleCalendar.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/ScheduleCalendar.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -54,9 +54,9 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ScheduleView `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L68) | ` 'day' \| 'week' \| 'month' ` |
-| [` ScheduleEvent `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L71) | See the linked SDK type definition. |
-| [` ScheduleBlockedSlot `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L83) | See the linked SDK type definition. |
+| [` ScheduleView `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L68) | ` 'day' \| 'week' \| 'month' ` |
+| [` ScheduleEvent `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L71) | See the linked SDK type definition. |
+| [` ScheduleBlockedSlot `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L83) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

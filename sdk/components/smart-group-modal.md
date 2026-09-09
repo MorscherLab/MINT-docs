@@ -12,7 +12,7 @@ description: "Two-mode smart grouping shell combining auto field recipes and man
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroupModal.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroupModal.vue">Source</a>
 </div>
 
 <ComponentPlayground name="SmartGroupModal" />
@@ -40,7 +40,7 @@ Use this when a plugin should let users choose between automatic grouping from p
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroupModal.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroupModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -54,8 +54,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SmartGroupFieldRecipeProps `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroup.types.ts#L38) | See the linked SDK type definition. |
-| [` SmartGroupManualProps `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/SmartGroup.types.ts#L87) | See the linked SDK type definition. |
+| [` SmartGroupFieldRecipeProps `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroup.types.ts#L38) | See the linked SDK type definition. |
+| [` SmartGroupManualProps `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/SmartGroup.types.ts#L87) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

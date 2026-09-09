@@ -144,4 +144,4 @@ artifact = await self.load_analysis_artifact(
 
 `Experiment` is a slots dataclass, not a live ORM row. Its `design_owner_plugin_id` identifies the existing design owner; `experiment_code` remains a REST detail field rather than an SDK dataclass field. Mutating a returned dataclass does not persist changes.
 
-Verified against [v1.2.0 repository protocol](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/repositories.py) and [request dependencies](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/runtime_dependencies.py).
+Verified against [v1.2.1 repository protocol](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/repositories.py) and [request dependencies](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/runtime_dependencies.py).

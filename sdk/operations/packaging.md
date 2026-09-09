@@ -34,7 +34,7 @@ What happens:
 
 The frontend build verifies that Python `mint-sdk` and frontend
 `@morscherlab/mint-sdk` resolve to the same release. Use `mint sdk update
---version 1.2.0` and commit both lockfiles before packaging. `--no-frontend`
+--version 1.2.1` and commit both lockfiles before packaging. `--no-frontend`
 skips building and marks the bundle without a frontend; do not use it as a
 substitute for building the UI you intend to ship.
 
@@ -72,7 +72,7 @@ The frontend's `dist/` is *not* a separate top-level directory in the bundle —
     "name": "my-plugin",
     "version": "1.0.0",
     "description": "Drug-response panel design",
-    "requires_mint": ">=1.2.0,<1.3",
+    "requires_mint": ">=1.2.1,<1.3",
     "has_frontend": true
   },
   "wheels": {
@@ -88,7 +88,7 @@ Set the MINT compatibility floor deliberately in `pyproject.toml`:
 
 ```toml
 [tool.mint]
-requires_mint = ">=1.2.0,<1.3"
+requires_mint = ">=1.2.1,<1.3"
 ```
 
 The platform checks this specifier when installing a `.mint` bundle. It also

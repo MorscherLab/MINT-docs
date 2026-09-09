@@ -9,17 +9,17 @@ one does not automatically change or migrate the others.
 | Version | Where it lives | Example | What it does |
 |---|---|---|---|
 | Plugin release | Git tag → wheel metadata → `PluginMetadata.version` and bundle manifest | `v0.2.0` | Identifies installed code and frontend assets |
-| Python SDK requirement | `[project].dependencies` | `mint-sdk>=1.2.0,<1.3` | Declares supported SDK runtime versions |
-| Frontend SDK requirement | `frontend/package.json` | `^1.2.0` | Declares the frontend dependency range |
-| Resolved SDK release | `uv.lock`, `frontend/bun.lock` | `1.2.0` in both | Records the actual build dependencies |
-| Platform requirement | `[tool.mint].requires_mint` | `>=1.2.0,<1.3` | Constrains `.mint` installation |
-| Marketplace floor | Registry `min_platform_version` | `1.2.0` | Informs catalog compatibility |
+| Python SDK requirement | `[project].dependencies` | `mint-sdk>=1.2.1,<1.3` | Declares supported SDK runtime versions |
+| Frontend SDK requirement | `frontend/package.json` | `^1.2.1` | Declares the frontend dependency range |
+| Resolved SDK release | `uv.lock`, `frontend/bun.lock` | `1.2.1` in both | Records the actual build dependencies |
+| Platform requirement | `[tool.mint].requires_mint` | `>=1.2.1,<1.3` | Constrains `.mint` installation |
+| Marketplace floor | Registry `min_platform_version` | `1.2.1` | Informs catalog compatibility |
 | Design-data schema | `@mint_plugin(schema_version=...)` and stored `DesignData` | `"2.0"` | Labels the JSON design format |
 | Database revision | `Migration.version` | `1`, `2`, `3` | Orders changes to plugin-owned SQL tables |
 
 MINT 1.2 uses a shared release for the platform, Python SDK and frontend SDK.
-Your plugin does **not** need to be version `1.2.0`: a plugin `0.2.0` can target
-MINT `1.2.0`. Build validation requires Python and frontend SDKs to resolve to
+Your plugin does **not** need to be version `1.2.1`: a plugin `0.2.0` can target
+MINT `1.2.1`. Build validation requires Python and frontend SDKs to resolve to
 the same release; matching broad ranges alone is insufficient.
 
 ## Package identity: one source of truth
@@ -30,7 +30,7 @@ The `mint init` scaffold already configures `hatch-vcs`. Keep it:
 [project]
 name = "mint-plugin-lab-qc"
 dynamic = ["version"]
-dependencies = ["mint-sdk>=1.2.0,<1.3"]
+dependencies = ["mint-sdk>=1.2.1,<1.3"]
 
 [project.entry-points."mint.plugins"]
 lab-qc = "mint_plugin_lab_qc.plugin:LabQcPlugin"
@@ -46,7 +46,7 @@ source = "vcs"
 version-file = "src/mint_plugin_lab_qc/_version.py"
 
 [tool.mint]
-requires_mint = ">=1.2.0,<1.3"
+requires_mint = ">=1.2.1,<1.3"
 ```
 
 This is a fragment to merge into the scaffold, including its existing build
@@ -87,9 +87,9 @@ versions in result provenance as well as the plugin release.
 
 ## Declare compatibility deliberately
 
-For plugins tested on the 1.2 line, `>=1.2.0,<1.3` is a conservative declaration.
+For plugins tested on the 1.2 line, `>=1.2.1,<1.3` is a conservative declaration.
 Use a wider range only when you support and verify it. The 1.2 scaffold may
-render the compatibility baseline `>=1.2.0b1,<1.3`; raise the floor to `1.2.0`
+render the compatibility baseline `>=1.2.0b1,<1.3`; raise the floor to `1.2.1`
 when your support policy requires the stable release.
 
 The bundle installer checks `requires_mint` and the wheel's SDK requirement.
@@ -175,6 +175,6 @@ Include upgrade steps, the supported MINT range, schema revisions and any
 changed analysis semantics in the changelog. See [publishing](/sdk/operations/publishing)
 for registry and artifact distribution.
 
-Source: [package identity](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/plugin_decorators.py),
-[build implementation](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/cli_build.py),
-[scaffold version policy](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/init_versions.py).
+Source: [package identity](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/plugin_decorators.py),
+[build implementation](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/cli_build.py),
+[scaffold version policy](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/init_versions.py).

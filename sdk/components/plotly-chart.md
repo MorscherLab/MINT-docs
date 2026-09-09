@@ -8,7 +8,7 @@ description: "Render native Plotly traces with SDK theme, sizing, loading, empty
 
 # PlotlyChart
 
-Available in **1.2.0**. `PlotlyChart` renders native Plotly traces inside `ChartContainer`, loads Plotly lazily when mounted, follows theme/container changes, and cleans up on unmount.
+Available since **1.2.0**. `PlotlyChart` renders native Plotly traces inside `ChartContainer`, loads Plotly lazily when mounted, follows theme/container changes, and cleans up on unmount.
 
 ## Example
 
@@ -35,7 +35,7 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/PlotlyChart.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/PlotlyChart.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -63,4 +63,4 @@ The component defaults to responsive rendering and hides the Plotly logo. Your `
 
 Set `empty` yourself when an analysis has no data. Bind `loading` to request state and keep axis labels/units explicit. The component does not expose Plotly click/selection events as Vue emits in 1.2. For custom chart libraries or event bindings beyond this API, use [ChartContainer](/sdk/components/chart-container).
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)
+[Release source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)

@@ -232,7 +232,7 @@ Plugins extend the data model in two complementary ways:
 
 Pick (1) when the data is tightly coupled to one experiment and never queried across experiments by anyone else. Pick (2) when you need indexes, cross-experiment queries, or relational integrity.
 
-Verified against [v1.2.0 data models and protocols](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/repositories.py) and [design ownership enforcement](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/repositories/sql_experiment_repository.py).
+Verified against [v1.2.1 data models and protocols](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/repositories.py) and [design ownership enforcement](https://github.com/MorscherLab/MINT/blob/v1.2.1/api/repositories/sql_experiment_repository.py).
 
 ## Next
 

@@ -1,6 +1,6 @@
 # Composables
 
-This page covers the public **1.2.0** composables and helper factories used for generated clients, experiment context, settings, forms, and platform API calls. For a complete selection-and-save page, see [Platform integration](/sdk/frontend/platform-integration).
+This page covers the public **1.2.1** composables and helper factories used for generated clients, experiment context, settings, forms, and platform API calls. For a complete selection-and-save page, see [Platform integration](/sdk/frontend/platform-integration).
 
 ## Full list
 
@@ -213,6 +213,25 @@ toast.info('Tip: results are saved to the experiment artifacts card')
 toast.show('Panel saved', 'success', 5000)
 toast.clear()
 ```
+
+In 1.2.1, `push()` returns the toast ID and accepts structured options:
+
+```ts
+const toastId = toast.push({
+  title: 'Analysis running',
+  detail: 'Results will be attached to the selected experiment.',
+  type: 'info',
+  progress: 'indeterminate',
+  dismissible: true,
+})
+// On completion or failure, dismiss the persistent progress notification.
+toast.dismiss(toastId)
+```
+
+At most two `actions` are retained; each has `label`, `onClick` and optional
+`primary`. `count` shows a grouped count. `progress: 'indeterminate'` prevents
+auto-dismiss; `progress: 'none'` hides the bar but still uses the normal timeout.
+The default duration remains 3500ms.
 
 ### `usePlatformContext`
 

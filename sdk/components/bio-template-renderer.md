@@ -12,7 +12,7 @@ BioTemplateRenderer is a workflow component exported by @morscherlab/mint-sdk fo
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/BioTemplateRenderer.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/BioTemplateRenderer.vue">Source</a>
 </div>
 
 <ComponentPlayground name="BioTemplateRenderer" />
@@ -26,7 +26,7 @@ import { BioTemplateRenderer } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/BioTemplateRenderer.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/BioTemplateRenderer.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -45,8 +45,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` BioTemplateEnvelope `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/templates/types.ts#L40) | See the linked SDK type definition. |
-| [` TemplateCollectionEnvelope `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/templates/types.ts#L50) | See the linked SDK type definition. |
+| [` BioTemplateEnvelope `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/templates/types.ts#L40) | See the linked SDK type definition. |
+| [` TemplateCollectionEnvelope `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/templates/types.ts#L50) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

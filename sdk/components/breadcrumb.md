@@ -12,7 +12,7 @@ Breadcrumb is a layout component exported by @morscherlab/mint-sdk for plugin fr
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/Breadcrumb.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/Breadcrumb.vue">Source</a>
 </div>
 
 <ComponentPlayground name="Breadcrumb" />
@@ -26,7 +26,7 @@ import { Breadcrumb } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/Breadcrumb.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/Breadcrumb.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -39,7 +39,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` BreadcrumbItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L436) | See the linked SDK type definition. |
+| [` BreadcrumbItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L459) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

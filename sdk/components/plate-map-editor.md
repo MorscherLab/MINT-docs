@@ -12,7 +12,7 @@ PlateMapEditor is a lab widgets component exported by @morscherlab/mint-sdk for 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/PlateMapEditor.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/PlateMapEditor.vue">Source</a>
 </div>
 
 <ComponentPlayground name="PlateMapEditor" />
@@ -26,7 +26,7 @@ import { PlateMapEditor } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/PlateMapEditor.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/PlateMapEditor.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -46,9 +46,9 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` PlateMapEditorState `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L138) | See the linked SDK type definition. |
-| [` WellPlateFormat `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L2) | See the linked SDK type definition. |
-| [` SampleType `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L122) | See the linked SDK type definition. |
+| [` PlateMapEditorState `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L138) | See the linked SDK type definition. |
+| [` WellPlateFormat `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L2) | See the linked SDK type definition. |
+| [` SampleType `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L122) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

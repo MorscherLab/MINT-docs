@@ -1,13 +1,33 @@
 # Upgrading to MINT SDK 1.2
 
-This guide targets **MINT v1.2.0**, released on 8 September 2026. Platform,
-Python SDK and frontend SDK releases use the same `v1.2.0` release tag. Your
-plugin has its own version. Read the [platform upgrade notes](https://github.com/MorscherLab/MINT/blob/v1.2.0/CHANGELOG.md)
-and [shared SDK changelog](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/CHANGELOG.md)
+This guide targets **MINT v1.2.1**, released on 9 September 2026. Platform,
+Python SDK and frontend SDK releases use the same `v1.2.1` release tag. Your
+plugin has its own version. Read the [platform upgrade notes](https://github.com/MorscherLab/MINT/blob/v1.2.1/CHANGELOG.md)
+and [shared SDK changelog](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/CHANGELOG.md)
 before changing dependencies.
 
 For the platform configuration and legacy API mapping, also read the
 [MINT 1.2 migration guide](/sdk/operations/migrating-to-1.2).
+
+## Moving from 1.2.0 to 1.2.1
+
+This patch includes frontend API changes as well as generated-job fixes. Update
+both SDK packages together and remove retired component props before building.
+
+| Surface | Change and migration |
+|---|---|
+| AppSidebar | Flat groups; replace removed `variant` with the single built-in look. Prefer `density` over deprecated `dense`. |
+| BaseTabs | Remove `variant`; use SegmentedControl for pill-style options. |
+| Workspace sidebar | `sidebarVariant` remains declared for compatibility but has no visual effect. |
+| NumberInput | Bounded values use an in-field scrubber; check custom CSS/tests targeting the removed range input. |
+| FormField / BasePill | Optional row layout and status dots; no change required for existing calls. |
+| Toasts | `push()` accepts title/detail/actions/progress; existing simple helpers remain available. |
+| Generated UI | Labels, nullable/empty inputs, literal fields, typed arrays and numeric bounds are preserved; selected files survive job switches. |
+| Job validation | Custom Pydantic validation failures produce JSON-serializable 422 responses. |
+
+Recheck sidebar spacing, tab selection, numeric keyboard/pointer input and file
+selection in your plugin. PostgreSQL and plugin-owned migration APIs remain on
+the 1.2 contract; the 1.2.1 release does not introduce `mint db`.
 
 ## 1. Prepare the project and target platform
 
@@ -21,12 +41,12 @@ Use a 1.2 CLI to perform the upgrade, even if the project's environment still
 contains SDK 1.1:
 
 ```bash
-uv tool install 'mint-sdk[cli]==1.2.0'
+uv tool install 'mint-sdk[cli]==1.2.1'
 mint --version
 ```
 
 For an existing uv tool installation, use `uv tool install --force
-'mint-sdk[cli]==1.2.0'`. Project commands below use `uv run mint` after dependency
+'mint-sdk[cli]==1.2.1'`. Project commands below use `uv run mint` after dependency
 synchronization, so they run the SDK selected by that project's environment.
 
 Check compatibility declarations. A project constrained to `<1.2` must have
@@ -35,17 +55,17 @@ requires the released 1.2 APIs, use:
 
 ```toml
 [project]
-dependencies = ["mint-sdk>=1.2.0,<1.3"]
+dependencies = ["mint-sdk>=1.2.1,<1.3"]
 
 [dependency-groups]
 dev = [
-  "mint-sdk[cli,server]>=1.2.0,<1.3",
+  "mint-sdk[cli,server]>=1.2.1,<1.3",
   "pytest>=8.0.0",
   "pytest-asyncio>=0.23.0",
 ]
 
 [tool.mint]
-requires_mint = ">=1.2.0,<1.3"
+requires_mint = ">=1.2.1,<1.3"
 ```
 
 Merge these entries into the scaffold; keep your plugin's scientific and other
@@ -57,8 +77,8 @@ version policy in the plugin.
 ## 2. Select one SDK release
 
 ```bash
-mint sdk update . --version 1.2.0 --dry-run
-mint sdk update . --version 1.2.0
+mint sdk update . --version 1.2.1 --dry-run
+mint sdk update . --version 1.2.1
 ```
 
 The updater selects a common release available on PyPI and npm when both SDKs
@@ -77,7 +97,7 @@ target excluded by Python upper bounds/exclusions or `[tool.mint].requires_mint`
 | `--scope patch` | Default: select a patch in the current minor |
 | `--scope minor` | Select the newest candidate within the current major; fail if excluded by declared bounds |
 | `--scope major` | Select across majors; fail if the candidate violates declared bounds |
-| `--version 1.2.0` | Select this exact release instead of the newest candidate |
+| `--version 1.2.1` | Select this exact release instead of the newest candidate |
 | `--channel stable` | Default release channel |
 | `--channel beta` | Allow prereleases for a development branch |
 | `--dry-run` | Preview file changes without applying them |
@@ -112,7 +132,7 @@ a fixed 1.2 support line, or review/widen bounds on an upgrade branch.
 The 1.2 SDK retains some 1.1 APIs as adapters. `mint doctor` helps identify
 legacy usage; retaining an adapter does not make it the recommended API for new
 code. Do not copy migration commands from unreleased source into a 1.2 plugin:
-`mint db` is not a v1.2.0 command.
+`mint db` is not a v1.2.1 command.
 
 ## 4. Regenerate, test and install
 
@@ -158,5 +178,5 @@ before using it in a multi-plugin workspace. Use linked sources to develop SDK
 changes, then unlink, synchronize and repeat build/install verification against
 the published release before distributing a plugin.
 
-Source: [update implementation](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/update_command.py),
-[dependency policy](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/dependency_policy.py).
+Source: [update implementation](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/update_command.py),
+[dependency policy](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/dependency_policy.py).

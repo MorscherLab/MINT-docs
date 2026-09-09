@@ -1,6 +1,6 @@
 # Tutorial 2 - Adding a Frontend
 
-You'll build **hello-standard** with MINT SDK **1.2.0**: a `standard` mode plugin with a FastAPI-style backend and a Vue 3 workspace. Use this path when your plugin needs custom interaction, results, or navigation. Generated mode remains the shorter path for Python parameters and standard result views.
+You'll build **hello-standard** with MINT SDK **1.2.1**: a `standard` mode plugin with a FastAPI-style backend and a Vue 3 workspace. Use this path when your plugin needs custom interaction, results, or navigation. Generated mode remains the shorter path for Python parameters and standard result views.
 
 By the end you will have:
 
@@ -10,7 +10,7 @@ By the end you will have:
 - Backend and frontend checks that can run in CI
 
 **Time:** 40-50 minutes
-**Prereqs:** Python 3.12+, `uv`, Bun, and the `mint` CLI from `mint-sdk[cli]` 1.2.0.
+**Prereqs:** Python 3.12+, `uv`, Bun, and the `mint` CLI from `mint-sdk[cli]` 1.2.1.
 
 ## 1. Scaffold in Standard Mode
 
@@ -65,7 +65,7 @@ cd ..
 uv run pytest -q
 ```
 
-Build the initial frontend before this scaffold checkpoint: the 1.2.0 standard scaffold may contain an empty `frontend/dist` placeholder, which the runtime rejects until it contains a build. For backend-only route tests, disable frontend discovery as shown below.
+Build the initial frontend before this scaffold checkpoint: the 1.2.1 standard scaffold may contain an empty `frontend/dist` placeholder, which the runtime rejects until it contains a build. For backend-only route tests, disable frontend discovery as shown below.
 
 ## 2. Inspect the Backend
 
@@ -195,6 +195,10 @@ import WorkspaceView from './views/WorkspaceView.vue'
   </PluginWorkspaceView>
 </template>
 ```
+
+`PluginWorkspaceView` already uses [AppLayout](/sdk/components/app-layout) internally and supplies the standard topbar and optional sidebar. Do not wrap it in another `AppLayout`. The imported `WorkspaceView` is the local page you edit; `AppContainer` gives that page spacing and scrolling.
+
+Keep this shell for custom plugin screens and add `experiment-shell` when you need the SDK's experiment selector/save/detach flow. Use [ControlWorkspaceView](/sdk/components/control-workspace-view) **instead** when a control model should generate the entire form/settings/sidebar page; it also includes its own `AppLayout`. For the selection guide and each component's props, see [AppLayout or a workspace?](/sdk/frontend/#applayout-or-a-workspace).
 
 The CSS entry imports Tailwind and the SDK tokens:
 

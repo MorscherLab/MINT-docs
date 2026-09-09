@@ -10,7 +10,7 @@ The `mint` command-line interface ships with the **`mint-sdk`** package (PyPI). 
 ## Install the 1.2 CLI
 
 ```bash
-uv tool install 'mint-sdk[cli]==1.2.0'
+uv tool install 'mint-sdk[cli]==1.2.1'
 ```
 
 The `[cli]` extra is required for command-line tooling. Plugin projects created
@@ -25,7 +25,7 @@ mint --version
 mint --help
 ```
 
-If the command isn't found, the install location isn't on your `PATH`. With `uv tool install 'mint-sdk[cli]==1.2.0'`, run `uv tool update-shell`. With `pip install --user 'mint-sdk[cli]'`, add `~/.local/bin` to `PATH`.
+If the command isn't found, the install location isn't on your `PATH`. With `uv tool install 'mint-sdk[cli]==1.2.1'`, run `uv tool update-shell`. With `pip install --user 'mint-sdk[cli]'`, add `~/.local/bin` to `PATH`.
 
 ## Command index
 

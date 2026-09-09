@@ -12,7 +12,7 @@ FormulaInput is a forms component exported by @morscherlab/mint-sdk for plugin f
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/FormulaInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/FormulaInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="FormulaInput" />
@@ -26,7 +26,7 @@ import { FormulaInput } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/FormulaInput.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/FormulaInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

@@ -1240,7 +1240,7 @@ const fallbackReason = computed(() => {
             title="Analysis tools"
             subtitle="Current view controls"
             :badge="2"
-            variant="analysis"
+            density="compact"
             :panels="appSidebarPanels"
             :active-view="activeShellView"
             :floating="false"
@@ -1436,7 +1436,7 @@ const fallbackReason = computed(() => {
       </template>
 
       <template v-else-if="name === 'BaseTabs'">
-        <BaseTabs v-model="activeTab" :tabs="tabs" variant="pills" />
+        <BaseTabs v-model="activeTab" :tabs="tabs" />
         <p class="mint-live-caption">Active tab: {{ activeTab }}</p>
       </template>
 
@@ -1477,7 +1477,7 @@ const fallbackReason = computed(() => {
 
       <template v-else-if="name === 'BasePill'">
         <div class="mint-live-row">
-          <BasePill variant="success">Completed</BasePill>
+          <BasePill variant="success" dot>Completed</BasePill>
           <BasePill variant="warning">Needs review</BasePill>
           <BasePill variant="error">Failed</BasePill>
         </div>

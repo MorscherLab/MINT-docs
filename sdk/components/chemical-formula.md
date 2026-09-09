@@ -12,7 +12,7 @@ Formula renderer with scientific typography and element-aware formatting.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/ChemicalFormula.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/ChemicalFormula.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ChemicalFormula" />
@@ -32,7 +32,7 @@ import { ChemicalFormula } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/ChemicalFormula.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/ChemicalFormula.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

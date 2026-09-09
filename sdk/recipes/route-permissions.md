@@ -107,7 +107,7 @@ Do not cache an actor or role on `self`; concurrent users share the instance. Ma
 
 Test an anonymous caller, an authenticated allowed caller, a caller with the right plugin role but no experiment visibility, an incompatible experiment type, and standalone mode. `RecordingContext` helps exercise persistence but does not replace platform RBAC integration tests.
 
-Verified against [v1.2.0 dependencies](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/runtime_dependencies.py), [actors](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/actors.py), and [scoped repository](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/repositories/scoped_experiment_repository.py).
+Verified against [v1.2.1 dependencies](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/runtime_dependencies.py), [actors](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/actors.py), and [scoped repository](https://github.com/MorscherLab/MINT/blob/v1.2.1/api/repositories/scoped_experiment_repository.py).
 
 - [Plugin roles tutorial](/sdk/tutorials/plugin-roles)
 - [Platform permissions](/reference/permissions)

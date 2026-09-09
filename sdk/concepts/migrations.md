@@ -1,8 +1,8 @@
 # Plugin tables and migrations
 
-MINT 1.2.0 supports plugin-owned SQLModel/SQLAlchemy tables with a versioned Python migration package. Use tables for structured drafts, run metadata, or application records that need queries and constraints. Use platform design/results repositories and object storage for data that belongs in the experiment workflow; see [Data model](/sdk/concepts/data-model).
+MINT 1.2.1 supports plugin-owned SQLModel/SQLAlchemy tables with a versioned Python migration package. Use tables for structured drafts, run metadata, or application records that need queries and constraints. Use platform design/results repositories and object storage for data that belongs in the experiment workflow; see [Data model](/sdk/concepts/data-model).
 
-This page describes the **v1.2.0 release**: `get_shared_models()`, `get_migrations_package()`, `PluginMigration`, and `MigrationRunner`. It does not describe an Alembic-based `mint db` workflow.
+This page describes the **v1.2.1 release**: `get_shared_models()`, `get_migrations_package()`, `PluginMigration`, and `MigrationRunner`. It does not describe an Alembic-based `mint db` workflow.
 
 ## The database contract
 
@@ -74,7 +74,7 @@ class AddNotes(PluginMigration):
         await op.add_column("panels", sa.Column("notes", sa.Text, nullable=True))
 ```
 
-Add the corresponding `notes: str | None = None` field to the current model. Keep each revision number unique and increasing. Discovery imports modules in the named package and finds `PluginMigration` subclasses; `version` controls order, not the filename. The `depends_on` attribute exists but v1.2.0 does not use it to resolve dependencies or sort revisions.
+Add the corresponding `notes: str | None = None` field to the current model. Keep each revision number unique and increasing. Discovery imports modules in the named package and finds `PluginMigration` subclasses; `version` controls order, not the filename. The `depends_on` attribute exists but v1.2.1 does not use it to resolve dependencies or sort revisions.
 
 For a populated table, add nullable columns or suitable server defaults first. An ORM `default_factory` runs in Python; it does not backfill database rows. Follow the [backfill recipe](/sdk/recipes/backfill-migration) when adding derived or required values.
 
@@ -99,7 +99,7 @@ The runner opens **one transaction for the entire run**, including migration his
 
 The released SQLite implementation uses `engine.begin()`; despite the locking module's descriptive comments, it does not issue `BEGIN EXCLUSIVE`. Do not rely on it for production multi-process migration coordination.
 
-A migration exception raises `MigrationError`. Earlier pending work in the same run is subject to the transaction rollback; verify SQLite DDL behavior with the actual driver. The v1.2.0 runner does **not** insert a new failed-history row, even though the tracking schema contains `success` and `error_message` columns. The platform records `migration_error` in plugin status; do not infer successful migration from process startup alone. Database-session conformance checks can also reject access to a mismatched schema.
+A migration exception raises `MigrationError`. Earlier pending work in the same run is subject to the transaction rollback; verify SQLite DDL behavior with the actual driver. The v1.2.1 runner does **not** insert a new failed-history row, even though the tracking schema contains `success` and `error_message` columns. The platform records `migration_error` in plugin status; do not infer successful migration from process startup alone. Database-session conformance checks can also reject access to a mismatched schema.
 
 All revisions in a run share the connection and transaction. A loop of 5,000-row updates does not create separate transactions or release the migration lock between batches.
 
@@ -116,13 +116,13 @@ PostgreSQL stores history in `public.plugin_schema_migrations`; SQLite uses `_pl
 
 Keep revisions immutable after release. Checksums cover the **migration class source**, not the entire module or external helpers: preserve helper behavior and constants too. Unique revision numbering and keeping the full shipped history are author responsibilities; the runner is not a migration graph validator.
 
-The v1.2.0 conformance checks only detect missing tables and columns. They do not validate types, nullability, keys, indexes, defaults, constraints, or transformed data. Verify those explicitly in upgrade tests.
+The v1.2.1 conformance checks only detect missing tables and columns. They do not validate types, nullability, keys, indexes, defaults, constraints, or transformed data. Verify those explicitly in upgrade tests.
 
 ## Package, design, and SQL versions
 
 The built package version identifies the plugin release; the scaffold derives it from Git through `hatch-vcs` and records it in wheel metadata. `schema_version` on `@mint_plugin` labels persisted design data. `PluginMigration.version` is the SQL revision. None automatically advances another.
 
-When releasing a schema change: update the current model, append a migration, update the plugin package version, and test both fresh install and upgrade. Preserve design-data compatibility separately if its payload changes. A `downgrade()` override is available on a migration class, but the v1.2.0 runner only executes upgrades and the CLI has no automatic downgrade command. Treat rollback as a tested backup/restore or forward-fix procedure.
+When releasing a schema change: update the current model, append a migration, update the plugin package version, and test both fresh install and upgrade. Preserve design-data compatibility separately if its payload changes. A `downgrade()` override is available on a migration class, but the v1.2.1 runner only executes upgrades and the CLI has no automatic downgrade command. Treat rollback as a tested backup/restore or forward-fix procedure.
 
 ## Raw SQL and backend differences
 
@@ -145,4 +145,4 @@ Parameterize values; never interpolate request data into SQL. Prefer generic SQL
 
 Continue with the [table tutorial](/sdk/tutorials/design-plugin-with-tables), [backfill tests](/sdk/recipes/backfill-migration), and [exact API signatures](/sdk/api/migrations).
 
-Release sources: [SDK database lifecycle](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/plugin_database.py), [migration runner](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/migrations/runner.py), and [platform schema setup](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/plugins/plugin_schema_setup.py).
+Release sources: [SDK database lifecycle](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/plugin_database.py), [migration runner](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/migrations/runner.py), and [platform schema setup](https://github.com/MorscherLab/MINT/blob/v1.2.1/api/plugins/plugin_schema_setup.py).

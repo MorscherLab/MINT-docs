@@ -2,7 +2,7 @@
 
 Build **batch-coordinator**, a `WORKFLOW` plugin that lists visible experiments and creates experiment records for downstream design and analysis plugins. It deliberately declares no design-data or result writes.
 
-This tutorial targets **MINT v1.2.0**. A workflow is a plugin category and access policy; it does not automatically schedule jobs or invoke other plugins.
+This tutorial targets **MINT v1.2.1**. A workflow is a plugin category and access policy; it does not automatically schedule jobs or invoke other plugins.
 
 ## 1. Scaffold a standard plugin
 
@@ -329,4 +329,4 @@ Use `@job` for your plugin's own queued calculations, [lifecycle events](/sdk/co
 
 Use [analysis artifacts](/sdk/concepts/platform-context) to read downstream outputs. Declare exact producer plugin IDs in `analysis_result_readers` when reading another plugin's payload. Merely listing a plugin in `dependencies` controls load order; it does not grant result access or execute that plugin.
 
-Source: [v1.2 workflow scaffolding](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/init_command.py), [repository protocol](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/repositories.py), and [platform permissions](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/permissions.py).
+Source: [v1.2 workflow scaffolding](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/init_command.py), [repository protocol](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/repositories.py), and [platform permissions](https://github.com/MorscherLab/MINT/blob/v1.2.1/api/permissions.py).

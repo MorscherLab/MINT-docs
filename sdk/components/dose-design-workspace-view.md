@@ -12,7 +12,7 @@ DoseDesignWorkspaceView is a workflow component exported by @morscherlab/mint-sd
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/DoseDesignWorkspaceView.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/DoseDesignWorkspaceView.vue">Source</a>
 </div>
 
 <ComponentPlayground name="DoseDesignWorkspaceView" />
@@ -23,10 +23,17 @@ DoseDesignWorkspaceView is a workflow component exported by @morscherlab/mint-sd
 import { DoseDesignWorkspaceView } from "@morscherlab/mint-sdk/components"
 ```
 
+## Sidebar compatibility in 1.2.1
+
+This recipe still declares `sidebarVariant`, but AppSidebar no longer has
+visual variants, so the option has no visual effect. For a custom sidebar,
+compose a `ControlWorkspaceView` or `PluginWorkspaceView` with a sidebar slot.
+The generated table below preserves the SDK's declarations and source comments.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/DoseDesignWorkspaceView.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/DoseDesignWorkspaceView.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -67,16 +74,16 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
-| [` UseControlWorkspaceReturn `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L359) | See the linked SDK type definition. |
-| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
-| [` DoseDesignControlModelOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L323) | See the linked SDK type definition. |
-| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
-| [` ComponentProps `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/DoseDesignWorkspaceView.vue#L28) | See the linked SDK type definition. |
-| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L159) | ` 'card' \| 'default' ` |
-| [` DoseDesignSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/DoseDesignWorkspaceView.vue#L27) | See the linked SDK type definition. |
-| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/form-builder.ts#L164) | See the linked SDK type definition. |
+| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
+| [` UseControlWorkspaceReturn `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L359) | See the linked SDK type definition. |
+| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
+| [` DoseDesignControlModelOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L323) | See the linked SDK type definition. |
+| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
+| [` ComponentProps `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/DoseDesignWorkspaceView.vue#L28) | See the linked SDK type definition. |
+| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L182) | ` 'card' \| 'default' ` |
+| [` DoseDesignSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/DoseDesignWorkspaceView.vue#L27) | See the linked SDK type definition. |
+| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

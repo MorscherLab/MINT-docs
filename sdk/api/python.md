@@ -19,7 +19,7 @@ Core public symbols exported from `mint_sdk`, grouped by area. Each entry has a 
 | `generated_ui` | Class decorator that opts into the SDK-managed generated workspace |
 | `job` | Decorator for typed managed jobs |
 
-Source: [`mint_sdk/plugin.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/plugin.py), [`mint_sdk/models.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/models.py), [`mint_sdk/context.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/context.py).
+Source: [`mint_sdk/plugin.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/plugin.py), [`mint_sdk/models.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/models.py), [`mint_sdk/context.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/context.py).
 
 ### `AnalysisPlugin`
 
@@ -217,7 +217,7 @@ Legacy defaults are read-only metadata plus analysis writes for `ANALYSIS`, CRUD
 | `UserPluginRole` | Dataclass — per-(user, plugin) role row |
 | `PlatformConfig` | Type alias `dict[str, Any]` for platform config view |
 
-Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/repositories.py).
+Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/repositories.py).
 
 ## Repository protocols
 
@@ -239,7 +239,7 @@ All repository methods are async. MINT 1.2 uses one scoped experiment repository
 | `LocalDatabase` | Local SQLite database used by standalone plugins |
 | `LocalDatabaseConfig` | `storage_dir` and other configuration |
 
-Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/local_database.py).
+Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/local_database.py).
 
 ## Lifecycle types
 
@@ -255,7 +255,7 @@ Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/
 |--------|-------------|
 | `get_plugin_logger(name)` | Structured logger with auto-attached fields |
 
-Source: [`mint_sdk/logging.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/logging.py).
+Source: [`mint_sdk/logging.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/logging.py).
 
 ## Exceptions
 
@@ -324,7 +324,7 @@ See [Recipes → Testing plugins](/sdk/recipes/testing-plugins) for usage. Prefe
 | `PluginDependency` | Helper for declaring plugin-aware FastAPI deps |
 | `require_context` | FastAPI dependency that yields the active `PlatformContext` |
 
-Source: [`mint_sdk/app.py`](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/app.py).
+Source: [`mint_sdk/app.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/app.py).
 
 Current `mint init` projects use the SDK-owned runtime target `mint_sdk.runtime:create_plugin_app`, which discovers the current project's single `mint.plugins` entry point and passes it to `create_standalone_app()`. Use `create_standalone_app(MyPlugin)` directly in tests or custom hosts when you already have the plugin class.
 
@@ -340,7 +340,7 @@ See [REST client](/sdk/api/client) for full signatures.
 
 - The package version is `mint_sdk.__version__`. With `hatch-vcs`, this is derived from the git tag at build time.
 - Modules prefixed with `_` (`mint_sdk._discover`, `mint_sdk._version`, `mint_sdk._prompt`) are internal and may break without notice. Use only the symbols documented in `__init__.py`.
-- For testing, see [`mint_sdk.testing`](https://github.com/MorscherLab/MINT/tree/v1.2.0/packages/sdk-python/src/mint_sdk/testing) — exports may evolve faster than the main SDK; check the testing module's `__init__.py` in your installed version.
+- For testing, see [`mint_sdk.testing`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-python/src/mint_sdk/testing) — exports may evolve faster than the main SDK; check the testing module's `__init__.py` in your installed version.
 
 ## Related
 

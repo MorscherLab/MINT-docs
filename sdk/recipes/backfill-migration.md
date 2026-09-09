@@ -1,6 +1,6 @@
 # Backfill migrations
 
-Add a new column and populate existing rows without overwriting values users already supplied. This recipe uses the `panels` table from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables) and the released MINT 1.2.0 migration API.
+Add a new column and populate existing rows without overwriting values users already supplied. This recipe uses the `panels` table from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables) and the released MINT 1.2.1 migration API.
 
 ## Add a nullable value first
 
@@ -45,7 +45,7 @@ If a query needs values, use `.bindparams(...)` on the statement. `MigrationOps.
 
 ## Large datasets and transaction boundaries
 
-The v1.2.0 runner executes all pending revisions within **one transaction** and, on PostgreSQL, one advisory lock. A loop with `LIMIT 5000` bounds each statement's work, but does not commit between batches or release locks. Splitting the loop across revisions in the same startup run does not change that transaction boundary.
+The v1.2.1 runner executes all pending revisions within **one transaction** and, on PostgreSQL, one advisory lock. A loop with `LIMIT 5000` bounds each statement's work, but does not commit between batches or release locks. Splitting the loop across revisions in the same startup run does not change that transaction boundary.
 
 For small, measured migrations, a single update is often sufficient. For a large live table, use staged releases:
 
@@ -55,7 +55,7 @@ For small, measured migrations, a single update is often sufficient. For a large
 
 Do not call `commit()` on the runner's private connection inside `upgrade()`. There is no released `mint db backfill` or migration-only CLI command. A custom maintenance command must use normal plugin sessions and explicit authorization; its lifecycle is separate from startup migrations.
 
-`alter_column()` only changes the column type in 1.2.0. It does not accept `nullable=False`. PostgreSQL `ALTER ... SET NOT NULL` and SQLite table rebuilding need their own integration checks. Schema changes can acquire database locks; do not describe adding a column or constraint as lock-free.
+`alter_column()` only changes the column type in 1.2.1. It does not accept `nullable=False`. PostgreSQL `ALTER ... SET NOT NULL` and SQLite table rebuilding need their own integration checks. Schema changes can acquire database locks; do not describe adding a column or constraint as lock-free.
 
 ## Test the real upgrade path
 

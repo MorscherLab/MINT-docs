@@ -13,7 +13,7 @@ You'll need:
 | **Python** | 3.12 or newer |
 | **uv** | Used by generated plugin projects |
 | **Bun** | latest (for frontend tutorials) |
-| **`mint` CLI** | Installed from `mint-sdk[cli]==1.2.0`; see [CLI overview](/cli/overview) |
+| **`mint` CLI** | Installed from `mint-sdk[cli]==1.2.1`; see [CLI overview](/cli/overview) |
 | **A running platform** | Optional for local code; real integration needs an installed plugin on a configured PostgreSQL-backed MINT platform |
 
 You do not need to read the whole SDK reference first. When a tutorial introduces a concept, it links to the deeper page.

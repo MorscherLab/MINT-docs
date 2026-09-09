@@ -122,6 +122,11 @@ assert(Object.values(results).some((entry: any) => entry.props.some((prop: any) 
 assert.equal(get('AppToastContainer').length, 0)
 assert.equal(get('SampleLegend').find(p => p.name === 'samples').required, true)
 assert.equal(get('SampleLegend').find(p => p.name === 'samples').default, '() => []')
+assert(!get('AppSidebar').some(p => p.name === 'variant'))
+assert.equal(get('AppSidebar').find(p => p.name === 'density').type, "'compact' | 'comfortable'")
+assert(!get('BaseTabs').some(p => p.name === 'variant'))
+assert.equal(get('BasePill').find(p => p.name === 'dot').default, 'false')
+assert.equal(get('FormField').find(p => p.name === 'layout').default, "'stacked'")
 
 console.log(`Extracted ${componentDocs.length} components, ${Object.values(results).reduce((sum: number, entry: any) => sum + entry.props.length, 0)} props; regression assertions passed.`)
 
@@ -208,7 +213,8 @@ for (const [name, component] of Object.entries(results)) {
     assert(content.includes(anchor), `Missing insertion point: ${path}`)
     content = content.replace(anchor, () => `\n${block}\n${anchor}`)
   }
-  content = content.replaceAll('/MINT/blob/main/packages/sdk-frontend/', `/MINT/blob/v${version}/packages/sdk-frontend/`)
+  content = content.replace(/\/MINT\/blob\/(?:main|v[^/]+)\/packages\/sdk-frontend\//g,
+    `/MINT/blob/v${version}/packages/sdk-frontend/`)
   if (!content.includes('href="#props"')) {
     content = content.replace('<div class="mint-component-reference__actions">',
       '<div class="mint-component-reference__actions">\n  <a class="mint-showcase-button" href="#props">Props</a>')

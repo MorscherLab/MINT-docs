@@ -1,9 +1,9 @@
 # Plugin Development Guide
 
-Build plugins for **MINT 1.2.0**: start with an installable scaffold, choose its
+Build plugins for **MINT 1.2.1**: start with an installable scaffold, choose its
 data permissions, connect it to experiments, add storage and a frontend, then
 test and version the bundle. The examples in this track are checked against
-the released `v1.2.0` source, dated 8 September 2026.
+the released `v1.2.1` source, dated 9 September 2026.
 
 ## What to learn
 
@@ -19,19 +19,19 @@ the released `v1.2.0` source, dated 8 September 2026.
 
 ### The 1.2 baseline
 
-Use Python 3.12+ and the CLI extra (`uv tool install 'mint-sdk[cli]==1.2.0'`).
+Use Python 3.12+ and the CLI extra (`uv tool install 'mint-sdk[cli]==1.2.1'`).
 Standard plugins also need Bun for the scaffolded Vue frontend. Platform
 integration needs a configured MINT server; MINT 1.2 requires PostgreSQL.
 Standalone plugin SQLite is still available for local development.
 
 Three choices are independent: **UI mode** (`generated` or `standard`),
 **plugin type** (data-access defaults), and **runtime** (in-process, subprocess,
-external or Docker). In v1.2.0, generated mode supports analysis plugins only;
+external or Docker). In v1.2.1, generated mode supports analysis plugins only;
 choose standard mode for design, workflow, static or full plugins.
 
 This track follows the released API. Development-branch additions such as
-`mint db` are not part of v1.2.0. See the [SDK changelog](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/CHANGELOG.md)
-and [platform changelog](https://github.com/MorscherLab/MINT/blob/v1.2.0/CHANGELOG.md)
+`mint db` are not part of v1.2.1. See the [SDK changelog](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/CHANGELOG.md)
+and [platform changelog](https://github.com/MorscherLab/MINT/blob/v1.2.1/CHANGELOG.md)
 for the release history.
 
 ## Choose your starting mode

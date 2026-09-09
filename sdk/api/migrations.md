@@ -1,6 +1,6 @@
-# Migrations reference — 1.2.0
+# Migrations reference — 1.2.1
 
-The released migration API is exported by `mint_sdk.migrations`. Source: [v1.2.0 migrations package](https://github.com/MorscherLab/MINT/tree/v1.2.0/packages/sdk-python/src/mint_sdk/migrations).
+The released migration API is exported by `mint_sdk.migrations`. Source: [v1.2.1 migrations package](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-python/src/mint_sdk/migrations).
 
 ## Plugin database hooks
 
@@ -36,7 +36,7 @@ class PluginMigration(ABC):
     def has_downgrade(self) -> bool: ...
 ```
 
-A metaclass checks that `version` is an integer and `name` a string at instantiation. Use unique positive increasing versions and stable labels such as `add_panel_notes`. `depends_on` is not interpreted by the v1.2.0 runner. `has_downgrade` reports whether the subclass overrides `downgrade`; the runner does not invoke it automatically.
+A metaclass checks that `version` is an integer and `name` a string at instantiation. Use unique positive increasing versions and stable labels such as `add_panel_notes`. `depends_on` is not interpreted by the v1.2.1 runner. `has_downgrade` reports whether the subclass overrides `downgrade`; the runner does not invoke it automatically.
 
 ## `MigrationOps`
 

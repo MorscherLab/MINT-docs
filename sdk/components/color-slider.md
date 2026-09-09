@@ -12,7 +12,7 @@ ColorSlider is a forms component exported by @morscherlab/mint-sdk for plugin fr
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/ColorSlider.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/ColorSlider.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ColorSlider" />
@@ -26,7 +26,7 @@ import { ColorSlider } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/ColorSlider.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/ColorSlider.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -49,7 +49,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ColorStop `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/ColorSlider.vue#L5) | See the linked SDK type definition. |
+| [` ColorStop `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/ColorSlider.vue#L5) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

@@ -1,6 +1,6 @@
 # Frontend SDK
 
-`@morscherlab/mint-sdk` **1.2.0** provides Vue 3 components, composables, generated-contract clients, compact control schemas, and design tokens for custom plugin frontends. Use `mint init --mode standard` for a Vue workspace; choose `--mode generated` when Python parameters and SDK-rendered results cover the interface.
+`@morscherlab/mint-sdk` **1.2.1** provides Vue 3 components, composables, generated-contract clients, compact control schemas, and design tokens for custom plugin frontends. Use `mint init --mode standard` for a Vue workspace; choose `--mode generated` when Python parameters and SDK-rendered results cover the interface.
 
 ## Choose a frontend path
 
@@ -13,6 +13,23 @@
 | A custom top bar, sidebar, or navigation arrangement | `PluginWorkspaceView` slots; use `AppLayout` directly only when needed |
 
 Follow [Adding a frontend](/sdk/tutorials/adding-a-frontend) for the complete backend-to-Vue tutorial, then [Platform integration](/sdk/frontend/platform-integration) for login state, experiment selection, persistence, and server files.
+
+## AppLayout or a workspace?
+
+`AppLayout` is the layout primitive used **inside** both workspace components. They share the same topbar/sidebar/content arrangement, but provide different amounts of behavior:
+
+| Component | Owns | Choose it when |
+|-----------|------|----------------|
+| [PluginWorkspaceView](/sdk/components/plugin-workspace-view) | `AppLayout`, default `AppTopBar`/`AppSidebar`, navigation, shared control values, and optional experiment selection/save/detach | Building a custom plugin frontend; this is the standard scaffold's default shell |
+| [ControlWorkspaceView](/sdk/components/control-workspace-view) | `AppLayout`, `AppTopBar`, `AppSidebar`, and a default `FormBuilder`, bound through `useControlWorkspace()` | A control model should generate the page's forms, settings, sidebar, and shared values |
+| [AppLayout](/sdk/components/app-layout) | Layout slots, sidebar positioning, floating cards, and optional mobile sidebar overlay | You need to compose your own shell and provide the topbar, sidebar, and their behavior |
+
+`PluginWorkspaceView` and `ControlWorkspaceView` overlap in control and layout support; they are alternative page shells. The first leaves the main content to your slot and adds plugin navigation and `experiment-shell`; the second renders a form by default and wires model-derived settings automatically. Choose one shell for a page. Nesting either workspace inside another `AppLayout` or workspace duplicates the shell.
+
+If a page already has a workspace and only needs a form, place `FormBuilder`
+inside its content instead of adding another workspace shell.
+
+The scaffold's local `views/WorkspaceView.vue` is your **page content**, not another SDK shell. Its normal nesting is `PluginWorkspaceView` → `AppContainer` → `WorkspaceView`. `AppContainer` supplies content spacing and scrolling. Keep the default shell and customize its slots before switching to `AppLayout` directly.
 
 ## What's in the package
 
@@ -30,7 +47,7 @@ If you scaffolded with `mint init --mode standard`, all of this is already done.
 
 1. **Install**
    ```bash
-   bun add @morscherlab/mint-sdk@^1.2.0
+   bun add @morscherlab/mint-sdk@^1.2.1
    ```
 
 2. **Import design tokens** in your app entry:
@@ -101,7 +118,7 @@ Body-only endpoints take the body directly. Endpoints combining parameters and a
 
 The frontend SDK now has a standalone component section and a local Histoire storybook:
 
-- [Component Library](/sdk/components/) — one page per exported component, with a live package-backed playground on each component page
+- [Component Library](/sdk/components/) — one page per exported component, with props tables (types, required status, defaults, and source descriptions) and a live package-backed playground
 
 The full Histoire lab runs locally during SDK development:
 
@@ -118,7 +135,7 @@ Stories include:
 - Light, dark, and white backgrounds for visual review
 - Common variant grids
 
-Treat the showcase as the public component reference. The pages here cover patterns and the most-used parts of the API; local Histoire covers every component and every prop.
+Use the public component pages for props and playgrounds, these guides for composition patterns, and local Histoire for additional interactive stories. Run `mint docs frontend <Name>` to inspect the SDK installed in your plugin project.
 
 ## Conventions
 
@@ -139,7 +156,7 @@ Treat the showcase as the public component reference. The pages here cover patte
 
 ## Source
 
-[`MINT v1.2.0/packages/sdk-frontend`](https://github.com/MorscherLab/MINT/tree/v1.2.0/packages/sdk-frontend) — the release source used for this guide. Use `mint docs frontend <Name>` against your installed SDK for exact local signatures.
+[`MINT v1.2.1/packages/sdk-frontend`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-frontend) — the release source used for this guide. Use `mint docs frontend <Name>` against your installed SDK for exact local signatures.
 
 ## Next
 

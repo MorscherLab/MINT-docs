@@ -25,7 +25,7 @@ async def recent_panels(self, actor: CurrentPluginActor) -> list[PanelOutput]:
 
 The session is an SQLAlchemy `AsyncSession`: use `await session.execute(...)`, then `result.scalars()` for ORM rows. Do not assume the SQLModel synchronous `session.exec()` convenience method is available.
 
-PostgreSQL integrated sessions set the plugin schema search path. Standalone sessions use SQLite. An installed isolated subprocess has no shared database session in 1.2.0, so this capability requires in-process deployment.
+PostgreSQL integrated sessions set the plugin schema search path. Standalone sessions use SQLite. An installed isolated subprocess has no shared database session in 1.2.1, so this capability requires in-process deployment.
 
 Schema scoping is table ownership, not user authorization. The platform cannot infer ownership rules for arbitrary rows. Filter every read/update/delete by the trusted actor or an explicitly authorized experiment. `requires_auth=True` authenticates the caller; it does not add SQL predicates. Build response objects while the session is open to avoid detached objects or lazy-loading surprises.
 

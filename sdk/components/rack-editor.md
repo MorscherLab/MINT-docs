@@ -12,7 +12,7 @@ RackEditor is a lab widgets component exported by @morscherlab/mint-sdk for plug
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/RackEditor.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/RackEditor.vue">Source</a>
 </div>
 
 <ComponentPlayground name="RackEditor" />
@@ -26,7 +26,7 @@ import { RackEditor } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/RackEditor.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/RackEditor.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -49,9 +49,9 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` Rack `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L100) | See the linked SDK type definition. |
-| [` WellPlateSize `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L5) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'fill' ` |
-| [` RackSampleDropMapper `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L116) | See the linked SDK type definition. |
+| [` Rack `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L100) | See the linked SDK type definition. |
+| [` WellPlateSize `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L5) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'fill' ` |
+| [` RackSampleDropMapper `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L116) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

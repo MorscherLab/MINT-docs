@@ -1,10 +1,10 @@
 # Frontend SDK reference
 
-Public components, composables, stores, and types from `@morscherlab/mint-sdk` **1.2.0**. For exact signatures, use `mint docs frontend <Name>` against the installed SDK or the linked release source. Follow [Adding a frontend](/sdk/tutorials/adding-a-frontend) for setup and [Platform integration](/sdk/frontend/platform-integration) for complete state/persistence examples.
+Public components, composables, stores, and types from `@morscherlab/mint-sdk` **1.2.1**. For exact signatures, use `mint docs frontend <Name>` against the installed SDK or the linked release source. Follow [Adding a frontend](/sdk/tutorials/adding-a-frontend) for setup and [Platform integration](/sdk/frontend/platform-integration) for complete state/persistence examples.
 
 ## Components
 
-Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/v1.2.0/packages/sdk-frontend/src/components).
+Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-frontend/src/components).
 
 ### Layout
 
@@ -132,7 +132,7 @@ For full prop signatures, browse the source or run the local Histoire storybook.
 
 ## Composables
 
-Typed composables and helper factories. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/v1.2.0/packages/sdk-frontend/src/composables).
+Typed composables and helper factories. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-frontend/src/composables).
 
 | Composable | Returns | Purpose |
 |------------|---------|---------|
@@ -292,7 +292,7 @@ import {
 } from '@morscherlab/mint-sdk'
 ```
 
-Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `FileDirectoryListing`, `UseFileBrowserOptions`, `UseFileBrowserReturn`, and `UseRequestSyncStateReturn`. For the full list, use the release [composable exports](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/composables/index.ts) and [type exports](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/index.ts).
+Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `FileDirectoryListing`, `UseFileBrowserOptions`, `UseFileBrowserReturn`, and `UseRequestSyncStateReturn`. For the full list, use the release [composable exports](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/index.ts) and [type exports](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/index.ts).
 
 ## Notes
 

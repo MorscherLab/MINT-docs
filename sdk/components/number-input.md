@@ -12,7 +12,7 @@ NumberInput is a forms component exported by @morscherlab/mint-sdk for plugin fr
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/NumberInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/NumberInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="NumberInput" />
@@ -23,10 +23,19 @@ NumberInput is a forms component exported by @morscherlab/mint-sdk for plugin fr
 import { NumberInput } from "@morscherlab/mint-sdk/components"
 ```
 
+## Interaction in 1.2.1
+
+Increment/decrement buttons are always visible. Supplying both `min` and `max`
+adds an in-field range indicator that can be dragged to scrub the value.
+The range surface exposes `role="slider"`; it is no longer a separate native
+range input. Arrow keys and PageUp/PageDown adjust values; Home/End jump to
+bounds on the slider surface while retaining normal caret behavior in the text
+input. Clearing the input emits `undefined`.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/NumberInput.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/NumberInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

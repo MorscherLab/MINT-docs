@@ -12,7 +12,7 @@ Searchable, sortable, selectable table for dense experiment and analysis results
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/DataFrame.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/DataFrame.vue">Source</a>
 </div>
 
 <ComponentPlayground name="DataFrame" />
@@ -59,7 +59,7 @@ Leave `columnWidths` unset for uncontrolled resizing inside the table. Pass it w
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/DataFrame.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/DataFrame.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -94,9 +94,9 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` DataFrameColumn `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L378) | See the linked SDK type definition. |
-| [` SortState `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L370) | See the linked SDK type definition. |
-| [` PaginationState `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L398) | See the linked SDK type definition. |
+| [` DataFrameColumn `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L401) | See the linked SDK type definition. |
+| [` SortState `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L393) | See the linked SDK type definition. |
+| [` PaginationState `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L421) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

@@ -1,6 +1,6 @@
 # Runtime isolation and storage
 
-MINT 1.2.0 can run an installed plugin in the platform process or in a separate Python subprocess. Choose a compatible dependency/runtime arrangement **and** check that it supports the services your plugin needs. Process isolation does not make every `PlatformContext` method remotely available.
+MINT 1.2.1 can run an installed plugin in the platform process or in a separate Python subprocess. Choose a compatible dependency/runtime arrangement **and** check that it supports the services your plugin needs. Process isolation does not make every `PlatformContext` method remotely available.
 
 ## Runtime comparison
 
@@ -59,4 +59,4 @@ Use a disposable MINT installation for the final integration check. Verify both 
 
 Plugin loading lives under `plugins` in `config.json`: `loadFromEntryPoints`, explicit `plugins` entries, `extraIndexUrls`, and durable `settings`. The released user configuration does not expose `forceIsolated` or `forceShared` switches. Do not add guessed options to configuration to work around a runtime mismatch.
 
-Release sources: [runtime database validation](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/plugin_database.py), [remote context](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-python/src/mint_sdk/remote_context.py), and [platform plugin loader](https://github.com/MorscherLab/MINT/blob/v1.2.0/api/plugins/loader.py).
+Release sources: [runtime database validation](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/plugin_database.py), [remote context](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/remote_context.py), and [platform plugin loader](https://github.com/MorscherLab/MINT/blob/v1.2.1/api/plugins/loader.py).

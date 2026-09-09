@@ -12,7 +12,7 @@ BaseTabs is a forms component exported by @morscherlab/mint-sdk for plugin front
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/BaseTabs.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/BaseTabs.vue">Source</a>
 </div>
 
 <ComponentPlayground name="BaseTabs" />
@@ -23,16 +23,25 @@ BaseTabs is a forms component exported by @morscherlab/mint-sdk for plugin front
 import { BaseTabs } from "@morscherlab/mint-sdk/components"
 ```
 
+## Changes in 1.2.1
+
+BaseTabs now renders underline tabs only, with count badges. The `variant` prop
+is removed, including `variant="pills"`. Use [SegmentedControl](/sdk/components/segmented-control)
+with `variant="card"` for a pill-style choice control.
+
+```vue
+<BaseTabs v-model="activeTab" :tabs="tabs" />
+```
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/components/BaseTabs.vue).
+MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/BaseTabs.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` modelValue ` | ` string ` | Yes | — | — |
 | ` tabs ` | ` TabItemInput[] ` | Yes | — | — |
-| ` variant ` | ` 'underline' \| 'pills' ` | No | ` 'underline' ` | — |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -40,7 +49,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TabItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.0/packages/sdk-frontend/src/types/components.ts#L73) | See the linked SDK type definition. |
+| [` TabItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L96) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 
