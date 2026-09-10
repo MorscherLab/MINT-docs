@@ -1,6 +1,6 @@
 # CLI reference
 
-The `mint` CLI ships with `mint-sdk`. This page documents the released **v1.2.1** command surface. Run `mint <command> --help` for the complete options on your installed version. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
+Install `mint-sdk[cli]` for the `mint` CLI. This page documents the released **v1.2.1** command surface. Run `mint <command> --help` for the complete options on your installed version. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
 
 Source: [`mint_sdk/cli.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/cli.py) and [`mint_sdk/cli_commands/`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-python/src/mint_sdk/cli_commands).
 
@@ -15,7 +15,9 @@ mint --help
 Python 3.12+ is required. The `[cli]` extra supplies Typer; the bare runtime
 package does not guarantee a usable CLI. `mint init` creates a project dev
 group with `[cli,server]`; after `uv sync`, prefer `uv run mint ...` inside the
-project to use its selected SDK. Database plugins also need `[local-db]`.
+project to use its selected SDK. The scaffold's runtime dependency stays plain
+`mint-sdk`; CLI/server extras belong to its development environment. Database
+plugins also need `[local-db]`. See [which requirement to install](/cli/overview#install-the-1-2-cli).
 
 ## A complete development loop
 

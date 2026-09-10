@@ -72,6 +72,13 @@ Every push to `main` triggers `.github/workflows/deploy.yml`, which builds the s
 1. Add a CNAME record `mint-docs.morscherlab.org` → `morscherlab.github.io` at your DNS provider.
 2. In the repo's GitHub Pages settings: Source = "GitHub Actions", custom domain = `mint-docs.morscherlab.org`, enable "Enforce HTTPS".
 
+## Plugin SDK installation wording
+
+Scaffolding instructions must install `mint-sdk[cli]` (the `mint` command needs
+Typer). Generated projects keep `mint-sdk` in runtime dependencies and
+`mint-sdk[cli,server]` in their dev group for CLI and Uvicorn support. Document
+`uv sync` followed by `uv run mint` for commands inside a plugin project.
+
 ## Plugin release format
 
 Plugins are published as `.mint` bundles. GitHub Releases host those bundles;

@@ -19,7 +19,16 @@ the released `v1.2.1` source, dated 9 September 2026.
 
 ### The 1.2 baseline
 
-Use Python 3.12+ and the CLI extra (`uv tool install 'mint-sdk[cli]==1.2.1'`).
+Use Python 3.12+ and install `mint-sdk[cli]` to scaffold plugins:
+
+```bash
+uv tool install 'mint-sdk[cli]==1.2.1'
+```
+
+`mint init` supplies `mint-sdk[cli,server]` in the generated project's dev
+dependencies. Run `uv sync` and use `uv run mint` inside that project. The
+plain `mint-sdk` dependency is for the runtime library; see [CLI setup](/cli/overview#install-the-1-2-cli).
+
 Standard plugins also need Bun for the scaffolded Vue frontend. Platform
 integration needs a configured MINT server; MINT 1.2 requires PostgreSQL.
 Standalone plugin SQLite is still available for local development.

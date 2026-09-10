@@ -1,6 +1,6 @@
 # Install on Linux (direct)
 
-Install MINT directly on a Linux server using `uv` (recommended) or `pip`. The Python wheel bundles the FastAPI backend and the Vue 3 frontend; the `mint` CLI ships in a separate package (`mint-sdk`) that's pulled in as a dependency.
+Install MINT directly on a Linux server using `uv` (recommended) or `pip`. The Python wheel bundles the FastAPI backend and the Vue 3 frontend; the platform pulls in `mint-sdk[cli,server]` for command-line and server tooling.
 
 ::: tip Picking an install method
 MINT is supported on **Linux servers only**, via either this direct install or the [Docker install](/get-started/install-docker). Pick:
@@ -64,16 +64,16 @@ sudo -u mint bash -c '
 
 :::
 
-This installs the platform package (`mint`) plus its dependencies (including `mint-sdk`, which provides the `mint` CLI binary at `/opt/mint/venv/bin/mint`). The platform itself runs as a long-lived single-worker ASGI process — see "Run as a systemd service" below.
+This installs the platform package (`mint`) plus its dependencies (including `mint-sdk[cli,server]`, which supplies CLI/server dependencies and the `mint` binary at `/opt/mint/venv/bin/mint`). The platform itself runs as a long-lived single-worker ASGI process — see "Run as a systemd service" below.
 
 ::: tip Get the `mint` CLI on your shell PATH
-The `mint` CLI is convenient for admins running platform-data commands (`mint auth login`, `mint experiment list`). To make it globally available, install `mint-sdk` separately as a uv tool:
+The `mint` CLI is convenient for admins running platform-data commands (`mint auth login`, `mint experiment list`). To make it globally available, install `mint-sdk[cli]` separately as a uv tool:
 
 ```bash
-uv tool install mint-sdk
+uv tool install 'mint-sdk[cli]==1.2.1'
 ```
 
-This is independent of the platform's own venv and only affects the admin's shell PATH.
+The `[cli]` extra supplies Typer for commands such as `mint init` and `mint auth`. This tool environment is separate from the platform venv. See [CLI installation](/cli/overview#install-the-1-2-cli) for the runtime/CLI/server distinction.
 :::
 
 ## Configure
@@ -233,7 +233,7 @@ for sessions, plugin jobs, global CPU slots, and per-user job limits. Use
 
 | Problem | Fix |
 |---------|-----|
-| `command not found: mint` (admin shell) | Install the CLI as a uv tool: `uv tool install mint-sdk`, then `uv tool update-shell`. |
+| `command not found: mint` (admin shell) | Install the CLI as a uv tool: `uv tool install 'mint-sdk[cli]==1.2.1'`, then `uv tool update-shell`. |
 | Service can't find `uvicorn` | The systemd unit must point at the venv's binary, e.g. `/opt/mint/venv/bin/uvicorn`, not a global one. |
 | Port 8001 already in use | Change `--port` in the systemd unit, or `lsof -i :8001` to find the conflicting process. |
 | Migration fails with advisory-lock error | Two MINT processes started simultaneously and both tried to migrate. Stop one, let the other finish, then restart. |

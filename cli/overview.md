@@ -1,6 +1,6 @@
 # mint CLI
 
-The `mint` command-line interface ships with the **`mint-sdk`** package (PyPI). It covers plugin development and remote platform administration; production platform processes are configured separately (see [Install on Linux](/get-started/install-direct)).
+Install **`mint-sdk[cli]`** to use the `mint` command-line interface. It covers plugin development and remote platform administration; production platform processes are configured separately (see [Install on Linux](/get-started/install-direct)).
 
 | Role | What it does | Detail |
 |------|--------------|--------|
@@ -13,9 +13,40 @@ The `mint` command-line interface ships with the **`mint-sdk`** package (PyPI). 
 uv tool install 'mint-sdk[cli]==1.2.1'
 ```
 
-The `[cli]` extra is required for command-line tooling. Plugin projects created
-with `mint init` also include the `[server]` development extra; use `uv run mint`
-inside the project after `uv sync`.
+`mint-sdk` is the package name; `[cli]` selects its optional command-line
+dependencies. Quote the requirement so shells such as zsh do not interpret the
+square brackets as a filename pattern.
+
+| Requirement | Use it for |
+|---|---|
+| `mint-sdk` | Python SDK/runtime imports, such as `AnalysisPlugin` and `MINTClient` |
+| `mint-sdk[cli]` | The `mint` commands, including `mint init` scaffolding; adds Typer |
+| `mint-sdk[cli,server]` | Plugin development with the CLI and Uvicorn; generated projects include this in their `dev` dependency group |
+
+The plain package registers the `mint` executable but does not install Typer.
+If Typer is missing, the command exits with the `mint-sdk[cli]` install hint.
+For an existing bare uv tool installation, reinstall with the extra:
+
+```bash
+uv tool install --force 'mint-sdk[cli]==1.2.1'
+```
+
+After scaffolding, use the generated project's environment:
+
+```bash
+mint init my-plugin --mode generated --yes
+cd my-plugin
+uv sync
+uv run mint dev
+```
+
+The scaffold keeps the runtime dependency as `mint-sdk` and supplies
+`mint-sdk[cli,server]` in `[dependency-groups].dev`. `uv sync` installs that
+group by default. `[cli]` is sufficient to create the project; its own dev
+environment supplies the server dependency for running it.
+
+Source: [SDK dependencies](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/pyproject.toml),
+[scaffold dependency policy](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/init_versions.py).
 
 ## Verifying the install
 
