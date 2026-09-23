@@ -70,7 +70,7 @@ This installs the platform package (`mint`) plus its dependencies (including `mi
 The `mint` CLI is convenient for admins running platform-data commands (`mint auth login`, `mint experiment list`). To make it globally available, install `mint-sdk[cli]` separately as a uv tool:
 
 ```bash
-uv tool install 'mint-sdk[cli]==1.2.1'
+uv tool install 'mint-sdk[cli]==1.2.6'
 ```
 
 The `[cli]` extra supplies Typer for commands such as `mint init` and `mint auth`. This tool environment is separate from the platform venv. See [CLI installation](/cli/overview#install-the-1-2-cli) for the runtime/CLI/server distinction.
@@ -233,7 +233,7 @@ for sessions, plugin jobs, global CPU slots, and per-user job limits. Use
 
 | Problem | Fix |
 |---------|-----|
-| `command not found: mint` (admin shell) | Install the CLI as a uv tool: `uv tool install 'mint-sdk[cli]==1.2.1'`, then `uv tool update-shell`. |
+| `command not found: mint` (admin shell) | Install the CLI as a uv tool: `uv tool install 'mint-sdk[cli]==1.2.6'`, then `uv tool update-shell`. |
 | Service can't find `uvicorn` | The systemd unit must point at the venv's binary, e.g. `/opt/mint/venv/bin/uvicorn`, not a global one. |
 | Port 8001 already in use | Change `--port` in the systemd unit, or `lsof -i :8001` to find the conflicting process. |
 | Migration fails with advisory-lock error | Two MINT processes started simultaneously and both tried to migrate. Stop one, let the other finish, then restart. |

@@ -1,5 +1,7 @@
 # Python SDK reference
 
+This reference targets the released **MINT SDK 1.2.6** (17 September 2026).
+
 Core public symbols exported from `mint_sdk`, grouped by area. Each entry has a one-line description and links to the source on GitHub; check `mint_sdk/__init__.py` in your installed version for the exact export list.
 
 ## Plugin classes
@@ -19,7 +21,7 @@ Core public symbols exported from `mint_sdk`, grouped by area. Each entry has a 
 | `generated_ui` | Class decorator that opts into the SDK-managed generated workspace |
 | `job` | Decorator for typed managed jobs |
 
-Source: [`mint_sdk/plugin.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/plugin.py), [`mint_sdk/models.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/models.py), [`mint_sdk/context.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/context.py).
+Source: [`mint_sdk/plugin.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/plugin.py), [`mint_sdk/models.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/models.py), [`mint_sdk/context.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/context.py).
 
 ### `AnalysisPlugin`
 
@@ -49,7 +51,8 @@ Optional lifecycle hooks (default to no-op):
 | `@on_event("experiment.after_save")` or legacy `on_after_experiment_save(...)` | After platform-service design-data save |
 | `@on_event("experiment.status_changed")` or legacy `on_experiment_status_change(...)` | On status flip |
 | `@on_config_change(...)` / `apply_settings(settings)` | When plugin settings are applied |
-| `get_migrations_package()` | Returns dotted path; `None` (default) means no migrations |
+| `get_migration_spec()` | Opt-in Alembic `MigrationSpec`; `None` by default (since 1.2.2) |
+| `get_migrations_package()` | Legacy integer migration package; mutually exclusive with `get_migration_spec()` |
 | `get_shared_models()` | List of SQLAlchemy models for owned tables |
 | `get_frontend_dir()` | Path to built frontend (auto-detected by default) |
 
@@ -217,7 +220,7 @@ Legacy defaults are read-only metadata plus analysis writes for `ANALYSIS`, CRUD
 | `UserPluginRole` | Dataclass — per-(user, plugin) role row |
 | `PlatformConfig` | Type alias `dict[str, Any]` for platform config view |
 
-Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/repositories.py).
+Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/repositories.py).
 
 ## Repository protocols
 
@@ -239,7 +242,7 @@ All repository methods are async. MINT 1.2 uses one scoped experiment repository
 | `LocalDatabase` | Local SQLite database used by standalone plugins |
 | `LocalDatabaseConfig` | `storage_dir` and other configuration |
 
-Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/local_database.py).
+Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/local_database.py).
 
 ## Lifecycle types
 
@@ -255,7 +258,7 @@ Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/
 |--------|-------------|
 | `get_plugin_logger(name)` | Structured logger with auto-attached fields |
 
-Source: [`mint_sdk/logging.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/logging.py).
+Source: [`mint_sdk/logging.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/logging.py).
 
 ## Exceptions
 
@@ -276,7 +279,31 @@ MINT 1.2 SDK hosts map typed exceptions to the canonical HTTP envelope automatic
 
 ## Migrations
 
-See [Migrations](/sdk/api/migrations) for full signatures.
+Since 1.2.2, platform and opt-in plugin migrations use a shared Alembic runtime.
+The v1.2.6 public contract below is available from `mint_sdk.migrations`;
+`MigrationSpec` is also exported from `mint_sdk`.
+
+| Symbol | Purpose |
+|--------|---------|
+| `MigrationSpec(package, models=(), legacy=None, managed_tables=())` | Packaged Alembic revisions and owned models/tables |
+| `LegacyBaseline(revision, validate)` | Explicit adoption boundary approved by a domain-specific validator |
+| `MigrationStatus` | `schema_revision`, `target_revision`, `pending_migrations`, `migration_backend`, `schema_version`, `migration_error` |
+| `run_migrations(engine, spec, *, owner, schema)` | Host startup: applies packaged revisions atomically before traffic |
+| `inspect_migrations(engine, spec, *, owner, schema)` | Reads/validates history without creating migration infrastructure |
+| `check_migrations(engine, spec, *, owner, schema)` | Reports owned model/schema differences; does not apply or stamp |
+| `generate_revision(engine, spec, *, owner, schema, message, autogenerate=True)` | Writes a source draft; returns `None` for an empty diff |
+
+Plugins declare `get_migration_spec()`; the SDK/platform host owns execution.
+Do not call `run_migrations()` from an HTTP handler. Developer `mint db`
+commands only inspect or author revisions. An existing database needs a
+validated adoption plan before changing backends, and an Alembic database
+cannot silently reopen through the legacy path.
+
+The following integer migration API remains supported for existing plugins.
+Do not declare both hooks on one plugin. See [Migrations](/sdk/api/migrations)
+for full signatures and [migration upgrade guidance](/sdk/operations/migrating-to-1.2#database-migrations-from-1-2-2).
+
+Source: [v1.2.6 migration contract](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/migrations/runtime.py).
 
 | Symbol | Description |
 |--------|-------------|
@@ -324,7 +351,7 @@ See [Recipes → Testing plugins](/sdk/recipes/testing-plugins) for usage. Prefe
 | `PluginDependency` | Helper for declaring plugin-aware FastAPI deps |
 | `require_context` | FastAPI dependency that yields the active `PlatformContext` |
 
-Source: [`mint_sdk/app.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/app.py).
+Source: [`mint_sdk/app.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/app.py).
 
 Current `mint init` projects use the SDK-owned runtime target `mint_sdk.runtime:create_plugin_app`, which discovers the current project's single `mint.plugins` entry point and passes it to `create_standalone_app()`. Use `create_standalone_app(MyPlugin)` directly in tests or custom hosts when you already have the plugin class.
 
@@ -340,7 +367,7 @@ See [REST client](/sdk/api/client) for full signatures.
 
 - The package version is `mint_sdk.__version__`. With `hatch-vcs`, this is derived from the git tag at build time.
 - Modules prefixed with `_` (`mint_sdk._discover`, `mint_sdk._version`, `mint_sdk._prompt`) are internal and may break without notice. Use only the symbols documented in `__init__.py`.
-- For testing, see [`mint_sdk.testing`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-python/src/mint_sdk/testing) — exports may evolve faster than the main SDK; check the testing module's `__init__.py` in your installed version.
+- For testing, see [`mint_sdk.testing`](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-python/src/mint_sdk/testing) — exports may evolve faster than the main SDK; check the testing module's `__init__.py` in your installed version.
 
 ## Related
 

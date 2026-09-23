@@ -1,6 +1,6 @@
 # Frontend SDK
 
-`@morscherlab/mint-sdk` **1.2.1** provides Vue 3 components, composables, generated-contract clients, compact control schemas, and design tokens for custom plugin frontends. Use `mint init --mode standard` for a Vue workspace; choose `--mode generated` when Python parameters and SDK-rendered results cover the interface.
+`@morscherlab/mint-sdk` **1.2.6** provides Vue 3 components, composables, generated-contract clients, compact control schemas, and design tokens for custom plugin frontends. Use `mint init --mode standard` for a Vue workspace; choose `--mode generated` when Python parameters and SDK-rendered results cover the interface.
 
 ## Choose a frontend path
 
@@ -47,7 +47,7 @@ If you scaffolded with `mint init --mode standard`, all of this is already done.
 
 1. **Install**
    ```bash
-   bun add @morscherlab/mint-sdk@^1.2.1
+   bun add @morscherlab/mint-sdk@^1.2.6
    ```
 
 2. **Import design tokens** in your app entry:
@@ -106,11 +106,14 @@ The generated file exports endpoint names, endpoint metadata, route/API prefixes
 
 Body-only endpoints take the body directly. Endpoints combining parameters and a body use `{ pathParams, query, body }` with the exact generated field names. Run `mint docs contract .` to inspect your plugin's signatures. Generated calls throw `MintApiError` for HTTP failures; see [typed errors](/sdk/frontend/composables#typed-http-errors-in-1-2).
 
-## New and updated 1.2 patterns
+## Current 1.2.6 patterns
 
 - **Experiment selection:** `ExperimentSelectorModal` writes to `useExperimentStore()`; `PluginWorkspaceView experiment-shell` uses the same store. Read `current`, `currentId`, `isResolving`, and `error` instead of retaining a duplicate record.
-- **Charts:** `PlotlyChart` renders native Plotly `data`/`layout`/`config`, loads Plotly lazily, follows theme and container size, and handles empty/loading/error states.
-- **Server files:** `useFileBrowser()` + `FileBrowserModal` browse configured read-only mounts and return path references. `FileUploader` remains the local browser-file picker.
+- **Charts:** [PlotlyChart](/sdk/components/plotly-chart) renders native Plotly traces, supports a custom Plotly build, pauses work with `active`, and emits point clicks when `clickEvents` is enabled. Both it and [ChartContainer](/sdk/components/chart-container) support `variant="frame"` plus header, subhead, legend, and footer slots.
+- **Chemical annotations:** [ChemicalFormula](/sdk/components/chemical-formula) accepts optional adducts, empty values, and pill styling. [AdductText](/sdk/components/adduct-text) displays adduct notation on its own.
+- **Plate decorations:** [WellPlate](/sdk/components/well-plate) accepts `wellClass` and `wellStyle` callbacks for per-well visual annotations without changing sample data.
+- **Controls and panes:** [SearchableSelect](/sdk/components/searchable-select) searches descriptive choices; [NumberInput](/sdk/components/number-input) supports steppers and drag scrubbing. [LayoutResizeHandle](/sdk/components/layout-resize-handle) and `useManualLayoutResize()` provide keyboard/pointer resizing.
+- **Server files:** `useFileBrowser()` + `FileBrowserModal` browse configured read-only mounts and return path references. Keep the refresh action connected: it explicitly refreshes the server's bounded metadata cache. `FileUploader` remains the local browser-file picker.
 - **Access rules:** use nested `access: { permissions: [...] }` on access-aware controls and actions. Flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields are deprecated in 1.2.
 - **HTTP errors:** generated clients use `MintApiError`; raw `useApi({ typedErrors: true })` opts into the same normalized error shape.
 
@@ -156,7 +159,7 @@ Use the public component pages for props and playgrounds, these guides for compo
 
 ## Source
 
-[`MINT v1.2.1/packages/sdk-frontend`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-frontend) — the release source used for this guide. Use `mint docs frontend <Name>` against your installed SDK for exact local signatures.
+[`MINT v1.2.6/packages/sdk-frontend`](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-frontend) — the release source used for this guide. Use `mint docs frontend <Name>` against your installed SDK for exact local signatures.
 
 ## Next
 

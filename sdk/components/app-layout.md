@@ -16,7 +16,7 @@ See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/AppLayout.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/AppLayout.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AppLayout" />
@@ -30,7 +30,7 @@ import { AppLayout } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/AppLayout.vue).
+MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/AppLayout.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

@@ -84,6 +84,29 @@ except httpx.TimeoutException as exc:
 
 Retry only operations whose semantics permit it. A timed-out write may already have committed. Reload by its stable identity before repeating an artifact or external write. Do not turn arbitrary failures into 404 or swallow cancellation with a broad catch.
 
+## Failed jobs and host logs in 1.2.6
+
+A failed `@job` is a job-state failure, not necessarily an HTTP failure when it
+was submitted. Read its terminal `error` and job ID from the job client/status
+tray. Since 1.2.6, handler failures retain `<ExceptionType>: <message>` instead
+of only `Job failed (job <id>)`. Service jobs preserve the original chained
+cause when present and log the exception.
+
+Process workers send their formatted traceback to the host, which logs it
+through the platform's handlers. Inspect **Admin -> Platform -> Logs** or the
+service logs with the job ID; worker stderr is no longer the only location for
+that traceback. Keep raised messages free of credentials and raw sensitive
+inputs, because the job error is visible to its authorized readers.
+
+Since 1.2.5, the host waits up to 30 seconds for a process worker to exit after
+SIGKILL. This prevents some large, already-finished jobs from losing their
+result during slow kernel cleanup. It does not extend the job's execution
+budget or hide a handler exception. If `Job worker could not be stopped`
+persists on 1.2.6, inspect host/process resource pressure and the logs before
+rerunning a write-producing job.
+
+Source: [v1.2.6 job manager](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/job_manager.py).
+
 ## Reading errors on the client
 
 The wire envelope includes `code`, `message`, `status`, `request_id`, and `details`, with legacy `detail`/`error` fields retained. Show the actionable message, use `code` for branching, and include `request_id` in support reports. Do not parse English message text to distinguish a conflict from a permission failure.
@@ -103,4 +126,4 @@ with MINTClient() as client:
 
 SDK-created apps install the handlers automatically. For a custom host, use the shared `mint_sdk.api_errors.register_api_error_handlers(app)` integration or implement the same contract explicitly.
 
-Verified against [v1.2.1 error handlers](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/api_errors.py), [exception mapping](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/exceptions.py), and [client exceptions](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/client/_exceptions.py).
+Verified against [v1.2.6 error handlers](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/api_errors.py), [exception mapping](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/exceptions.py), and [client exceptions](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/client/_exceptions.py).

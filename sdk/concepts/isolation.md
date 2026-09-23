@@ -1,6 +1,6 @@
 # Runtime isolation and storage
 
-MINT 1.2.1 can run an installed plugin in the platform process or in a separate Python subprocess. Choose a compatible dependency/runtime arrangement **and** check that it supports the services your plugin needs. Process isolation does not make every `PlatformContext` method remotely available.
+MINT 1.2.6 can run an installed plugin in the platform process or in a separate Python subprocess. Choose a compatible dependency/runtime arrangement **and** check that it supports the services your plugin needs. Process isolation does not make every `PlatformContext` method remotely available.
 
 ## Runtime comparison
 
@@ -17,7 +17,7 @@ The **table-owning plugin tutorial must be deployed in-process** for PostgreSQL.
 
 MINT installs compatible dependencies into the platform environment and mounts the plugin's routers in the platform FastAPI application. Calls to SDK repository adapters reach platform services directly.
 
-The session returned by `get_plugin_db_session()` uses the schema derived from the plugin entry-point identity, such as `panel_designer` for `panel-designer`. On the normal installed entry-point startup path, MINT prepares that schema and runs declared migrations before plugin initialization. See [Migrations](/sdk/concepts/migrations) for baseline stamping, conformance checks, and failure reporting.
+The session returned by `get_plugin_db_session()` uses the schema derived from the plugin entry-point identity, such as `panel_designer` for `panel-designer`. On the normal installed entry-point startup path, MINT prepares that schema and runs declared migrations before plugin initialization. Alembic opt-in plugins declare `get_migration_spec()`; their revisions create tables on fresh installs and a migration failure prevents startup. Legacy integer plugins retain their older baseline behavior. See [Migrations](/sdk/concepts/migrations) for the distinction.
 
 Do not use the shared connection to query platform tables directly. The repository APIs carry experiment visibility and plugin capability checks; an arbitrary SQL query does not acquire those checks automatically. Schema scoping is a data-organization mechanism, not a sandbox for untrusted Python code.
 
@@ -59,4 +59,4 @@ Use a disposable MINT installation for the final integration check. Verify both 
 
 Plugin loading lives under `plugins` in `config.json`: `loadFromEntryPoints`, explicit `plugins` entries, `extraIndexUrls`, and durable `settings`. The released user configuration does not expose `forceIsolated` or `forceShared` switches. Do not add guessed options to configuration to work around a runtime mismatch.
 
-Release sources: [runtime database validation](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/plugin_database.py), [remote context](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/remote_context.py), and [platform plugin loader](https://github.com/MorscherLab/MINT/blob/v1.2.1/api/plugins/loader.py).
+Release sources: [runtime database validation](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/plugin_database.py), [remote context](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/remote_context.py), and [platform plugin loader](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/plugins/loader.py).

@@ -1,6 +1,6 @@
 # Frontend platform integration
 
-This guide targets MINT **1.2.1**. Start with the [standard frontend tutorial](/sdk/tutorials/adding-a-frontend); it already installs Vue, Pinia, the SDK, styles, and a generated API client.
+This guide targets MINT **1.2.6**. Start with the [standard frontend tutorial](/sdk/tutorials/adding-a-frontend); it already installs Vue, Pinia, the SDK, styles, and a generated API client.
 
 ## Choose the right source of state
 
@@ -213,6 +213,65 @@ function confirm(selection: FileSelection[]): void {
 
 Send the selected `{ mount_id, path, ... }` records to a plugin endpoint only after defining that endpoint's input model. On the server, resolve paths through the platform filesystem service and validate access; never concatenate an unchecked browser path onto a server directory. `typeRules` marks matching entries for the UI; it is not backend file validation. `FileUploader` instead returns browser `File[]` for a local-file workflow.
 
+### Listing cache and refresh
+
+The file-browser changes introduced in 1.2.4 are included in 1.2.6. The platform reuses a server-side `FileBrowser` while mount configuration is unchanged. Its default cache retains metadata for up to 300 seconds and 128 directories; each request still resolves the path and checks the directory signature before reuse. This is metadata caching, not a local copy of the files.
+
+Keep `@refresh="browser.refresh"` connected. It sends `refresh=true` for the current location and invalidates cached listings for that mount, including descendants. Listing responses are capped at 2,000 entries by default, so display `truncated` and counts instead of claiming the visible rows are a complete directory inventory. `typeRules` classifies matching entries rather than hiding other files. The helper cancels superseded requests and starts at a reachable mount when the preferred mount is offline.
+
+Cache size, TTL, and entry limits are Python `FileBrowser` settings; they are not `useFileBrowser()` options. See the [release filesystem implementation](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/filesystem.py) if you own a standalone file browser service.
+
+### Adapter-driven FilePicker
+
+Use `FilePicker` for expandable folder trees, metadata preview, recursive search, and reviewing resolved file selections. It is a different component from the controlled `FileBrowserModal` above: its open binding is `v-model:open`, its result event is `select`, and it accepts a `PickerAdapter`.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import {
+  BaseButton,
+  FilePicker,
+  decodePlatformPickerPath,
+  usePlatformFilePickerAdapter,
+  type PickerSelection,
+} from '@morscherlab/mint-sdk'
+
+const open = ref(false)
+const adapter = usePlatformFilePickerAdapter()
+const files = ref<Array<{ mount_id: string; path: string }>>([])
+
+function select(selection: PickerSelection): void {
+  if (selection.source !== 'server') return
+  files.value = selection.files.map(file => {
+    const location = decodePlatformPickerPath(file.path)
+    return { mount_id: location.mountId, path: location.path }
+  })
+  open.value = false
+}
+</script>
+
+<template>
+  <BaseButton @click="open = true">Choose data</BaseButton>
+  <FilePicker
+    v-model:open="open"
+    :adapter="adapter"
+    :sources="['server']"
+    selection-mode="folder+files"
+    :capabilities="{ server: { formats: ['mzML', 'mzML.gz'] } }"
+    @select="select"
+  />
+  <p>{{ files.length }} input files selected</p>
+</template>
+```
+
+The platform adapter uses opaque picker identities, not filesystem paths. Decode each selected server file with `decodePlatformPickerPath()` before submitting its mount-relative reference. For local selections, `selection.source === 'localFile'` instead yields browser `File[]` with optional `relativePaths`; the picker does not read or upload their bytes.
+
+`usePlatformFilePickerAdapter({ rootLocation: { mount_id, path } })` can start inside one directory and prevent navigating above it. For a plugin-owned file API, use `createFilePickerAdapter(transport, options)` with `listMounts(request?)` and `browse(location, request?)` transport methods that return `ServerMount[]` and `FileDirectoryListing`. Forward `request.signal` and `request.refresh` to your generated endpoint calls; the adapter already implements mount identity, navigation, and search. `useFilePicker` itself is internal, not the public extension point.
+
+The picker warms at most 20 immediate folders with two requests at a time and reuses in-flight reads during navigation. Closing, changing source, and refreshing invalidate pending/cached adapter state; reopening re-reads the current location. This bounded prefetch is not a full-tree index. Recursive adapter search stops at 500 folders or more than 10,000 matches; narrow the location/query when those limits are reached. Unlike the raw browser modal, the adapter rejects a truncated server listing so a partial inventory cannot be confirmed as a complete selection.
+
+`systemFilter` and `capabilities` guide visibility/selection in the UI. They never replace backend access checks, file-size validation, or path resolution.
+
 ## Verify both execution modes
 
 1. Run `mint dev` and verify calculations and explicit missing-platform states in the standalone workspace.
@@ -222,7 +281,7 @@ Send the selected `{ mount_id, path, ... }` records to a plugin endpoint only af
 
 ## Release source
 
-- [Platform context and message validation](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/usePlatformContext.ts)
-- [Shared experiment selection](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/stores/experiment.ts)
-- [Experiment data persistence](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/useExperimentSave.ts)
-- [Server file browser API](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/useFileBrowser.ts)
+- [Platform context and message validation](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/usePlatformContext.ts)
+- [Shared experiment selection](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/stores/experiment.ts)
+- [Experiment data persistence](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/useExperimentSave.ts)
+- [Server file browser API](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/useFileBrowser.ts)

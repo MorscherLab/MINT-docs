@@ -12,7 +12,7 @@ Sectioned sidebar for plugin-specific navigation and grouped tools.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/AppSidebar.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/AppSidebar.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AppSidebar" />
@@ -39,7 +39,7 @@ When AppLayout owns placement, pass `:floating="false"` to the sidebar:
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/AppSidebar.vue).
+MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/AppSidebar.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -84,14 +84,14 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SidebarToolSection `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L159) | See the linked SDK type definition. |
-| [` FormSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/form-builder.ts#L135) | See the linked SDK type definition. |
-| [` PillNavItem `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L221) | See the linked SDK type definition. |
-| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
-| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
-| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
-| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
+| [` SidebarToolSection `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L163) | See the linked SDK type definition. |
+| [` FormSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/form-builder.ts#L135) | See the linked SDK type definition. |
+| [` PillNavItem `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L225) | See the linked SDK type definition. |
+| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
+| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
+| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
+| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

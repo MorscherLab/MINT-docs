@@ -10,10 +10,10 @@ By the end you will have:
 - A `.mint` bundle ready to install
 
 **Time:** 20-30 minutes
-**Prereqs:** Python 3.12+, `uv`, and the MINT v1.2 SDK. Install the CLI with `uv tool install "mint-sdk[cli]==1.2.1"`; the generated project has its own environment.
+**Prereqs:** Python 3.12+, `uv`, and the MINT v1.2 SDK. Install the CLI with `uv tool install "mint-sdk[cli]==1.2.6"`; the generated project has its own environment.
 
 ::: info Current CLI shape
-MINT v1.2.1 does not have `mint add job`. Start a job-based plugin with `mint init --mode generated`, or add `@job` methods directly to an existing plugin class.
+MINT v1.2.6 does not have `mint add job`. Start a job-based plugin with `mint init --mode generated`, or add `@job` methods directly to an existing plugin class.
 :::
 
 ## 1. Scaffold the Project

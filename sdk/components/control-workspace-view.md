@@ -16,7 +16,7 @@ See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/ControlWorkspaceView.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/ControlWorkspaceView.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ControlWorkspaceView" />
@@ -38,7 +38,7 @@ the SDK's declarations and source comments.
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/ControlWorkspaceView.vue).
+MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/ControlWorkspaceView.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -78,17 +78,17 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
-| [` UseControlWorkspaceReturn `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L359) | See the linked SDK type definition. |
-| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
-| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
-| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L182) | ` 'card' \| 'default' ` |
-| [` ControlWorkspaceSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/ControlWorkspaceView.vue#L30) | See the linked SDK type definition. |
-| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
-| [` ControlComponentBindingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L281) | See the linked SDK type definition. |
-| [` ControlComponentPropsMap `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L263) | See the linked SDK type definition. |
-| [` ControlComponentPropsByIdMap `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L267) | See the linked SDK type definition. |
+| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
+| [` UseControlWorkspaceReturn `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L359) | See the linked SDK type definition. |
+| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
+| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
+| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L186) | ` 'card' \| 'default' ` |
+| [` ControlWorkspaceSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/ControlWorkspaceView.vue#L30) | See the linked SDK type definition. |
+| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
+| [` ControlComponentBindingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L281) | See the linked SDK type definition. |
+| [` ControlComponentPropsMap `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L263) | See the linked SDK type definition. |
+| [` ControlComponentPropsByIdMap `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L267) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

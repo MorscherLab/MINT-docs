@@ -16,7 +16,7 @@ See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/PluginWorkspaceView.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/PluginWorkspaceView.vue">Source</a>
 </div>
 
 <ComponentPlayground name="PluginWorkspaceView" />
@@ -53,7 +53,7 @@ the SDK's declarations and source comments.
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/PluginWorkspaceView.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts).
+MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/PluginWorkspaceView.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -129,23 +129,23 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L182) | ` 'card' \| 'default' ` |
-| [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L246) | See the linked SDK type definition. |
-| [` PluginSwitcherInfo `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L258) | See the linked SDK type definition. |
-| [` PillNavItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L231) | See the linked SDK type definition. |
-| [` TopBarSettingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L196) | See the linked SDK type definition. |
-| [` AccountMenuItem `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L266) | See the linked SDK type definition. |
-| [` SidebarToolSection `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L159) | See the linked SDK type definition. |
-| [` FormSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/form-builder.ts#L135) | See the linked SDK type definition. |
-| [` PluginWorkspaceSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts#L28) | ` 'default' \| 'analysis' ` |
-| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
-| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
-| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
-| [` ControlComponentBindingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L281) | See the linked SDK type definition. |
-| [` ControlComponentPropsMap `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L263) | See the linked SDK type definition. |
-| [` ControlComponentPropsByIdMap `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L267) | See the linked SDK type definition. |
-| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
+| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L186) | ` 'card' \| 'default' ` |
+| [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L250) | See the linked SDK type definition. |
+| [` PluginSwitcherInfo `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L262) | See the linked SDK type definition. |
+| [` PillNavItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L235) | See the linked SDK type definition. |
+| [` TopBarSettingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L200) | See the linked SDK type definition. |
+| [` AccountMenuItem `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L270) | See the linked SDK type definition. |
+| [` SidebarToolSection `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L163) | See the linked SDK type definition. |
+| [` FormSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/form-builder.ts#L135) | See the linked SDK type definition. |
+| [` PluginWorkspaceSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts#L28) | ` 'default' \| 'analysis' ` |
+| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
+| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
+| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
+| [` ControlComponentBindingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L281) | See the linked SDK type definition. |
+| [` ControlComponentPropsMap `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L263) | See the linked SDK type definition. |
+| [` ControlComponentPropsByIdMap `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L267) | See the linked SDK type definition. |
+| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

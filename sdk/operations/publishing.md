@@ -123,7 +123,7 @@ Keep them consistent. `min_platform_version` is a version floor;
 
 ```toml
 [tool.mint]
-requires_mint = ">=1.2.1,<1.3"
+requires_mint = ">=1.2.6,<1.3"
 ```
 
 ### Register a release
@@ -157,7 +157,7 @@ A `registry.json` file can contain:
         "asset_pattern": "*.mint"
       },
       "latest_version": "0.2.0",
-      "min_platform_version": "1.2.1",
+      "min_platform_version": "1.2.6",
       "tags": ["lcms"]
     }
   ]
@@ -193,8 +193,8 @@ when that catalog is intended for testing.
 - [ ] Release notes explain changes and any migration/recovery steps.
 - [ ] The GitHub Release contains the `.mint` file and any optional checksum.
 
-Source: [bundle builder](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/cli_build_cmd.py),
-[scaffolded release workflow](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/init_workflow_templates.py).
+Source: [bundle builder](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/cli_build_cmd.py),
+[scaffolded release workflow](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/init_workflow_templates.py).
 
 ## Related
 

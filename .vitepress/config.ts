@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitepress'
 import { componentSidebarGroups } from './componentCatalog'
+import { currentDocsVersion, versionNav } from './versions'
 
 export default defineConfig({
   title: 'MINT',
@@ -82,6 +83,7 @@ export default defineConfig({
           { text: 'Source code', link: 'https://github.com/MorscherLab/MINT' },
         ],
       },
+      versionNav(currentDocsVersion),
       { text: 'Open MINT', link: 'https://mint.morscherlab.org' },
     ],
 

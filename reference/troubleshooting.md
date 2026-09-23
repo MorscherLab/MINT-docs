@@ -7,13 +7,13 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Problem | Cause | Fix |
 |---------|-------|-----|
 | `command not found: mint` | CLI not installed or its location is not on PATH | Install `mint-sdk[cli]`, then run `uv tool update-shell` (uv) or add `~/.local/bin` to PATH (pip); see [CLI setup](/cli/overview#install-the-1-2-cli) |
-| `mint` reports missing `typer` | Plain `mint-sdk` was installed without CLI dependencies | For a uv tool, run `uv tool install --force 'mint-sdk[cli]==1.2.1'`; in a scaffolded project, run `uv sync` and use `uv run mint` |
+| `mint` reports missing `typer` | Plain `mint-sdk` was installed without CLI dependencies | For a uv tool, run `uv tool install --force 'mint-sdk[cli]==1.2.6'`; in a scaffolded project, run `uv sync` and use `uv run mint` |
 | Local serving reports missing `uvicorn` | Server dependencies are missing in the active environment | Keep `mint-sdk[cli,server]` in the project's dev dependency group, run `uv sync`, then `uv run mint dev` |
 | Port 8001 already in use | Another process is on the port | Stop the conflicting process or change `--port` in the systemd unit |
 | Browser shows "Cannot connect" | Platform process crashed | `journalctl -u mint -n 200` (direct install) or `docker compose logs mint` (Docker); restart |
 | MINT starts but no logo / styles | Browser cached an old build | Hard-refresh with **⌘⇧R** (Mac) or **Ctrl+Shift+R** (Win/Linux) |
 | Migration fails with advisory-lock error | Two MINT processes started simultaneously | Stop one, let the other finish, restart |
-| Plugin migration fails on platform startup | A plugin's migration raised | Platform exits non-zero; **Admin -> Plugins -> Installed** (after restart from a known-good plugin set) shows the error. Fix the plugin's migration in a follow-up release. |
+| Alembic plugin migration fails on startup | Migration, ownership, history or model/schema validation failed | The plugin remains disabled before initialization. Inspect migration status in **Admin -> Plugins -> Installed** and the platform logs; fix the cause in a reviewed plugin release. |
 
 ## Authentication
 
@@ -42,10 +42,20 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 |---------|-------|-----|
 | Plugin install fails with a dependency conflict | Plugin requires a clashing dep | The platform retries with an isolated venv automatically; if that also fails, the plugin's deps are inconsistent — open an issue against the plugin |
 | Plugin tile not visible to a user | User lacks the plugin role | **Admin -> Plugins -> Installed -> Access control** — grant the appropriate plugin role |
-| Plugin upgrade fails partway | New migration crashed | Platform rolls back to the previous version; **Admin -> Plugins -> Installed** shows the error; fix the migration in a new plugin release |
+| Plugin upgrade fails partway | Installation or migration failed | Inspect **Admin -> Plugins -> Installed** and logs. Package snapshots are best-effort recovery; they do not undo database changes. Use the verified deployment/database backup when needed. |
 | Plugin process keeps crashing | Plugin error in `initialize()` or a request handler | In development, run `mint dev logs backend --lines 100`; in production, use **Admin -> Platform -> Server**, **Admin -> Platform -> Logs**, or the platform service logs. If the failure came from a generated analysis run, also check the plugin page's job status tray. |
 | `mint dev` can't find the plugin | Working directory has no `pyproject.toml` with `mint.plugins` entry point | `cd` into the plugin root, or `mint init` to scaffold |
 | Plugin appears installed but routes return 404 | Plugin failed `initialize()` and the loader skipped mounting | **Admin -> Plugins -> Installed** shows the failure reason; fix and reload |
+
+## Jobs and file browsing (1.2.4–1.2.6)
+
+| Problem | Check | Next step |
+|---------|-------|-----------|
+| Failed job only shows `Job failed (job …)` | Platform and plugin SDK version | Upgrade together to 1.2.6; handler failures now report exception type/message. Preserve the job ID when reporting the problem. |
+| Worker traceback is absent from admin logs | Runtime is older than 1.2.6 | In 1.2.6 the worker sends its traceback to the host logger. Check **Admin -> Platform -> Logs** or service logs by job ID. |
+| Finished analysis fails with `Job worker could not be stopped` | Runtime version and host resource pressure | 1.2.5 adds up to 30 seconds of post-SIGKILL cleanup wait. On 1.2.6, inspect process/kernel cleanup and resource pressure; this message is not the analysis timeout. |
+| Newly added server files are missing from a picker | Cached directory metadata | Use refresh or close and reopen the picker. Since 1.2.4, refresh invalidates directory snapshots and reopening re-reads the location. |
+| A directory looks empty after filtering | Search/type filters and mount visibility | Clear filters and refresh; 1.2.4 keeps expansion controls available for filtered zero counts. Hidden paths and mount permissions still apply. |
 
 ## Marketplace
 
@@ -82,6 +92,30 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Slow queries on Postgres | Missing index on a plugin-owned table | Add the index in a new plugin migration |
 | OpenTelemetry exporter errors in logs | OTLP endpoint unreachable | Set `observability.enabled: false` until fixed; the rest of the platform keeps working |
 | Auto-issued GitHub bug reports flooding | A recurring bug spams unique stack traces | Disable `errorReporting.enabled` until the bug is fixed |
+
+### Legacy adoption after upgrading from 1.2.1 or earlier
+
+Platform startup completes pending legacy integer migrations through v031 before
+validating the Alembic baseline. Errors naming missing history or baseline
+schema drift are genuine checks, not instructions to delete the migration
+ledger or stamp it manually.
+
+Use 1.2.3 or later (this guide targets **1.2.6, 17 September 2026**) when adopting
+a legacy database: the corrected validator accepts `cancelled` experiments and
+preserves deliberate plugin-permission revocations and historical/custom Viewer
+roles. For a remaining data validation error, back up and inspect the listed
+fields and record IDs. The bridge only runs pending migrations; it does not
+repair invalid data left after a migration was already marked complete.
+
+`mint db current/check/revision` are developer inspection/authoring commands,
+not repair commands. The separate platform `python -m api.migrations
+--database-url ...` command applies pending legacy migrations and normally runs
+implicitly at startup. Follow the [migration guide](/sdk/operations/migrating-to-1.2#database-migrations-from-1-2-2)
+before using it explicitly.
+
+Release evidence: [1.2.6 changelog](https://github.com/MorscherLab/MINT/blob/v1.2.6/CHANGELOG.md),
+[adoption validator](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/migrations/alembic_adoption.py),
+[plugin loader](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/plugins/loader.py).
 
 ## Hosted (lab) mode
 

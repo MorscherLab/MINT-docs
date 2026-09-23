@@ -8,11 +8,11 @@ description: "Interactive 96- and 384-well plate map with heatmaps, selection, a
 
 # WellPlate
 
-Interactive 96- and 384-well plate map with heatmaps, selection, and editing hooks.
+Interactive plate map with heatmaps, selection, and editing hooks. Supported formats are 6, 12, 24, 48, 54, 96, and 384 wells.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/WellPlate.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/WellPlate.vue">Source</a>
 </div>
 
 <ComponentPlayground name="WellPlate" />
@@ -35,10 +35,44 @@ import { WellPlate } from "@morscherlab/mint-sdk/components"
 />
 ```
 
+## Decorate wells without changing sample data
+
+In 1.2.6, `wellClass` and `wellStyle` let you mark a QC state or a focused well independently of sample type and heatmap values:
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { WellPlate, type WellClassResolver, type WellStyleResolver } from '@morscherlab/mint-sdk'
+
+const selected = ref<string[]>([])
+const flagged = new Set(['A1', 'B2'])
+const wellClass: WellClassResolver = well => ({ 'qc-flagged': flagged.has(well.id) })
+const wellStyle: WellStyleResolver = well =>
+  well.id === 'A1' ? { outline: '2px solid var(--text-primary)', outlineOffset: '2px' } : undefined
+</script>
+
+<template>
+  <WellPlate
+    v-model="selected"
+    :format="96"
+    :show-well-ids="true"
+    :well-class="wellClass"
+    :well-style="wellStyle"
+  />
+  <p>Flagged wells: A1 and B2. A1 is the focused well.</p>
+</template>
+
+<style scoped>
+:deep(.qc-flagged) { border-style: dashed; }
+</style>
+```
+
+Both callbacks receive the resolved `Well` (including its `id`, `row`, `col`, and state). `wellClass` accepts a class string, array, or boolean map. `wellStyle` is merged after heatmap/sample styling, so it can override those styles; prefer an outline or border when the heatmap must remain visible. These hooks do not disable selection, edit data, or persist a QC flag. Supply a visible legend/text explanation rather than conveying meaning through color alone.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/WellPlate.vue).
+MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/WellPlate.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -70,6 +104,8 @@ MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` loading ` | ` boolean ` | No | ` false ` | Replace the plate grid with a loading placeholder. |
 | ` error ` | ` string \| null ` | No | ` undefined ` | Error message. When set, the plate grid is replaced by an error state. null/undefined renders normally. |
 | ` emptyMessage ` | ` string ` | No | ` undefined ` | Opt-in empty-state headline. A blank plate is meaningful, so the empty state only replaces the grid when this message is supplied and no wells carry data. |
+| ` wellClass ` | ` WellClassResolver ` | No | ` undefined ` | Add semantic classes to individual wells without overloading sample data. |
+| ` wellStyle ` | ` WellStyleResolver ` | No | ` undefined ` | Add or override individual well styles after heatmap/sample styling. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -77,17 +113,19 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` WellPlateFormat `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L2) | See the linked SDK type definition. |
-| [` Well `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L8) | See the linked SDK type definition. |
-| [` WellPlateSelectionMode `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L4) | ` 'none' \| 'single' \| 'multiple' \| 'rectangle' \| 'drag' ` |
-| [` HeatmapConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L20) | See the linked SDK type definition. |
-| [` WellPlateSize `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L5) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'fill' ` |
-| [` WellShape `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L6) | ` 'circle' \| 'rounded' ` |
-| [` WellEditField `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L51) | ` 'label' \| 'sampleType' \| 'injectionVolume' \| 'injectionCount' \| 'customMethod' ` |
-| [` WellLegendItem `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L77) | See the linked SDK type definition. |
-| [` ColumnCondition `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L91) | See the linked SDK type definition. |
-| [` RowCondition `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L95) | See the linked SDK type definition. |
-| [` WellSampleDropParser `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L71) | See the linked SDK type definition. |
+| [` WellPlateFormat `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L2) | See the linked SDK type definition. |
+| [` Well `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L8) | See the linked SDK type definition. |
+| [` WellPlateSelectionMode `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L4) | ` 'none' \| 'single' \| 'multiple' \| 'rectangle' \| 'drag' ` |
+| [` HeatmapConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L26) | See the linked SDK type definition. |
+| [` WellPlateSize `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L5) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'fill' ` |
+| [` WellShape `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L6) | ` 'circle' \| 'rounded' ` |
+| [` WellEditField `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L57) | ` 'label' \| 'sampleType' \| 'injectionVolume' \| 'injectionCount' \| 'customMethod' ` |
+| [` WellLegendItem `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L83) | See the linked SDK type definition. |
+| [` ColumnCondition `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L97) | See the linked SDK type definition. |
+| [` RowCondition `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L101) | See the linked SDK type definition. |
+| [` WellSampleDropParser `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L77) | See the linked SDK type definition. |
+| [` WellClassResolver `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L19) | See the linked SDK type definition. |
+| [` WellStyleResolver `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L20) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

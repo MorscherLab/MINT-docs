@@ -298,6 +298,19 @@
   width: 100%;
 }
 
+.mint-resize-demo {
+  display: grid;
+  min-width: 600px;
+  min-height: 12rem;
+}
+
+.mint-resize-demo > aside,
+.mint-resize-demo > section {
+  min-width: 0;
+  padding: 1rem;
+  background: var(--vp-c-bg-soft);
+}
+
 .mint-demo-grid {
   display: grid;
   gap: 1rem;

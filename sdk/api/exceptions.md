@@ -16,7 +16,7 @@ MINT 1.2 SDK hosts automatically translate `PluginException` subclasses into HTT
 
 FastAPI request-model validation is 422; it is distinct from service-layer `ValidationException` (400). `HTTPException` retains its explicit status.
 
-Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/exceptions.py).
+Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/exceptions.py).
 
 ## Hierarchy
 
@@ -252,7 +252,8 @@ A veto in an observer event is a failed observer, not a rollback of an already c
 
 ## Migration-specific errors
 
-Defined in `mint_sdk.migrations.errors`:
+Defined in `mint_sdk.migrations.errors`; the specialized checksum/version
+exceptions below describe the legacy integer runner:
 
 | Symbol | Raised when |
 |--------|-------------|
@@ -261,7 +262,11 @@ Defined in `mint_sdk.migrations.errors`:
 | `SchemaVersionAheadError` | DB has revisions the plugin doesn't ship |
 | `DestructiveMigrationError` | A `drop_table` / `drop_column` ran without explicit allow |
 
-These don't currently inherit from `PluginException` — they're caught by the migration runner specifically. See [Migrations reference](/sdk/api/migrations#exceptions).
+These do not inherit from `PluginException`. The Alembic runtime also uses
+`MigrationError` for ownership, history, checksum and baseline-validation
+failures; database and revision-code errors may propagate directly. See
+[Alembic errors and recovery](/sdk/api/migrations#alembic-errors-and-recovery)
+and [legacy exceptions](/sdk/api/migrations#legacy-exceptions).
 
 ## Serializing errors
 

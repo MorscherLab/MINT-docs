@@ -1,10 +1,10 @@
 # Frontend SDK reference
 
-Public components, composables, stores, and types from `@morscherlab/mint-sdk` **1.2.1**. For exact signatures, use `mint docs frontend <Name>` against the installed SDK or the linked release source. Follow [Adding a frontend](/sdk/tutorials/adding-a-frontend) for setup and [Platform integration](/sdk/frontend/platform-integration) for complete state/persistence examples.
+Public components, composables, stores, and types from `@morscherlab/mint-sdk` **1.2.6**. For exact signatures, use `mint docs frontend <Name>` against the installed SDK or the linked release source. Follow [Adding a frontend](/sdk/tutorials/adding-a-frontend) for setup and [Platform integration](/sdk/frontend/platform-integration) for complete state/persistence examples.
 
 ## Components
 
-Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-frontend/src/components).
+Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-frontend/src/components).
 
 ### Layout
 
@@ -19,6 +19,7 @@ Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https
 | `AppSidebar` | Sectioned sidebar |
 | `AppAvatarMenu` | User avatar + menu |
 | `AppPluginSwitcher` | Inter-plugin switcher widget |
+| [`LayoutResizeHandle`](/sdk/components/layout-resize-handle) | Bounded keyboard separator and pointer-start event for resizable panes |
 
 ### Forms
 
@@ -27,12 +28,13 @@ Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https
 | `BaseButton` | Primary button — `variant`, `size`, `loading`, `disabled` |
 | `BaseInput` | Text / number input; pair with `FormField` for label / hint / error text |
 | `BaseSelect` | Themed `<select>` with options array; pair with `FormField` for label |
+| [`SearchableSelect`](/sdk/components/searchable-select) | Searchable single-select listbox with descriptions, metadata, and disabled reasons |
 | `BaseCheckbox` | Single checkbox |
 | `BaseRadioGroup` | Grouped radio buttons |
 | `BaseSlider` | Range slider |
 | `BaseTextarea` | Multi-line input |
 | `BaseToggle` | Boolean switch |
-| `NumberInput` | Numeric input with stepper |
+| `NumberInput` | Numeric input with always-visible steppers, optional unit, and pointer scrubbing |
 | `MultiSelect` | Multiple-choice select |
 | `DatePicker`, `DateTimePicker`, `TimePicker`, `TimeRangeInput` | Date/time inputs |
 | `Calendar` | Calendar widget |
@@ -64,8 +66,9 @@ Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https
 | `AppContainer`, `CollapsibleCard`, `ResourceCard` | Card and panel surfaces |
 | `Breadcrumb` | Breadcrumb trail |
 | `ScientificNumber` | Formatted scientific number |
-| `ChartContainer` | Wrapper around chart libraries (Plotly etc.) |
-| [`PlotlyChart`](/sdk/components/plotly-chart) | Native Plotly traces with lazy loading, theme, sizing, and lifecycle management |
+| `ChartContainer` | Card/frame chart chrome with header, toolbar, subhead, body, legend, and footer slots |
+| [`PlotlyChart`](/sdk/components/plotly-chart) | Native Plotly traces, optional custom runtime, inactive-panel pause, sizing, and opt-in point-click events |
+| [`AdductText`](/sdk/components/adduct-text) | Compact MS adduct notation with optional badge styling |
 | `Divider` | Horizontal rule |
 | `IconButton` | Icon-only button |
 | `Avatar` | User avatar |
@@ -80,10 +83,10 @@ Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https
 
 | Component | Use |
 |-----------|-----|
-| `WellPlate`, `PlateMapEditor` | Well-plate editing |
+| `WellPlate`, `PlateMapEditor` | Well-plate editing; `WellPlate` supports per-well class/style callbacks |
 | `RackEditor`, `ReagentEditor`, `ReagentList` | Rack / reagent editing |
 | `FormBuilder`, `FormField`, `FormActions` | Schema-driven forms and form chrome |
-| `ChemicalFormula`, `FormulaInput` | Chemical formula display / input |
+| `ChemicalFormula`, `FormulaInput` | Chemical formula display / input; display supports adducts, pills, and empty values |
 | `MoleculeInput` | Molecule structure input |
 | `ConcentrationInput`, `UnitInput` | Concentration with units |
 | `DoseCalculator` | Dilution / serial-dilution calculator |
@@ -125,6 +128,7 @@ Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https
 | `SettingsModal` | Settings UI primitive |
 | `FileUploader` | Drag-and-drop file picker that emits selected `File[]` |
 | [`FileBrowserModal`](/sdk/components/file-browser-modal) | Controlled read-only server mount picker returning path references |
+| `FilePicker` | Adapter-driven folder tree, metadata preview, search, and resolved selection; uses `v-model:open` and `@select` |
 | `DropdownButton` | Button with attached menu |
 | `FitPanel` | Fit-to-container panel |
 
@@ -132,7 +136,7 @@ For full prop signatures, browse the source or run the local Histoire storybook.
 
 ## Composables
 
-Typed composables and helper factories. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-frontend/src/composables).
+Typed composables and helper factories. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-frontend/src/composables).
 
 | Composable | Returns | Purpose |
 |------------|---------|---------|
@@ -177,7 +181,12 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 | `useTextSearch`, `useSortedItems` | client-side search/sort | Filterable lists and tables |
 | `useExpansionSet` | expand/collapse state | Trees and grouped panels |
 | `useFileBrowser` | mount/listing/path selection state | Drives `FileBrowserModal` against the platform filesystem API |
+| `usePlatformFilePickerAdapter` | Authenticated `PickerAdapter` | Connects `FilePicker` to platform mounts, optionally scoped by `rootLocation` |
+| `createFilePickerAdapter` | Transport-backed `PickerAdapter` | Shared navigation/search for plugin-owned mount APIs |
+| `encodePlatformPickerPath`, `decodePlatformPickerPath` | Opaque picker identity conversion | Convert between picker paths and mount-relative backend references |
 | `useRequestSyncState` | loading, errors, timestamps, cancellation | Tracks request feedback while protecting shared state from stale completions |
+| `useManualLayoutResize` | Pointer resize state, start/stop, and cleanup | Connect a `LayoutResizeHandle` to application-owned dimensions |
+| `resizedLeadingPanelWidth`, `resizedTrailingPanelWidth`, `resizedVerticalSplitPercent` | Bounded dimension helpers | Convert pointer deltas into pane widths or vertical percentages |
 
 ## Stores and access policies
 
@@ -292,7 +301,7 @@ import {
 } from '@morscherlab/mint-sdk'
 ```
 
-Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `FileDirectoryListing`, `UseFileBrowserOptions`, `UseFileBrowserReturn`, and `UseRequestSyncStateReturn`. For the full list, use the release [composable exports](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/composables/index.ts) and [type exports](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/index.ts).
+Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `FileDirectoryListing`, `UseFileBrowserOptions`, `UseFileBrowserReturn`, and `UseRequestSyncStateReturn`. For the full list, use the release [composable exports](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/index.ts) and [type exports](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/index.ts).
 
 ## Notes
 

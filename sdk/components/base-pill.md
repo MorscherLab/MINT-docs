@@ -12,7 +12,7 @@ Compact status label for tables, metadata, and small state indicators.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/BasePill.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/BasePill.vue">Source</a>
 </div>
 
 <ComponentPlayground name="BasePill" />
@@ -35,7 +35,7 @@ so status does not depend on color alone.
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/components/BasePill.vue).
+MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/BasePill.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -53,9 +53,9 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` PillVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L344) | ` 'default' \| 'primary' \| 'success' \| 'warning' \| 'error' \| 'info' \| 'outline' ` |
-| [` PillColor `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L346) | ` 'neutral' \| 'primary' \| 'success' \| 'warning' \| 'error' \| 'info' ` |
-| [` PillSize `](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-frontend/src/types/components.ts#L348) | ` 'sm' \| 'md' \| 'lg' ` |
+| [` PillVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L351) | ` 'default' \| 'primary' \| 'success' \| 'warning' \| 'error' \| 'info' \| 'outline' ` |
+| [` PillColor `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L353) | ` 'neutral' \| 'primary' \| 'success' \| 'warning' \| 'error' \| 'info' ` |
+| [` PillSize `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L355) | ` 'sm' \| 'md' \| 'lg' ` |
 
 <!-- sdk-props:end -->
 

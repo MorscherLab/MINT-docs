@@ -1,6 +1,6 @@
 # FormBuilder
 
-`FormBuilder` in SDK **1.2.1** renders a full `FormSchema`, a compact `controls` object, or a `defineControlModel()` workspace model. Use the same model and value object for forms, settings, and sidebars so every control edits the same state.
+`FormBuilder` in SDK **1.2.6** renders a full `FormSchema`, a compact `controls` object, or a `defineControlModel()` workspace model. Use the same model and value object for forms, settings, and sidebars so every control edits the same state.
 
 ## When to use FormBuilder vs. hand-rolled forms
 

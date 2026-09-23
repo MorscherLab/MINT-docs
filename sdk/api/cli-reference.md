@@ -1,13 +1,13 @@
 # CLI reference
 
-Install `mint-sdk[cli]` for the `mint` CLI. This page documents the released **v1.2.1** command surface. Run `mint <command> --help` for the complete options on your installed version. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
+Install `mint-sdk[cli]` for the `mint` CLI. This page documents the released **v1.2.6** command surface. Run `mint <command> --help` for the complete options on your installed version. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
 
-Source: [`mint_sdk/cli.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/cli.py) and [`mint_sdk/cli_commands/`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-python/src/mint_sdk/cli_commands).
+Source: [`mint_sdk/cli.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/cli.py) and [`mint_sdk/cli_commands/`](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-python/src/mint_sdk/cli_commands).
 
 ## Install and choose the environment
 
 ```bash
-uv tool install 'mint-sdk[cli]==1.2.1'
+uv tool install 'mint-sdk[cli]==1.2.6'
 mint --version
 mint --help
 ```
@@ -39,7 +39,7 @@ uv run mint verify .
 disposable platform. `deploy` and `plugin upload` instead change a running
 platform. Use [the deployment guide](/sdk/operations/deploying) for that step.
 For generated UI choose `--mode generated --type analysis`. Other types require
-standard mode in v1.2.1.
+standard mode in v1.2.6.
 
 ## Top-level
 
@@ -152,7 +152,7 @@ Runtime registration is also available:
 These operate on the platform host; paths and URLs must be reachable there.
 See [isolation](/sdk/concepts/isolation) for runtime support and limitations.
 
-Source: [plugin commands](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/cli_commands/plugin_cmd.py).
+Source: [plugin commands](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/cli_commands/plugin_cmd.py).
 
 ### `mint admin`
 
@@ -215,7 +215,7 @@ mint init [DIRECTORY] [flags]
 
 Without `--yes`, missing fields are prompted interactively. With `--yes`, the AI-assistant file defaults to `claude`, which creates `CLAUDE.md`. If `mint doctor` says that file is missing current SDK guidance, run `mint doctor --fix` once to refresh it. `--ai-assistant none` skips assistant files, but the current `mint doctor` check still expects one of those files; run `mint doctor --fix` if you later want a passing doctor report.
 
-The v1.2.1 parser accepts `workflow`, although `init --help` still omits it from its type description. Generated mode accepts only `analysis`; use standard mode for the other types.
+The v1.2.6 parser accepts `workflow`, although `init --help` still omits it from its type description. Generated mode accepts only `analysis`; use standard mode for the other types.
 
 Use `generated` mode for the first plugin unless you know you need a custom Vue workspace. Use `standard` mode when the UI needs custom layout, custom controls, or multiple interactive views.
 
@@ -313,7 +313,7 @@ Add common plugin pieces to an existing project.
 | `mint add setting <name> [--type string\|number\|integer\|boolean] [--default VALUE] [--description TEXT] [--required] [--generate] [--path PATH]` | Add a typed plugin setting |
 | `mint add endpoint <name> [--route PATH] [--method get\|post\|put\|patch\|delete] [--router NAME] [--create-router] [--request-model NAME] [--response-model NAME] [--generate] [--path PATH]` | Add a FastAPI endpoint |
 | `mint add router <name> [--prefix PATH] [--tag TAG] [--path PATH]` | Add and register a router |
-| `mint add migration <name> [--path PATH]` | Add a plugin schema migration |
+| `mint add migration <name> [--autogenerate] [--database-url URL] [--path PATH]` | Add a plugin schema migration |
 | `mint add schema <name> [--file requests\|responses] [--field name:type] [--generate] [--path PATH]` | Add a Pydantic schema |
 | `mint add service <name> [--method NAME] [--path PATH]` | Add a service module |
 | `mint add artifact [--path PATH]` | Add a local artifact helper and `/artifacts` router |
@@ -325,7 +325,7 @@ Add common plugin pieces to an existing project.
 | `mint add data-template-pack [pack] [--list] [--json] [--generate] [--page] [--path PATH]` | Add a curated data-template pack |
 | `mint add data-template-preset [preset] [--list] [--json] [--page] [--path PATH]` | Add a ready-to-save data-template preset |
 
-There is no `mint add job` command in MINT v1.2.1. Use `mint init --mode generated` for the current job scaffold, or add `@job` methods by hand.
+There is no `mint add job` command in MINT v1.2.6. Use `mint init --mode generated` for the current job scaffold, or add `@job` methods by hand.
 
 ### `mint verify`
 
@@ -402,7 +402,7 @@ mint sdk update [PATH] [--scope patch|minor|major] [--channel stable|beta]
                 [--version VERSION] [--dry-run] [--no-sync] [--verify]
 ```
 
-The default is the stable patch channel. `--version 1.2.1` selects one exact
+The default is the stable patch channel. `--version 1.2.6` selects one exact
 release; Python and frontend lockfiles resolve to the same release. The newest candidate is selected first, then checked against Python upper
 bounds, exclusions and `requires_mint`; an excluded candidate fails rather
 than falling back to an older allowed release. A valid Python
@@ -445,11 +445,27 @@ not scaffold a platform or contact the remote CLI authentication target.
 `mint dev` serves a plugin, while these commands serve the platform. Production
 platform setup remains a [Linux administration task](/get-started/install-direct).
 
-## Version-specific boundaries
+## Developer database commands
 
-In released v1.2.1 there is no `mint add job` or `mint db` command. Define jobs
-in Python, and create table migrations with `mint add migration`. Migration
-execution is handled during plugin startup; see [migrations](/sdk/concepts/migrations).
+Available since 1.2.2. These commands inspect explicit development databases or
+write revision source files; they do not apply, stamp or downgrade migrations.
+The plugin must declare `get_migration_spec()`. Legacy migration declarations
+continue to use `mint add migration` without autogeneration.
+
+| Command | Behavior |
+|---|---|
+| `mint db current --database-url URL [--path PATH] [--target plugin\|platform]` | Report migration history/status without applying changes |
+| `mint db check --database-url URL [--path PATH] [--target plugin\|platform]` | Compare the database to declared models; nonzero exit on differences |
+| `mint db revision "description" --database-url URL [--path PATH] [--target plugin\|platform]` | Generate a draft from model differences in editable source |
+| `mint add migration name --autogenerate --database-url URL --path .` | Author a plugin revision from model differences |
+| `mint add migration name --path .` | Create an editable migration skeleton using the plugin's declaration |
+
+The default target is `plugin`; `platform` requires PostgreSQL. SQLite inspection
+requires an existing file. Revision generation requires the database at the
+current migration head and a source migration package inside the project.
+Review every generated revision before release. See [migrations](/sdk/concepts/migrations).
+
+There is still no `mint add job`; define `@job` methods in Python.
 
 ## Configuration files
 

@@ -2,7 +2,7 @@
 
 `MINTClient` is the synchronous Python client for the MINT platform REST API. Use it from external scripts, CI jobs, or notebooks; from inside a plugin process, prefer `PlatformContext` accessors which avoid the network round-trip.
 
-Source: [`mint_sdk/client/client.py`](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/client/client.py).
+Source: [`mint_sdk/client/client.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/client/client.py).
 
 ## Construction
 
@@ -71,7 +71,7 @@ These are thin wrappers over `client.auth`.
 | `client.updates` | `UpdatesAPI` | Platform/plugin update checks, GitHub release installs |
 | `client.objects` | `ObjectsAPI` | Typed object upload, download, list, existence and deletion |
 
-Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-python/src/mint_sdk/client/resources).
+Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-python/src/mint_sdk/client/resources).
 
 ::: warning Not exposed
 Earlier docs claimed `client.users` and `client.artifacts` — those don't exist. First-class artifact readers live at `client.experiments.artifacts`, and raw object operations at `client.objects`. There is no `MINTClient.from_env()` factory; use the env-aware constructor (option 3 above).

@@ -1,6 +1,6 @@
 # Tutorial 2 - Adding a Frontend
 
-You'll build **hello-standard** with MINT SDK **1.2.1**: a `standard` mode plugin with a FastAPI-style backend and a Vue 3 workspace. Use this path when your plugin needs custom interaction, results, or navigation. Generated mode remains the shorter path for Python parameters and standard result views.
+You'll build **hello-standard** with MINT SDK **1.2.6**: a `standard` mode plugin with a FastAPI-style backend and a Vue 3 workspace. Use this path when your plugin needs custom interaction, results, or navigation. Generated mode remains the shorter path for Python parameters and standard result views.
 
 By the end you will have:
 
@@ -10,7 +10,7 @@ By the end you will have:
 - Backend and frontend checks that can run in CI
 
 **Time:** 40-50 minutes
-**Prereqs:** Python 3.12+, `uv`, Bun, and the `mint` CLI from `mint-sdk[cli]` 1.2.1.
+**Prereqs:** Python 3.12+, `uv`, Bun, and the `mint` CLI from `mint-sdk[cli]` 1.2.6.
 
 ## 1. Scaffold in Standard Mode
 
@@ -65,7 +65,7 @@ cd ..
 uv run pytest -q
 ```
 
-Build the initial frontend before this scaffold checkpoint: the 1.2.1 standard scaffold may contain an empty `frontend/dist` placeholder, which the runtime rejects until it contains a build. For backend-only route tests, disable frontend discovery as shown below.
+Build the initial frontend before this scaffold checkpoint: the standard scaffold may contain an empty `frontend/dist` placeholder, which the runtime rejects until it contains a build. For backend-only route tests, disable frontend discovery as shown below.
 
 ## 2. Inspect the Backend
 

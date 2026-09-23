@@ -1,6 +1,6 @@
 # Querying plugin-owned tables
 
-Use `get_plugin_db_session()` for the SQLModel tables returned by your plugin's `get_shared_models()`. This recipe uses the owner-scoped `Panel` model from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables).
+Use `get_plugin_db_session()` for your plugin-owned SQLModel tables. With Alembic opt-in, declare the current models in `MigrationSpec.models` and let startup apply revisions before opening a session; keep any `get_shared_models()` override consistent. This recipe uses the owner-scoped `Panel` model from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables).
 
 ## Read within a scoped session
 
@@ -25,7 +25,7 @@ async def recent_panels(self, actor: CurrentPluginActor) -> list[PanelOutput]:
 
 The session is an SQLAlchemy `AsyncSession`: use `await session.execute(...)`, then `result.scalars()` for ORM rows. Do not assume the SQLModel synchronous `session.exec()` convenience method is available.
 
-PostgreSQL integrated sessions set the plugin schema search path. Standalone sessions use SQLite. An installed isolated subprocess has no shared database session in 1.2.1, so this capability requires in-process deployment.
+PostgreSQL integrated sessions set the plugin schema search path. Standalone sessions use SQLite. An installed isolated subprocess has no shared database session in 1.2.6, so this capability requires in-process deployment.
 
 Schema scoping is table ownership, not user authorization. The platform cannot infer ownership rules for arbitrary rows. Filter every read/update/delete by the trusted actor or an explicitly authorized experiment. `requires_auth=True` authenticates the caller; it does not add SQL predicates. Build response objects while the session is open to avoid detached objects or lazy-loading surprises.
 
@@ -69,7 +69,7 @@ async with self.get_plugin_db_session() as session:
     rows = [dict(row) for row in result.mappings()]
 ```
 
-Migration raw SQL has a different search-path rule: use `op.qualified_table("panels")` there. Do not interpolate user input into table names, column names, sort clauses, or SQL values.
+Migration code must not rely on the application session search path: modern Alembic revisions receive `schema` and should use schema-bound SQLAlchemy tables; legacy `MigrationOps` provides `op.qualified_table("panels")`. Do not interpolate user input into table names, column names, sort clauses, or SQL values.
 
 ## Aggregation and indexes
 
@@ -83,7 +83,7 @@ async with self.get_plugin_db_session() as session:
     panel_count = int(result.scalar_one())
 ```
 
-Use indexes that match actual filters. The tutorial declares `owner_user_id` as indexed in both the model and initial migration. If you add a composite index later, add it to current model metadata as well as the next migration so model-created fresh databases have it too. Validate the PostgreSQL query plan when optimizing production queries.
+Use indexes that match actual filters. The tutorial declares `owner_user_id` as indexed in both the model and initial migration. If you add a composite index later, add it to current model metadata as well as the next migration so explicit model checks agree with migration-created fresh databases. For model-only or legacy plugins, current metadata also controls model-created fresh tables. Validate the PostgreSQL query plan when optimizing production queries.
 
 Generic `sa.JSON` is useful for portable storage, but JSON containment semantics are not portable. Do not assume `.contains(...)` on that column becomes PostgreSQL `JSONB @>` or works identically on SQLite. For frequent drug-name lookup, consider a normalized child table with an indexed drug-name column. If using PostgreSQL-specific JSONB operators, declare the type deliberately and test the SQLite alternative separately.
 

@@ -20,7 +20,7 @@ stateDiagram-v2
     Registered --> Installing: marketplace upload or API install
     Installing --> RestartRequired: package and manifest recorded
     RestartRequired --> Discovering: server starts
-    Discovering --> Migrating: optional get_migrations_package
+    Discovering --> Migrating: declared migration protocol
     Migrating --> Configuring: resolve @mint_plugin config
     Configuring --> Initializing: initialize(context)
     Initializing --> Ready: endpoints jobs frontend mounted
@@ -28,7 +28,7 @@ stateDiagram-v2
     Upgrading --> RestartRequired
     Ready --> Uninstalling: admin action
     Uninstalling --> [*]: keep archive or purge
-    Migrating --> Failed: migration raises
+    Migrating --> Failed: Alembic migration fails
     Configuring --> Failed: config hook raises
     Initializing --> Failed: initialize raises
 ```
@@ -47,8 +47,9 @@ my-plugin = "my_plugin.plugin:MyPlugin"
 
 The entry-point name is the **install slug** (URL-safe, hyphenated). The right-hand side is the dotted import path to the `AnalysisPlugin` subclass.
 
-Put `name`, `version`, `description`, authors, homepage, and license in the
-PEP 621 `[project]` table. Use `@mint_plugin(...)` on the class for runtime
+Put package name, description, authors, homepage, and license in the PEP 621
+`[project]` table. Preserve the scaffold's dynamic `hatch-vcs` version configuration;
+the built wheel records the Git-derived package version. Use `@mint_plugin(...)` on the class for runtime
 behavior:
 
 ```python
@@ -87,16 +88,23 @@ traffic.
 
 ### Migrating
 
-Before `initialize()` runs, `MigrationRunner` applies the plugin's pending migrations:
+On the normal installed entry-point path, database preparation happens before typed startup configuration and `initialize()`:
 
-- Reads `get_migrations_package()` to find the plugin's migration package, if any
-- Acquires a Postgres advisory lock to serialize migrations across replicas
-- Compares applied revisions in `plugin_schema_migrations` with the on-disk revisions
-- Runs each pending migration in order
+| Declaration | Startup behavior |
+|---|---|
+| `get_migration_spec()` | Shared Alembic runtime validates owner/history/checksums and applies pending string revisions in one host transaction |
+| `get_migrations_package()` | Retained `MigrationRunner` applies or stamps legacy integer revisions |
+| Models without a migration protocol | Creates missing tables and reports model conformance; does not evolve existing columns |
 
-A failure here puts the plugin in **Failed** state — its routes don't mount, and the admin UI surfaces the error. Fix the failure in a new plugin release. The pending migration batch runs in one transaction; a failure rolls back that batch, which is retried on the next startup. Previously committed revisions remain applied.
+Declare only one migration protocol. `get_shared_models()` can accompany either; for Alembic, put the authoritative model set in `MigrationSpec.models` too.
 
-See [Migrations](/sdk/concepts/migrations) for the migration framework itself.
+Fresh Alembic databases execute their packaged baseline, including standalone SQLite. MINT does not silently create current model tables and stamp revisions in this path. Existing unversioned tables require explicit validated `LegacyBaseline` adoption. PostgreSQL upgrades use advisory locks; SQLite upgrades use `BEGIN IMMEDIATE`. A revision cannot commit or roll back the surrounding host transaction.
+
+An **Alembic** migration failure records migration status and disables the installed plugin before `initialize()` and route mounting. Standalone startup likewise refuses readiness. Legacy integer migration errors and model-only drift retain their earlier status/session behavior: do not infer that every such badge automatically disables a plugin. Inspect `migration_error`, logs, and actual runtime state.
+
+`mint db current`, `check`, and `revision` inspect/author against an explicit development database; none applies migrations. Restarting the development runtime applies the reviewed packaged revisions. Test the installed PostgreSQL lifecycle separately from `mint dev --platform`, which is a standalone development proxy.
+
+See [Migrations](/sdk/concepts/migrations) for both protocols, history checks, and recovery.
 
 ### Configuring
 
@@ -266,13 +274,13 @@ await self.save_settings_transactionally(
 await self.patch_settings_transactionally({"min_signal": 1500})
 ```
 
-Revisions are opaque content ETag/CAS tokens, not increasing migration numbers. A stale full replacement conflicts; it does not merge or retry automatically. A patch is shallow, so a supplied nested object replaces that field rather than deep-merging it. Settings revisions, package versions, SQL migration integers, and design payload schema versions solve different problems.
+Revisions are opaque content ETag/CAS tokens, not increasing migration numbers. A stale full replacement conflicts; it does not merge or retry automatically. A patch is shallow, so a supplied nested object replaces that field rather than deep-merging it. Settings revisions, package versions, Alembic string revisions (or legacy SQL integers), and design payload schema versions solve different problems.
 
 ## Failed state
 
 A plugin reaches **Failed** when:
 
-- A migration raises during `Migrating`
+- An Alembic migration fails during `Migrating`
 - `initialize()` raises during `Initializing`
 - Typed startup configuration or its change hook fails
 
@@ -293,12 +301,13 @@ configuration, then restart/reload the server so startup can retry.
 | `@health_check` / `check_health()` | no | Healthy default |
 | `@on_event(...)` | no | Use for experiment or plugin-local events |
 | `@on_config_change(...)` | no | Requires a `@mint_plugin(config=...)` model |
-| `get_migrations_package()` | no | Returns `None` (no migrations) |
+| `get_migration_spec()` | no | Returns `None`; opt into the shared Alembic runtime with `MigrationSpec` |
+| `get_migrations_package()` | no | Returns `None`; retained legacy integer protocol, mutually exclusive with a spec |
 | `get_shared_models()` | no | Returns `[]` (no tables) |
 
 Health is a runtime diagnostic; an unhealthy report alone should not be described as an automatic route unload. Inspect the admin error and logs for the actual startup/runtime failure.
 
-Verified against [v1.2.1 plugin lifecycle](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/plugin.py), [settings](https://github.com/MorscherLab/MINT/blob/v1.2.1/packages/sdk-python/src/mint_sdk/plugin_settings.py), and [platform design-save service](https://github.com/MorscherLab/MINT/blob/v1.2.1/api/services/experiment_service.py).
+Verified against [v1.2.6 plugin lifecycle](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/plugin.py), [settings](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/plugin_settings.py), and [platform design-save service](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/services/experiment_service.py).
 
 ## Next
 

@@ -1,26 +1,152 @@
-# Migrations reference — 1.2.1
+# Migrations reference — 1.2.6
 
-The released migration API is exported by `mint_sdk.migrations`. Source: [v1.2.1 migrations package](https://github.com/MorscherLab/MINT/tree/v1.2.1/packages/sdk-python/src/mint_sdk/migrations).
+`mint_sdk.migrations` exports the shared Alembic runtime and the retained legacy integer framework. Alembic opt-in is available from 1.2.2. Source: [v1.2.6 migrations package](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-python/src/mint_sdk/migrations).
+
+## `MigrationSpec` and `LegacyBaseline`
+
+```python
+@dataclass(frozen=True)
+class LegacyBaseline:
+    revision: str
+    validate: Callable[[Connection, str | None], bool]
+
+
+@dataclass(frozen=True)
+class MigrationSpec:
+    package: str
+    models: tuple[type, ...] = ()
+    legacy: LegacyBaseline | None = None
+    managed_tables: tuple[str, ...] = ()
+```
+
+| Field | Meaning |
+|---|---|
+| `package` | Importable, single-filesystem-location package containing standard Alembic revision modules |
+| `models` | Unique owned ORM model classes with `__table__`; used for scoped comparison, not automatic table creation |
+| `legacy` | Optional fixed baseline and synchronous validator for explicit adoption of an existing unversioned schema |
+| `managed_tables` | Additional owned table names used in scope filtering, particularly a shared `public` domain; not an ignore list or permission to skip DDL |
+
+Return the spec from `AnalysisPlugin.get_migration_spec()`. Returning a spec and a non-`None` `get_migrations_package()` together raises `ConfigurationException`. Keep the legacy hook at its default when using this protocol.
+
+The revision graph must be a single complete linear chain; the database head and recorded ancestor history must match it. Models cannot claim MINT's internal migration tables. Foreign references outside the domain can be represented as reference-only metadata stubs; this does not grant permission to mutate another domain. A reference to an undeclared table in the same owned domain is rejected.
+
+## Revision module shape
+
+```python
+from alembic import op
+import sqlalchemy as sa
+
+revision = "p002"
+down_revision = "p001"
+branch_labels = None
+depends_on = None
+destructive = False
+# Optional frozen helpers, relative to this revision's directory:
+# checksum_files = ("frozen_helpers/backfill.py",)
+
+
+def upgrade(*, schema: str | None) -> None:
+    op.add_column("panels", sa.Column("notes", sa.Text, nullable=True), schema=schema)
+
+
+def downgrade(*, schema: str | None) -> None:
+    raise NotImplementedError("Use a reviewed forward migration or restore a backup")
+```
+
+`upgrade` is **synchronous**. MINT provides the connection and keyword `schema` through its managed Alembic environment. Bind every table/index operation to that schema. `checksum_files` files must exist inside the revision directory tree; their names and bytes participate in the checksum alongside the entire revision file.
+
+Managed drop-table, drop-column, drop-index, and drop-constraint operations require `destructive = True`. Raw SQL is not a substitute for reviewing data-loss risk. Revision code may not commit, roll back, or start a separate host transaction. No runtime API below calls `downgrade()`.
+
+## Runtime functions
+
+```python
+async def run_migrations(
+    engine: AsyncEngine, spec: MigrationSpec, *, owner: str, schema: str | None
+) -> MigrationStatus: ...
+
+async def inspect_migrations(
+    engine: AsyncEngine, spec: MigrationSpec, *, owner: str, schema: str | None
+) -> MigrationStatus: ...
+
+async def check_migrations(
+    engine: AsyncEngine, spec: MigrationSpec, *, owner: str, schema: str | None
+) -> list[Any]: ...
+
+async def generate_revision(
+    engine: AsyncEngine | None, spec: MigrationSpec, *,
+    owner: str, schema: str | None, message: str, autogenerate: bool = True,
+) -> str | None: ...
+
+async def ensure_database_identity(
+    engine: AsyncEngine, *, owner: str, schema: str | None
+) -> None: ...
+
+# Async context manager yielding an AsyncConnection:
+def migration_connection(
+    engine: AsyncEngine, *, owner: str, schema: str | None, create: bool = True
+): ...
+```
+
+Use `owner="plugin:<canonical-plugin-id>"` and `schema=None` for standalone SQLite. PostgreSQL requires a valid, nonreserved plugin schema; `owner="platform"` is reserved for the platform and must use `schema="public"`.
+
+| Function | Behavior |
+|---|---|
+| `run_migrations` | Creates/validates identity, applies pending revisions and records history in one managed transaction; a fresh domain must have a packaged baseline |
+| `inspect_migrations` | Reads and validates current revision, owner, history, and checksums; does not create migration infrastructure or apply repairs |
+| `check_migrations` | Requires packaged head, then returns the scoped Alembic model/schema differences; empty list means no detected differences |
+| `generate_revision` | Writes a reviewable revision path; returns `None` for an empty autogenerated diff; autogenerate needs an explicit development engine |
+| `ensure_database_identity` | Claims/checks the database domain without inventing a migration revision; not a baseline adoption helper |
+| `migration_connection` | Locks and validates the physical domain; low-level host support, not a replacement for normal application sessions |
+
+`generate_revision(..., engine=None, autogenerate=False)` can author an empty source revision programmatically. The public `mint db revision` CLI exposes the database-backed autogenerated path. CLI source checks additionally reject installed/site-packages revision locations. Do not invoke authoring functions during production startup.
+
+Startup comparison in `run_migrations` rejects missing tables/columns and type incompatibility; `check_migrations` performs the fuller declarative comparison. A successful status inspection is not a full schema or data check.
+
+## `MigrationStatus`
+
+```python
+@dataclass(frozen=True)
+class MigrationStatus:
+    schema_revision: str | None
+    target_revision: str | None
+    pending_migrations: int
+    migration_backend: str = "alembic"
+    schema_version: int | None = None
+    migration_error: str | None = None
+```
+
+String revisions belong in `schema_revision` and `target_revision`; do not parse them into legacy integer `schema_version`. Errors in runtime operations raise rather than returning a normal failure result. The platform catches startup errors and publishes failure status including `migration_error`.
 
 ## Plugin database hooks
 
 ```python
 class AnalysisPlugin:
     def get_shared_models(self) -> list[type]: ...
+    def get_migration_spec(self) -> MigrationSpec | None: ...
     def get_migrations_package(self) -> str | None: ...
     def validate_database_runtime(self, context: PlatformContext | None = None) -> None: ...
     async def ensure_standalone_database(
         self, storage_dir: Any | None = None, *, run_migrations: bool = True
     ) -> Any: ...
-    # Async context manager, yielding an AsyncSession:
+    # Async context manager yielding an AsyncSession:
     def get_plugin_db_session(self): ...
 ```
 
-`get_shared_models()` defaults to `[]`; `get_migrations_package()` defaults to `None`. Use both for a plugin with current ORM models and migration history. `ensure_standalone_database()` returns `PluginDatabaseState` from `mint_sdk.plugin_database`: `mode`, integer `schema_version`, `applied_migrations`, `stamped_migrations`, `conformance`, and the derived `ok` property. It raises `ConfigurationException` when schema conformance fails.
+The model hook defaults to `[]`, both migration hooks to `None`. `ensure_standalone_database()` returns `PluginDatabaseState` from `mint_sdk.plugin_database`: `mode`, optional integer `schema_version`, `migration_backend`, `schema_revision`, `target_revision`, `pending_migrations`, `migration_error`, legacy `applied_migrations` / `stamped_migrations`, `conformance`, and derived `ok`.
 
-Standalone app startup calls the database lifecycle automatically for a declared database contract. Integrated shared sessions use PostgreSQL; `RemotePlatformContext` cannot supply shared SQL sessions. Both supported session context managers commit on success and roll back on failure.
+With a spec, `run_migrations=False` inspects the existing database and rejects a missing head, pending revisions, or model drift; it does not initialize a fresh schema. Normal standalone app startup prepares storage automatically. Integrated shared sessions use PostgreSQL; `RemotePlatformContext` cannot supply shared SQL sessions. Successful session exit commits, and exceptions roll back.
 
-## `PluginMigration`
+## Alembic errors and recovery
+
+The modern runtime uses `MigrationError` for invalid owner/scope, invalid revision graph, unknown stored revision, history/checksum mismatch, rejected baseline adoption, and incompatible model drift. Managed drops can raise `DestructiveMigrationError`; SQL/database errors and errors raised inside revision code can propagate directly. Do not assume all failures are the legacy `MigrationChecksumError` or `SchemaVersionAheadError` subclasses.
+
+Recover with compatible immutable revision files, a reviewed forward repair, or tested backup restoration. Removing identity/history tables or manually stamping an unknown database bypasses the evidence that the runtime requires.
+
+## Legacy integer migration API
+
+The following API remains supported for plugins returning `get_migrations_package()`. It is distinct from the Alembic contract above.
+
+### `PluginMigration`
 
 ```python
 class PluginMigration(ABC):
@@ -36,9 +162,9 @@ class PluginMigration(ABC):
     def has_downgrade(self) -> bool: ...
 ```
 
-A metaclass checks that `version` is an integer and `name` a string at instantiation. Use unique positive increasing versions and stable labels such as `add_panel_notes`. `depends_on` is not interpreted by the v1.2.1 runner. `has_downgrade` reports whether the subclass overrides `downgrade`; the runner does not invoke it automatically.
+A metaclass checks that `version` is an integer and `name` a string at instantiation. Use unique positive increasing versions and stable labels such as `add_panel_notes`. `depends_on` is not interpreted by the v1.2.6 runner. `has_downgrade` reports whether the subclass overrides `downgrade`; the runner does not invoke it automatically.
 
-## `MigrationOps`
+### `MigrationOps`
 
 Constructed by the runner with an active connection:
 
@@ -85,7 +211,7 @@ class MigrationOps:
 
 For a PostgreSQL auto-generated integer key, do not assume `sa.Column("id", sa.Integer, primary_key=True)` passed to `create_table()` emits `SERIAL` or `IDENTITY`: this helper renders the column type directly. Use an explicitly tested server-side identity/sequence DDL, or an application-assigned key such as the tutorial's UUID string.
 
-## `MigrationRunner`
+### `MigrationRunner`
 
 ```python
 class MigrationRunner:
@@ -108,13 +234,13 @@ class MigrationRunner:
     def discover(package_path: str) -> list[PluginMigration]: ...
 ```
 
-Use `dialect="sqlite"` or `"postgresql"`; `schema` is used only for PostgreSQL operations. The runner creates the tracking table, sorts by integer version, checks the database-ahead guard and applied class checksums, and runs pending revisions in one transaction. PostgreSQL uses an advisory transaction lock; the released SQLite implementation uses an ordinary `engine.begin()` block.
+Use `dialect="sqlite"` or `"postgresql"`; `schema` is used only for PostgreSQL operations. The legacy runner rejects an active Alembic domain, creates the integer tracking table, sorts by integer version, checks the database-ahead guard and applied class checksums, and runs pending revisions in one transaction. PostgreSQL uses an advisory transaction lock; the released SQLite implementation uses an ordinary `engine.begin()` block.
 
 `tables_already_exist=True` stamps all supplied revisions only when there is no history. Stamping executes no migration bodies. Existing successful history is skipped after checksum validation; supplied unsuccessful history can be retried. The runner itself does not write failed-history rows when an upgrade raises.
 
 `discover()` imports the package's immediate child modules and instantiates discovered subclasses. Do not re-export/import migration classes across those modules, which can cause duplicate discovery. Keep the full history and verify revision uniqueness in your package checks.
 
-## `MigrationResult`
+### `MigrationResult`
 
 ```python
 @dataclass
@@ -127,7 +253,7 @@ class MigrationResult:
 
 Successful calls return the current version and applied/stamped revision lists. On an upgrade failure the runner appends an error internally and **raises**, so callers do not receive a normal result to inspect. Catch `MigrationError` at a test or administrative boundary and inspect platform migration status/logs.
 
-## Exceptions
+### Legacy exceptions
 
 | Exception | Trigger |
 |---|---|

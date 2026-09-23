@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import '@morscherlab/mint-sdk/styles'
 import {
+  AdductText,
   AlertBox,
   AppAvatarMenu,
   AppContainer,
@@ -65,6 +66,7 @@ import {
   InstrumentStatusCard,
   LcmsSequenceTable,
   LoadingSpinner,
+  LayoutResizeHandle,
   MoleculeInput,
   MultiSelect,
   NumberInput,
@@ -83,6 +85,7 @@ import {
   ScheduleCalendar,
   ScientificNumber,
   SegmentedControl,
+  SearchableSelect,
   SequenceInput,
   SequenceProgressBar,
   SettingsModal,
@@ -100,7 +103,7 @@ import {
   UnitInput,
   Tooltip,
 } from '@morscherlab/mint-sdk/components'
-import { useApi, useToast } from '@morscherlab/mint-sdk/composables'
+import { useApi, useToast, useManualLayoutResize, resizedLeadingPanelWidth } from '@morscherlab/mint-sdk/composables'
 import {
   createLcmsBatchCollection,
   createWellPlateScreenCollection,
@@ -114,6 +117,21 @@ const toast = useToast()
 const textValue = ref('Dose-response panel')
 const notesValue = ref('QC reviewed, ready to publish.')
 const selectValue = ref('dose')
+const searchableValue = ref<string | number>('dose')
+const resizeContainer = ref<HTMLElement | null>(null)
+const panelWidth = ref(260)
+const { startResize } = useManualLayoutResize<'controls'>({
+  enabled: true,
+  resolveTarget: () => ({
+    getContainerElement: () => resizeContainer.value,
+    getStartValue: () => panelWidth.value,
+    onResize: ({ startValue, deltaX, containerRect }) => {
+      panelWidth.value = resizedLeadingPanelWidth(startValue, deltaX, containerRect.width, {
+        minWidth: 200, maxWidth: 400,
+      })
+    },
+  }),
+})
 const checkboxValue = ref(true)
 const toggleValue = ref(true)
 const radioValue = ref('treated')
@@ -971,6 +989,9 @@ onMounted(() => {
 })
 
 const previewNames = new Set([
+  'AdductText',
+  'SearchableSelect',
+  'LayoutResizeHandle',
   'AlertBox',
   'AppAvatarMenu',
   'AppContainer',
@@ -1101,7 +1122,28 @@ const fallbackReason = computed(() => {
 
     <div class="mint-component-playground__surface">
       <ClientOnly>
-      <template v-if="name === 'AlertBox'">
+      <template v-if="name === 'AdductText'">
+        <div class="mint-live-row">
+          <AdductText value="[M+H]+" />
+          <AdductText value="[M+Na]+" variant="badge" />
+          <AdductText value="[M-H]-" tone="muted" />
+        </div>
+      </template>
+
+      <template v-else-if="name === 'SearchableSelect'">
+        <SearchableSelect v-model="searchableValue" :options="selectOptions" search-placeholder="Search workflows" />
+        <p class="mint-live-caption">Selected: {{ searchableValue }}</p>
+      </template>
+
+      <template v-else-if="name === 'LayoutResizeHandle'">
+        <div ref="resizeContainer" class="mint-resize-demo" :style="{ gridTemplateColumns: `${panelWidth}px 8px minmax(0, 1fr)` }">
+          <aside>Controls · {{ panelWidth }} px</aside>
+          <LayoutResizeHandle v-model="panelWidth" :min="200" :max="400" orientation="vertical" label="Resize controls panel" @resize-start="startResize('controls', $event)" />
+          <section>Analysis results</section>
+        </div>
+      </template>
+
+      <template v-else-if="name === 'AlertBox'">
         <AlertBox type="success" title="Analysis complete" action-label="Open result">
           24 samples processed. QC checks passed for 23 samples.
         </AlertBox>

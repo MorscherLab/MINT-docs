@@ -59,7 +59,8 @@ MINT-docs/
 ```bash
 bun install
 bun run dev      # http://localhost:17174/
-bun run build    # outputs to .vitepress/dist/
+bun run build    # current docs + frozen versions in .vitepress/dist/
+bun run build:current  # current version only (fast local check)
 bun run preview  # serve the built site
 ```
 
@@ -71,6 +72,26 @@ Every push to `main` triggers `.github/workflows/deploy.yml`, which builds the s
 
 1. Add a CNAME record `mint-docs.morscherlab.org` → `morscherlab.github.io` at your DNS provider.
 2. In the repo's GitHub Pages settings: Source = "GitHub Actions", custom domain = `mint-docs.morscherlab.org`, enable "Enforce HTTPS".
+
+## Documentation versions
+
+The header switches between current documentation at `/` and frozen snapshots
+such as `/v1.2.1/`. `.vitepress/versions.ts` records the current documented SDK
+version and each archive's **documentation-repository commit**.
+
+`bun run build` builds the current site, exports each pinned commit to a temporary
+directory, installs its own frozen lockfile, and builds it under its versioned
+base path. It needs full Git history, Node/Bun, and access to uncached dependencies.
+No old content is relabeled with a newer SDK. The archive overlay adds the current
+version menu and repairs catalog paths and a historical navigation anchor;
+archived page edits are disabled.
+
+When advancing the documented release, keep the SDK dependency and
+`currentDocsVersion` aligned. Add the previous verified documentation commit to
+`archivedDocs` when retaining that release. `scripts/check-doc-versions.ts` runs
+after a full build to check switch links, SDK baselines and archived assets.
+The switcher links to each version's home page on the published documentation
+site; `bun run preview` also serves the built archive paths for local inspection.
 
 ## Plugin SDK installation wording
 

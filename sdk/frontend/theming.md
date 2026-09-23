@@ -177,4 +177,4 @@ This breaks the user's preference within that scope — use sparingly and docume
 
 - [Design tokens](/sdk/frontend/design-tokens) — full token catalog
 - [Component Library](/sdk/components/) — every component honors theming
-- [Composables → useTheme](/sdk/frontend/composables#usetheme) — programmatic access
+- [Composables → useTheme](/sdk/frontend/composables#other-notable-composables-one-line-each) — programmatic access

@@ -1,6 +1,6 @@
 # Composables
 
-This page covers the public **1.2.1** composables and helper factories used for generated clients, experiment context, settings, forms, and platform API calls. For a complete selection-and-save page, see [Platform integration](/sdk/frontend/platform-integration).
+This page covers the public **1.2.6** composables and helper factories used for generated clients, experiment context, settings, forms, and platform API calls. For a complete selection-and-save page, see [Platform integration](/sdk/frontend/platform-integration).
 
 ## Full list
 
@@ -42,7 +42,11 @@ This page covers the public **1.2.1** composables and helper factories used for 
 | `useAppExperiment` | App-level experiment provide/inject | Plugin pages that need the active experiment |
 | `useExperimentStore` | Shared Pinia selection | Workspace picker state and resolved experiment records |
 | `useFileBrowser` | Server mount listing and selection | Read-only server paths with `FileBrowserModal` |
+| `usePlatformFilePickerAdapter` | Authenticated platform `PickerAdapter` | `FilePicker` folder trees, preview, and resolved file selection |
+| `createFilePickerAdapter` | Shared mount navigation/search adapter | Connect a plugin-owned file API through typed transport callbacks |
 | `useRequestSyncState` | Request loading/error/timestamps and cancellation | Stateful request feedback |
+| `useManualLayoutResize` | Pointer resize lifecycle and current drag state | Pair with `LayoutResizeHandle` for workbench panes |
+| `resizedLeadingPanelWidth`, `resizedTrailingPanelWidth`, `resizedVerticalSplitPercent` | Bounded dimension calculations | Apply pointer deltas to widths or vertical splits |
 :::
 
 ## Deep dives
@@ -406,7 +410,21 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
 </template>
 ```
 
-Props include `data`, `layout`, `config`, `title`, `description`, `loading`, `empty`, `emptyMessage`, and `ariaLabel`. The component lazily imports Plotly, updates with `Plotly.react`, tracks theme and container size, and purges on unmount. Set `empty` explicitly when there is no result. Keep axis labels and units in the supplied layout. Use `ChartContainer` for another rendering library.
+The component lazily imports Plotly, updates with `Plotly.react`, tracks theme and container size, and purges on unmount. Set `empty` explicitly when there is no result, and keep axis labels/units in the supplied layout.
+
+In 1.2.6, `active` pauses render/resize work for hidden tabs; `height` accepts pixels or a CSS height. Pass `plotly` only when the plugin owns a compatible custom build. Set `clickEvents` to receive `plotly-click` with a `PlotMouseEvent`. Use `variant="frame"` in a bounded workbench panel and the `header`, `toolbar`, `subhead`, `legend`, and `footer` slots for surrounding UI. See [PlotlyChart](/sdk/components/plotly-chart) for the full example; use [ChartContainer](/sdk/components/chart-container) for another rendering library.
+
+### Resizable workbench panes
+
+`LayoutResizeHandle` updates its `v-model` on keyboard actions and emits `resize-start` for pointer actions. `useManualLayoutResize({ enabled, resolveTarget })` supplies `startResize(kind, event)`, `stopResize()`, `isResizing`, `isResizingKind(kind)`, and `activeResize`.
+
+Each resolved target provides a container element, a starting value, and an `onResize` callback. Use `resizedLeadingPanelWidth()` for a left panel, `resizedTrailingPanelWidth()` for a right panel, or `resizedVerticalSplitPercent()` for a top/bottom split. The helper owns pointer listeners and cleanup; your component owns the value and applies it to its layout. See [the complete resize example](/sdk/components/layout-resize-handle).
+
+### File picker adapters
+
+`usePlatformFilePickerAdapter()` connects `FilePicker` to authenticated platform mounts. `createFilePickerAdapter()` instead accepts a transport with `listMounts(request?)` and `browse(location, request?)`, allowing a generated plugin client to reuse the SDK's navigation and search. Both accept `rootLocation` to confine browsing to a mount-relative directory.
+
+Preserve abort signals and explicit refresh flags in custom transports. Decode opaque server selections with `decodePlatformPickerPath()` before calling mount-scoped backend APIs. See [the complete picker example and cache behavior](/sdk/frontend/platform-integration#adapter-driven-filepicker).
 
 ## Notes
 

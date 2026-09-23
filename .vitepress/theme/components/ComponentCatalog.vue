@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { withBase } from 'vitepress'
 import { componentCategories, componentDocs, componentSlug } from '../../componentCatalog'
 
 const query = ref('')
@@ -44,7 +45,7 @@ const filteredGroups = computed(() => {
           v-for="component in group.components"
           :key="component.name"
           class="mint-component-tile"
-          :href="`/sdk/components/${componentSlug(component.name)}`"
+          :href="withBase(`/sdk/components/${componentSlug(component.name)}`)"
         >
           <span class="mint-component-tile__meta">{{ component.category }}</span>
           <span class="mint-component-tile__name">{{ component.name }}</span>

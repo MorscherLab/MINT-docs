@@ -4,6 +4,23 @@ MINT's update story has three related checks: the **platform** runtime, the bund
 
 > [Screenshot: Admin -> Platform -> Server and Admin -> Plugins showing platform and plugin update statuses]
 
+## Current documented release: 1.2.6
+
+This guide covers **MINT 1.2.6, released 17 September 2026**. Keep the platform,
+Python SDK and frontend SDK on matching releases; plugins retain their own
+package versions and are distributed as `.mint` bundles.
+
+| Since | Upgrade detail |
+|-------|----------------|
+| 1.2.2 | Platform startup uses the shared Alembic runtime; plugins can opt in with their own independent revision history. |
+| 1.2.3 | Legacy database adoption accepts every supported experiment status and preserves deliberate permission/Viewer-role changes. |
+| 1.2.4 | File-browser refresh invalidates cached directory snapshots; picker reopening re-reads its location. |
+| 1.2.5 | Large process workers receive up to 30 seconds to exit after SIGKILL before cleanup failure discards a result. |
+| 1.2.6 | Failed jobs show their handler exception; worker tracebacks reach platform logs. |
+
+Read the [release notes](https://github.com/MorscherLab/MINT/blob/v1.2.6/CHANGELOG.md)
+and [SDK upgrade guide](/sdk/operations/upgrading-sdk) before updating.
+
 ## Platform updates
 
 Configured under `updates` in `config.json`:
@@ -27,14 +44,11 @@ Configured under `updates` in `config.json`:
 | `includePrereleases` | Include GitHub prereleases in the update list |
 | `pluginSources` | Optional per-plugin GitHub release sources used outside the marketplace registry |
 
-Update status appears in **Admin -> Platform -> Server** alongside platform health and runtime details. Installation:
-
-1. Stops the running MINT process gracefully
-2. Replaces the wheel
-3. Re-applies platform migrations
-4. Restarts the process
-
-There is a brief outage during the swap. For zero-downtime upgrades, run two MINT replicas behind a load balancer and rolling-restart them.
+Update status appears in **Admin -> Platform -> Server** alongside platform health and runtime details. Apply the release using the update path supported by your deployment, then
+restart when required. Startup applies pending platform migrations; it does not
+rerun completed revisions. Plan a maintenance window and verify readiness and
+plugin status after restart. A rolling restart alone does not guarantee a
+zero-downtime schema upgrade.
 
 ### Runtime bundles
 
@@ -47,6 +61,24 @@ MINT_UPDATES__AUTO_APPLY_ON_STARTUP=true
 ```
 
 On each container creation or recreation, the entrypoint checks for a newer platform bundle, applies it when available, and continues startup even if the preflight update check fails. Leave this off when your lab requires scheduled maintenance windows or manual release review.
+
+### Database adoption and migration status
+
+Since 1.2.2, startup first completes pending pre-Alembic migrations v001–v031,
+then validates the legacy schema/data before adopting `platform_v031`.
+Incomplete or unexpected history and baseline drift stop adoption rather than
+being stamped silently. Version 1.2.3 fixes false rejections of valid legacy
+statuses and intentional permission/role changes.
+
+The explicit platform bridge (`python -m api.migrations --database-url ...`)
+also applies pending legacy migrations. Developer `mint db` inspection and
+revision commands never apply migrations and are not a substitute for that
+bridge. See the [migration guide](/sdk/operations/migrating-to-1.2#database-migrations-from-1-2-2).
+
+For Alembic plugins, administration exposes backend, current/target revision,
+pending migration count and errors. A failed Alembic migration leaves the
+plugin disabled before initialization. Other plugin migration styles remain
+supported; adopting the new runtime is a deliberate plugin change.
 
 ## Plugin updates
 
