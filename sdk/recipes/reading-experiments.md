@@ -152,7 +152,7 @@ def reprocess(self, source: Path) -> dict[str, int]:
     return {"bytes": source.stat().st_size}
 ```
 
-Selecting an artifact keeps only its experiment and artifact database IDs in the browser; nothing is downloaded. When the user presses Run, the plugin's `POST {prefix}/jobs/artifacts` route receives `experiment_id`, `artifact_id` and the job `session_id`, and checks again, for the requesting user:
+The picker lists only artifacts the job can use: file artifacts (`mint.analysis_file.v1`) that are active, visible to the user, and owned by this plugin or a plugin in `analysis_result_readers`. It is served by the plugin's `GET {prefix}/jobs/artifacts?experiment_id=N`, which applies the same checks as staging. Selecting an artifact keeps only its experiment and artifact database IDs in the browser; nothing is downloaded. When the user presses Run, the plugin's `POST {prefix}/jobs/artifacts` route receives `experiment_id`, `artifact_id` and the job `session_id`, and checks again, for the requesting user:
 
 - the `experiments.view` permission and the experiment's visibility,
 - that the artifact is still active (not archived),
