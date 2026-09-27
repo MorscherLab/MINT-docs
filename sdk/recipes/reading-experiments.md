@@ -159,7 +159,7 @@ Selecting an artifact keeps only its experiment and artifact database IDs in the
 - that its owner is this plugin or listed in `analysis_result_readers`,
 - that it is file-backed (`mint.analysis_file.v1`) and its object reference stays in the artifact's experiment/plugin scope.
 
-It then streams the object into the same owner/session-scoped, quota-bounded job staging as a browser upload, and the handler receives a writable copy as a normal `Path`. A missing, archived or unreadable artifact is reported as not found. Declare every producer plugin in `analysis_result_readers`, exactly as for [reading its output](#read-another-plugin-s-output).
+It then streams the object into the same owner/session-scoped, quota-bounded job staging as a browser upload, and the handler receives a writable copy as a normal `Path`. The staged copy remembers its source artifact, and each job submission that uses it repeats these checks: if the user's access was revoked in the meantime, the submission is refused and the copy is deleted. A missing, archived or unreadable artifact is reported as not found. Declare every producer plugin in `analysis_result_readers`, exactly as for [reading its output](#read-another-plugin-s-output).
 
 ## Data shape and source
 
