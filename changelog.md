@@ -12,6 +12,21 @@ MINT follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The pla
 
 → [Full CHANGELOG](https://github.com/MorscherLab/MINT/blob/main/CHANGELOG.md) — every change, every version.
 
+## Notable changes in 1.3
+
+Admin and plugin-author actions for the 1.3 minor release. Update the platform and both SDK packages together.
+
+| Area | Change | Action |
+|---|---|---|
+| Upgrade path | 1.3 no longer runs the integer (v001–v031) migrations and refuses to start on a database that 1.2.x (≥ 1.2.2) has not adopted into Alembic | Upgrade 1.1 → 1.2.x (≥ 1.2.2) → 1.3. Do not downgrade to ≤ 1.2.1; restore a backup instead. See [Updates](/admin/updates). |
+| Scheduled updates | The platform can stage platform and plugin updates daily and restart once | Run under a restart supervisor (`mint platform daemon` or `MINT_RESTART_SUPERVISED=1`; the Docker Compose file sets it). See [Updates](/admin/updates). |
+| Plugin dependencies | In-process plugin dependencies are hash-locked; plugins that no longer resolve after an upgrade are disabled with a reason | Check the admin plugin list after upgrading. See [Plugin management](/admin/plugins). |
+| Access tokens and MCP | Personal access tokens and an MCP endpoint at `/mcp` for AI tools | Set `server.externalUrl` correctly; `/mcp` accepts only its host. See [AI Assistants and API Access](/guide/ai-and-api). Plugins can publish MCP tools: [MCP tools](/sdk/recipes/mcp-tools). |
+| Instruments | A shared instrument directory with `instruments.view` / `instruments.edit` permissions | Review custom roles. See [Instruments](/guide/instruments). |
+| Sessions | Changing a password signs out every other session | None. |
+| Python SDK | Package-root exports deprecated in 1.2 and `PluginDataRepository` are removed; the legacy migration protocol is deprecated (removal in 1.4) | Follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3). |
+| Frontend SDK | `PlateMapEditor`, `RackEditor`, `FileBrowserModal`, `ColorSlider`, `AppPluginSwitcher` and several composables are removed; `PlateEditor` replaces the plate editors | Follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3); run `mint doctor`. |
+
 ## Notable changes in 1.2
 
 Plugin-author and admin actions per patch release. Guides elsewhere on this site describe current behavior only; the full notes are in the changelogs linked above.
