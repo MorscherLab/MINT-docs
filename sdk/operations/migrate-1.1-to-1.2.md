@@ -1,6 +1,6 @@
-# Migrating to MINT 1.2
+# Migrate from MINT 1.1 to 1.2
 
-This guide targets the released **MINT v@MINT_VERSION@** (17 September 2026). Platform administrators must use PostgreSQL. New plugin code should use the unified experiment repository and current frontend job/client APIs; several legacy APIs remain as compatibility adapters in this release.
+This guide moves a plugin from MINT 1.1 to 1.2. Administrators upgrading the platform database should follow [Upgrading from MINT 1.1](/admin/updates#upgrading-from-mint-1-1) first. Several legacy APIs remain as compatibility adapters in 1.2; new code should use the current APIs below.
 
 ## Before upgrading
 
@@ -9,60 +9,29 @@ This guide targets the released **MINT v@MINT_VERSION@** (17 September 2026). Pl
 3. Check every plugin with `mint doctor --explain` and review `mint docs deprecated-apis`.
 4. Upgrade the platform and the Python/frontend SDK packages together to matching 1.2 releases.
 
-::: warning SQLite platform data needs a separate migration plan
-MINT 1.2 has no SQLite platform backend and does not ship an automatic SQLite-to-PostgreSQL converter. If an older deployment has platform data in SQLite, keep an offline backup and migrate and verify that data with your normal database tooling before starting 1.2. The SDK's standalone local database remains SQLite and does not need to be converted merely because the platform is upgraded.
-:::
+## What changes for plugin code
 
-## Configure PostgreSQL only
+| Surface | Action for 1.2 | Detailed guide |
+|---|---|---|
+| Package discovery | Declare one `mint.plugins` entry point; derive identity from package metadata | [Versioning](/sdk/operations/versioning) |
+| Type and writes | Consider `WORKFLOW`; explicitly review experiment CRUD, design writes and analysis writes | [Plugin types](/sdk/concepts/plugin-types) |
+| Platform data | Use the unified experiment repository and first-class analysis artifacts | [PlatformContext](/sdk/concepts/platform-context), [writing results](/sdk/recipes/writing-results) |
+| Routes | Use `@endpoint`, typed actors and resource checks; replace custom role guards with SDK guards where appropriate | [Route permissions](/sdk/recipes/route-permissions) |
+| Lifecycle | Use typed `@on_event` handlers; subprocess plugins now receive platform experiment events | [Lifecycle](/sdk/concepts/lifecycle) |
+| Settings | Keep runtime effects in `@on_config_change`; preserve secret references and revision checks | [PlatformContext](/sdk/concepts/platform-context) |
+| Errors | Handle the typed envelope and request IDs; generated frontend clients use typed errors | [Error handling](/sdk/recipes/error-handling) |
+| Tables | Keep legacy numbered revisions or opt in with `get_migration_spec()` / `MigrationSpec`; review database ownership and adoption | [Migrations](/sdk/concepts/migrations) |
+| Frontend | Regenerate contracts and check renamed/changed public imports | [Adding a frontend](/sdk/tutorials/adding-a-frontend) |
 
-Remove the old database selector from `config.json`:
+The 1.2 SDK retains some 1.1 APIs as adapters. `mint doctor` helps identify
+legacy usage; retaining an adapter does not make it the recommended API for new
+code. The released `mint db current`, `mint db check`, `mint db revision` and
+`mint add migration --autogenerate` commands inspect an explicit development
+database or generate source files. They never apply or stamp migrations.
+See [Upgrading from MINT 1.1](/admin/updates#upgrading-from-mint-1-1)
+for the platform startup upgrade and legacy-adoption boundary.
 
-```json
-{
-  "database": {
-    "host": "postgres",
-    "port": 5432,
-    "databaseName": "mint_db"
-  },
-  "DB_USERNAME": "mint",
-  "DB_PASSWORD": "secret"
-}
-```
-
-Also remove `MINT_DATABASE__MODE` from systemd, Compose, Kubernetes, and shell environments. `devMode: true` still bypasses authentication, but it now uses the configured PostgreSQL connection instead of substituting a local SQLite database.
-
-SQLite remains supported for plugin-owned standalone storage through `mint-sdk[local-db]`. Calls through `self.get_plugin_db_session()` continue to use SQLite under `mint dev` and a plugin-scoped PostgreSQL schema when installed.
-
-## Database migrations from 1.2.2
-
-Platform startup now uses the shared SDK Alembic runtime. Existing installations
-first complete pending legacy integer migrations through **v031**, then validate
-and adopt the frozen `platform_v031` baseline. Fresh databases use packaged
-Alembic revisions. Platform and plugin schemas keep independent migration
-histories and database ownership.
-
-The legacy bridge can also be run explicitly from the platform environment:
-
-```bash
-uv run python -m api.migrations --database-url "$MINT_LEGACY_DATABASE_URL"
-```
-
-Set `MINT_LEGACY_DATABASE_URL` to the intended PostgreSQL database using the
-platform's synchronous SQLAlchemy driver. **This command applies pending
-legacy migrations**; it is not an inspection command. Startup normally invokes
-the bridge itself. Running it does not repair schema drift or data from
-migrations already recorded as complete, and it does not replace the subsequent
-Alembic adoption checks.
-
-Adoption requires the exact v001–v031 history and the expected baseline schema.
-It rejects missing/unexpected revisions, schema drift, and invalid current data.
-From 1.2.3, valid `cancelled` experiments, deliberately revoked `plugins.use`
-permissions, and historically deleted or custom Viewer roles are accepted.
-For a genuine validation failure, back up and inspect the fields/record IDs in
-the diagnostic before correcting the data. Do not erase history or stamp a
-baseline merely to make startup pass.
-
-### Plugin database declarations
+## Plugin database declarations
 
 The legacy `get_migrations_package()` and numbered `PluginMigration` classes
 remain supported. Alembic is an explicit opt-in:
@@ -93,7 +62,7 @@ and exposes its migration error in administration. Status includes
 `pending_migrations` and `migration_error`; integer `schema_version` remains
 relevant to the legacy backend.
 
-### Developer inspection does not apply migrations
+## Developer inspection does not apply migrations
 
 For an Alembic plugin project and an existing disposable development database:
 
@@ -196,23 +165,7 @@ When migrating a job center, replace imports of `useJobsStatusTray` and its lega
 
 ## Update and verify the plugin
 
-Keep the Python and frontend SDK releases aligned. After updating the dependency declarations and lockfiles, regenerate the contract when the plugin has a custom frontend:
-
-```bash
-uv sync
-uv run mint sdk generate
-uv run mint doctor --fix
-uv run mint doctor --explain
-uv run mint doctor --strict
-uv run pytest -v
-
-cd frontend
-bun install
-bun run type-check
-bun run build
-```
-
-Review every automatic fix before committing it. Then run the plugin against a disposable MINT 1.2/PostgreSQL environment and exercise experiment reads/writes, settings, generated clients, jobs, and migrations before upgrading a shared deployment.
+Follow [Regenerate, test and install](/sdk/operations/upgrading#regenerate-test-and-install) in the SDK upgrade guide, then run the plugin against a disposable MINT 1.2/PostgreSQL environment and exercise experiment reads/writes, settings, generated clients, jobs, and migrations before upgrading a shared deployment.
 
 ## Release tags
 
@@ -220,7 +173,7 @@ The platform, `mint-sdk`, and `@morscherlab/mint-sdk` now share one `v*` release
 
 ## Related
 
-- [Upgrading the SDK](/sdk/operations/upgrading-sdk)
+- [Upgrading the SDK](/sdk/operations/upgrading)
 - [Configuration](/admin/configuration)
 - [Platform updates](/admin/updates)
 - [Python SDK reference](/sdk/api/python)

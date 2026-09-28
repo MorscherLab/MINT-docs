@@ -99,7 +99,7 @@ bundle requirement. If `requires_mint` is omitted, the builder derives a floor
 from the Python SDK requirement when possible, otherwise from its build SDK;
 set it explicitly for releases with a documented support range.
 
-Use [the SDK updater](/sdk/operations/upgrading-sdk) to keep Python and frontend
+Use [the SDK updater](/sdk/operations/upgrading) to keep Python and frontend
 resolutions aligned. It preserves a valid existing Python compatibility floor;
 selecting a newer lockfile version is not a declaration that older versions
 remain supported by newly changed code.

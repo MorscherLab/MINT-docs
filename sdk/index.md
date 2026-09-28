@@ -13,7 +13,7 @@ the released `v@MINT_VERSION@` source, dated 17 September 2026.
 | Create a Python-only analysis tool | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | Typed job inputs, generated UI, result output and tests |
 | Read/write platform data | [PlatformContext](/sdk/concepts/platform-context), [result recipe](/sdk/recipes/writing-results) | Visible experiments, design ownership, artifacts, files, settings and events |
 | Create your own SQL tables | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | SQLModel models, scoped sessions, CRUD and fresh/upgrade migration paths |
-| Version and upgrade a plugin | [Versioning](/sdk/operations/versioning), [upgrade to 1.2](/sdk/operations/upgrading-sdk) | Git tags, SDK compatibility, design formats, SQL revisions and rollback planning |
+| Version and upgrade a plugin | [Versioning](/sdk/operations/versioning), [upgrading the SDK](/sdk/operations/upgrading) | Git tags, SDK compatibility, design formats, SQL revisions and rollback planning |
 | Use the CLI through deployment | [CLI reference](/sdk/api/cli-reference), [deployment](/sdk/operations/deploying) | Scaffold, generate, diagnose, build, verify and install |
 | Build a custom frontend | [Frontend tutorial](/sdk/tutorials/adding-a-frontend), [platform integration](/sdk/frontend/platform-integration) | Vue 3, typed clients, experiment selection, authentication, forms, files and charts |
 

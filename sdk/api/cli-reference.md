@@ -409,7 +409,7 @@ than falling back to an older allowed release. A valid Python
 compatibility floor is preserved, so raise it explicitly for newly required
 APIs. `--dry-run` previews changes, `--no-sync` skips installs/lock validation,
 and `--verify` chains Docker verification against the stable/beta channel.
-See [upgrading to 1.2](/sdk/operations/upgrading-sdk).
+See [upgrading the SDK](/sdk/operations/upgrading).
 
 ### `mint sdk generate`
 

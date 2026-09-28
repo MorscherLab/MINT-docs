@@ -301,7 +301,7 @@ cannot silently reopen through the legacy path.
 
 The following integer migration API remains supported for existing plugins.
 Do not declare both hooks on one plugin. See [Migrations](/sdk/api/migrations)
-for full signatures and [migration upgrade guidance](/sdk/operations/migrating-to-1.2#database-migrations-from-1-2-2).
+for full signatures and [migration upgrade guidance](/admin/updates#upgrading-from-mint-1-1).
 
 Source: [v@MINT_VERSION@ migration contract](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations/runtime.py).
 

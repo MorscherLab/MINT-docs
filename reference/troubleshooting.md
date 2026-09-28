@@ -110,7 +110,7 @@ repair invalid data left after a migration was already marked complete.
 `mint db current/check/revision` are developer inspection/authoring commands,
 not repair commands. The separate platform `python -m api.migrations
 --database-url ...` command applies pending legacy migrations and normally runs
-implicitly at startup. Follow the [migration guide](/sdk/operations/migrating-to-1.2#database-migrations-from-1-2-2)
+implicitly at startup. Follow the [migration guide](/admin/updates#upgrading-from-mint-1-1)
 before using it explicitly.
 
 Release evidence: [1.2.6 changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md),
