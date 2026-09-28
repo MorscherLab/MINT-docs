@@ -4,22 +4,10 @@ MINT's update story has three related checks: the **platform** runtime, the bund
 
 > [Screenshot: Admin -> Platform -> Server and Admin -> Plugins showing platform and plugin update statuses]
 
-## Current documented release: 1.2.6
-
-This guide covers **MINT @MINT_VERSION@, released 17 September 2026**. Keep the platform,
-Python SDK and frontend SDK on matching releases; plugins retain their own
-package versions and are distributed as `.mint` bundles.
-
-| Since | Upgrade detail |
-|-------|----------------|
-| 1.2.2 | Platform startup uses the shared Alembic runtime; plugins can opt in with their own independent revision history. |
-| 1.2.3 | Legacy database adoption accepts every supported experiment status and preserves deliberate permission/Viewer-role changes. |
-| 1.2.4 | File-browser refresh invalidates cached directory snapshots; picker reopening re-reads its location. |
-| 1.2.5 | Large process workers receive up to 30 seconds to exit after SIGKILL before cleanup failure discards a result. |
-| 1.2.6 | Failed jobs show their handler exception; worker tracebacks reach platform logs. |
-
-Read the [release notes](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md)
-and [SDK upgrade guide](/sdk/operations/upgrading) before updating.
+Keep the platform, Python SDK and frontend SDK on matching releases; plugins retain their own
+package versions and are distributed as `.mint` bundles. Read the
+[release notes](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md), the
+[notable changes](/changelog#notable-changes-in-1-2) and the [SDK upgrade guide](/sdk/operations/upgrading) before updating.
 
 ## Platform updates
 
@@ -64,11 +52,10 @@ On each container creation or recreation, the entrypoint checks for a newer plat
 
 ### Database adoption and migration status
 
-Since 1.2.2, startup first completes pending pre-Alembic migrations v001–v031,
+Startup first completes pending pre-Alembic migrations v001–v031,
 then validates the legacy schema/data before adopting `platform_v031`.
 Incomplete or unexpected history and baseline drift stop adoption rather than
-being stamped silently. Version 1.2.3 fixes false rejections of valid legacy
-statuses and intentional permission/role changes.
+being stamped silently.
 
 The explicit platform bridge (`python -m api.migrations --database-url ...`)
 also applies pending legacy migrations. Developer `mint db` inspection and

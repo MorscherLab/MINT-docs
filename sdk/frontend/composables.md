@@ -218,7 +218,7 @@ toast.show('Panel saved', 'success', 5000)
 toast.clear()
 ```
 
-In 1.2.1, `push()` returns the toast ID and accepts structured options:
+`push()` returns the toast ID and accepts structured options:
 
 ```ts
 const toastId = toast.push({
@@ -412,7 +412,7 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
 
 The component lazily imports Plotly, updates with `Plotly.react`, tracks theme and container size, and purges on unmount. Set `empty` explicitly when there is no result, and keep axis labels/units in the supplied layout.
 
-In @MINT_VERSION@, `active` pauses render/resize work for hidden tabs; `height` accepts pixels or a CSS height. Pass `plotly` only when the plugin owns a compatible custom build. Set `clickEvents` to receive `plotly-click` with a `PlotMouseEvent`. Use `variant="frame"` in a bounded workbench panel and the `header`, `toolbar`, `subhead`, `legend`, and `footer` slots for surrounding UI. See [PlotlyChart](/sdk/components/plotly-chart) for the full example; use [ChartContainer](/sdk/components/chart-container) for another rendering library.
+`active` pauses render/resize work for hidden tabs; `height` accepts pixels or a CSS height. Pass `plotly` only when the plugin owns a compatible custom build. Set `clickEvents` to receive `plotly-click` with a `PlotMouseEvent`. Use `variant="frame"` in a bounded workbench panel and the `header`, `toolbar`, `subhead`, `legend`, and `footer` slots for surrounding UI. See [PlotlyChart](/sdk/components/plotly-chart) for the full example; use [ChartContainer](/sdk/components/chart-container) for another rendering library.
 
 ### Resizable workbench panes
 

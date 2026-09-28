@@ -106,7 +106,7 @@ The generated file exports endpoint names, endpoint metadata, route/API prefixes
 
 Body-only endpoints take the body directly. Endpoints combining parameters and a body use `{ pathParams, query, body }` with the exact generated field names. Run `mint docs contract .` to inspect your plugin's signatures. Generated calls throw `MintApiError` for HTTP failures; see [typed errors](/sdk/frontend/composables#typed-http-errors-in-1-2).
 
-## Current @MINT_VERSION@ patterns
+## Current patterns
 
 - **Experiment selection:** `ExperimentSelectorModal` writes to `useExperimentStore()`; `PluginWorkspaceView experiment-shell` uses the same store. Read `current`, `currentId`, `isResolving`, and `error` instead of retaining a duplicate record.
 - **Charts:** [PlotlyChart](/sdk/components/plotly-chart) renders native Plotly traces, supports a custom Plotly build, pauses work with `active`, and emits point clicks when `clickEvents` is enabled. Both it and [ChartContainer](/sdk/components/chart-container) support `variant="frame"` plus header, subhead, legend, and footer slots.

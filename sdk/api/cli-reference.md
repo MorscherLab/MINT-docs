@@ -453,7 +453,7 @@ platform setup remains a [Linux administration task](/admin/install-direct).
 
 ## Developer database commands
 
-Available since 1.2.2. These commands inspect explicit development databases or
+These commands inspect explicit development databases or
 write revision source files; they do not apply, stamp or downgrade migrations.
 The plugin must declare `get_migration_spec()`. Legacy migration declarations
 continue to use `mint add migration` without autogeneration.

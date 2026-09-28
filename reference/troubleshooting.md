@@ -47,15 +47,15 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | `mint dev` can't find the plugin | Working directory has no `pyproject.toml` with `mint.plugins` entry point | `cd` into the plugin root, or `mint init` to scaffold |
 | Plugin appears installed but routes return 404 | Plugin failed `initialize()` and the loader skipped mounting | **Admin -> Plugins -> Installed** shows the failure reason; fix and reload |
 
-## Jobs and file browsing (1.2.4–1.2.6)
+## Jobs and file browsing
 
 | Problem | Check | Next step |
 |---------|-------|-----------|
-| Failed job only shows `Job failed (job …)` | Platform and plugin SDK version | Upgrade together to 1.2.6; handler failures now report exception type/message. Preserve the job ID when reporting the problem. |
-| Worker traceback is absent from admin logs | Runtime is older than 1.2.6 | In 1.2.6 the worker sends its traceback to the host logger. Check **Admin -> Platform -> Logs** or service logs by job ID. |
-| Finished analysis fails with `Job worker could not be stopped` | Runtime version and host resource pressure | 1.2.5 adds up to 30 seconds of post-SIGKILL cleanup wait. On 1.2.6, inspect process/kernel cleanup and resource pressure; this message is not the analysis timeout. |
-| Newly added server files are missing from a picker | Cached directory metadata | Use refresh or close and reopen the picker. Since 1.2.4, refresh invalidates directory snapshots and reopening re-reads the location. |
-| A directory looks empty after filtering | Search/type filters and mount visibility | Clear filters and refresh; 1.2.4 keeps expansion controls available for filtered zero counts. Hidden paths and mount permissions still apply. |
+| Failed job only shows `Job failed (job …)` | Platform and plugin SDK version | Upgrade the platform and plugin SDK together; current releases report the handler's exception type and message. Preserve the job ID when reporting the problem. |
+| Worker traceback is absent from admin logs | Runtime version | The worker sends its traceback to the host logger. Check **Admin -> Platform -> Logs** or service logs by job ID. |
+| Finished analysis fails with `Job worker could not be stopped` | Host resource pressure | The host waits up to 30 seconds for a worker to exit after SIGKILL. Inspect process/kernel cleanup and resource pressure; this message is not the analysis timeout. |
+| Newly added server files are missing from a picker | Cached directory metadata | Use refresh or close and reopen the picker. Refresh invalidates directory snapshots and reopening re-reads the location. |
+| A directory looks empty after filtering | Search/type filters and mount visibility | Clear filters and refresh; expansion controls stay available for filtered zero counts. Hidden paths and mount permissions still apply. |
 
 ## Marketplace
 
@@ -93,15 +93,14 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | OpenTelemetry exporter errors in logs | OTLP endpoint unreachable | Set `observability.enabled: false` until fixed; the rest of the platform keeps working |
 | Auto-issued GitHub bug reports flooding | A recurring bug spams unique stack traces | Disable `errorReporting.enabled` until the bug is fixed |
 
-### Legacy adoption after upgrading from 1.2.1 or earlier
+### Legacy database adoption
 
 Platform startup completes pending legacy integer migrations through v031 before
 validating the Alembic baseline. Errors naming missing history or baseline
 schema drift are genuine checks, not instructions to delete the migration
 ledger or stamp it manually.
 
-Use 1.2.3 or later (this guide targets **1.2.6, 17 September 2026**) when adopting
-a legacy database: the corrected validator accepts `cancelled` experiments and
+The adoption validator accepts `cancelled` experiments and
 preserves deliberate plugin-permission revocations and historical/custom Viewer
 roles. For a remaining data validation error, back up and inspect the listed
 fields and record IDs. The bridge only runs pending migrations; it does not
@@ -113,7 +112,7 @@ not repair commands. The separate platform `python -m api.migrations
 implicitly at startup. Follow the [migration guide](/admin/updates#upgrading-from-mint-1-1)
 before using it explicitly.
 
-Release evidence: [1.2.6 changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md),
+Release evidence: [changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md),
 [adoption validator](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/migrations/alembic_adoption.py),
 [plugin loader](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/plugins/loader.py).
 

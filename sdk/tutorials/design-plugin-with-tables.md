@@ -2,7 +2,7 @@
 
 Build **panel-designer**, a standard experiment-design plugin that stores reusable drug panels in its own table. Users can create, list, replace, and delete their own panels, then publish a panel into a visible MINT experiment's design data.
 
-This tutorial targets **MINT / mint-sdk @MINT_VERSION@** and uses the Alembic opt-in introduced in 1.2.2: `get_migration_spec()` returns a `MigrationSpec`. Existing plugins can retain the [legacy integer migrations](/sdk/concepts/migrations#existing-plugins-with-integer-migrations); do not declare both migration protocols on one plugin.
+This tutorial targets **MINT / mint-sdk @MINT_VERSION@** and uses the Alembic opt-in: `get_migration_spec()` returns a `MigrationSpec`. Existing plugins can retain the [legacy integer migrations](/sdk/concepts/migrations#existing-plugins-with-integer-migrations); do not declare both migration protocols on one plugin.
 
 **Prerequisites:** [Tutorial 2](/sdk/tutorials/adding-a-frontend), Python with the SDK installed, and a disposable MINT instance for the final PostgreSQL check.
 

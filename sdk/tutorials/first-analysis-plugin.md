@@ -209,8 +209,8 @@ mint doctor --strict
 uv run pytest -q
 ```
 
-MINT 1.2.1 fixes generated controls for numeric arrays, nullable/empty inputs,
-fixed literals and numeric bounds. Backend validators still decide which values
+Generated controls handle numeric arrays, nullable/empty inputs, fixed literals
+and numeric bounds. Backend validators still decide which values
 are accepted; custom Pydantic validation failures return 422 responses.
 
 ## 5. Preview the Generated UI

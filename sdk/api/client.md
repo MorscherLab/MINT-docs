@@ -163,7 +163,7 @@ with MINTClient() as client:
 | `get_file_bytes(..., max_bytes=..., ...)` | Bounded buffered file read |
 | `download_file(experiment_id, path, plugin_id=..., artifact_key=..., ...)` | Streaming download with validated size/checksum and atomic destination replacement |
 
-These readers are available in v1.2.1. There is no artifact write method in this client namespace; publish artifacts inside the producing plugin with the [persistence helpers](/sdk/recipes/writing-results).
+There is no artifact write method in this client namespace; publish artifacts inside the producing plugin with the [persistence helpers](/sdk/recipes/writing-results).
 
 Raw objects use `client.objects.list/put_bytes/put_file/get_bytes/get_ref/download_file/exists/delete`, with an experiment ID and explicit `plugin_id`. These are public REST operations using the authenticated user's platform permissions; they do not impersonate an installed plugin. Uploading an object alone does not create a visible analysis artifact.
 

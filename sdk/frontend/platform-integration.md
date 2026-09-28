@@ -215,7 +215,7 @@ Send the selected `{ mount_id, path, ... }` records to a plugin endpoint only af
 
 ### Listing cache and refresh
 
-The file-browser changes introduced in 1.2.4 are included in 1.2.6. The platform reuses a server-side `FileBrowser` while mount configuration is unchanged. Its default cache retains metadata for up to 300 seconds and 128 directories; each request still resolves the path and checks the directory signature before reuse. This is metadata caching, not a local copy of the files.
+The platform reuses a server-side `FileBrowser` while mount configuration is unchanged. Its default cache retains metadata for up to 300 seconds and 128 directories; each request still resolves the path and checks the directory signature before reuse. This is metadata caching, not a local copy of the files.
 
 Keep `@refresh="browser.refresh"` connected. It sends `refresh=true` for the current location and invalidates cached listings for that mount, including descendants. Listing responses are capped at 2,000 entries by default, so display `truncated` and counts instead of claiming the visible rows are a complete directory inventory. `typeRules` classifies matching entries rather than hiding other files. The helper cancels superseded requests and starts at a reachable mount when the preferred mount is offline.
 
