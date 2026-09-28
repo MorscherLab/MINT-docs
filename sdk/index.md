@@ -27,7 +27,7 @@ uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
 
 `mint init` supplies `mint-sdk[cli,server]` in the generated project's dev
 dependencies. Run `uv sync` and use `uv run mint` inside that project. The
-plain `mint-sdk` dependency is for the runtime library; see [CLI setup](/admin/cli#install-the-1-2-cli).
+plain `mint-sdk` dependency is for the runtime library; see [CLI setup](/sdk/api/cli-reference#install-and-choose-the-environment).
 
 Standard plugins also need Bun for the scaffolded Vue frontend. Platform
 integration needs a configured MINT server; MINT 1.2 requires PostgreSQL.

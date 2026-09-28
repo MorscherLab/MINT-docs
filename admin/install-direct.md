@@ -73,7 +73,7 @@ The `mint` CLI is convenient for admins running platform-data commands (`mint au
 uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
 ```
 
-The `[cli]` extra supplies Typer for commands such as `mint init` and `mint auth`. This tool environment is separate from the platform venv. See [CLI installation](/admin/cli#install-the-1-2-cli) for the runtime/CLI/server distinction.
+The `[cli]` extra supplies Typer for commands such as `mint init` and `mint auth`. This tool environment is separate from the platform venv. See [CLI installation](/admin/cli#install) for the runtime/CLI/server distinction.
 :::
 
 ## Configure

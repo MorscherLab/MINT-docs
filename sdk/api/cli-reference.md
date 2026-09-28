@@ -17,7 +17,13 @@ package does not guarantee a usable CLI. `mint init` creates a project dev
 group with `[cli,server]`; after `uv sync`, prefer `uv run mint ...` inside the
 project to use its selected SDK. The scaffold's runtime dependency stays plain
 `mint-sdk`; CLI/server extras belong to its development environment. Database
-plugins also need `[local-db]`. See [which requirement to install](/admin/cli#install-the-1-2-cli).
+plugins also need `[local-db]`. 
+| Requirement | Use it for |
+|---|---|
+| `mint-sdk` | Python SDK/runtime imports, such as `AnalysisPlugin` and `MINTClient` |
+| `mint-sdk[cli]` | The `mint` commands, including `mint init` scaffolding; adds Typer |
+| `mint-sdk[cli,server]` | Plugin development with the CLI and Uvicorn; generated projects include this in their `dev` dependency group |
+
 
 ## A complete development loop
 

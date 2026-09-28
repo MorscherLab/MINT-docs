@@ -133,10 +133,9 @@ export default defineConfig({
           ],
         },
         {
-          text: 'mint CLI',
+          text: 'Tools',
           items: [
-            { text: 'Overview', link: '/admin/cli' },
-            { text: 'Platform commands', link: '/admin/cli-platform' },
+            { text: 'mint CLI', link: '/admin/cli' },
           ],
         },
       ],

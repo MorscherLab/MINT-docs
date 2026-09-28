@@ -6,7 +6,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| `command not found: mint` | CLI not installed or its location is not on PATH | Install `mint-sdk[cli]`, then run `uv tool update-shell` (uv) or add `~/.local/bin` to PATH (pip); see [CLI setup](/admin/cli#install-the-1-2-cli) |
+| `command not found: mint` | CLI not installed or its location is not on PATH | Install `mint-sdk[cli]`, then run `uv tool update-shell` (uv) or add `~/.local/bin` to PATH (pip); see [CLI setup](/admin/cli#install) |
 | `mint` reports missing `typer` | Plain `mint-sdk` was installed without CLI dependencies | For a uv tool, run `uv tool install --force 'mint-sdk[cli]==@MINT_VERSION@'`; in a scaffolded project, run `uv sync` and use `uv run mint` |
 | Local serving reports missing `uvicorn` | Server dependencies are missing in the active environment | Keep `mint-sdk[cli,server]` in the project's dev dependency group, run `uv sync`, then `uv run mint dev` |
 | Port 8001 already in use | Another process is on the port | Stop the conflicting process or change `--port` in the systemd unit |
