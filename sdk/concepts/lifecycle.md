@@ -90,21 +90,7 @@ traffic.
 
 On the normal installed entry-point path, database preparation happens before typed startup configuration and `initialize()`:
 
-| Declaration | Startup behavior |
-|---|---|
-| `get_migration_spec()` | Shared Alembic runtime validates owner/history/checksums and applies pending string revisions in one host transaction |
-| `get_migrations_package()` | Retained `MigrationRunner` applies or stamps legacy integer revisions |
-| Models without a migration protocol | Creates missing tables and reports model conformance; does not evolve existing columns |
-
-Declare only one migration protocol. `get_shared_models()` can accompany either; for Alembic, put the authoritative model set in `MigrationSpec.models` too.
-
-Fresh Alembic databases execute their packaged baseline, including standalone SQLite. MINT does not silently create current model tables and stamp revisions in this path. Existing unversioned tables require explicit validated `LegacyBaseline` adoption. PostgreSQL upgrades use advisory locks; SQLite upgrades use `BEGIN IMMEDIATE`. A revision cannot commit or roll back the surrounding host transaction.
-
-An **Alembic** migration failure records migration status and disables the installed plugin before `initialize()` and route mounting. Standalone startup likewise refuses readiness. Legacy integer migration errors and model-only drift retain their earlier status/session behavior: do not infer that every such badge automatically disables a plugin. Inspect `migration_error`, logs, and actual runtime state.
-
-`mint db current`, `check`, and `revision` inspect/author against an explicit development database; none applies migrations. Restarting the development runtime applies the reviewed packaged revisions. Test the installed PostgreSQL lifecycle separately from `mint dev --platform`, which is a standalone development proxy.
-
-See [Migrations](/sdk/concepts/migrations) for both protocols, history checks, and recovery.
+Declare only one migration protocol. See [Migrations](/sdk/concepts/migrations) for startup behavior of each protocol, failure handling and recovery.
 
 ### Configuring
 
@@ -307,7 +293,7 @@ configuration, then restart/reload the server so startup can retry.
 
 Health is a runtime diagnostic; an unhealthy report alone should not be described as an automatic route unload. Inspect the admin error and logs for the actual startup/runtime failure.
 
-Verified against [v1.2.6 plugin lifecycle](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/plugin.py), [settings](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/plugin_settings.py), and [platform design-save service](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/services/experiment_service.py).
+Verified against [v@MINT_VERSION@ plugin lifecycle](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/plugin.py), [settings](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/plugin_settings.py), and [platform design-save service](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/services/experiment_service.py).
 
 ## Next
 

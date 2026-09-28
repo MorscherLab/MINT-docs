@@ -30,7 +30,17 @@ Tokens also make light/dark/density work universally. The dark theme just change
 | `--color-primary-soft` | Soft tint for backgrounds | `rgba(99, 102, 241, 0.12)` |
 | `--color-cta` | Orange CTA | `#F97316` |
 | `--color-cta-hover` | CTA hover | `#EA580C` |
-| `--mint-brand` | MINT brand mark color | `#7BD0B5` |
+| `--color-purple` | Purple accent | `#8B5CF6` |
+| `--mint-brand`, `--mint-brand-hover`, `--mint-brand-soft` | MINT brand mark color, hover, tint | `#7BD0B5`, `#5FB89A`, `rgba(123, 208, 181, 0.12)` |
+
+### Entity accents
+
+Experiments use cyan and projects use sky blue. Each has a base, `-hover`, `-soft` (icon chips and pills), and `-border` (pill outline) token.
+
+| Variable | Default light |
+|----------|---------------|
+| `--color-experiment`, `--color-experiment-hover`, `--color-experiment-soft`, `--color-experiment-border` | `#06B6D4`, `#0891B2`, `rgba(6, 182, 212, 0.12)`, `rgba(6, 182, 212, 0.3)` |
+| `--color-project`, `--color-project-hover`, `--color-project-soft`, `--color-project-border` | `#0EA5E9`, `#0284C7`, `rgba(14, 165, 233, 0.12)`, `rgba(14, 165, 233, 0.32)` |
 
 Use brand tokens for: links, primary buttons, focused inputs, the most-prominent action on a screen.
 
@@ -43,7 +53,7 @@ Use brand tokens for: links, primary buttons, focused inputs, the most-prominent
 | `--mint-warning` | Warnings, "needs review" states |
 | `--mint-info` | Informational notices |
 
-Each ships variants: `--mint-{name}-bg`, `--mint-{name}-border`, `--mint-{name}-text`.
+Every semantic color has `--mint-{name}-bg` and `--mint-{name}-border`. Success, error, and warning also have `--mint-{name}-hover`; info has no hover token. Only warning has a text token, `--mint-warning-text`, for readable labels on `--mint-warning-bg`.
 
 ### Surfaces
 
@@ -64,7 +74,7 @@ Each ships variants: `--mint-{name}-bg`, `--mint-{name}-border`, `--mint-{name}-
 | `--text-primary` | Main text color |
 | `--text-secondary` | Less-emphasized text (labels, captions) |
 | `--text-muted` | Even more recessed (helper text) |
-| `--mint-text-inverse` | Legacy alias for text on dark backgrounds |
+| `--text-secondary-strong` | Label color for secondary/ghost buttons; stays at WCAG AA on `--bg-tertiary` |
 
 ### Focus
 
@@ -88,18 +98,36 @@ Tailwind's standard scale (`p-2`, `p-4`, `gap-3`) works as usual. SDK-specific r
 | `--radius-sm`, `--radius-md`, `--radius-lg` | Standard radius scale |
 | `--shadow-sm`, `--shadow`, `--shadow-md`, `--shadow-lg` | Elevation |
 | `--form-height-sm`, `--form-height-md`, `--form-height-lg` | Input/control heights |
+| `--card-shadow` | The single shadow used by every SDK card |
 | `--mint-transition` | Shared component transition (`150ms ease`) |
 
 ### Motion
 
-| Variable | Use |
-|----------|-----|
-| Rule | Use |
-|------|-----|
+| Token or rule | Use |
+|---------------|-----|
+| `--mint-transition` | Simple custom hover/focus transitions (`150ms ease`) |
+| `--mint-ease-out-quart` | The SDK's standard easing curve (`cubic-bezier(0.25, 1, 0.5, 1)`) |
 | `@media (prefers-reduced-motion: reduce)` | The SDK globally shortens animation and transition durations |
-| `--mint-transition` | Use for simple custom hover/focus transitions |
 
 The SDK respects `prefers-reduced-motion` globally. Custom animations should either use the same media query or keep motion non-essential.
+
+### Data colors
+
+| Variable | Use |
+|----------|-----|
+| `--mint-sample-1` … `--mint-sample-9` | Categorical sample color scale (the SDK mirrors it in `SAMPLE_COLOR_SCALE`, `src/utils/color.ts`, for canvas and SVG) |
+| `--mint-slot-r`, `--mint-slot-g`, `--mint-slot-b`, `--mint-slot-y` | Rack and plate slot positions |
+
+### Other tokens
+
+| Variable | Use |
+|----------|-----|
+| `--font-mono` | Fira Code stack for data, code, and routes |
+| `--mint-disabled-opacity` | Opacity of disabled controls (`0.6`) |
+| `--scrollbar-track`, `--scrollbar-thumb`, `--scrollbar-hover` | Scrollbar colors |
+| `--mint-toast-offset-top` | Top offset of the toast stack. Not declared in the stylesheet: a mounted `AppTopBar` sets it on `<html>` to its bottom edge plus 1rem and updates it on resize and scroll. The toast stack falls back to `1rem` |
+
+Legacy aliases still used by some components: `--mint-bg-primary`, `--mint-bg-secondary`, `--mint-bg-card`, `--mint-bg-hover`, `--mint-bg-input`, `--mint-text-primary`, `--mint-text-secondary`, `--mint-text-muted`, `--mint-text-inverse`, `--mint-border`, `--mint-border-focus`. Use the canonical `--bg-*`, `--text-*`, and `--border-*` names in new code.
 
 ## Tailwind utilities
 

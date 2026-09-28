@@ -602,7 +602,7 @@ const pluginSwitcherInfo = {
     { id: 'lcms', label: 'LC-MS Batch', version: '0.9.4', color: '#0ea5e9' },
     { id: 'qc', label: 'QC Review', version: '0.4.1', color: '#16a34a' },
   ],
-  installHref: '/workflow/plugins',
+  installHref: '/admin/plugins',
 }
 
 const appSidebarPanels = {

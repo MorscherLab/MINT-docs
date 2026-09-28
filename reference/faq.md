@@ -12,9 +12,16 @@ MINT is a modular laboratory platform. It manages **projects**, **experiments**,
 
 It's especially well-suited to wet-lab teams that want a single browser-based home for project tracking, experiment metadata, and analysis workflows — without each tool living on a different server with a different login.
 
-## What was MLD?
+## Coming from MLD?
 
-MLD was the original name (Morscher Laboratory Database). It was rebranded to **MINT** — Mass-spec INtegrated Toolkit — alongside the `v1.0.0` release. The legacy `mld-sdk` and `@morscherlab/mld-sdk` packages are frozen on their respective registries; new releases ship as `mint-sdk` and `@morscherlab/mint-sdk`. The CLI binary is `mint`, env vars use the `MINT_` prefix. See the [rebrand decision](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-30-mld-to-mint-rebrand.md).
+MLD (Morscher Laboratory Database) was the platform's original name. It was renamed **MINT** — Mass-spec INtegrated Toolkit — with `v1.0.0`, and the rename is complete:
+
+- Packages are `mint-sdk` (PyPI) and `@morscherlab/mint-sdk` (npm). The `mld-sdk` packages are frozen and receive no releases.
+- Plugins are discovered only through the `mint.plugins` entry-point group. A plugin that still declares `mld.plugins` is not loaded, and no error is shown.
+- Settings use the `MINT_` environment prefix. General `MLD_*` variables are ignored; only a few legacy aliases remain, such as `MLD_CONFIG_PATH` and the `MLD_*` GitHub-token and JWT-secret names.
+- The CLI is `mint`.
+
+Rebuild old plugins against `mint-sdk` and rename any `MLD_*` variables in your deployment. Background: [rebrand decision](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-04-30-mld-to-mint-rebrand.md).
 
 ## How does MINT relate to LEAF?
 
@@ -32,17 +39,13 @@ There is intentionally no desktop / single-user install path: MINT is a multi-us
 
 Yes — when needed. The plugin loader checks each plugin's dependencies against everything already installed; if there's a clash, the plugin runs in its own `uv`-managed venv, in a separate subprocess that the platform proxies HTTP to. Otherwise plugins share the platform's environment for efficiency. Either way, plugin crashes don't take down the platform: middleware wraps every plugin call with error isolation.
 
-## Can I migrate from MLD to MINT?
-
-Yes — the rebrand is name-only at the data level. Existing MLD installations upgrade in place: the database schema is identical, plugins built against `mld-sdk` continue to work during a grace period, and `MLD_*` environment variables remain honored alongside the new `MINT_*` ones. Plugin authors are encouraged to re-publish against `mint-sdk` at their next release. The migration plan is at [`decisions/2026-04-30-mld-to-mint-rebrand.md`](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-30-mld-to-mint-rebrand.md).
-
 ## What database backends are supported?
 
 PostgreSQL is the only supported MINT platform database in 1.2. The SDK's local-db extra still uses SQLite when a plugin runs standalone; that is separate from the installed platform.
 
 ## How big a deployment can MINT handle?
 
-Single-process MINT comfortably serves dozens of concurrent users with a handful of plugins. For larger labs, run multiple MINT replicas behind a load balancer with a shared Postgres — the advisory-lock-aware migration runner is built for that.
+MINT runs as a single server process. Rate limits, presence, in-flight plugin operations and update caches live in that process, so the platform refuses to start with more than one worker (the `MINT_ALLOW_MULTI_WORKER=1` override accepts the resulting misbehavior). Scale by giving the host more CPU and memory; heavy analyses run in separate job worker processes.
 
 ## How do I back up MINT?
 
@@ -51,13 +54,13 @@ Two layers:
 1. **Database** — standard `pg_dump` / `pg_dumpall` for PostgreSQL.
 2. **Filesystem** — `server.dataPath` for plugin registry state, uploaded `.mint` bundles, plugin environment snapshots, object storage, and plugin-owned files.
 
-`snapshot.py` keeps short-lived rollback snapshots for plugin upgrades, but those aren't a backup substitute — they're a local rollback aid.
+Plugin environment snapshots under `<server.dataPath>/plugins/snapshots/` are short-lived rollback points for plugin upgrades, but those aren't a backup substitute — they're a local rollback aid.
 
 ## Does MINT support SSO?
 
 Yes. Current MINT releases include built-in SWITCH edu-ID sign-in through OpenID Connect. Enable it under `sso.eduid` and set `server.externalUrl` to the public HTTPS URL. User accounts are stored in the platform's required PostgreSQL database.
 
-Other identity providers can still sit in front of MINT through an organization-managed reverse proxy or access gateway, but SWITCH edu-ID is the supported in-platform SSO path today. See [Authentication](/workflow/auth-passkeys).
+Other identity providers can still sit in front of MINT through an organization-managed reverse proxy or access gateway, but SWITCH edu-ID is the supported in-platform SSO path today. See [Authentication](/admin/authentication).
 
 ## Can I write a plugin in something other than Python?
 
@@ -78,7 +81,7 @@ sudo -u mint /opt/mint/venv/bin/pip install --upgrade mint
 sudo systemctl restart mint
 ```
 
-For Docker, bump the image tag or use the runtime-bundle update path described in [Updates](/workflow/updates). The `uv tool upgrade mint-sdk` / `pipx upgrade mint-sdk` style commands only update an admin shell's `mint` CLI; they do not upgrade the running platform service.
+For Docker, bump the image tag or use the runtime-bundle update path described in [Updates](/admin/updates). The `uv tool upgrade mint-sdk` / `pipx upgrade mint-sdk` style commands only update an admin shell's `mint` CLI; they do not upgrade the running platform service.
 
 For self-hosted deployments, use **Admin -> Platform -> Server** and **Admin -> Plugins** to check available platform and plugin releases. Take a normal deployment/database backup before upgrading.
 

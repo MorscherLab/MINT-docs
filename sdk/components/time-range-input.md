@@ -1,18 +1,22 @@
 ---
 aside: false
 title: TimeRangeInput
-description: "TimeRangeInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Paired start/end time pickers that validate range order and display computed duration."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # TimeRangeInput
 
-TimeRangeInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Paired start/end time pickers that validate range order and display computed duration.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Use [TimePicker](/sdk/components/time-picker) instead.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/TimeRangeInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/TimeRangeInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="TimeRangeInput" />
@@ -26,7 +30,7 @@ import { TimeRangeInput } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/TimeRangeInput.vue).
+MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/TimeRangeInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -47,7 +51,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TimeRange `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L62) | See the linked SDK type definition. |
+| [` TimeRange `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L62) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

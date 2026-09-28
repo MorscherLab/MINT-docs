@@ -12,7 +12,7 @@ NumberInput is a forms component exported by @morscherlab/mint-sdk for plugin fr
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/NumberInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/NumberInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="NumberInput" />
@@ -57,7 +57,7 @@ Arrow Up/Down adjust by `step`; Page Up/Down adjust by ten steps. Home/End jump 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/NumberInput.vue).
+MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/NumberInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

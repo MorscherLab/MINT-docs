@@ -19,11 +19,11 @@ develop ──▶ test ──▶ build ──▶ publish ──▶ install ─�
 |------|--------|
 | [Packaging](/sdk/operations/packaging) | `mint build`, the `.mint` bundle structure, what gets included |
 | [Publishing](/sdk/operations/publishing) | Publish `.mint` release assets and optionally register them in a marketplace |
-| [CI patterns](/sdk/operations/ci-patterns) | GitHub Actions templates: build-on-PR, publish-on-tag, matrix tests |
-| [Versioning](/sdk/operations/versioning) | SemVer, `hatch-vcs`, SDK ranges, platform compatibility checks |
-| [Deploying](/sdk/operations/deploying) | Production install considerations, isolation tradeoffs, storage volumes |
-| [Migrating to MINT 1.2](/sdk/operations/migrating-to-1.2) | PostgreSQL, repository, frontend, and plugin-discovery changes from 1.1 |
-| [Upgrading the SDK](/sdk/operations/upgrading-sdk) | `mint sdk update`, handling SDK-major breaks |
+| [CI patterns](/sdk/operations/ci-patterns) | Scaffold GitHub Actions workflows plus checksum, registry PR and SDK-compatibility additions |
+| [Versioning](/sdk/operations/versioning) | SemVer, `hatch-vcs`, SDK ranges, `requires_mint`/`min_platform_version`, committed lockfiles |
+| [Deploying](/sdk/operations/deploying) | `mint verify`, `mint deploy` and what it confirms, storage and recovery |
+| [Migrate from 1.1 to 1.2](/sdk/operations/migrate-1.1-to-1.2) | PostgreSQL, repository, frontend, and plugin-discovery changes from 1.1 |
+| [Upgrading the SDK](/sdk/operations/upgrading) | `mint sdk update`, lockfiles, regenerate and verify |
 
 ## Conventions
 

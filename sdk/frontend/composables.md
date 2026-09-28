@@ -1,6 +1,6 @@
 # Composables
 
-This page covers the public **1.2.6** composables and helper factories used for generated clients, experiment context, settings, forms, and platform API calls. For a complete selection-and-save page, see [Platform integration](/sdk/frontend/platform-integration).
+This page covers the public **@MINT_VERSION@** composables and helper factories used for generated clients, experiment context, settings, forms, and platform API calls. For a complete selection-and-save page, see [Platform integration](/sdk/frontend/platform-integration).
 
 ## Full list
 
@@ -17,7 +17,7 @@ This page covers the public **1.2.6** composables and helper factories used for 
 | `useFormBuilder` | Schema-driven form runtime | The `FormBuilder` component (rare to use directly) |
 | `defineControls`, `defineControlModel` | Typed compact control schemas | Generate FormBuilder, SettingsModal, AppSidebar, and ControlWorkspaceView bindings from one model |
 | `useControlSchema`, `useControlWorkspace` | Derived form/sidebar/topbar/component bindings | Custom generated workspaces |
-| `useAsync`, `useAsyncBatch` | Async-state helpers (loading/data/error) | Wrap any async operation |
+| `useAsyncBatch` | Async-state helper for several calls | Run async functions together (`useAsync` is deprecated; use `useRequestSyncState`) |
 | `useWellPlateEditor` | Well-plate state + helpers | Plate-design UIs |
 | `useRackEditor` | Rack-layout state | Sample-rack UIs |
 | `useConcentrationUnits` | Concentration parsing / conversion | Anything dealing with µM / mg/mL / % |
@@ -218,7 +218,7 @@ toast.show('Panel saved', 'success', 5000)
 toast.clear()
 ```
 
-In 1.2.1, `push()` returns the toast ID and accepts structured options:
+`push()` returns the toast ID and accepts structured options:
 
 ```ts
 const toastId = toast.push({
@@ -235,7 +235,7 @@ toast.dismiss(toastId)
 At most two `actions` are retained; each has `label`, `onClick` and optional
 `primary`. `count` shows a grouped count. `progress: 'indeterminate'` prevents
 auto-dismiss; `progress: 'none'` hides the bar but still uses the normal timeout.
-The default duration remains 3500ms.
+The default duration is 3500 ms. The toast stack sits 1rem from the top of the viewport; when an `AppTopBar` is mounted, it starts 1rem below the bar (the bar publishes `--mint-toast-offset-top` on `<html>`).
 
 ### `usePlatformContext`
 
@@ -377,7 +377,6 @@ For lower-level layouts, `useControlSchema()` gives you `formSchema`, `settingsS
 
 | Composable | Use it when |
 |------------|-------------|
-| `useAsync` | Wrap any async function so the template can show loading / error / data states |
 | `useDoseCalculator` | Building dose-response calculators or serial dilution helpers |
 | `useConcentrationUnits` | Parsing user input like "5 mM" and converting between unit families |
 | `useChemicalFormula` | Show elemental composition of a formula string |
@@ -412,7 +411,7 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
 
 The component lazily imports Plotly, updates with `Plotly.react`, tracks theme and container size, and purges on unmount. Set `empty` explicitly when there is no result, and keep axis labels/units in the supplied layout.
 
-In 1.2.6, `active` pauses render/resize work for hidden tabs; `height` accepts pixels or a CSS height. Pass `plotly` only when the plugin owns a compatible custom build. Set `clickEvents` to receive `plotly-click` with a `PlotMouseEvent`. Use `variant="frame"` in a bounded workbench panel and the `header`, `toolbar`, `subhead`, `legend`, and `footer` slots for surrounding UI. See [PlotlyChart](/sdk/components/plotly-chart) for the full example; use [ChartContainer](/sdk/components/chart-container) for another rendering library.
+`active` pauses render/resize work for hidden tabs; `height` accepts pixels or a CSS height. Pass `plotly` only when the plugin owns a compatible custom build. Set `clickEvents` to receive `plotly-click` with a `PlotMouseEvent`. Use `variant="frame"` in a bounded workbench panel and the `header`, `toolbar`, `subhead`, `legend`, and `footer` slots for surrounding UI. See [PlotlyChart](/sdk/components/plotly-chart) for the full example; use [ChartContainer](/sdk/components/chart-container) for another rendering library.
 
 ### Resizable workbench panes
 

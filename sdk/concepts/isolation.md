@@ -1,17 +1,22 @@
 # Runtime isolation and storage
 
-MINT 1.2.6 can run an installed plugin in the platform process or in a separate Python subprocess. Choose a compatible dependency/runtime arrangement **and** check that it supports the services your plugin needs. Process isolation does not make every `PlatformContext` method remotely available.
+MINT @MINT_VERSION@ can run an installed plugin in the platform process, in a separate Python subprocess, behind an external HTTP URL, or in a platform-managed Docker container. Choose a compatible dependency/runtime arrangement **and** check that it supports the services your plugin needs. Process isolation does not make every `PlatformContext` method remotely available.
 
 ## Runtime comparison
 
 | Runtime | Platform access | Plugin-owned SQL tables | Typical use |
 |---|---|---|---|
-| Installed in-process | Direct platform context and repositories | PostgreSQL schema through `get_plugin_db_session()` | Plugins requiring shared database access |
-| Installed isolated subprocess | Remote context over authenticated internal HTTP APIs | No shared SQL-session bridge | Plugins with isolated dependencies using supported platform service adapters |
-| Standalone `mint dev` | No integrated context | Local SQLite | Plugin API/UI development and local database tests |
-| `mint dev --platform` | Development proxy into the standalone server | Local SQLite | Testing platform URL/proxy behavior during development |
+| Installed in-process | Platform `PlatformContext`; direct async scoped repositories | PostgreSQL schema through `get_plugin_db_session()`; required for shared-table sessions in 1.2 | Plugins requiring shared database access; `.mint` bundle with compatible Python dependencies |
+| Installed isolated subprocess | SDK `RemotePlatformContext`; same async protocol over authenticated internal HTTP APIs | No shared SQL-session bridge | Conflicting or heavy Python dependency sets using supported platform service adapters |
+| External server | Platform must reach its URL | Owned by the service | An already running plugin service; the service owns its process lifecycle |
+| Docker runtime | Containerized plugin runtime | Owned by the container | Container image, networking and native libraries must be provided |
+| Standalone `mint dev` | `context=None`; no platform repositories, selected helpers return empty values | Local SQLite when declared | Plugin API/UI development and local database tests |
+| `mint dev --platform` | Starts the platform and a development proxy into the standalone server | Local SQLite | Testing platform URL/proxy behavior during development |
+| External notebook, script, CI | No plugin context; synchronous `MINTClient` with the caller's credentials | Use platform APIs | Scripts outside a plugin |
 
 The **table-owning plugin tutorial must be deployed in-process** for PostgreSQL. `requires_shared_database=True` combined with `RemotePlatformContext` fails validation with `ConfigurationException`. Calling the remote context's `get_shared_db_session()` directly raises `NotImplementedError`; the SDK does not silently switch an installed remote plugin to SQLite.
+
+External HTTP and Docker-managed runtimes are registered rather than installed: the platform records where to proxy the plugin's routes and wires the proxy at startup. The runtime owns its process, dependencies and storage; plan plugin-owned tables as in-process only.
 
 ## In-process plugins
 
@@ -59,4 +64,4 @@ Use a disposable MINT installation for the final integration check. Verify both 
 
 Plugin loading lives under `plugins` in `config.json`: `loadFromEntryPoints`, explicit `plugins` entries, `extraIndexUrls`, and durable `settings`. The released user configuration does not expose `forceIsolated` or `forceShared` switches. Do not add guessed options to configuration to work around a runtime mismatch.
 
-Release sources: [runtime database validation](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/plugin_database.py), [remote context](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/remote_context.py), and [platform plugin loader](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/plugins/loader.py).
+Release sources: [runtime database validation](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/plugin_database.py), [remote context](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/remote_context.py), and [platform plugin loader](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/plugins/loader.py).

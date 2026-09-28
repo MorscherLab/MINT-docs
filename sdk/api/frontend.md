@@ -1,142 +1,24 @@
 # Frontend SDK reference
 
-Public components, composables, stores, and types from `@morscherlab/mint-sdk` **1.2.6**. For exact signatures, use `mint docs frontend <Name>` against the installed SDK or the linked release source. Follow [Adding a frontend](/sdk/tutorials/adding-a-frontend) for setup and [Platform integration](/sdk/frontend/platform-integration) for complete state/persistence examples.
+Public components, composables, stores, and types from `@morscherlab/mint-sdk` **@MINT_VERSION@**. For exact signatures, use `mint docs frontend <Name>` against the installed SDK or the linked release source. Follow [Adding a frontend](/sdk/tutorials/adding-a-frontend) for setup and [Platform integration](/sdk/frontend/platform-integration) for complete state/persistence examples.
 
 ## Components
 
-Vue 3 component exports. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-frontend/src/components).
+Components are documented in the [Component Library](/sdk/components/), where each page lists props and embeds a playground. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-frontend/src/components).
 
-### Layout
+Deprecated components, scheduled for removal in MINT 1.3:
 
-| Component | Use |
-|-----------|-----|
-| `AppLayout` | Page shell with optional topbar/sidebar slots |
-| `PluginWorkspaceView` | Plugin page shell used by the current `mint init` frontend scaffold |
-| `ControlWorkspaceView` | Generate sidebar, top bar, and forms from one control model |
-| `BioTemplatePresetWorkspaceView`, `BioTemplatePackWorkspaceView` | Biology preset/pack workspaces with control and persistence bindings |
-| `AppContainer` | Standalone container without top bar (login, setup) |
-| `AppTopBar` | Platform top bar component |
-| `AppSidebar` | Sectioned sidebar |
-| `AppAvatarMenu` | User avatar + menu |
-| `AppPluginSwitcher` | Inter-plugin switcher widget |
-| [`LayoutResizeHandle`](/sdk/components/layout-resize-handle) | Bounded keyboard separator and pointer-start event for resizable panes |
-
-### Forms
-
-| Component | Use |
-|-----------|-----|
-| `BaseButton` | Primary button — `variant`, `size`, `loading`, `disabled` |
-| `BaseInput` | Text / number input; pair with `FormField` for label / hint / error text |
-| `BaseSelect` | Themed `<select>` with options array; pair with `FormField` for label |
-| [`SearchableSelect`](/sdk/components/searchable-select) | Searchable single-select listbox with descriptions, metadata, and disabled reasons |
-| `BaseCheckbox` | Single checkbox |
-| `BaseRadioGroup` | Grouped radio buttons |
-| `BaseSlider` | Range slider |
-| `BaseTextarea` | Multi-line input |
-| `BaseToggle` | Boolean switch |
-| `NumberInput` | Numeric input with always-visible steppers, optional unit, and pointer scrubbing |
-| `MultiSelect` | Multiple-choice select |
-| `DatePicker`, `DateTimePicker`, `TimePicker`, `TimeRangeInput` | Date/time inputs |
-| `Calendar` | Calendar widget |
-| `TagsInput` | Free-text tag input |
-| `SegmentedControl` | Compact tab-like option selector |
-
-### Modals and feedback
-
-| Component | Use |
-|-----------|-----|
-| `BaseModal` | Standard modal dialog |
-| `BaseTabs` | Tab strip + panels |
-| `ConfirmDialog` | Confirm-or-cancel dialog controlled with `v-model` |
-| `AlertBox` | Inline banner (info / warning / error / success) |
-| `AppToastContainer` | Toast host component registered by the SDK install plugin |
-| `Tooltip` | Hover-triggered tooltip |
-| `EmptyState` | Empty-list placeholder |
-| `LoadingSpinner` | Spinner |
-| `ProgressBar` | Linear progress |
-| `Skeleton` | Loading skeleton |
-| `BasePill` | Compact label / status pill |
-| `StatusIndicator` | Colored dot for status |
-
-### Data display
-
-| Component | Use |
-|-----------|-----|
-| `DataFrame` | Searchable, sortable, sticky table with optional row selection, deletion, and column resizing |
-| `AppContainer`, `CollapsibleCard`, `ResourceCard` | Card and panel surfaces |
-| `Breadcrumb` | Breadcrumb trail |
-| `ScientificNumber` | Formatted scientific number |
-| `ChartContainer` | Card/frame chart chrome with header, toolbar, subhead, body, legend, and footer slots |
-| [`PlotlyChart`](/sdk/components/plotly-chart) | Native Plotly traces, optional custom runtime, inactive-panel pause, sizing, and opt-in point-click events |
-| [`AdductText`](/sdk/components/adduct-text) | Compact MS adduct notation with optional badge styling |
-| `Divider` | Horizontal rule |
-| `IconButton` | Icon-only button |
-| `Avatar` | User avatar |
-
-### Multi-step
-
-| Component | Use |
-|-----------|-----|
-| `StepWizard` | Multi-step form with progress indicator |
-
-### Domain widgets
-
-| Component | Use |
-|-----------|-----|
-| `WellPlate`, `PlateMapEditor` | Well-plate editing; `WellPlate` supports per-well class/style callbacks |
-| `RackEditor`, `ReagentEditor`, `ReagentList` | Rack / reagent editing |
-| `FormBuilder`, `FormField`, `FormActions` | Schema-driven forms and form chrome |
-| `ChemicalFormula`, `FormulaInput` | Chemical formula display / input; display supports adducts, pills, and empty values |
-| `MoleculeInput` | Molecule structure input |
-| `ConcentrationInput`, `UnitInput` | Concentration with units |
-| `DoseCalculator` | Dilution / serial-dilution calculator |
-| `ProtocolStepEditor` | Protocol step editor |
-| `SequenceInput` | DNA / protein sequence input |
-| `ScheduleCalendar` | Calendar / scheduling UI |
-| `ExperimentTimeline` | Per-experiment timeline |
-| `SequenceProgressBar` | Instrument sequence progress and time estimates |
-
-### Experiment-aware
-
-| Component | Use |
-|-----------|-----|
-| `ExperimentCodeBadge` | Formatted experiment code (`LCM-EXP-001`, `DR-EXP-001`, ...) |
-| `ExperimentDataViewer` | Pretty-print experiment design + analysis |
-| `ExperimentPopover` | Hover info for an experiment |
-| `ExperimentSelectorModal` | Modal picker that commits resolved records to `useExperimentStore()` |
-
-### Sample / grouping
-
-| Component | Use |
-|-----------|-----|
-| `SampleHierarchyTree` | Hierarchical sample tree |
-| `SampleLegend` | Legend for sample groups |
-| `SampleSelector` | Multi-sample selector |
-| `GroupAssigner` | Manual group assignment UI |
-| `AutoGroupModal` | Auto-grouping modal (driven by `useAutoGroup`) |
-| `SmartGroupModal` | Two-mode smart grouping shell for auto and manual sample grouping |
-| `SmartGroupFieldRecipe` | Auto grouping view based on parsed sample fields and QC routing |
-| `SmartGroupManual` | Manual cohort builder for irregular sample names |
-| `BatchProgressList` | Progress for batch operations |
-
-### Theming + utilities
-
-| Component | Use |
-|-----------|-----|
-| `ThemeToggle` | Theme switcher (Light / Dark / System) |
-| `ColorSlider` | Color picker slider |
-| `SettingsModal` | Settings UI primitive |
-| `FileUploader` | Drag-and-drop file picker that emits selected `File[]` |
-| [`FileBrowserModal`](/sdk/components/file-browser-modal) | Controlled read-only server mount picker returning path references |
-| `FilePicker` | Adapter-driven folder tree, metadata preview, search, and resolved selection; uses `v-model:open` and `@select` |
-| `DropdownButton` | Button with attached menu |
-| `FitPanel` | Fit-to-container panel |
-
-For full prop signatures, browse the source or run the local Histoire storybook. For curated live examples, open a page in the [Component Library](/sdk/components/); each component page embeds its own playground.
+| Component | Replacement |
+|-----------|-------------|
+| `ColorSlider` | `BaseSlider` |
+| `DropdownButton` | `ActionMenu` |
+| `TimeRangeInput` | `TimePicker` |
+| `ResourceCard` | None |
+| `InstrumentAlertLog`, `InstrumentStatusCard`, `LcmsSequenceTable` | None in the SDK; instrument UI moves to the mld-ms plugins |
 
 ## Composables
 
-Typed composables and helper factories. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-frontend/src/composables).
+Typed composables and helper factories. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-frontend/src/composables).
 
 | Composable | Returns | Purpose |
 |------------|---------|---------|
@@ -148,7 +30,7 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 | `usePlatformContext` | integration, plugin, user, theme, features | Platform shell context |
 | `useForm` | reactive form state | Manual form management |
 | `useFormBuilder` | schema-driven form runtime | `FormBuilder` component |
-| `useAsync`, `useAsyncBatch` | async state helpers | Wrap async operations |
+| `useAsyncBatch` | async state helper | Run several async functions together |
 | `useWellPlateEditor` | plate state + helpers | Plate-design UIs |
 | `useRackEditor` | rack state | Sample rack UIs |
 | `useConcentrationUnits` | concentration math | µM / mg/mL / % conversions |
@@ -160,13 +42,27 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 | `useScheduleDrag` | drag-to-reschedule | Calendar / timeline |
 | `useProtocolTemplates` | protocol step engine | Protocol UIs |
 | `useAutoGroup` | sample auto-grouping | Group by name prefix |
-| `usePluginConfig` | plugin settings | Read plugin config |
 | `createPluginClient`, `usePluginClient` | contract-aware plugin API runtime | Generated plugin clients |
 | `buildPluginEndpointUrl`, `resolvePluginBaseUrl` | URL helpers | Link previews and diagnostics that match generated client calls |
 | `uploadPluginEndpoint`, `downloadPluginEndpoint`, `downloadBlob` | multipart / Blob helpers | Generated upload and download endpoint wrappers |
 | `usePluginEventStream` | auth-aware SSE helper | Generated event-stream endpoint wrappers |
 | `usePluginSettings` | plugin settings helpers | Load/save plugin configuration |
+| `usePluginJobs` | SDK job lifecycle client | Connect a custom frontend to the plugin's `@job` endpoints |
 | `usePluginJobCenter` | job-center view state | Render a `PluginJobCenterSource` from `usePluginJobs()` |
+| `useAnalysisArtifacts` | artifact list and actions | List and manage analysis artifacts through the platform API |
+| `useGeneratedAnalysis`, `createGeneratedAnalysisTransport` | generated-workspace runtime | Experimental runtime behind the SDK-managed generated analysis UI |
+| `usePluginWorkspace` | shell, sidebar, and control state | Build a custom shell with the same behavior as `PluginWorkspaceView` |
+| `createPluginResourceClient` | list/create/update/remove adapter | Wrap a generated client as a CRUD resource |
+| `useExperimentSamples` | design data and derived samples | Feed `SampleSelector`-style UIs from an experiment |
+| `useSampleGroups`, `useGroupAssignment` | group hierarchy and two-zone assignment | Sample selectors and control/treatment assignment |
+| `useTemplateCollection` | template collection state | Load and save a biology template collection in design data |
+| `useBioTemplateControls`, `useBioTemplateComponents` | template schemas and component mappings | Lower-level parts of `useBioTemplateWorkspace` |
+| `defineControlComponentBindings`, `defineWellPlateControlProps`, `defineDoseCalculatorControlProps`, `defineWellPlateDoseControlProps`, `defineWellPlateDoseComponentBindings` | control-to-component mappings | Bind generated controls to `WellPlate` / `DoseCalculator` |
+| `useRuntimeAlignment` | frontend/backend revision state | Keep a loaded frontend aligned with the backend revision |
+| `usePresenceHeartbeat` | presence reporting | Report a visible integrated tab to the platform presence tracker |
+| `useMobileSupportGate` | viewport support state | Drive `MobileSupportGate` |
+| `useFocusTrap`, `useRovingFocus`, `useMenuKeyboard`, `useListReorder`, `useReorderAnnouncer` | keyboard and screen-reader helpers | Accessible dialogs, tabs, menus, and reorderable lists |
+| `useEventListener`, `useDebouncedWatch` | lifecycle-bound listener and debounced watcher | Small utilities used by SDK components |
 | `useCurrentExperiment` | injection/URL experiment helper | Resolve an experiment ID and fetch its record; separate from picker selection |
 | `useExperimentSelector` | reactive experiment picker | Experiment dropdowns |
 | `useExperimentData` | reactive experiment view | Live design + analysis |
@@ -188,16 +84,45 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 | `useManualLayoutResize` | Pointer resize state, start/stop, and cleanup | Connect a `LayoutResizeHandle` to application-owned dimensions |
 | `resizedLeadingPanelWidth`, `resizedTrailingPanelWidth`, `resizedVerticalSplitPercent` | Bounded dimension helpers | Convert pointer deltas into pane widths or vertical percentages |
 
+### Deprecated composables
+
+Scheduled for removal in MINT 1.3:
+
+| Composable | Replacement |
+|------------|-------------|
+| `useAsync` | `useRequestSyncState()` |
+| `useOptimisticMutation` | `useRequestSyncState()` |
+| `usePluginConfig` | `usePluginSettings()` |
+| `useResourceCrud` | `useGeneratedPluginClient()` |
+| `useWellPlateAdapter` (with `createWellPlateWells`, `createRowConditions`, `createColumnConditions`), `useWellPainting`, `useWellPlateValidation` | `useWellPlateEditor()` |
+| `useCommandHistory` | Keep command stacks in the plugin |
+| `useJobsStatusTray` | `usePluginJobCenter()` |
+
 ## Stores and access policies
 
 | Export | State and methods |
 |--------|-------------------|
 | `useAuthStore()` | `userInfo`, `isAuthenticated`, `needsAuth`, `isAdmin`, `isLoading`, `error`, `hasPermission(...)` |
 | `useExperimentStore()` | `current`, `currentId`, `isResolving`, `error`, `select(record)`, `selectById(id)`, `clear()` |
-| `useSettingsStore()` | Shared SDK theme, API, and display settings |
+| `useSettingsStore()`, `tryUseSettingsStore()` | Shared SDK theme, color palette, table density, and API settings; `tryUseSettingsStore()` returns `null` without an active Pinia |
+| `colorPalettes`, `paletteCssVariables()`, `PALETTE_CSS_VARIABLES`, `tableDensityToSize()` | Palette definitions, the `<html>` overrides a palette writes, and the table size for a density |
 | `AccessPolicy`, `AccessControlled` | Nested `access: { permissions, anyPermissions, requiresAuth, requiresAdmin, ... }` policies for access-aware UI |
 
 Destructure Pinia state with `storeToRefs()` or read it through the store object. In 1.2, experiment selection is stored once per plugin Pinia instance; `ExperimentSelectorModal` emits only open-state updates. Use `useAppExperiment()` or `PluginWorkspaceView experiment-shell` for top-bar presentation and saving. Backend permissions remain authoritative.
+
+## Utility exports
+
+| Area | Exports |
+|------|---------|
+| Permissions | `ADMIN_ROLE`, `ADMIN_PANEL_PERMISSIONS`, `getRoleInfo`, `isAdminRole`, `isAdminUser`, `getAccessAudience`, `getUserPermissions`, `hasAllPermissions`, `hasAnyPermission`, `canAccessAdmin`, `canAccessPlugin`, `normalizeAccessPolicy`, `canAccessByPolicy` |
+| Plugin secrets | `PLUGIN_SECRET_FORMAT_KEY`, `PLUGIN_SECRET_FORMAT_REF`, `PLUGIN_SECRET_REF_KEY`, `setPluginSecret`, `keepPluginSecret`, `clearPluginSecret`, `isPluginSecretRef`, `isPluginSecretLocked`, `pluginSecretId`, `pluginSecretLabel`, `pluginSecretState`, `usesPluginSecretReferences` |
+| Jobs | `resolveJobCapabilities`, `normalizeJobPercent`, `normalizeJobState`, `isActiveJobStatus`, `isTerminalJobStatus`, `jobStatusLabel` |
+| Instrument sequences | `sequenceProgressPercent`, `sequenceSamplesRemaining`, `estimateSequenceRemainingSeconds`, `estimateSequenceFinishDate`, `formatSequenceRemaining`, `formatSequenceEta` |
+| LC-MS | `DEFAULT_LCMS_SEQUENCE_COLUMNS`, `extractLcmsCommonPrefix`, `extractLcmsSampleName`, `lcmsWellIdFromPosition`, `inferLcmsPlateTypeFromWellIds`, `reconstructLcmsPlateCellsFromSequenceItems`, `basenameFromWindowsPath` |
+| Racks and LC-MS plates | `LCMS_DEFAULT_CONTROL_POSITIONS`, `createLcmsControlWellEditData`, `getLcmsDefaultControlWellId`, `lcmsPlateCellsToRack`, `lcmsPlateCellsToRacks`, `lcmsPlateTypeToRackFormat`, `lcmsWellId`, `parseLcmsWellId`, `rackFormatToLcmsPlateType`, `rackToLcmsPlateCells`, `racksToLcmsPlateCells` |
+| Generated job forms (experimental) | `generatedJobFormSchema`, `generatedJobDefaults`, `normalizeGeneratedJobInput` |
+| Color | `hexToHsl`, `hslToHex`, `deriveShade` |
+| Biology templates | Everything from `@morscherlab/mint-sdk/templates` is also re-exported from the package root |
 
 ## Generated plugin client helpers
 
@@ -264,9 +189,6 @@ import {
   type FieldRules,
   type FieldState,
   type UseFormReturn,
-  type AsyncError,              // useAsync
-  type AsyncState,
-  type UseAsyncReturn,
   type ConcentrationValue,      // useConcentrationUnits
   type ConcentrationUnit,
   type MolarityUnit,
@@ -301,7 +223,7 @@ import {
 } from '@morscherlab/mint-sdk'
 ```
 
-Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `FileDirectoryListing`, `UseFileBrowserOptions`, `UseFileBrowserReturn`, and `UseRequestSyncStateReturn`. For the full list, use the release [composable exports](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/index.ts) and [type exports](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/index.ts).
+Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `FileDirectoryListing`, `UseFileBrowserOptions`, `UseFileBrowserReturn`, and `UseRequestSyncStateReturn`. For the full list, use the release [composable exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/index.ts) and [type exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/types/index.ts).
 
 ## Notes
 
@@ -309,7 +231,7 @@ Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `Fi
 - Prefer named imports. Installing `MINTSdk` globally registers the SDK components; do not assume that a global install includes only one component. `PlotlyChart` loads its Plotly runtime on mount.
 - Current plugin scaffolds import Tailwind v4 and the SDK style bundle from `frontend/src/style.css`: `@import "tailwindcss";` then `@import "@morscherlab/mint-sdk/styles";`. Keep the SDK import unlayered so Tailwind preflight cannot outrank SDK component styles. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
 - For plugin-scoped API calls, prefer `useGeneratedPluginClient()` from `frontend/src/generated/mint-plugin.ts`; use raw `useApi()` for platform APIs outside the plugin contract.
-- `mint doctor` flags legacy `usePluginApi()`, private SDK subpath imports, direct frontend composable file subpaths, and raw plugin API `fetch('/api/...')` calls.
+- `mint doctor` flags legacy `usePluginApi()`, private SDK subpath imports, direct frontend composable file subpaths, raw plugin API `fetch('/api/...')` calls, and the removed `AppSidebar` `variant` prop (in `.vue` files and in agent docs such as `CLAUDE.md` / `AGENTS.md`).
 
 ## Related
 

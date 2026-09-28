@@ -1,6 +1,6 @@
 # FormBuilder
 
-`FormBuilder` in SDK **1.2.6** renders a full `FormSchema`, a compact `controls` object, or a `defineControlModel()` workspace model. Use the same model and value object for forms, settings, and sidebars so every control edits the same state.
+`FormBuilder` in SDK **@MINT_VERSION@** renders a full `FormSchema`, a compact `controls` object, or a `defineControlModel()` workspace model. Use the same model and value object for forms, settings, and sidebars so every control edits the same state.
 
 ## When to use FormBuilder vs. hand-rolled forms
 
@@ -191,11 +191,11 @@ Use a full `FormSchema` when you need exact JSON schema-like control over every 
 
 The canonical list is `FormFieldType` in `packages/sdk-frontend/src/types/form-builder.ts`. The internal registry is readable through `getFieldRegistryEntry(type)` from `@morscherlab/mint-sdk/composables`.
 
-## Typed tags in 1.2.1
+## Typed tags
 
 Full `FormFieldSchema` entries with `type: 'tags'` can set `itemType: 'number'`
 to parse entered tags as numbers; `itemType: 'string'` keeps strings. Generated
-job forms preserve numeric array defaults and constraints in 1.2.1. Keep the
+job forms preserve numeric array defaults and constraints. Keep the
 backend's Pydantic model authoritative for submitted input validation.
 
 ## Validation

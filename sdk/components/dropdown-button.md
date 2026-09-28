@@ -1,18 +1,22 @@
 ---
 aside: false
 title: DropdownButton
-description: "DropdownButton is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Button that opens a dropdown menu for selecting one option from a list."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # DropdownButton
 
-DropdownButton is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Button that opens a dropdown menu for selecting one option from a list.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Use [ActionMenu](/sdk/components/action-menu) instead.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/DropdownButton.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/DropdownButton.vue">Source</a>
 </div>
 
 <ComponentPlayground name="DropdownButton" />
@@ -26,7 +30,7 @@ import { DropdownButton } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/DropdownButton.vue).
+MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/DropdownButton.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -44,9 +48,9 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L112) | See the linked SDK type definition. |
-| [` ButtonVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L7) | ` 'primary' \| 'secondary' \| 'cta' \| 'danger' \| 'success' \| 'ghost' ` |
-| [` ButtonSize `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L8) | ` 'sm' \| 'md' \| 'lg' ` |
+| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L112) | See the linked SDK type definition. |
+| [` ButtonVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L7) | ` 'primary' \| 'secondary' \| 'cta' \| 'danger' \| 'success' \| 'ghost' ` |
+| [` ButtonSize `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L8) | ` 'sm' \| 'md' \| 'lg' ` |
 
 <!-- sdk-props:end -->
 

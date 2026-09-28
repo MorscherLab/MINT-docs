@@ -1,27 +1,19 @@
-# MINT Docs Sync
+# MINT Docs: restructure + sync to 1.2.9
 
-## Module 1 - deployment and version foundation
+## Phase A: restructure (no content fixes yet)
 
-- [x] Update the docs site SDK dependency to the current MINT SDK release.
-- [x] Update Docker install examples and production pinning text to MINT 1.1.9.
-- [x] Align direct install and update docs with the current runtime/update model.
-- [x] Correct platform configuration notes that affect deployment.
-- [x] Correct the permissions reference count and new deployment-adjacent permission families.
-- [x] Run the VitePress build and a focused stale-content search.
-- [x] Commit and push the module.
+- [x] A1 Version variable: markdown-it hook replaces `@MINT_VERSION@` (prose + code) from `versions.ts`; replace hand-written 1.2.6 pins.
+- [x] A2 Move pages (git mv) into Use / Administer / Build / Reference; update config.ts nav + sidebars; fix internal links.
+- [x] A3 Merge `sdk/operations/migrating-to-1.2` + `upgrading-sdk` -> `migrate-1.1-to-1.2` + evergreen `upgrading`; admin DB parts -> `admin/updates`.
+- [x] A4 CLI: admin CLI page in `admin/cli`; `sdk/api/cli-reference` sole flag table; drop duplicate platform section.
+- [x] A5 Single home per duplicated topic (plugin types, runtimes, migrations, component tables, proxy/first-run).
+- [x] A6 "since X" notes + release tables -> `changelog.md` "Notable changes".
+- [x] A7 Delete `sdk/frontend/components.md`, `playground.md`; FitPanel category; tutorial order roles=4, workflow=5.
+- [x] A8 Update README layout + CLAUDE.md architecture section.
+- [x] Build passes; commit.
 
-## Later modules
+## Phase B: facts to 1.2.9
 
-- [x] Experiment/data model: first-class analysis artifacts, Home/Notices, project rollups.
-  - [x] Update workflow data-model and experiment pages.
-  - [x] Update project and quickstart workflow text.
-  - [x] Update UI tour and glossary.
-  - [x] Sync SDK data-model/API references that directly describe experiment results.
-  - [x] Build, search for stale UI/model phrasing, commit, and push.
-- [x] Plugin system: compatibility enforcement, registry fallback, plugin calendar/notifications.
-  - [x] Update admin/user-facing plugin lifecycle docs.
-  - [x] Update marketplace registry, install request, cache, compatibility, and restart-required docs.
-  - [x] Correct SDK lifecycle/isolation concepts for `@mint_plugin`, decorated endpoints, settings hooks, and SDK version pinning.
-  - [x] Sync packaging, publishing, config, API, frontend settings, deploying, and glossary references touched by plugin-system semantics.
-- [x] Plugin development guide: MINT SDK 1.1 `mint init --mode`, decorators, jobs, generated UI.
-- [x] Reference/UI: admin navigation, account modal, glossary, FAQ, screenshots.
+- [x] Bump versions.ts + SDK dep to 1.2.9; regenerate component props.
+- [x] Apply audit findings per section; new tutorial, 12 component pages, deprecation banners.
+- [x] Build + check-doc-versions + stale grep; commit.

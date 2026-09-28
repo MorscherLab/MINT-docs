@@ -2,7 +2,7 @@
 
 Build a `.mint` bundle, verify it on a disposable MINT platform, then install
 that same artifact on the intended server. These instructions target MINT
-**1.2.6**; the platform requires PostgreSQL. A standalone plugin's SQLite file
+**@MINT_VERSION@**; the platform requires PostgreSQL. A standalone plugin's SQLite file
 is development storage, not the platform database.
 
 ## 1. Check and build locally
@@ -29,7 +29,8 @@ throwaway platform and PostgreSQL service, completes initial setup, uploads the
 bundle, waits for restart/loading and then tears down the environment. Defaults
 use the stable platform image; use `--channel beta` for a prerelease or `--image
 IMAGE` to choose a particular platform image. `--keep` preserves the environment
-for inspection.
+for inspection. `--timeout` (default 300 seconds) bounds setup, restart and
+plugin load.
 
 To include your plugin's own API smoke checks:
 
@@ -73,6 +74,32 @@ its `.mint` asset. Settings use
 the runtime plugin name, while upgrade/uninstall commands take the installed
 package name; `plugin list --json` shows both.
 
+### What deploy confirms
+
+Without `--bundle`, `mint deploy` first builds the bundle exactly like
+`mint build` (tests included). Without `--to`, it targets the stored host. It
+then uploads the bundle, which requires `plugins.install`. If the platform
+reports that a restart is needed, it restarts the platform and waits:
+
+1. **Restart.** Before restarting, it reads `boot_id` from `GET /api/health`;
+   every server process reports a new one. The restart counts only once a
+   different `boot_id` appears, so redeploying the same version (for example,
+   uncommitted edits) is confirmed as well. A platform older than 1.2.9 reports
+   no `boot_id`; the command then waits for health and for the plugin to load
+   the version recorded in the bundle's `manifest.json`.
+2. **Load.** It waits until the plugin appears in the platform's loaded list.
+   If the loaded version differs from the bundle version, it prints a warning
+   naming both and still succeeds; check that `PluginMetadata.version` follows
+   the package version.
+
+`--timeout` (default 180 seconds) is one budget for restart and load together.
+Failures print `Error: ...` and exit 1; with `--json` they print
+`{"success": false, "message": ...}`. Restarting requires
+`platform.configure`. An account without it gets an error saying the plugin
+is installed but not running. Ask an administrator to restart, or deploy with
+`--no-restart`, which prints `Uploaded. Restart the platform to load the
+plugin.`
+
 ## 4. Check behavior after installation
 
 | Check | What it proves |
@@ -90,12 +117,7 @@ connect frontend failures with backend logs.
 
 ## Runtime choices and storage
 
-| Runtime | Appropriate use | Important boundary |
-|---|---|---|
-| In-process plugin | `.mint` bundle with compatible Python dependencies | Required for platform shared-table sessions in 1.2 |
-| Isolated subprocess | Conflicting/heavy Python dependency sets | Remote scoped repositories; no direct shared SQL sessions |
-| External server | An already running plugin service | Platform must reach its URL; the service owns its process lifecycle |
-| Docker runtime | Plugin with a containerized runtime | Container image, networking and native libraries must be provided |
+See [Isolation](/sdk/concepts/isolation#runtime-comparison) for the runtime table.
 
 External and Docker runtimes can be registered using `mint plugin runtime
 external` / `docker`; see the [CLI reference](/sdk/api/cli-reference) and
@@ -138,5 +160,5 @@ reverse database migrations. Either retain backward-compatible schema changes,
 ship a forward fix, or restore the corresponding data snapshot. Document any
 plugin-specific restore requirements with the release.
 
-Source: [verification runner](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/verify_command.py),
-[deployment command](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/deploy_command.py).
+Source: [verification runner](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/verify_command.py),
+[deployment command](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/deploy_command.py).

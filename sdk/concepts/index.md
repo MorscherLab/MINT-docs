@@ -15,11 +15,7 @@ plugin before following the [tutorials](/sdk/tutorials/).
 
 ## Standalone and integrated execution
 
-| Execution | Context | Storage and permissions |
-|---|---|---|
-| Standalone development | `context=None` | Optional local SQLite; no automatic platform experiment access |
-| Installed in-process | Scoped `PlatformContext` | Platform repositories and, when declared, a plugin PostgreSQL schema |
-| Installed subprocess | `RemotePlatformContext` | Scoped remote repositories; direct shared-table sessions are unavailable in 1.2 |
+Standalone development runs with `context=None`; an installed plugin runs in-process or in a subprocess with a scoped context. See [Isolation](/sdk/concepts/isolation#runtime-comparison) for the runtime table.
 
 Code must handle its actual environment. A local SQL session can use SQLite,
 but saving a platform analysis artifact requires integration. Authentication

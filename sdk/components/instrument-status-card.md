@@ -1,18 +1,22 @@
 ---
 aside: false
 title: InstrumentStatusCard
-description: "InstrumentStatusCard is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Compact card for live instrument monitor status, sample, method, sequence progress, and ETA."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # InstrumentStatusCard
 
-InstrumentStatusCard is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Compact card for live instrument monitor status, sample, method, sequence progress, and ETA.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Instrument UI moves to the `mld-ms` plugins; there is no direct SDK replacement.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/InstrumentStatusCard.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/InstrumentStatusCard.vue">Source</a>
 </div>
 
 <ComponentPlayground name="InstrumentStatusCard" />
@@ -26,7 +30,7 @@ import { InstrumentStatusCard } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/InstrumentStatusCard.vue).
+MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/InstrumentStatusCard.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -41,7 +45,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` InstrumentStatus `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/instrument.ts#L25) | See the linked SDK type definition. |
+| [` InstrumentStatus `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/instrument.ts#L25) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

@@ -2,7 +2,7 @@
 
 Build **batch-coordinator**, a `WORKFLOW` plugin that lists visible experiments and creates experiment records for downstream design and analysis plugins. It deliberately declares no design-data or result writes.
 
-This tutorial targets **MINT v1.2.6**. A workflow is a plugin category and access policy; it does not automatically schedule jobs or invoke other plugins.
+This tutorial targets **MINT v@MINT_VERSION@**. A workflow is a plugin category and access policy; it does not automatically schedule jobs or invoke other plugins.
 
 ## 1. Scaffold a standard plugin
 
@@ -265,7 +265,7 @@ vi.mock('../generated/mint-plugin', () => ({
 }))
 
 it('creates an experiment and refreshes the visible list', async () => {
-  const experiment = { id: 7, name: 'QC batch', experiment_type: 'custom', status: 'draft' }
+  const experiment = { id: 7, name: 'QC batch', experiment_type: 'custom', status: 'planned' }
   client.listExperiments.mockResolvedValueOnce({ items: [], total: 0 })
   client.listExperiments.mockResolvedValueOnce({ items: [experiment], total: 1 })
   client.createExperiment.mockResolvedValue(experiment)
@@ -300,7 +300,17 @@ mint sdk generate --check
 mint build .
 ```
 
-Install the `.mint` bundle in a disposable MINT instance and configure its allowed experiment types. Then verify the actual platform boundary:
+Check that the bundle installs and loads, then deploy it to a test platform you administer:
+
+```bash
+mint verify .
+mint auth login --url https://mint-test.example.org
+mint deploy . --to https://mint-test.example.org
+```
+
+`mint verify` boots the MINT platform image in Docker, installs the bundle through the normal upload path, restarts, and waits until the plugin loads. `mint deploy` uploads the same bundle, restarts the platform (requires `platform.configure`), and confirms the restart by the new server `boot_id`; `--timeout` (default 180 s) covers restart and load together.
+
+On the test platform, configure the plugin's allowed experiment types. Then verify the actual platform boundary:
 
 | Action | Expected result |
 |---|---|
@@ -329,4 +339,4 @@ Use `@job` for your plugin's own queued calculations, [lifecycle events](/sdk/co
 
 Use [analysis artifacts](/sdk/concepts/platform-context) to read downstream outputs. Declare exact producer plugin IDs in `analysis_result_readers` when reading another plugin's payload. Merely listing a plugin in `dependencies` controls load order; it does not grant result access or execute that plugin.
 
-Source: [v1.2 workflow scaffolding](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/init_command.py), [repository protocol](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/repositories.py), and [platform permissions](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/permissions.py).
+Source: [v1.2 workflow scaffolding](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/init_command.py), [repository protocol](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/repositories.py), and [platform permissions](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/permissions.py).

@@ -2,7 +2,7 @@
 
 `MINTClient` is the synchronous Python client for the MINT platform REST API. Use it from external scripts, CI jobs, or notebooks; from inside a plugin process, prefer `PlatformContext` accessors which avoid the network round-trip.
 
-Source: [`mint_sdk/client/client.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/client/client.py).
+Source: [`mint_sdk/client/client.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/client/client.py).
 
 ## Construction
 
@@ -19,7 +19,7 @@ with MINTClient(base_url="https://mint.example.org",
     me = client.whoami()
 
 # 3. Env-aware (no arguments) — reads MINT_URL and MINT_TOKEN, falling back
-#    to credentials stored by `mint platform auth login` at ~/.config/mint/credentials.json
+#    to credentials stored by `mint auth login` at ~/.config/mint/credentials.json
 with MINTClient() as client:
     ...
 ```
@@ -40,7 +40,7 @@ def __init__(
 When `base_url` is `None`, the resolution order is:
 
 1. `MINT_URL` env var
-2. Stored credentials at `~/.config/mint/credentials.json` (written by `mint platform auth login`; honors `XDG_CONFIG_HOME`)
+2. Stored credentials at `~/.config/mint/credentials.json` (written by `mint auth login`; honors `XDG_CONFIG_HOME`)
 3. Otherwise raise `MINTAPIError`
 
 When `token` is `None`, the same fallback chain runs for the JWT (env: `MINT_TOKEN`).
@@ -54,8 +54,10 @@ When `timeout=None`, the client uses the shared platform transport policy: `MINT
 | `client.login(username, password)` | `dict` | Authenticate; store JWT in the client |
 | `client.logout()` | `None` | Clear stored credentials |
 | `client.whoami()` | `dict` | Return current user info |
+| `client.health()` | `dict` | Platform health payload from `/health`; no authentication required |
+| `client.close()` | `None` | Close the HTTP connection; the context manager calls it |
 
-These are thin wrappers over `client.auth`.
+`login`, `logout`, and `whoami` are thin wrappers over `client.auth`.
 
 ## Resource clients
 
@@ -63,15 +65,27 @@ These are thin wrappers over `client.auth`.
 
 | Property | Type | Purpose |
 |----------|------|---------|
-| `client.auth` | `AuthAPI` | Login / logout / verify / refresh / whoami |
+| `client.auth` | `AuthAPI` | Login / logout / verify / refresh / whoami / public auth config |
 | `client.experiments` | `ExperimentsAPI` | Experiment CRUD, design data, compatibility analysis results, experiment types |
 | `client.projects` | `ProjectsAPI` | List, get, create, update, delete, experiments, members |
-| `client.plugins` | `PluginsAPI` | List loaded plugins |
-| `client.admin` | `AdminAPI` | Admin diagnostics, users, roles, plugin-role assignments |
+| `client.plugins` | `PluginsAPI` | List, install, upload, upgrade, and uninstall plugins; runtime registration; plugin config; package indexes; environment snapshots |
+| `client.admin` | `AdminAPI` | Admin status, system snapshot, config, logs, restart; users, roles, plugin-role assignments |
 | `client.updates` | `UpdatesAPI` | Platform/plugin update checks, GitHub release installs |
 | `client.objects` | `ObjectsAPI` | Typed object upload, download, list, existence and deletion |
 
-Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-python/src/mint_sdk/client/resources).
+Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/client/resources).
+
+### Resource methods
+
+| Namespace | Methods |
+|-----------|---------|
+| `client.auth` | `login(username, password)`, `logout()`, `verify()`, `refresh()`, `whoami()`, `config()` |
+| `client.projects` | `list(*, status=None, search=None, my_projects=False, skip=0, limit=100)`, `get(id)`, `create(...)`, `update(id, **fields)`, `delete(id)`, `experiments(id, *, skip=0, limit=100)`, `members(id)` |
+| `client.plugins` | `list()`, `install(source, *, force=False)`, `upload(path, *, force=False)`, `upgrade(package_name, *, force=False)`, `uninstall(package_name)`, `register_external(name, target, ...)`, `register_docker(name, image, ...)`, `get_config(plugin_name)`, `set_config(plugin_name, config, *, expected_revision)`, `update_config(plugin_name, config)`, `get_extra_index_urls()`, `set_extra_index_urls(urls)`, `snapshots()`, `snapshot(snapshot_id)` |
+| `client.admin` | `status()`, `system()`, `config()`, `restart()`, `logging_config()`, `logs(*, limit=100, offset=0, level=None, search=None, plugin=None)`; users: `list_users()`, `get_user(id)`, `create_user(*, username, password, ...)`, `update_user(id, **fields)`, `delete_user(id)`, `activate_user(id)`, `deactivate_user(id)`; roles: `list_roles()`, `list_permissions()`, `create_role(*, name, slug, permissions, ...)`, `update_role(id, **fields)`, `delete_role(id)`; plugin roles: `list_plugin_roles(plugin_id)`, `set_plugin_role(plugin_id, user_id, role)`, `remove_plugin_role(plugin_id, user_id)`, `list_user_plugin_roles(user_id)` |
+| `client.updates` | `check()`, `config()`, `sources()`, `update_plugin(package_name, *, force=False)`, `update_platform()`, `list_releases(github_url, *, asset_pattern="*.mint")`, `install_github(github_url, *, tag=None, asset_pattern="*.mint", force=False)` |
+
+`set_config()` sends the revision as `If-Match`; a stale revision fails with `ConflictError`. Read it from `get_config()` first.
 
 ::: warning Not exposed
 Earlier docs claimed `client.users` and `client.artifacts` — those don't exist. First-class artifact readers live at `client.experiments.artifacts`, and raw object operations at `client.objects`. There is no `MINTClient.from_env()` factory; use the env-aware constructor (option 3 above).
@@ -163,7 +177,7 @@ with MINTClient() as client:
 | `get_file_bytes(..., max_bytes=..., ...)` | Bounded buffered file read |
 | `download_file(experiment_id, path, plugin_id=..., artifact_key=..., ...)` | Streaming download with validated size/checksum and atomic destination replacement |
 
-These readers are available in v1.2.1. There is no artifact write method in this client namespace; publish artifacts inside the producing plugin with the [persistence helpers](/sdk/recipes/writing-results).
+There is no artifact write method in this client namespace; publish artifacts inside the producing plugin with the [persistence helpers](/sdk/recipes/writing-results).
 
 Raw objects use `client.objects.list/put_bytes/put_file/get_bytes/get_ref/download_file/exists/delete`, with an experiment ID and explicit `plugin_id`. These are public REST operations using the authenticated user's platform permissions; they do not impersonate an installed plugin. Uploading an object alone does not create a visible analysis artifact.
 
@@ -212,7 +226,7 @@ For very large result sets, prefer querying only what you need — accumulating 
 
 - `MINTClient` instances are not thread-safe. Use one per thread.
 - Inside a plugin, prefer `PlatformContext` accessors over `MINTClient` — they avoid the public REST hop in shared mode and preserve plugin capability, owner, reader, type, and actor visibility checks. An isolated context implements the same protocol over internal HTTP.
-- The credentials file (`~/.config/mint/credentials.json`, or `$XDG_CONFIG_HOME/mint/credentials.json`) is the user's responsibility to secure (`chmod 600`); `mint platform auth login` sets that automatically.
+- The credentials file (`~/.config/mint/credentials.json`, or `$XDG_CONFIG_HOME/mint/credentials.json`) is the user's responsibility to secure (`chmod 600`); `mint auth login` sets that automatically.
 
 ## Related
 

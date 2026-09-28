@@ -1,6 +1,6 @@
 # Frontend SDK
 
-`@morscherlab/mint-sdk` **1.2.6** provides Vue 3 components, composables, generated-contract clients, compact control schemas, and design tokens for custom plugin frontends. Use `mint init --mode standard` for a Vue workspace; choose `--mode generated` when Python parameters and SDK-rendered results cover the interface.
+`@morscherlab/mint-sdk` **@MINT_VERSION@** provides Vue 3 components, composables, generated-contract clients, compact control schemas, and design tokens for custom plugin frontends. Use `mint init --mode standard` for a Vue workspace; choose `--mode generated` when Python parameters and SDK-rendered results cover the interface.
 
 ## Choose a frontend path
 
@@ -37,7 +37,7 @@ The scaffold's local `views/WorkspaceView.vue` is your **page content**, not ano
 |----------|---------|--------|
 | Components | Workspace, form, data, and biology components | [Component Library](/sdk/components/) provides component pages and playgrounds |
 | Composables | Typed state and API helpers | [Composables](/sdk/frontend/composables) — generated clients, `useCurrentExperiment`, `usePluginSettings`, `defineControlModel`, … |
-| Design tokens | 500+ CSS custom properties | [Design tokens](/sdk/frontend/design-tokens) — colors, spacing, motion, focus rings |
+| Design tokens | About 90 CSS custom properties | [Design tokens](/sdk/frontend/design-tokens) — colors, spacing, motion, focus rings |
 | Theming | Light/dark/density support | [Theming](/sdk/frontend/theming) — `prefers-reduced-motion`, palette overrides, accessibility |
 | FormBuilder + controls | Schema-driven forms from either full schemas or compact controls | [FormBuilder](/sdk/frontend/form-builder) — shared form/settings/sidebar definitions |
 
@@ -47,7 +47,7 @@ If you scaffolded with `mint init --mode standard`, all of this is already done.
 
 1. **Install**
    ```bash
-   bun add @morscherlab/mint-sdk@^1.2.6
+   bun add @morscherlab/mint-sdk@^@MINT_VERSION@
    ```
 
 2. **Import design tokens** in your app entry:
@@ -106,7 +106,7 @@ The generated file exports endpoint names, endpoint metadata, route/API prefixes
 
 Body-only endpoints take the body directly. Endpoints combining parameters and a body use `{ pathParams, query, body }` with the exact generated field names. Run `mint docs contract .` to inspect your plugin's signatures. Generated calls throw `MintApiError` for HTTP failures; see [typed errors](/sdk/frontend/composables#typed-http-errors-in-1-2).
 
-## Current 1.2.6 patterns
+## Current patterns
 
 - **Experiment selection:** `ExperimentSelectorModal` writes to `useExperimentStore()`; `PluginWorkspaceView experiment-shell` uses the same store. Read `current`, `currentId`, `isResolving`, and `error` instead of retaining a duplicate record.
 - **Charts:** [PlotlyChart](/sdk/components/plotly-chart) renders native Plotly traces, supports a custom Plotly build, pauses work with `active`, and emits point clicks when `clickEvents` is enabled. Both it and [ChartContainer](/sdk/components/chart-container) support `variant="frame"` plus header, subhead, legend, and footer slots.
@@ -159,7 +159,7 @@ Use the public component pages for props and playgrounds, these guides for compo
 
 ## Source
 
-[`MINT v1.2.6/packages/sdk-frontend`](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-frontend) — the release source used for this guide. Use `mint docs frontend <Name>` against your installed SDK for exact local signatures.
+[`MINT v@MINT_VERSION@/packages/sdk-frontend`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-frontend) — the release source used for this guide. Use `mint docs frontend <Name>` against your installed SDK for exact local signatures.
 
 ## Next
 

@@ -36,7 +36,7 @@ class PeakQcPlugin(AnalysisPlugin):
 
 `requires_auth` is inherited by ordinary routes; a route can explicitly use `auth=True` or `auth=False`. `CurrentPluginActor` provides `user_id` (string), `username`, platform `role`, `permissions`, and `plugin_role`. Use `actor.has_permission("experiments.edit")` for a platform permission; use the separate plugin role for plugin-specific actions.
 
-`CurrentExperiment` checks `experiments.view`, visibility, and the effective experiment-type allowlist. It returns 404 for an inaccessible or missing experiment and 503 without platform integration. Knowing an experiment ID or holding a plugin role does not bypass this check.
+`CurrentExperiment` checks `experiments.view`, visibility, and the effective experiment-type allowlist. It returns 403 when the actor lacks `experiments.view`, 404 for an inaccessible or missing experiment, and 503 without platform integration. Knowing an experiment ID or holding a plugin role does not bypass this check.
 
 ## Experiment-scoped endpoint groups
 
@@ -107,7 +107,7 @@ Do not cache an actor or role on `self`; concurrent users share the instance. Ma
 
 Test an anonymous caller, an authenticated allowed caller, a caller with the right plugin role but no experiment visibility, an incompatible experiment type, and standalone mode. `RecordingContext` helps exercise persistence but does not replace platform RBAC integration tests.
 
-Verified against [v1.2.6 dependencies](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/runtime_dependencies.py), [actors](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/actors.py), and [scoped repository](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/repositories/scoped_experiment_repository.py).
+Verified against [v@MINT_VERSION@ dependencies](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/runtime_dependencies.py), [actors](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/actors.py), and [scoped repository](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/repositories/scoped_experiment_repository.py).
 
 - [Plugin roles tutorial](/sdk/tutorials/plugin-roles)
 - [Platform permissions](/reference/permissions)

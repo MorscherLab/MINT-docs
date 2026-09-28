@@ -11,26 +11,15 @@ MINT-docs/
   package.json          # vitepress (Bun-managed)
   bunfig.toml           # forces hoisted node_modules
   index.md              # home page
-  changelog.md          # links to GitHub releases
+  changelog.md          # GitHub release links + notable changes per release
   team.md               # team and contributors
-  get-started/
-    install-direct.md
-    install-docker.md
-    install-hosted.md
-    quickstart.md
-  workflow/
-    data-model.md
-    projects.md
-    experiments.md
-    members-roles.md
-    auth-passkeys.md
-    plugins.md
-    marketplace.md
-    updates.md
-  cli/
-    overview.md
-    platform.md
-    configuration.md
+  guide/                # Use MINT (lab scientists)
+    quickstart.md, access.md, data-model.md, projects.md,
+    experiments.md, marketplace.md, ui-tour.md
+  admin/                # Administer MINT (lab admins)
+    install-direct.md, install-docker.md, proxy-and-setup.md,
+    configuration.md, users-roles.md, authentication.md,
+    plugins.md, updates.md, cli.md
   sdk/
     concepts/
     tutorials/
@@ -38,8 +27,8 @@ MINT-docs/
     frontend/
     operations/
     api/
+    components/         # one page per SDK component (props generated)
   reference/
-    ui-tour.md
     permissions.md
     troubleshooting.md
     faq.md

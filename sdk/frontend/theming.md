@@ -15,13 +15,15 @@ Programmatic access via `useTheme`:
 import { useTheme } from '@morscherlab/mint-sdk'
 
 const { isDark, toggleTheme, setTheme } = useTheme()
-// isDark: ComputedRef<boolean> — current resolved light/dark state
+// isDark: resolved light/dark state (follows the OS when the theme is 'system')
 
 setTheme('dark')
 toggleTheme()
 ```
 
-The dark class lives on `<html>` — `html.dark { ... }`. The SDK's `variables.css` defines both light defaults and dark overrides:
+`setTheme()` and `toggleTheme()` accept only `'light'` and `'dark'`. The stored theme defaults to `'system'`; set `useSettingsStore().theme = 'system'` to return to the OS preference.
+
+The SDK settings store toggles the `dark` class on `<html>` from the stored theme (for `'system'`, from `prefers-color-scheme` and its changes). `variables.css` defines light defaults on `:root` and dark overrides on `html.dark`:
 
 ```css
 :root {
@@ -29,13 +31,13 @@ The dark class lives on `<html>` — `html.dark { ... }`. The SDK's `variables.c
   --text-primary: #1E293B;
 }
 
-.dark {
+html.dark {
   --bg-primary: #0F172A;
   --text-primary: #F8FAFC;
 }
 ```
 
-Custom CSS in your plugin can do the same — wrap dark-specific overrides in `.dark`:
+Custom CSS in your plugin can do the same — scope dark-specific overrides under `.dark`:
 
 ```css
 .my-special-card {
@@ -50,9 +52,11 @@ Custom CSS in your plugin can do the same — wrap dark-specific overrides in `.
 
 ## Density
 
-The SDK settings store tracks `tableDensity` (`compact`, `normal`, `comfortable`) for table-heavy views and settings panels. Prefer SDK table/list components such as `DataFrame`, `ExperimentDataViewer`, and generated workspace shells when density should follow the user's preference. For custom tables, read the settings store or expose a local density prop instead of hardcoding row height globally.
+The SDK settings store tracks `tableDensity` (`compact`, `normal`, `comfortable`; default `normal`) for table-heavy views and mirrors it on `<html data-density="...">` for CSS. `tableDensityToSize()` maps it to the `sm` / `md` / `lg` size used by SDK tables. Prefer SDK table/list components such as `DataFrame`, `ExperimentDataViewer`, and generated workspace shells when density should follow the user's preference. For custom tables, read the settings store or expose a local density prop instead of hardcoding row height globally.
 
 ## Palette overrides
+
+Users can choose a color palette in the SDK settings store (`colorPalette`: `default`, `colorblind`, `viridis`, or `pastel`). A non-default palette writes hue-shifted values for `--color-primary`, `--color-primary-hover`, `--color-primary-soft`, `--color-cta`, and `--color-cta-hover` onto `<html>` (`PALETTE_CSS_VARIABLES`, `paletteCssVariables()`); `default` writes nothing.
 
 A deployment can re-skin the platform by overriding brand variables in its own stylesheet:
 
@@ -75,7 +79,6 @@ The SDK targets **WCAG AA** out of the box:
 |---------|-------------------|
 | Text contrast | 4.5:1 minimum for body text, 3:1 for large text and UI controls — verified against light and dark token combinations |
 | Focus indicators | Every interactive component shows a visible focus ring using `--focus-ring` and `--focus-ring-offset` |
-| Hit targets | Buttons / inputs / checkboxes meet 44×44 px on touch viewports |
 | Disabled states | Pair opacity reduction with a visual cue (cursor change, badge) — opacity alone fails WCAG |
 | Colorblind safety | Semantic colors don't rely on hue alone; they include icons or text labels |
 
@@ -124,25 +127,9 @@ For a plugin's custom animations:
 
 Keep motion non-essential; reduced-motion users should get the same information without animation.
 
-## RTL support
+## Right-to-left layouts
 
-Right-to-left layouts work via Tailwind's RTL plugin and CSS logical properties (`margin-inline-start`, `padding-inline-end`, …). The SDK uses logical properties everywhere; plugins should follow suit:
-
-```vue
-<!-- Good -->
-<div class="ms-4">…</div>            <!-- margin-inline-start -->
-
-<!-- Avoid -->
-<div class="ml-4">…</div>            <!-- physical margin-left, breaks RTL -->
-```
-
-RTL isn't enabled by default — labs that need it set the `dir="rtl"` attribute on `<html>` and the SDK adapts.
-
-## Optical centering
-
-The SDK applies a 1px upward shift (`padding-top: -1px; padding-bottom: +1px;`) on components where a fill / shadow / active background makes vertical text position dominant — buttons, dropdown triggers, tabs, segmented controls, nav pills. This compensates for Fira Sans' cap-letter mid-point sitting ~5.6% above the em-box center.
-
-You don't apply this manually — the SDK's components handle it. If you build a custom component that fits the pattern (filled background + centered text), copy the precedent from `BaseButton.vue` or `BasePill.vue`.
+The SDK does not support right-to-left layouts. Its component styles use physical `left`/`right` margins, padding, and positions, and ship no `[dir="rtl"]` rules, so setting `dir="rtl"` on `<html>` does not mirror SDK components. Plugins may use logical properties (`ms-4`, `margin-inline-start`) in their own markup, but SDK components will stay left-to-right.
 
 ## Skipping themes
 

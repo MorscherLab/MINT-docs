@@ -16,7 +16,7 @@ MINT 1.2 SDK hosts automatically translate `PluginException` subclasses into HTT
 
 FastAPI request-model validation is 422; it is distinct from service-layer `ValidationException` (400). `HTTPException` retains its explicit status.
 
-Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/exceptions.py).
+Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/exceptions.py).
 
 ## Hierarchy
 
@@ -104,7 +104,7 @@ if user.id != panel.owner_id:
     )
 ```
 
-`code = "PERMISSION_DENIED"`.
+`code = "PERMISSION_DENIED"`. `PermissionException` also subclasses Python's built-in `PermissionError`, so `except PermissionError` catches it and `UnsupportedExperimentTypeException`.
 
 ## `ConfigurationException`
 
@@ -246,27 +246,13 @@ async def initialize(self, context=None):
 | `UnsupportedExperimentTypeException(experiment_type, allowed_experiment_types, message=None, details=None)` | `EXPERIMENT_TYPE_NOT_ALLOWED`; write targets a disallowed type |
 | `DesignDataOwnershipConflictException(*, experiment_id, current_owner_plugin_id, requested_owner_plugin_id)` | `DESIGN_DATA_OWNERSHIP_CONFLICT`; another plugin already owns this design |
 | `EventVetoException(message=..., details=None)` | `EVENT_VETO`; reject a blocking before-save event |
-| `PlatformCompatibilityError(message, sdk_api_version=None, platform_api_version=None, details=None)` | Internal platform/SDK API mismatch; HTTP code is `plugin.api_version_mismatch` |
+| `PlatformCompatibilityError(message, sdk_api_version=None, platform_api_version=None, details=None)` | Internal platform/SDK API mismatch; exception `code` is `PLATFORM_API_VERSION_MISMATCH`, HTTP envelope code is `plugin.api_version_mismatch`. Import it from `mint_sdk.exceptions`; it is not exported from `mint_sdk` |
 
 A veto in an observer event is a failed observer, not a rollback of an already committed experiment. A settings CAS conflict or artifact replacement conflict is a `ConflictException`; reload the authoritative state before creating a new edit.
 
 ## Migration-specific errors
 
-Defined in `mint_sdk.migrations.errors`; the specialized checksum/version
-exceptions below describe the legacy integer runner:
-
-| Symbol | Raised when |
-|--------|-------------|
-| `MigrationError` | Generic migration failure (base) |
-| `MigrationChecksumError` | An applied revision's file was edited |
-| `SchemaVersionAheadError` | DB has revisions the plugin doesn't ship |
-| `DestructiveMigrationError` | A `drop_table` / `drop_column` ran without explicit allow |
-
-These do not inherit from `PluginException`. The Alembic runtime also uses
-`MigrationError` for ownership, history, checksum and baseline-validation
-failures; database and revision-code errors may propagate directly. See
-[Alembic errors and recovery](/sdk/api/migrations#alembic-errors-and-recovery)
-and [legacy exceptions](/sdk/api/migrations#legacy-exceptions).
+Migration exceptions (`mint_sdk.migrations.errors`) do not inherit from `PluginException`; see [Alembic errors and recovery](/sdk/api/migrations#alembic-errors-and-recovery) and [legacy exceptions](/sdk/api/migrations#legacy-exceptions).
 
 ## Serializing errors
 
@@ -309,4 +295,4 @@ The HTTP envelope wraps the Python exception's fields and adds transport context
 ## Related
 
 - [Recipes → Error handling](/sdk/recipes/error-handling) — patterns and anti-patterns
-- [Workflow → Updates](/workflow/updates) — auto-issue reporting (User Manual track)
+- [Workflow → Updates](/admin/updates) — auto-issue reporting (User Manual track)

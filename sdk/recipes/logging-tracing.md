@@ -2,24 +2,26 @@
 
 ## Goal
 
-Emit structured logs and OpenTelemetry spans from plugin code that carry plugin name and, in platform request contexts, request IDs - so log queries and traces correlate cleanly with platform-side records.
+Emit logs and OpenTelemetry spans from plugin code that carry, in platform request contexts, request IDs - so log queries and traces correlate cleanly with platform-side records.
 
 ## Get a logger
 
-```python
-from mint_sdk import get_plugin_logger
+Use the standard library:
 
-log = get_plugin_logger(__name__)
+```python
+import logging
+
+log = logging.getLogger(__name__)
 ```
 
-`get_plugin_logger` returns a standard Python `logging.Logger` configured to:
+Inside an installed plugin, records propagate to the platform's root handlers:
+the JSON formatter in production or the readable development formatter. The
+platform's log configuration sets the level.
 
-- Use the platform's JSON formatter in production or readable dev formatter in development
-- Auto-attach `plugin=<name>` to each log record
-- Include `request_id` when the platform request middleware has set one
-- Honor the platform's root log-level configuration
-
-Use it everywhere — module top-level, inside route handlers, inside `initialize`.
+`mint_sdk.get_plugin_logger()` is deprecated and scheduled for removal in
+MINT 1.3; importing it emits a `DeprecationWarning`. It only wrapped
+`logging.getLogger("mint.plugin.<name>")` and added `plugin=<name>` to
+`extra`. Pass that field yourself when you want it (see below).
 
 ## Logging levels
 
@@ -35,20 +37,20 @@ Don't `log.error` for routine validation or 404 — those are normal user errors
 
 ## Structured fields
 
-Add custom fields via `extra={...}`. They become top-level JSON keys.
+The platform JSON formatter writes `timestamp`, `level`, `logger`, `message`,
+`exception` (when present), `request_id`, OpenTelemetry `trace_id`/`span_id`,
+and only three `extra` keys: `user_id`, `plugin` and `experiment_id`. Other
+`extra` keys are dropped from the JSON line, so put anything else into the
+message:
 
 ```python
 log.info(
-    "panel created",
-    extra={
-        "panel_id": str(panel.id),
-        "experiment_id": panel.experiment_id,
-        "drug_count": len(panel.drugs),
-    },
+    "panel created: panel_id=%s drug_count=%d",
+    panel.id,
+    len(panel.drugs),
+    extra={"plugin": "panel-designer", "experiment_id": panel.experiment_id},
 )
 ```
-
-The SDK logger adapter adds the `plugin` field. The platform formatter also includes `request_id` from request context, plus selected fields such as `user_id` and `experiment_id` when you provide them via `extra`.
 
 ## Logging exceptions
 
@@ -56,10 +58,7 @@ The SDK logger adapter adds the `plugin` field. The platform formatter also incl
 try:
     await _do_thing()
 except SomeError:
-    log.exception(   # or log.error(msg, exc_info=True)
-        "thing failed",
-        extra={"thing_id": thing_id},
-    )
+    log.exception("thing failed: thing_id=%s", thing_id)  # or log.error(..., exc_info=True)
     raise
 ```
 
@@ -128,12 +127,10 @@ Match field names with what the platform's middleware emits so dashboards work u
 
 ## Notes
 
-- The SDK's logger is process-local; in isolated mode each plugin subprocess has its own logger writing to stdout. The platform's log aggregator (or your container runtime) captures and forwards.
 - For hot paths, prefer DEBUG over INFO — keeps the production stream clean while still being readable in dev.
-- The `print()` builtin still works but bypasses the structured logger. Its output goes to stdout without JSON wrapping or auto-fields. Don't use it from production paths.
+- The `print()` builtin still works but bypasses the structured logger. Its output goes to stdout without JSON wrapping or request fields. Don't use it from production paths.
 
 ## Related
 
 - [Recipes → Error handling](/sdk/recipes/error-handling) — how exceptions become structured log records
-- [Workflow → Updates](/workflow/updates) — auto-issue reporting (uses log fields to dedupe)
-- [API Reference → Python SDK](/sdk/api/python) — `get_plugin_logger` signature
+- [Workflow → Updates](/admin/updates) — auto-issue reporting (uses log fields to dedupe)

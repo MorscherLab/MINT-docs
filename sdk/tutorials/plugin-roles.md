@@ -95,21 +95,54 @@ async def panel_access(self, actor: CurrentPluginActor) -> PanelAccess:
     )
 ```
 
-Run `mint sdk generate`, then inspect the generated client's operation for `panel_access`. Load it when the workspace opens and disable create/save/delete buttons when `can_edit` is false. Enable publishing only when `can_publish` is true and an experiment is selected. Show a short explanation such as “An editor role is required to change panels.”
+Run `mint sdk generate`; the generated client exposes it as `panelAccess()`. Load it when the workspace opens and disable create/save/delete buttons when `can_edit` is false. Enable publishing only when `can_publish` is true and an experiment is selected. Show a short explanation such as “An editor role is required to change panels.”
 
 Keep normal request error handling: a user's role can change after the page loads. Frontend controls communicate permissions; the backend checks enforce them.
 
 ## 5. Test denial and ownership together
 
-The original Tutorial 3 CRUD test uses the standalone actor, which has no plugin role. Update it to inject an editor **before its first request**:
+The Tutorial 3 CRUD test uses the standalone actor, which has no plugin role, so its writes now return 403. Replace `tests/test_panel_database.py` with a version that acts as editors:
 
 ```python
-app.dependency_overrides[current_plugin_actor] = lambda: PluginActor(
-    user_id="owner", plugin_role="editor",
-)
-```
+from pathlib import Path
 
-When testing another user's ownership boundary, give that user `plugin_role="editor"` too; otherwise the role check returns 403 before the ownership lookup can return 404. Restore the owner editor override after that check instead of calling `app.dependency_overrides.clear()`.
+import pytest
+from fastapi.testclient import TestClient
+from mint_sdk import PluginActor
+from mint_sdk.app import create_standalone_app
+from mint_sdk.runtime_dependencies import current_plugin_actor
+
+from mint_plugin_panel_designer.plugin import PanelDesignerPlugin
+
+OWNER = PluginActor(user_id="owner", plugin_role="editor")
+OTHER = PluginActor(user_id="other", plugin_role="editor")
+
+
+def test_panel_crud_and_owner_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    plugin = PanelDesignerPlugin()
+    plugin._setup_standalone_db(storage_dir=tmp_path)
+    monkeypatch.setattr(plugin, "get_frontend_dir", lambda: None)
+    app = create_standalone_app(plugin, environ={})
+    app.dependency_overrides[current_plugin_actor] = lambda: OWNER
+    with TestClient(app) as client:
+        base = "/api/panel-designer/panels"
+        body = {"name": "Cisplatin", "drugs": [{"name": "Cisplatin", "doses_uM": [0.1, 1]}]}
+        created = client.post(base, json=body)
+        assert created.status_code == 201
+        panel_id = created.json()["id"]
+        assert client.put(f"{base}/{panel_id}", json={**body, "name": "Pilot"}).status_code == 200
+
+        # Another editor passes the role check but fails the ownership lookup.
+        app.dependency_overrides[current_plugin_actor] = lambda: OTHER
+        assert client.get(base).json() == []
+        assert client.put(f"{base}/{panel_id}", json=body).status_code == 404
+        assert client.delete(f"{base}/{panel_id}").status_code == 404
+
+        app.dependency_overrides[current_plugin_actor] = lambda: OWNER
+        assert client.delete(f"{base}/{panel_id}").status_code == 200
+        assert client.get(base).json() == []
+        assert client.post(base, json={"name": "", "drugs": []}).status_code == 422
+```
 
 Add `tests/test_panel_roles.py`:
 
@@ -171,9 +204,29 @@ mint sdk generate
 mint doctor --strict
 ```
 
-These overrides exist only in tests. The running standalone app has no platform role assignment store, so its write requests remain denied. To exercise real role assignments, install the plugin into a disposable MINT instance. `mint dev --platform` is a development proxy and does not supply an installed plugin context.
+The frontend build is unchanged from Tutorial 3; rebuild it if you changed the workspace:
 
-## 6. Assign and verify roles in MINT
+```bash
+cd frontend
+bun run type-check
+bun run test
+bun run build
+cd ..
+```
+
+These overrides exist only in tests. The running standalone app has no platform role assignment store, so its write requests remain denied. To exercise real role assignments, deploy the plugin in step 6. `mint dev --platform` is a development proxy and does not supply an installed plugin context.
+
+## 6. Verify and deploy
+
+```bash
+mint verify .
+mint auth login --url https://mint-test.example.org
+mint deploy . --to https://mint-test.example.org
+```
+
+`mint verify` boots the MINT platform image in Docker, installs the bundle through the normal upload path, restarts, and waits until the plugin loads. `mint deploy` uploads the same bundle to a test platform you administer, restarts it (requires `platform.configure`), and confirms the restart by the new server `boot_id`; `--timeout` (default 180 s) covers restart and load together.
+
+## 7. Assign and verify roles in MINT
 
 A platform admin assigns the exact role string to the user for `panel-designer` through MINT's plugin-role administration.
 

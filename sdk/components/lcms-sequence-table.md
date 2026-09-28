@@ -1,18 +1,22 @@
 ---
 aside: false
 title: LcmsSequenceTable
-description: "LcmsSequenceTable is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Table for Xcalibur-compatible LCMS sequence rows with optional reorder/remove/duplicate controls."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # LcmsSequenceTable
 
-LcmsSequenceTable is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Table for Xcalibur-compatible LCMS sequence rows with optional reorder/remove/duplicate controls.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Instrument UI moves to the `mld-ms` plugins; there is no direct SDK replacement.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/LcmsSequenceTable.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/LcmsSequenceTable.vue">Source</a>
 </div>
 
 <ComponentPlayground name="LcmsSequenceTable" />
@@ -26,7 +30,7 @@ import { LcmsSequenceTable } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/LcmsSequenceTable.vue).
+MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/LcmsSequenceTable.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -45,8 +49,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` LcmsSequenceItem `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/lcms.ts#L6) | See the linked SDK type definition. |
-| [` LcmsSequenceTableColumn `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/lcms.ts#L16) | See the linked SDK type definition. |
+| [` LcmsSequenceItem `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/lcms.ts#L6) | See the linked SDK type definition. |
+| [` LcmsSequenceTableColumn `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/lcms.ts#L16) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

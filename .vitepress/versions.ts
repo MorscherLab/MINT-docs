@@ -1,4 +1,4 @@
-export const currentDocsVersion = '1.2.6'
+export const currentDocsVersion = '1.2.9'
 
 // Frozen documentation commits, each built with its own package.json and lockfile.
 export const archivedDocs = [

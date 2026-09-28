@@ -10,10 +10,10 @@ By the end you will have:
 - A `.mint` bundle ready to install
 
 **Time:** 20-30 minutes
-**Prereqs:** Python 3.12+, `uv`, and the MINT v1.2 SDK. Install the CLI with `uv tool install "mint-sdk[cli]==1.2.6"`; the generated project has its own environment.
+**Prereqs:** Python 3.12+, `uv`, and the MINT v1.2 SDK. Install the CLI with `uv tool install "mint-sdk[cli]==@MINT_VERSION@"`; the generated project has its own environment.
 
 ::: info Current CLI shape
-MINT v1.2.6 does not have `mint add job`. Start a job-based plugin with `mint init --mode generated`, or add `@job` methods directly to an existing plugin class.
+MINT v@MINT_VERSION@ does not have `mint add job`. Start a job-based plugin with `mint init --mode generated`, or add `@job` methods directly to an existing plugin class.
 :::
 
 ## 1. Scaffold the Project
@@ -48,10 +48,9 @@ hello-mint/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml
-│       ├── release.yml
-│       └── sdk-auto-update.yml
+│       └── release.yml
 ├── .gitignore
-├── CLAUDE.md                 # Default; --ai-assistant codex emits Codex guidance
+├── CLAUDE.md                 # Default; --ai-assistant codex writes AGENTS.md instead
 ├── README.md
 ├── pyproject.toml
 ├── src/
@@ -209,8 +208,8 @@ mint doctor --strict
 uv run pytest -q
 ```
 
-MINT 1.2.1 fixes generated controls for numeric arrays, nullable/empty inputs,
-fixed literals and numeric bounds. Backend validators still decide which values
+Generated controls handle numeric arrays, nullable/empty inputs, fixed literals
+and numeric bounds. Backend validators still decide which values
 are accepted; custom Pydantic validation failures return 422 responses.
 
 ## 5. Preview the Generated UI
@@ -254,6 +253,25 @@ dist/mint-plugin-hello-mint-<version>.mint
 ```
 
 A `.mint` bundle contains the plugin wheel, manifest, and any bundled frontend assets. Generated-mode plugins usually have no `frontend/` directory because the UI is supplied by the SDK.
+
+## 7. Verify and deploy
+
+Check the real install path in a disposable platform container (requires Docker):
+
+```bash
+mint verify .
+```
+
+`mint verify` builds the bundle, boots the MINT platform image, installs the bundle through the normal upload path, restarts, and waits until the plugin loads.
+
+Then deploy to a test platform you administer:
+
+```bash
+mint auth login --url https://mint-test.example.org
+mint deploy . --to https://mint-test.example.org
+```
+
+`mint deploy` builds the same bundle, uploads it, restarts the platform, and confirms the restart by the new server `boot_id`. The restart requires the `platform.configure` permission; `--timeout` (default 180 s) covers the restart and the plugin load together. Use a test platform, not production.
 
 ## Where You've Landed
 

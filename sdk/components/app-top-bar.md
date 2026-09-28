@@ -12,7 +12,7 @@ Platform-style top bar for shells that need custom navigation chrome.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/AppTopBar.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AppTopBar.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AppTopBar" />
@@ -23,10 +23,18 @@ Platform-style top bar for shells that need custom navigation chrome.
 import { AppTopBar } from "@morscherlab/mint-sdk/components"
 ```
 
+## Toast positioning
+
+A mounted `AppTopBar` publishes `--mint-toast-offset-top` on `<html>`, measured from the
+top-most bar and refreshed on resize and scroll. [AppToastContainer](/sdk/components/app-toast-container)
+reads this variable so toasts render 1rem below the top bar instead of covering its
+right-hand controls. Without a mounted `AppTopBar`, the toast container stays 1rem from
+the top of the viewport.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/AppTopBar.vue).
+MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AppTopBar.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -60,12 +68,12 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L186) | ` 'card' \| 'default' ` |
-| [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L250) | See the linked SDK type definition. |
-| [` PluginSwitcherInfo `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L262) | See the linked SDK type definition. |
-| [` PillNavItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L235) | See the linked SDK type definition. |
-| [` AccountMenuItem `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L270) | See the linked SDK type definition. |
-| [` TopBarSettingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/components.ts#L200) | See the linked SDK type definition. |
+| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L186) | ` 'card' \| 'default' ` |
+| [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L250) | See the linked SDK type definition. |
+| [` PluginSwitcherInfo `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L262) | See the linked SDK type definition. |
+| [` PillNavItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L235) | See the linked SDK type definition. |
+| [` AccountMenuItem `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L270) | See the linked SDK type definition. |
+| [` TopBarSettingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L200) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

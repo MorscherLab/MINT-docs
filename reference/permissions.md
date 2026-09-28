@@ -2,11 +2,11 @@
 
 MINT's RBAC has three pieces:
 
-1. **23 permissions** in 9 resource families
+1. **23 permissions** in 10 resource families
 2. **3 system roles** (Admin / Member / Viewer) plus admin-defined custom roles
 3. **Project membership and experiment collaborators** layered around visibility
 
-The authoritative list lives at [`api/permissions.py`](https://github.com/MorscherLab/MINT/blob/main/api/permissions.py); this page mirrors it.
+The authoritative list lives at [`api/permissions.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/permissions.py); this page mirrors it.
 
 ## Permission catalog
 
@@ -45,6 +45,12 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 | `jobs.read_all` | Read job state beyond the current user's own jobs |
 | `jobs.manage_all` | Cancel or manage jobs beyond the current user's own jobs |
 
+### `filesystem.*` (1)
+
+| Permission | What it grants |
+|------------|----------------|
+| `filesystem.browse` | Browse the read-only server directories configured in `filesystem.mounts` |
+
 ### `notifications.*` (1)
 
 | Permission | What it grants |
@@ -63,28 +69,27 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 |------------|----------------|
 | `notices.publish` | Publish, pin, archive, and expire platform notices |
 
-### `users.*` (3)
+### `users.*` (2)
 
 | Permission | What it grants |
 |------------|----------------|
 | `users.view` | List users |
-| `users.invite` | Send invitations to new users |
-| `users.manage` | Disable / re-enable users; assign system roles |
+| `users.manage` | Create, update, activate, deactivate and delete users, reset passwords, assign roles, and manage roles |
 
 ### `platform.*` (2)
 
 | Permission | What it grants |
 |------------|----------------|
-| `platform.configure` | Modify admin settings (SMTP, marketplace registry, observability, auth), apply platform updates, and use **Admin -> Platform -> Terminal** when enabled |
-| `platform.view_logs` | View structured logs and the admin status dashboard |
+| `platform.configure` | Modify admin settings (SMTP, marketplace registry, observability, auth), apply platform updates, and use **Admin -> Platform -> Terminal** when enabled. Turning authentication off or dev mode on additionally requires the `admin` role |
+| `platform.view_logs` | View structured logs and read the `GET /api/health/ready` readiness report |
 
 ## System roles → permissions
 
-The platform ships three system roles. Their permission sets come directly from `api/permissions.py`:
+The platform ships three system roles. Their permission sets are seeded by the platform database baseline:
 
 - **Admin** — every permission (all 23)
-- **Member** — every permission EXCEPT `users.manage`, `platform.configure`, `plugins.install`, `jobs.read_all`, `jobs.manage_all`, `notifications.receive_important`, `calendar.read_all`, `notices.publish`
-- **Viewer** — only the four `*.view` permissions: `projects.view`, `experiments.view`, `plugins.view`, `users.view`
+- **Member** — all `projects.*` and `experiments.*` permissions, plus `plugins.view`, `plugins.use`, `plugins.configure`, `users.view`, `platform.view_logs` and `filesystem.browse`
+- **Viewer** — `projects.view`, `experiments.view`, `plugins.view`, `users.view` and `plugins.use
 
 Tabular form:
 
@@ -100,7 +105,7 @@ Tabular form:
 | `experiments.edit` | ✓ | ✓ | |
 | `experiments.delete` | ✓ | ✓ | |
 | `plugins.view` | ✓ | ✓ | ✓ |
-| `plugins.use` | ✓ | ✓ | |
+| `plugins.use` | ✓ | ✓ | ✓ |
 | `plugins.configure` | ✓ | ✓ | |
 | `plugins.install` | ✓ | | |
 | `jobs.read_all` | ✓ | | |
@@ -109,14 +114,25 @@ Tabular form:
 | `calendar.read_all` | ✓ | | |
 | `notices.publish` | ✓ | | |
 | `users.view` | ✓ | ✓ | ✓ |
-| `users.invite` | ✓ | ✓ | |
 | `users.manage` | ✓ | | |
 | `platform.configure` | ✓ | | |
 | `platform.view_logs` | ✓ | ✓ | |
+| `filesystem.browse` | ✓ | ✓ | |
 
 ## Custom roles
 
-Admins can build custom roles by composing any subset of the 23 permissions above. Custom roles appear alongside the built-in three when assigning a user's system role.
+Admins can build custom roles by composing any subset of the 23 permissions above. Custom roles appear alongside the built-in three when assigning a user's system role. A role also has a project scope and a plugin access list (`all` or selected plugins).
+
+### Limits on `users.manage`
+
+A non-admin with `users.manage` cannot:
+
+- assign the `admin` role;
+- create, edit or assign a role with permissions or plugin access it does not hold itself;
+- create a user in a default role that outranks its own;
+- update, activate, deactivate, delete or reset the password of a user whose role outranks its own.
+
+These checks apply to both the `/api/admin` and legacy `/api/users` routes.
 
 Common custom-role recipes:
 
@@ -127,7 +143,7 @@ Common custom-role recipes:
 | **Plugin admin** | The Plugin operator set plus `plugins.install` |
 | **Project lead** | All `projects.*` plus all `experiments.*` |
 
-The role-design rationale for the original RBAC shape is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-10-rbac-roles-design.md). The current authoritative list is `api/permissions.py`.
+The role-design rationale for the original RBAC shape is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-04-10-rbac-roles-design.md). The current authoritative list is `api/permissions.py`.
 
 ## Project membership
 
@@ -167,5 +183,5 @@ The terminal opens a short-lived shell in the running MINT process/container and
 
 ## Next
 
-→ [Members & roles](/workflow/members-roles) — how to assign roles in the UI
-→ [Authentication](/workflow/auth-passkeys) — how users prove who they are
+→ [Members & roles](/admin/users-roles) — how to assign roles in the UI
+→ [Authentication](/admin/authentication) — how users prove who they are

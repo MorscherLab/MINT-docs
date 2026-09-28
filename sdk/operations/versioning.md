@@ -9,17 +9,17 @@ one does not automatically change or migrate the others.
 | Version | Where it lives | Example | What it does |
 |---|---|---|---|
 | Plugin release | Git tag → wheel metadata → `PluginMetadata.version` and bundle manifest | `v0.2.0` | Identifies installed code and frontend assets |
-| Python SDK requirement | `[project].dependencies` | `mint-sdk>=1.2.6,<1.3` | Declares supported SDK runtime versions |
-| Frontend SDK requirement | `frontend/package.json` | `^1.2.6` | Declares the frontend dependency range |
-| Resolved SDK release | `uv.lock`, `frontend/bun.lock` | `1.2.6` in both | Records the actual build dependencies |
-| Platform requirement | `[tool.mint].requires_mint` | `>=1.2.6,<1.3` | Constrains `.mint` installation |
-| Marketplace floor | Registry `min_platform_version` | `1.2.6` | Informs catalog compatibility |
+| Python SDK requirement | `[project].dependencies` | `mint-sdk>=@MINT_VERSION@,<1.3` | Declares supported SDK runtime versions |
+| Frontend SDK requirement | `frontend/package.json` | `^@MINT_VERSION@` | Declares the frontend dependency range |
+| Resolved SDK release | `uv.lock`, `frontend/bun.lock` | `@MINT_VERSION@` in both | Records the actual build dependencies |
+| Platform requirement | `[tool.mint].requires_mint` | `>=@MINT_VERSION@,<1.3` | Constrains `.mint` installation |
+| Marketplace floor | Registry `min_platform_version` | `@MINT_VERSION@` | Informs catalog compatibility |
 | Design-data schema | `@mint_plugin(schema_version=...)` and stored `DesignData` | `"2.0"` | Labels the JSON design format |
-| Database revision | `Migration.version` | `1`, `2`, `3` | Orders changes to plugin-owned SQL tables |
+| Database revision | Alembic `revision` (or legacy `PluginMigration.version`) | `"p002"` (legacy: `2`) | Orders changes to plugin-owned SQL tables |
 
 MINT 1.2 uses a shared release for the platform, Python SDK and frontend SDK.
-Your plugin does **not** need to be version `1.2.6`: a plugin `0.2.0` can target
-MINT `1.2.6`. Build validation requires Python and frontend SDKs to resolve to
+Your plugin does **not** need to be version `@MINT_VERSION@`: a plugin `0.2.0` can target
+MINT `@MINT_VERSION@`. Build validation requires Python and frontend SDKs to resolve to
 the same release; matching broad ranges alone is insufficient.
 
 ## Package identity: one source of truth
@@ -30,7 +30,7 @@ The `mint init` scaffold already configures `hatch-vcs`. Keep it:
 [project]
 name = "mint-plugin-lab-qc"
 dynamic = ["version"]
-dependencies = ["mint-sdk>=1.2.6,<1.3"]
+dependencies = ["mint-sdk>=@MINT_VERSION@,<1.3"]
 
 [project.entry-points."mint.plugins"]
 lab-qc = "mint_plugin_lab_qc.plugin:LabQcPlugin"
@@ -46,7 +46,7 @@ source = "vcs"
 version-file = "src/mint_plugin_lab_qc/_version.py"
 
 [tool.mint]
-requires_mint = ">=1.2.6,<1.3"
+requires_mint = ">=@MINT_VERSION@,<1.3"
 ```
 
 This is a fragment to merge into the scaffold, including its existing build
@@ -87,9 +87,9 @@ versions in result provenance as well as the plugin release.
 
 ## Declare compatibility deliberately
 
-For plugins tested on the 1.2 line, `>=1.2.6,<1.3` is a conservative declaration.
+For plugins tested on the 1.2 line, `>=@MINT_VERSION@,<1.3` is a conservative declaration.
 Use a wider range only when you support and verify it. The 1.2 scaffold may
-render the compatibility baseline `>=1.2.0b1,<1.3`; raise the floor to `1.2.6`
+render the compatibility baseline `>=1.2.0b1,<1.3`; raise the floor to `@MINT_VERSION@`
 when your support policy requires the stable release.
 
 The bundle installer checks `requires_mint` and the wheel's SDK requirement.
@@ -99,7 +99,14 @@ bundle requirement. If `requires_mint` is omitted, the builder derives a floor
 from the Python SDK requirement when possible, otherwise from its build SDK;
 set it explicitly for releases with a documented support range.
 
-Use [the SDK updater](/sdk/operations/upgrading-sdk) to keep Python and frontend
+The two platform declarations differ in form and in when they are checked:
+
+| Declaration | Lives in | Form | Checked when |
+|---|---|---|---|
+| `[tool.mint].requires_mint` | `pyproject.toml`, copied into the bundle manifest | PEP 440 specifier, e.g. `">=@MINT_VERSION@,<1.3"` | Every `.mint` install (upload, GitHub, marketplace) |
+| `min_platform_version` | Marketplace registry entry | Version floor, e.g. `"@MINT_VERSION@"` | Catalog compatibility and marketplace install |
+
+Use [the SDK updater](/sdk/operations/upgrading) to keep Python and frontend
 resolutions aligned. It preserves a valid existing Python compatibility floor;
 selecting a newer lockfile version is not a declaration that older versions
 remain supported by newly changed code.
@@ -127,12 +134,14 @@ when a design is too old for the current editor.
 
 | Plugin release | Migrations shipped |
 |---|---|
-| `0.1.0` | `v001_initial` |
-| `0.2.0` | `v001_initial`, `v002_add_note` |
+| `0.1.0` | `p001_initial` |
+| `0.2.0` | `p001_initial`, `p002_add_notes` |
 | `0.2.1` | Same revisions; code fix only |
-| `1.0.0` | Previous revisions plus `v003_convert_values` |
+| `1.0.0` | Previous revisions plus `p003_convert_values` |
 
-Never reset numbering or rewrite an already applied revision. Update the
+Alembic revisions chain by `revision` / `down_revision` ids; legacy
+`PluginMigration` classes use an integer `version`. Never reset the chain or
+rewrite an already applied revision. Update the
 SQLModel definition and add the corresponding migration together. Test both
 fresh table creation and upgrade from the last deployed schema: they take
 different paths. See [migrations](/sdk/concepts/migrations) and the
@@ -147,6 +156,22 @@ database/storage backup. Prefer a forward corrective release when practical.
 Keep code, migrations, generated contracts, lockfiles and `CHANGELOG.md` in the
 same review. Exclude `.venv`, `node_modules`, secrets, local SQLite databases
 and development data. Do not edit generated clients by hand.
+
+### Commit lockfiles
+
+The `mint init` scaffold's `.gitignore` excludes `uv.lock`,
+`frontend/bun.lock` and `frontend/bun.lockb`. To record the resolved SDK
+release and build reproducibly, delete those three lines from `.gitignore`,
+then commit both lockfiles:
+
+```bash
+uv lock
+(cd frontend && bun install)
+git add .gitignore uv.lock frontend/bun.lock
+```
+
+After that, CI can use `uv sync --locked` and `bun install --frozen-lockfile`,
+which fail when a lockfile is out of date.
 
 A release sequence after the review and checks pass:
 
@@ -175,6 +200,6 @@ Include upgrade steps, the supported MINT range, schema revisions and any
 changed analysis semantics in the changelog. See [publishing](/sdk/operations/publishing)
 for registry and artifact distribution.
 
-Source: [package identity](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/plugin_decorators.py),
-[build implementation](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/cli_build.py),
-[scaffold version policy](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/init_versions.py).
+Source: [package identity](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/plugin_decorators.py),
+[build implementation](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/cli_build.py),
+[scaffold version policy](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/init_versions.py).

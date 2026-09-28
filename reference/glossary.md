@@ -25,7 +25,7 @@ admins approve or deny them.
 Hides a project from default dashboards without deleting any data. Reversible.
 
 **Archive (uninstall mode)**
-Renames a plugin's tables with an `archived_*` prefix on uninstall. Data is unreachable but recoverable.
+Renames a plugin's database schema to `_archived_<schema>_<date>` on uninstall. Data is unreachable but recoverable. The other uninstall modes are `keep` and `purge`.
 
 **Artifact**
 A broad term for data produced or consumed around an experiment. In current MINT UI, analysis outputs are managed as **analysis artifacts**. File-backed artifacts store object references under the platform's configured data path or object store.
@@ -59,7 +59,7 @@ JSON validated against an experiment-design plugin's schema. Describes what the 
 A plugin that owns an experiment type and its database schema. Provides the experiment's design form and CRUD logic.
 
 **Dev mode**
-`devMode: true` in `config.json`. Bypasses authentication on every route while keeping the configured PostgreSQL connection. For local development only — never expose.
+`devMode: true` in `config.json`. Bypasses authentication on every route and disables passkeys; the PostgreSQL connection is kept, with `mint` / `mint` credentials if none are set. Only the `admin` role can turn it on from the admin UI. For local development only — never expose.
 
 ## E
 
@@ -80,12 +80,12 @@ The mechanism by which conflicting plugins run in separate venvs and subprocesse
 ## J
 
 **JWT (JSON Web Token)**
-The auth token MINT issues after a successful password or passkey login. Stored in an HttpOnly cookie. 24-hour TTL by default.
+The auth token MINT issues after a successful password or passkey login. Stored in the HttpOnly `mint_access_token` cookie, marked `Secure` on HTTPS deployments. 7-day lifetime by default (`auth.tokenExpireMinutes`).
 
 ## M
 
 **Marketplace**
-The catalog of plugins available for install. Sourced from `marketplace.registryUrl`. Admins approve install requests when approval is enforced.
+The catalog of plugins available for install. Sourced from `marketplace.registryUrl`. Users without `plugins.install` file install requests, which an admin approves or denies.
 
 **Marketplace registry**
 A static JSON feed that points at GitHub release `.mint` assets. Hostable on
@@ -93,13 +93,13 @@ any HTTPS endpoint. The default registry is `MorscherLab/mint-registry`; private
 deployments can point `marketplace.registryUrl` at an aggregate registry.
 
 **Member (system role)**
-A user with read + write rights for projects and experiments they belong to, but no platform-admin rights. Most lab users are Members.
+The default role for new users: can create and edit projects and experiments and use plugins, but has no platform-admin rights. Write access comes from the role's permissions, not from project membership. Most lab users are Members.
 
 **Migration (platform)**
-A schema migration in `api/migrations/versions/` that the platform runs on startup. Tracked via `alembic_version`.
+An Alembic revision under `api/db_revisions/` that the platform applies on startup. Tracked via `alembic_version`. Older databases first run the legacy integer migrations v001–v031 in `api/migrations/versions/`.
 
 **Migration (plugin)**
-A `PluginMigration` from `mint_sdk.migrations`. Plugins that own tables ship migrations; the platform runs them advisory-locked. Tracked in `plugin_schema_migrations`.
+A schema change for a plugin's own tables. Plugins opt into the shared Alembic runtime with `MigrationSpec` / `get_migration_spec()` from `mint_sdk.migrations`; the platform runs revisions under a migration lock, and a failed migration keeps the plugin disabled. The older `PluginMigration` runner is tracked in `plugin_schema_migrations`.
 
 **MINT**
 Mass-spec INtegrated Toolkit. The current name for the platform formerly called MLD. Rebrand landed alongside `v1.0.0`.
@@ -113,7 +113,7 @@ The historical name of the platform — Morscher Laboratory Database. Now retire
 A WebAuthn credential — a public/private key pair stored on a device. Replaces or supplements password login.
 
 **Permission**
-A `resource.action` string (e.g., `experiments.edit`) that backend routes check. Current MINT releases define 23 permissions in 9 groups.
+A `resource.action` string (e.g., `experiments.edit`) that backend routes check. Current MINT releases define 23 permissions in 10 groups.
 
 **Plugin auto-update**
 A per-plugin marketplace setting stored in `marketplace.autoUpdatePlugins`. When enabled, compatible registry updates can be installed automatically by the marketplace sync task.
@@ -128,13 +128,13 @@ A self-contained extension to the platform. Plugin classes inherit
 The runtime bridge the platform hands a plugin during startup. It exposes the current actor plus scoped services for experiments, projects, analysis artifacts, plugin-owned data, settings, notifications, calendar events, and job visibility according to the plugin's declared capabilities.
 
 **Project**
-The top-level grouping in MINT. Owns a set of experiments and a member list. Project membership gates access to all experiments in the project.
+The top-level grouping in MINT. Owns a set of experiments and a member list. When `access.experimentVisibilityMode` is `restricted`, project membership decides which experiments a non-admin can see; in the default `open` mode it does not.
 
 **Project role**
 A stored project-membership label. Current values are `editor` and `viewer`; route-level write access still comes from system RBAC.
 
 **Purge (uninstall mode)**
-Drops a plugin's tables and uploaded artifacts permanently. Irreversible.
+Drops a plugin's database schema and all its tables permanently. Irreversible.
 
 ## R
 
@@ -163,7 +163,7 @@ One of `planned`, `ongoing`, `completed`, or `cancelled`. Most plugins gate writ
 ## V
 
 **Viewer (system role)**
-A read-only platform-wide role. Cannot write to any resource.
+A platform-wide role that can view projects, experiments, plugins and users and can use plugins, but cannot create or edit platform records.
 
 ## W
 
