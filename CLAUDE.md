@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 User-facing documentation site for [MINT](https://github.com/MorscherLab/MINT) — Mass-spec INtegrated Toolkit (formerly MLD). Built with VitePress, deployed to **mint-docs.morscherlab.org** via GitHub Pages on every push to `main`.
 
-This repo contains the **user-facing manual** and the **Plugin Development** documentation track: install, workflow walkthroughs, UI tour, FAQ, glossary, user-level `mint` CLI usage (`/cli/`), SDK concepts, tutorials, recipes, frontend component/composable guidance, operations, and API reference. The platform repository is still the source of truth for implementation, so verify SDK signatures and schema details against `../MINT-platform/MINT` before changing reference pages.
+This repo contains the **user-facing manual** and the **Plugin Development** documentation track: install, workflow walkthroughs, UI tour, FAQ, glossary, admin-level `mint` CLI usage (`/admin/cli`), SDK concepts, tutorials, recipes, frontend component/composable guidance, operations, and API reference. The platform repository is still the source of truth for implementation, so verify SDK signatures and schema details against `../MINT-platform/MINT` before changing reference pages.
 
 ## Commands
 
@@ -23,13 +23,12 @@ There are no tests, linters, or formatters configured. CI only runs `bun install
 
 ## Architecture
 
-VitePress reads markdown from the project root recursively, but `srcExclude` in `.vitepress/config.ts` skips `README.md` and `node_modules/**`. Five content directories drive the navigation:
+VitePress reads markdown from the project root recursively, but `srcExclude` in `.vitepress/config.ts` skips `README.md` and `node_modules/**`. Four content directories drive the navigation:
 
-- `get-started/` — install paths (Linux direct, Linux Docker, hosted MINT) and the 5-minute quickstart. MINT is supported on Linux servers only — there is intentionally no desktop / macOS / Windows install path.
-- `workflow/` — the platform user guide (projects, experiments, members, auth, plugins, marketplace, updates)
-- `cli/` — User Manual side of the `mint` CLI: `overview` (orientation), `platform` (auth/experiment/project/status), `configuration` (`config.json` schema). The `mint` CLI is shipped by the `mint-sdk` package and is **not** the platform launcher (the platform runs via `uvicorn api.main:app`).
+- `guide/` — **Use MINT** (lab scientists): quickstart, access, data model, projects, experiments, marketplace (browse/request), UI tour.
+- `admin/` — **Administer MINT** (lab admins): install (direct, Docker; Linux servers only — no desktop/macOS/Windows path), reverse proxy + first run, `config.json` configuration, users & roles, authentication, plugin management, updates (incl. upgrading from 1.1), and the `mint` CLI for admins. The `mint` CLI ships in `mint-sdk[cli]` and is **not** the platform launcher. `sdk/api/cli-reference` is the only full command/flag table.
 - `sdk/` — full Plugin Development track: concepts, tutorials, recipes, frontend, operations, api. Six sub-sections.
-- `reference/` — UI tour, RBAC permission reference, troubleshooting, FAQ, glossary
+- `reference/` — RBAC permission reference, troubleshooting, FAQ, glossary
 
 Plus `index.md` (home), `team.md` (Vue components from `vitepress/theme`), and `changelog.md` (links out to GitHub Releases — release notes themselves are not maintained here).
 
@@ -40,6 +39,9 @@ Plus `index.md` (home), `team.md` (Vue components from `vitepress/theme`), and `
 Edit links in the footer point to `MorscherLab/MINT-docs` on GitHub. The dev server uses `lastUpdated` git timestamps, which is why CI checks out with `fetch-depth: 0`.
 
 ## Conventions for content edits
+
+- Write `@MINT_VERSION@` for the documented release (install pins, `blob/v@MINT_VERSION@/` source links); a markdown-it hook in `config.ts` substitutes `currentDocsVersion` from `.vitepress/versions.ts`. Guides describe current behavior only — per-release notes go in `changelog.md` under "Notable changes".
+- Each topic has one home (plugin types: `sdk/concepts/plugin-types`; runtimes: `sdk/concepts/isolation`; migration mechanics: `sdk/api/migrations`; components: `sdk/components/`). Link instead of copying.
 
 - The audience is lab scientists and lab admins, not core developers — keep tone task-oriented, prefer screenshots and short steps over prose.
 - Screenshot placeholders use the convention `> [Screenshot: description of what should be shown]` as a blockquote — these are TODOs for the actual image. Match this pattern when drafting new pages so they're easy to grep for and replace later.
