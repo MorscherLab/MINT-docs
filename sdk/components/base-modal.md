@@ -35,6 +35,11 @@ import { BaseModal } from "@morscherlab/mint-sdk/components"
 </BaseModal>
 ```
 
+## Behavior
+
+- With `layout="rail"`, a `ModalTab.section` groups adjacent rail items under a section heading. The scoped `#pane-header` slot (`{ tab }`) replaces the pane's default title and subtitle.
+- With modals stacked, Escape closes only the topmost one. A modal mounted already open takes focus on mount, preferring an `[autofocus]` descendant.
+
 <!-- sdk-props:start -->
 ## Props
 

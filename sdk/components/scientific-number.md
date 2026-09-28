@@ -23,6 +23,10 @@ ScientificNumber is a data display component exported by @morscherlab/mint-sdk f
 import { ScientificNumber } from "@morscherlab/mint-sdk/components"
 ```
 
+## Copying
+
+The copy button appears on hover, on keyboard focus, and always on touch devices, and confirms with `Copied <value>`. Screen readers hear `6.022 × 10^23`, and a text selection across the number pastes `10^23`. The copy button, and a selection inside the number, copy the canonical string (`6.022e23 mol⁻¹`).
+
 <!-- sdk-props:start -->
 ## Props
 

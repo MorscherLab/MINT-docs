@@ -284,7 +284,7 @@ const adminField = {
 }
 ```
 
-The old flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields are deprecated in 1.2; the nested policy wins if both forms are supplied. These rules control visibility, not server authorization. Settings endpoints must still require the corresponding backend permission.
+The flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields are removed and no longer gate anything; use `access`. These rules control visibility, not server authorization. Settings endpoints must still require the corresponding backend permission.
 
 ## Conditional fields
 

@@ -23,6 +23,10 @@ FormulaInput is a forms component exported by @morscherlab/mint-sdk for plugin f
 import { FormulaInput } from "@morscherlab/mint-sdk/components"
 ```
 
+## Behavior
+
+While blurred, the field shows the rendered formula; while focused, the raw text. A fixed `MW · value · g/mol` segment shows the molecular weight. An unknown element or unparsable formula puts the field in the error state and names the symbol. All 118 elements, hydrates (`·` or `*`), and trailing charges (`SO4^2-`, `Fe2+`, `NH4+`) are accepted.
+
 <!-- sdk-props:start -->
 ## Props
 

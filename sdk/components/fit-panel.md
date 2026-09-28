@@ -23,6 +23,10 @@ FitPanel is a lab widgets component exported by @morscherlab/mint-sdk for plugin
 import { FitPanel } from "@morscherlab/mint-sdk/components"
 ```
 
+## Results
+
+Results render as a parameter table with a header row (Parameter / Value, plus 95% CI when any row has `ci`); `columnLabels` renames the headers. A result with `verdict` is shown as a verdict line below the table instead. Pass `series` (with `v-model:active-series`) for several fitted series behind a color-coded switch; it supersedes `results`.
+
 <!-- sdk-props:start -->
 ## Props
 

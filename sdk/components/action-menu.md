@@ -36,6 +36,16 @@ import { ActionMenu } from "@morscherlab/mint-sdk/components"
 />
 ```
 
+The `#trigger` slot replaces the default icon trigger. Render one `<button>` and wire the slot's `toggle` and `keydown` to it:
+
+```vue
+<ActionMenu :items="items" @select="handleAction">
+  <template #trigger="{ open, toggle, keydown }">
+    <button type="button" aria-haspopup="menu" :aria-expanded="open" @click="toggle" @keydown="keydown">Actions</button>
+  </template>
+</ActionMenu>
+```
+
 <!-- sdk-props:start -->
 ## Props
 

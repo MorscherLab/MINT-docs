@@ -45,7 +45,9 @@ import { ChartContainer } from '@morscherlab/mint-sdk'
 </style>
 ```
 
-The default `card` variant has a border and rounded corners. `frame` fills a parent with a definite height and uses compact header spacing; give your chart renderer an appropriate height too. This component does not resize or dispose an external chart library for you.
+The default `card` variant has a border and rounded corners. `frame` fills a parent with a definite height; give your chart renderer an appropriate height too. Both variants share one header: a one-line title and description above a hairline.
+
+Pass `legendItems` (`{ label, color, hidden? }[]`) to list series as clickable items in the header; a click emits `legend-toggle` with the item index, and your renderer applies the change. This component does not resize or dispose an external chart library for you.
 
 | Slot | Placement |
 |------|-----------|

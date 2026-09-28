@@ -23,6 +23,10 @@ Platform-style top bar for shells that need custom navigation chrome.
 import { AppTopBar } from "@morscherlab/mint-sdk/components"
 ```
 
+## Plugin identity
+
+Inside the platform, `AppTopBar` shows an integrated plugin's icon, name, and version as a static identity in place of `title` / `subtitle`; it is not a control. Users switch plugins from the platform home. Standalone plugins show `title` / `subtitle`. Every control is 32px high, so the bar stays 52px.
+
 ## Toast positioning
 
 A mounted `AppTopBar` publishes `--mint-toast-offset-top` on `<html>`, measured from the

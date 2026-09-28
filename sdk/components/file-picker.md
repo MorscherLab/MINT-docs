@@ -8,7 +8,7 @@ description: "Adapter-driven file and folder selection with tree navigation, sea
 
 # FilePicker
 
-`FilePicker` provides expandable folder navigation, metadata preview, search, and a review step for file selections. Use `usePlatformFilePickerAdapter()` for authenticated MINT server mounts, or supply an adapter backed by your plugin's API.
+`FilePicker` is a file and folder picker in a `BaseModal` (`size="xl"`) with folder navigation, metadata preview, search, and a review step for file selections. Use `usePlatformFilePickerAdapter()` for authenticated MINT server mounts, or supply an adapter backed by your plugin's API.
 
 ## Example
 
@@ -49,11 +49,13 @@ function select(value: PickerSelection): void {
 </template>
 ```
 
+The picker lists one folder at a time (`view="list"`, the default): double-click or → enters a folder, ← goes up, and each row shows a mono size and modified time. Pass `view="tree"` for the disclosure-triangle tree. Unreadable rows show a lock and the reason. With a mount-rooted adapter, the mounts appear as header sources next to Local files; the picker opens the first reachable mount and keeps the selection when you switch mounts.
+
 `selectionMode` accepts `single-file`, `multi-file`, `folder`, or `folder+files`. `sources` can include `server` and `localFile`; the default is server only. `capabilities` sets allowed suffixes, optional `maxBytes`, and optional host-defined blank classification for each source.
 
 ## Adapter and selection boundaries
 
-`PickerAdapter` implements `listRoot(request?)`, `listChildren(path, request?)`, and `search(query, scope, request?)`, with optional `invalidate()`. For a mount API, prefer `createFilePickerAdapter()` with `listMounts`/`browse` transport methods instead of writing those navigation methods yourself. Forward abort signals and explicit refresh requests through your transport.
+`PickerAdapter` implements `listRoot(request?)`, `listChildren(path, request?)`, and `search(query, scope, request?)`, with optional `invalidate()`. Set `mounts: true` when `listRoot()` returns mount points, so the picker shows them as sources; implement `mountOf(path)` so an `initialPath` inside a mount selects that mount. Without `rootLocation`, `usePlatformFilePickerAdapter()` and `createFilePickerAdapter()` set `mounts: true`; the platform adapter also implements `mountOf`. For a mount API, prefer `createFilePickerAdapter()` with `listMounts`/`browse` transport methods instead of writing those navigation methods yourself. Forward abort signals and explicit refresh requests through your transport.
 
 - A server result contains `folders`, `files`, and `excluded` records. Platform-adapter paths are opaque identities: decode them with `decodePlatformPickerPath()` to obtain `mountId` and a relative `path` before a backend call.
 - A local result contains browser `File[]` and optional `relativePaths`. The picker does not upload files or read their bytes.
@@ -69,7 +71,7 @@ The picker warms at most 20 immediate folders with two background reads at a tim
 | `select` | `PickerSelection`; store the result in plugin state |
 | `cancel` | No payload |
 
-Do not interchange this API with [FileBrowserModal](/sdk/components/file-browser-modal), which takes controlled listing props and emits `confirm`. See [Platform integration](/sdk/frontend/platform-integration#adapter-driven-filepicker) for decoding selections, adapter transport details, and server cache behavior.
+See [Platform integration](/sdk/frontend/platform-integration#adapter-driven-filepicker) for decoding selections, adapter transport details, and server cache behavior.
 
 [Release source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/FilePicker.vue)
 

@@ -445,8 +445,6 @@
   gap: 1rem;
 }
 
-.mint-rack-editor-demo,
-.mint-plate-editor-demo,
 .mint-component-binding-demo {
   min-width: 46rem;
   max-height: 34rem;

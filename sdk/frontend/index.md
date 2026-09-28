@@ -49,6 +49,7 @@ If you scaffolded with `mint init --mode standard`, all of this is already done.
    ```bash
    bun add @morscherlab/mint-sdk@^@MINT_VERSION@
    ```
+   Peer dependencies: `vue` ^3.5, `pinia` ^2.1, ^3 or ^4, `tailwindcss` ^4.1, and optionally `vue-router` ^4.2 or ^5 and `@simplewebauthn/browser` ^14 (passkeys).
 
 2. **Import design tokens** in your app entry:
    ```css
@@ -113,8 +114,8 @@ Body-only endpoints take the body directly. Endpoints combining parameters and a
 - **Chemical annotations:** [ChemicalFormula](/sdk/components/chemical-formula) accepts optional adducts, empty values, and pill styling. [AdductText](/sdk/components/adduct-text) displays adduct notation on its own.
 - **Plate decorations:** [WellPlate](/sdk/components/well-plate) accepts `wellClass` and `wellStyle` callbacks for per-well visual annotations without changing sample data.
 - **Controls and panes:** [SearchableSelect](/sdk/components/searchable-select) searches descriptive choices; [NumberInput](/sdk/components/number-input) supports steppers and drag scrubbing. [LayoutResizeHandle](/sdk/components/layout-resize-handle) and `useManualLayoutResize()` provide keyboard/pointer resizing.
-- **Server files:** `useFileBrowser()` + `FileBrowserModal` browse configured read-only mounts and return path references. Keep the refresh action connected: it explicitly refreshes the server's bounded metadata cache. `FileUploader` remains the local browser-file picker.
-- **Access rules:** use nested `access: { permissions: [...] }` on access-aware controls and actions. Flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields are deprecated in 1.2.
+- **Server files:** [FilePicker](/sdk/components/file-picker) with `usePlatformFilePickerAdapter()` browses configured read-only mounts and returns path references; decode them with `decodePlatformPickerPath()`. Its refresh action explicitly refreshes the server's bounded metadata cache. `FileUploader` remains the local browser-file picker.
+- **Access rules:** use nested `access: { permissions: [...] }` on access-aware controls and actions. The flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields no longer gate anything.
 - **HTTP errors:** generated clients use `MintApiError`; raw `useApi({ typedErrors: true })` opts into the same normalized error shape.
 
 ## Component library

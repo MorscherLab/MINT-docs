@@ -10,6 +10,10 @@ description: "Interactive 96- and 384-well plate map with heatmaps, selection, a
 
 Interactive plate map with heatmaps, selection, and editing hooks. Supported formats are 6, 12, 24, 48, 54, 96, and 384 wells.
 
+::: warning Deprecated prop
+`showSampleTypeIndicator` is a no-op and is removed in **MINT 1.4**. The sample-type marker already encodes the type by shape, with `Q` / `i` glyphs for QC / iQC.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/WellPlate.vue">Source</a>

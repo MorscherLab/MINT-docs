@@ -36,6 +36,8 @@ import { StepWizard } from "@morscherlab/mint-sdk/components"
 </StepWizard>
 ```
 
+The default navigation shows a step counter (`2 / 4`) on the left and Cancel, Back, and Next / Finish as `BaseButton`s on the right. A custom `#navigation` slot replaces all of it; style custom navigation through that slot.
+
 <!-- sdk-props:start -->
 ## Props
 

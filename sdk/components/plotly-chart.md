@@ -27,7 +27,7 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
       xaxis: { title: { text: 'Injection' } },
       yaxis: { title: { text: 'Intensity (a.u.)' } },
     }"
-    :config="{ toImageButtonOptions: { filename: 'qc-intensity' } }"
+    :config="{ displayModeBar: true, toImageButtonOptions: { filename: 'qc-intensity' } }"
   />
 </template>
 ```
@@ -58,7 +58,9 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 <!-- sdk-props:end -->
 
-The component defaults to responsive rendering and hides the Plotly logo. Your `layout` and `config` override those defaults. Input traces/layout are copied before Plotly receives them, so Plotly's mutations do not modify caller-owned reactive state.
+The component defaults to responsive rendering, hides the Plotly logo, and hides the modebar (`displayModeBar: false`; pass `config: { displayModeBar: true }` to restore it). It applies `mintPlotlyTemplate()` (MINT fonts, the `--mint-sample-1…8` group palette, token-based grid and axis colors) and re-reads it on every theme change. Your `layout` and `config` override those defaults.
+
+With two or more legend traces, the series are listed in the chart header and a click toggles the trace. Set `headerLegend: false`, or set `layout.showlegend` (`true` keeps Plotly's in-plot legend, `false` shows none), to leave the legend to Plotly. Input traces/layout are copied before Plotly receives them, so Plotly's mutations do not modify caller-owned reactive state.
 
 ## Workbench charts and point clicks
 

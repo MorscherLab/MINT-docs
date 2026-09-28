@@ -27,7 +27,7 @@ import { AppSidebar } from "@morscherlab/mint-sdk/components"
 
 Sections now render as flat groups instead of nested cards. The effective default
 density is compact; use `density="comfortable"` for more spacing. The old
-`variant` prop has been removed, and `dense` is deprecated. Use `collapsible`
+`variant` prop has been removed, and `dense` is deprecated (removal in MINT 1.4). Use `collapsible`
 explicitly when you need a collapse button; it defaults to `false` on AppSidebar.
 
 When AppLayout owns placement, pass `:floating="false"` to the sidebar. The former

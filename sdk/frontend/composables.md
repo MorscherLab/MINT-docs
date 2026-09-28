@@ -17,18 +17,17 @@ This page covers the public **@MINT_VERSION@** composables and helper factories 
 | `useFormBuilder` | Schema-driven form runtime | The `FormBuilder` component (rare to use directly) |
 | `defineControls`, `defineControlModel` | Typed compact control schemas | Generate FormBuilder, SettingsModal, AppSidebar, and ControlWorkspaceView bindings from one model |
 | `useControlSchema`, `useControlWorkspace` | Derived form/sidebar/topbar/component bindings | Custom generated workspaces |
-| `useAsyncBatch` | Async-state helper for several calls | Run async functions together (`useAsync` is deprecated; use `useRequestSyncState`) |
 | `useWellPlateEditor` | Well-plate state + helpers | Plate-design UIs |
-| `useRackEditor` | Rack-layout state | Sample-rack UIs |
+| `useRackEditor` | Rack state, undo/redo, and `PlateEditor` listeners | Holding the plates of a [`PlateEditor`](/sdk/components/plate-editor) |
 | `useConcentrationUnits` | Concentration parsing / conversion | Anything dealing with µM / mg/mL / % |
 | `useDoseCalculator` | Dilution + serial-dilution math | Drug-screening tools |
 | `useReagentSeries` | Dilution series generators | Building dose-response panels |
 | `useChemicalFormula` | Formula parsing + MW | Showing elemental composition |
-| `useSequenceUtils` | DNA / protein sequence helpers | Sequence inputs and stats |
+| `useSequenceUtils` | DNA / protein sequence helpers, including `findSequenceProblems` | Sequence inputs and stats |
 | `useTimeUtils` | Time math + slot generation | Schedule UIs |
 | `useScheduleDrag` | Drag-to-reschedule handlers | Calendar / timeline UIs |
 | `useProtocolTemplates` | Lab-protocol template engine | Step-by-step protocol UIs |
-| `useAutoGroup` | Auto-group samples by name prefix | Sample grouping helpers |
+| `useAutoGroup` | Auto-group samples by name prefix | Deprecated, removal in MINT 1.4; use `SmartGroupModal` |
 | `createPluginClient` | Contract-aware plugin API client runtime | Generated `useGeneratedPluginClient()` wrappers |
 | `buildPluginEndpointUrl`, `resolvePluginBaseUrl` | URL helpers matching generated calls | Rendering links, diagnostics, downloads, and previews |
 | `uploadPluginEndpoint`, `downloadPluginEndpoint` | Multipart and Blob helpers | Generated upload/download endpoint wrappers |
@@ -41,7 +40,7 @@ This page covers the public **@MINT_VERSION@** composables and helper factories 
 | `useExperimentSave` | Save/load design data and compatibility analysis results | Forms that save back to an experiment |
 | `useAppExperiment` | App-level experiment provide/inject | Plugin pages that need the active experiment |
 | `useExperimentStore` | Shared Pinia selection | Workspace picker state and resolved experiment records |
-| `useFileBrowser` | Server mount listing and selection | Read-only server paths with `FileBrowserModal` |
+| `useFileBrowser` | Server mount listing and selection | Custom UIs for read-only server paths (`FilePicker` covers the standard case) |
 | `usePlatformFilePickerAdapter` | Authenticated platform `PickerAdapter` | `FilePicker` folder trees, preview, and resolved file selection |
 | `createFilePickerAdapter` | Shared mount navigation/search adapter | Connect a plugin-owned file API through typed transport callbacks |
 | `useRequestSyncState` | Request loading/error/timestamps and cancellation | Stateful request feedback |
@@ -388,7 +387,38 @@ For lower-level layouts, `useControlSchema()` gives you `formSchema`, `settingsS
 | `useTextSearch`, `useSortedItems` | Client-side filtering and sorting |
 | `useExpansionSet` | Expand/collapse state for trees and grouped lists |
 | `useBioTemplateWorkspace` | Template-driven controls, preview, and component bindings |
+| `useSequenceUtils` | `findSequenceProblems(seq, 'dna' \| 'rna' \| 'protein')` returns `{ ambiguousBases, invalidCharacters }`: the characters `validateSequence` would strip, named instead of dropped |
 | `useFileBrowser` | Server mount browsing, refresh, search, sort, path selection, and error state |
+
+### `useRackEditor`
+
+`useRackEditor(initialRacks?, options?)` holds a `Rack[]` for a controlled [`PlateEditor`](/sdk/components/plate-editor). The initial racks are copied, so the caller's wells are not mutated.
+
+```vue
+<script setup lang="ts">
+import { PlateEditor, useRackEditor } from '@morscherlab/mint-sdk'
+
+const { racks, activeRackId, plateEditorListeners, canUndo, canRedo } = useRackEditor()
+</script>
+
+<template>
+  <PlateEditor
+    :model-value="racks"
+    :active-rack-id="activeRackId"
+    history
+    :can-undo="canUndo"
+    :can-redo="canRedo"
+    v-on="plateEditorListeners"
+  />
+</template>
+```
+
+- `plateEditorListeners` (type `PlateEditorListeners`) applies every `PlateEditor` intent except `well-click`, `import`, `export`, `group-add`, and `selection-change`.
+- `undo()` / `redo()` step through at most 50 changes made through the listeners and restore the full previous state; `canUndo` / `canRedo` drive the editor's buttons. `clearHistory()` forgets every step; `reset()` calls it.
+- `moveWell(rackId, sourceWellId, targetWellId)` swaps two wells (a move when the target is empty).
+- `assignWells(rackId, wellIds, groupId)` sets each well's `group` and keeps its `sampleType`; an empty well becomes a `sample`, and `undefined` empties the wells.
+
+The BioTemplate `plate-map` binding uses `useRackEditor` with history turned on.
 
 ### Plotly results
 
@@ -409,9 +439,11 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
 </template>
 ```
 
-The component lazily imports Plotly, updates with `Plotly.react`, tracks theme and container size, and purges on unmount. Set `empty` explicitly when there is no result, and keep axis labels/units in the supplied layout.
+The component lazily imports Plotly, updates with `Plotly.react`, tracks theme and container size, and purges on unmount. It applies `mintPlotlyTemplate()` by default (your `layout` keys still win) and re-reads it on every theme change. Set `empty` explicitly when there is no result, and keep axis labels/units in the supplied layout.
 
 `active` pauses render/resize work for hidden tabs; `height` accepts pixels or a CSS height. Pass `plotly` only when the plugin owns a compatible custom build. Set `clickEvents` to receive `plotly-click` with a `PlotMouseEvent`. Use `variant="frame"` in a bounded workbench panel and the `header`, `toolbar`, `subhead`, `legend`, and `footer` slots for surrounding UI. See [PlotlyChart](/sdk/components/plotly-chart) for the full example; use [ChartContainer](/sdk/components/chart-container) for another rendering library.
+
+For a chart you render with Plotly directly, `mintPlotlyTemplate(element?)` (from `@morscherlab/mint-sdk`) returns a Plotly `Template` resolved from the MINT tokens: the `--mint-sample-1…8` colorway, `--font-sans` body text, `--font-mono` ticks, `--border-light` grid, and a card-style hover label. Pass it as `layout: { template: mintPlotlyTemplate() }`; call it again after a theme change.
 
 ### Resizable workbench panes
 

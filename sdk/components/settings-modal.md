@@ -23,6 +23,10 @@ SettingsModal is a feedback component exported by @morscherlab/mint-sdk for plug
 import { SettingsModal } from "@morscherlab/mint-sdk/components"
 ```
 
+## Layout
+
+With `layout` omitted, the modal shows a rail when there are more than three groups and stacks every group on one page otherwise; `layout="horizontal"` and `layout="vertical"` force a layout. The rail separates plugin groups from personal (Appearance) settings. Schema-driven settings get a search across groups, a modified-from-default marker with a per-row reset, and "Restore group defaults". Changes apply immediately; the default footer closes with "Done", and a `#footer` slot replaces it.
+
 <!-- sdk-props:start -->
 ## Props
 

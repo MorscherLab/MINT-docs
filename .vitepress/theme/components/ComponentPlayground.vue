@@ -7,7 +7,6 @@ import {
   AppAvatarMenu,
   AppContainer,
   AppLayout,
-  AppPluginSwitcher,
   AppSidebar,
   AppToastContainer,
   AppTopBar,
@@ -34,7 +33,6 @@ import {
   BioTemplateRenderer,
   ChemicalFormula,
   CollapsibleCard,
-  ColorSlider,
   ComponentBindingRenderer,
   ConcentrationInput,
   ControlWorkspaceView,
@@ -43,7 +41,6 @@ import {
   DatePicker,
   DateTimePicker,
   Divider,
-  DropdownButton,
   EmptyState,
   BatchProgressList,
   DoseCalculator,
@@ -61,21 +58,16 @@ import {
   FormField,
   GroupAssigner,
   IconButton,
-  InstrumentAlertLog,
   InstrumentStateBadge,
-  InstrumentStatusCard,
-  LcmsSequenceTable,
   LoadingSpinner,
   LayoutResizeHandle,
   MoleculeInput,
   MultiSelect,
   NumberInput,
-  PlateMapEditor,
   PluginIcon,
   PluginWorkspaceView,
   ProgressBar,
   ProtocolStepEditor,
-  RackEditor,
   ReagentEditor,
   ReagentList,
   ResourceCard,
@@ -146,9 +138,7 @@ const dataFrameColumnWidths = ref<Record<string, number>>({})
 const selectedWells = ref(['B2', 'H12', 'P24'])
 const currentStep = ref(1)
 const smartGroupMode = ref<'auto' | 'manual'>('auto')
-const colorValue = ref(42)
 const segmentedValue = ref('plate')
-const dropdownValue = ref('export')
 const activeShellView = ref('analysis')
 const numberValue = ref(96)
 const formulaValue = ref('C6H12O6')
@@ -166,7 +156,6 @@ const sampleLegendValue = ref('treated')
 const settingsDemoOpen = ref(false)
 const autoGroupDemoOpen = ref(false)
 const isClient = ref(false)
-const activeRackId = ref('rack-1')
 const formBuilderValues = ref<Record<string, unknown>>({
   panelName: 'Dose-response panel',
   method: 'four-pl',
@@ -288,12 +277,6 @@ const segmentedOptions = [
   { value: 'timeline', label: 'Timeline', description: 'Protocol schedule' },
 ]
 
-const dropdownOptions = [
-  { value: 'export', label: 'Export CSV', description: 'Download processed results' },
-  { value: 'archive', label: 'Archive run', description: 'Move to project history' },
-  { value: 'rerun', label: 'Re-run analysis', description: 'Start from current settings' },
-]
-
 const unitOptions = [
   { value: 'uL', label: 'uL', factor: 1, group: 'Volume' },
   { value: 'mL', label: 'mL', factor: 1000, group: 'Volume' },
@@ -365,75 +348,6 @@ const sequenceProgress = {
   current_sample_name: 'Sample B07',
   current_method: 'polar_pos_12min.raw',
 }
-
-const instrumentStatus = {
-  instrument_id: 'orbitrap-01',
-  instrument_name: 'Orbitrap 01',
-  state: 'running',
-  active_method: 'polar_pos_12min.meth',
-  current_sample: {
-    file_name: 'MINT_042_POS_B07.raw',
-    sample_id: 'B07',
-    sample_name: 'Treatment B07',
-    vial_position: 'B:07',
-    injection_volume: 2,
-  },
-  sequence_progress: sequenceProgress,
-  timestamp: '2026-05-29T12:25:00Z',
-  last_seen: '2026-05-29T12:25:00Z',
-}
-
-const instrumentAlerts = [
-  {
-    id: 'alert-1',
-    instrument_id: 'orbitrap-01',
-    instrument_name: 'Orbitrap 01',
-    level: 'warning',
-    message: 'Source pressure drift',
-    body: { source: 'Monitor', detail: 'Pressure drift exceeded warning threshold.', code: 204 },
-    timestamp: '2026-05-29T12:10:00Z',
-  },
-  {
-    id: 'alert-2',
-    instrument_id: 'lcms-02',
-    instrument_name: 'LCMS 02',
-    level: 'info',
-    message: 'Sequence completed',
-    body: { source: 'Sequence', detail: 'Batch QC sequence completed successfully.' },
-    timestamp: '2026-05-29T11:40:00Z',
-    acknowledged: true,
-  },
-]
-
-const lcmsSequenceItems = [
-  {
-    sample_type: 'Blank',
-    file_name: 'MINT_042_blank_001',
-    sample_id: 'blank-1',
-    path: 'D:\\Data\\MINT_042_blank_001.raw',
-    instrument_method: 'D:\\Methods\\polar_pos_12min.meth',
-    position: 'A:01',
-    injection_volume: 2,
-  },
-  {
-    sample_type: 'QC',
-    file_name: 'MINT_042_qc_002',
-    sample_id: 'qc-1',
-    path: 'D:\\Data\\MINT_042_qc_002.raw',
-    instrument_method: 'D:\\Methods\\polar_pos_12min.meth',
-    position: 'A:02',
-    injection_volume: 2,
-  },
-  {
-    sample_type: 'Unknown',
-    file_name: 'MINT_042_sample_B07',
-    sample_id: 'B07',
-    path: 'D:\\Data\\MINT_042_sample_B07.raw',
-    instrument_method: 'D:\\Methods\\polar_pos_12min.meth',
-    position: 'B:07',
-    injection_volume: 2,
-  },
-]
 
 const sampleLegendItems = [
   { id: 'control', name: 'Control', color: '#2563eb', count: 16 },
@@ -595,16 +509,6 @@ const accountMenuItems = [
   { id: 'docs', label: 'Documentation', href: '/sdk/components' },
 ]
 
-const pluginSwitcherInfo = {
-  current: { id: 'dose', label: 'Dose Response', version: '1.0.41', color: '#f97316' },
-  plugins: [
-    { id: 'dose', label: 'Dose Response', version: '1.0.41', color: '#f97316' },
-    { id: 'lcms', label: 'LC-MS Batch', version: '0.9.4', color: '#0ea5e9' },
-    { id: 'qc', label: 'QC Review', version: '0.4.1', color: '#16a34a' },
-  ],
-  installHref: '/admin/plugins',
-}
-
 const appSidebarPanels = {
   analysis: [
     { id: 'parameters', label: 'Parameters', subtitle: 'Model and thresholds', defaultOpen: true, badge: 2 },
@@ -669,56 +573,6 @@ const formBuilderSchema = {
   submitLabel: 'Save design',
   showCancel: true,
 }
-
-const rackEditorValue = ref([
-  {
-    id: 'rack-1',
-    name: 'Sample Rack',
-    format: 96,
-    slot: 'R',
-    injectionVolume: 2,
-    wells: {
-      A1: { id: 'A1', row: 0, col: 0, state: 'filled', sampleType: 'control', metadata: { label: 'Vehicle_A1' } },
-      A2: { id: 'A2', row: 0, col: 1, state: 'filled', sampleType: 'sample', metadata: { label: 'Drug_A1' } },
-      B1: { id: 'B1', row: 1, col: 0, state: 'filled', sampleType: 'qc', metadata: { label: 'QC_01' } },
-    },
-  },
-  {
-    id: 'rack-2',
-    name: 'Backup Rack',
-    format: 54,
-    slot: 'G',
-    injectionVolume: 5,
-    wells: {},
-  },
-])
-
-const plateEditorSamples = [
-  { id: 'control', name: 'Control', color: '#2563eb', count: 2 },
-  { id: 'treated', name: 'Treated', color: '#f97316', count: 2 },
-  { id: 'qc', name: 'QC', color: '#16a34a', count: 1 },
-]
-
-const plateMapState = ref({
-  plates: [
-    {
-      id: 'plate-a',
-      name: 'Plate A',
-      format: 96,
-      wells: {
-        A1: { id: 'A1', row: 0, col: 0, state: 'filled', sampleType: 'control' },
-        A2: { id: 'A2', row: 0, col: 1, state: 'filled', sampleType: 'control' },
-        B1: { id: 'B1', row: 1, col: 0, state: 'filled', sampleType: 'treated' },
-        B2: { id: 'B2', row: 1, col: 1, state: 'filled', sampleType: 'treated' },
-        H12: { id: 'H12', row: 7, col: 11, state: 'filled', sampleType: 'qc' },
-      },
-    },
-  ],
-  activePlateId: 'plate-a',
-  samples: plateEditorSamples,
-  selectedWells: ['A1', 'A2'],
-  activeSampleId: 'treated',
-})
 
 const moleculeValue = ref({
   smiles: 'CC(=O)OC1=CC=CC=C1C(=O)O',
@@ -996,7 +850,6 @@ const previewNames = new Set([
   'AppAvatarMenu',
   'AppContainer',
   'AppLayout',
-  'AppPluginSwitcher',
   'AppSidebar',
   'AppToastContainer',
   'AppTopBar',
@@ -1024,7 +877,6 @@ const previewNames = new Set([
   'ChartContainer',
   'ChemicalFormula',
   'CollapsibleCard',
-  'ColorSlider',
   'ComponentBindingRenderer',
   'ConcentrationInput',
   'ControlWorkspaceView',
@@ -1035,7 +887,6 @@ const previewNames = new Set([
   'Divider',
   'DoseCalculator',
   'DoseDesignWorkspaceView',
-  'DropdownButton',
   'EmptyState',
   'ExperimentCodeBadge',
   'ExperimentDataViewer',
@@ -1050,20 +901,15 @@ const previewNames = new Set([
   'FormActions',
   'GroupAssigner',
   'IconButton',
-  'InstrumentAlertLog',
   'InstrumentStateBadge',
-  'InstrumentStatusCard',
-  'LcmsSequenceTable',
   'LoadingSpinner',
   'MoleculeInput',
   'MultiSelect',
   'NumberInput',
-  'PlateMapEditor',
   'PluginIcon',
   'PluginWorkspaceView',
   'ProgressBar',
   'ProtocolStepEditor',
-  'RackEditor',
   'ReagentEditor',
   'ReagentList',
   'ResourceCard',
@@ -1315,16 +1161,6 @@ const fallbackReason = computed(() => {
         </div>
       </template>
 
-      <template v-else-if="name === 'AppPluginSwitcher'">
-        <div class="mint-menu-demo">
-          <AppPluginSwitcher
-            :current="pluginSwitcherInfo.current"
-            :plugins="pluginSwitcherInfo.plugins"
-            :install-href="pluginSwitcherInfo.installHref"
-          />
-        </div>
-      </template>
-
       <template v-else-if="name === 'AppToastContainer'">
         <div class="mint-live-row">
           <BaseButton variant="primary" @click="toast.info('Export file is being generated...')">
@@ -1430,16 +1266,8 @@ const fallbackReason = computed(() => {
         <BaseSlider v-model="sliderValue" :min="0" :max="100" show-value />
       </template>
 
-      <template v-else-if="name === 'ColorSlider'">
-        <ColorSlider v-model="colorValue" :min="0" :max="100" show-value show-labels min-label="Low" max-label="High" />
-      </template>
-
       <template v-else-if="name === 'SegmentedControl'">
         <SegmentedControl v-model="segmentedValue" :options="segmentedOptions" variant="card" full-width />
-      </template>
-
-      <template v-else-if="name === 'DropdownButton'">
-        <DropdownButton v-model="dropdownValue" :options="dropdownOptions" variant="secondary" />
       </template>
 
       <template v-else-if="name === 'NumberInput'">
@@ -1715,35 +1543,6 @@ const fallbackReason = computed(() => {
         <ReagentEditor v-model="reagentEditorValue" :plate-format="96" />
       </template>
 
-      <template v-else-if="name === 'RackEditor'">
-        <div class="mint-rack-editor-demo">
-          <RackEditor
-            v-model="rackEditorValue"
-            v-model:active-rack-id="activeRackId"
-            :max-racks="3"
-            :min-racks="1"
-            :allow-reorder="true"
-            well-plate-size="sm"
-            show-legend
-            show-badges
-          />
-        </div>
-      </template>
-
-      <template v-else-if="name === 'PlateMapEditor'">
-        <div class="mint-plate-editor-demo">
-          <PlateMapEditor
-            v-model="plateMapState"
-            :format="96"
-            :samples="plateEditorSamples"
-            :max-plates="2"
-            size="sm"
-            :allow-add-plates="false"
-            :allow-add-samples="false"
-          />
-        </div>
-      </template>
-
       <template v-else-if="name === 'FormActions'">
         <div class="mint-form-actions-demo">
           <FormActions show-cancel submit-label="Save experiment" />
@@ -1961,10 +1760,6 @@ const fallbackReason = computed(() => {
         </div>
       </template>
 
-      <template v-else-if="name === 'LcmsSequenceTable'">
-        <LcmsSequenceTable :items="lcmsSequenceItems" :max-rows="3" />
-      </template>
-
       <template v-else-if="name === 'FileUploader'">
         <FileUploader accept=".csv,.xlsx" multiple />
       </template>
@@ -1992,14 +1787,6 @@ const fallbackReason = computed(() => {
           <InstrumentStateBadge state="error" />
           <InstrumentStateBadge state="disconnected" />
         </div>
-      </template>
-
-      <template v-else-if="name === 'InstrumentStatusCard'">
-        <InstrumentStatusCard :status="instrumentStatus" />
-      </template>
-
-      <template v-else-if="name === 'InstrumentAlertLog'">
-        <InstrumentAlertLog :alerts="instrumentAlerts" title="Instrument Events" />
       </template>
 
       <template v-else-if="name === 'ProgressBar'">

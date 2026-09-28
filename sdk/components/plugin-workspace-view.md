@@ -46,7 +46,7 @@ import { PluginWorkspaceView } from "@morscherlab/mint-sdk/components"
 
 `sidebarVariant` is still declared by this workspace API for compatibility, but
 AppSidebar no longer has visual variants, so that option no longer changes its
-appearance. Use the workspace's sidebar slot with AppSidebar when you need to
+appearance; it is removed in MINT 1.4. Use the workspace's sidebar slot with AppSidebar when you need to
 control its new `density` prop directly. The generated table below preserves
 the SDK's declarations and source comments.
 

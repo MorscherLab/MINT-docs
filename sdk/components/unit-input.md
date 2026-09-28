@@ -23,6 +23,10 @@ UnitInput is a forms component exported by @morscherlab/mint-sdk for plugin fron
 import { UnitInput } from "@morscherlab/mint-sdk/components"
 ```
 
+## Behavior
+
+The unit sits in a fixed segment inside the field; with more than one unit it opens a menu that previews the current value in each unit of the same group. Units with a `factor` show a hint with the value in the neighboring unit nearest to 1–1000 (`≈ 0.25 mL`). The menu is teleported to `<body>`, so `overflow: hidden` ancestors do not clip it.
+
 <!-- sdk-props:start -->
 ## Props
 

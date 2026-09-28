@@ -26,7 +26,7 @@ import { SegmentedControl } from "@morscherlab/mint-sdk/components"
 ## Sizing in 1.2.1
 
 The card variant sizes to its content. Add `full-width` when the choice control
-should fill its container.
+should fill its container. An option's `color` renders a small swatch before its label.
 
 ```vue
 <SegmentedControl v-model="mode" :options="modes" variant="card" full-width />

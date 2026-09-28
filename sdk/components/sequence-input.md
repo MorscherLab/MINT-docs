@@ -23,6 +23,10 @@ SequenceInput is a forms component exported by @morscherlab/mint-sdk for plugin 
 import { SequenceInput } from "@morscherlab/mint-sdk/components"
 ```
 
+## Behavior
+
+The field keeps the typed text and reports problems under it: `N` bases as a warning with their count, characters outside the alphabet as an error naming them. `v-model` receives the sanitized sequence. `maxLength` counts sequence characters, not typed characters. `useSequenceUtils().findSequenceProblems()` returns the same report for your own fields.
+
 <!-- sdk-props:start -->
 ## Props
 

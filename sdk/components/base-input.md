@@ -33,6 +33,16 @@ import { BaseInput } from "@morscherlab/mint-sdk/components"
 </FormField>
 ```
 
+The `#prefix` slot takes a bare leading glyph (a search icon, a currency sign); the `#suffix` slot renders a unit segment inside the field border:
+
+```vue
+<BaseInput v-model="volume" type="number">
+  <template #suffix>µL</template>
+</BaseInput>
+```
+
+Without either slot, the component renders the bare `<input>` as its root.
+
 <!-- sdk-props:start -->
 ## Props
 
