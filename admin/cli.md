@@ -35,8 +35,9 @@ Prompts for the platform URL if none is stored, your username or email, and your
 | `mint auth login` | Acquire a JWT for the given platform URL |
 | `mint auth logout` | Discard the stored JWT |
 | `mint auth status` | Print the active platform URL, user, expiration |
+| `mint auth token create\|list\|revoke` | Manage your personal access tokens for scripts and AI assistants |
 
-The credential file tracks one default host plus per-host tokens. To switch instances, run `mint auth login --url <other-url>`.
+The credential file tracks one default host plus per-host tokens. To switch instances, run `mint auth login --url <other-url>`. For unattended scripts, create a personal access token with `mint auth token create` and pass it as `MINT_TOKEN`; see [AI Assistants and API Access](/guide/ai-and-api) and the [CLI reference](/sdk/api/cli-reference#mint-auth).
 
 ## Experiments
 
@@ -112,7 +113,7 @@ For deeper operational status, use **Admin -> Platform -> Server** in the browse
 
 ## Restart and run the platform
 
-`mint platform restart` asks the configured platform to restart (requires `platform.configure`). All platform commands are also available under `mint platform …`, for example `mint platform admin user list`. `mint daemon` and `mint platform daemon start|stop|restart|status|logs` run the platform without Docker; see the [CLI reference](/sdk/api/cli-reference#platform-daemon-commands).
+`mint platform restart` asks the configured platform to restart (requires `platform.configure`). All platform commands are also available under `mint platform …`, for example `mint platform admin user list`. `mint daemon` and `mint platform daemon start|stop|restart|status|logs` run the platform without Docker; see the [CLI reference](/sdk/api/cli-reference#mint-daemon-and-mint-platform-daemon).
 
 ## Updates
 

@@ -1,6 +1,6 @@
 # Users & Roles
 
-MINT controls access with a **system role** per user plus project membership. The system role decides which actions a user may take anywhere in the platform. Project membership records who works on a project and, in restricted visibility mode, which experiments a user can see. Roles combine 23 permissions in 10 groups; admins can build custom roles from them.
+MINT controls access with a **system role** per user plus project membership. The system role decides which actions a user may take anywhere in the platform. Project membership records who works on a project and, in restricted visibility mode, which experiments a user can see. Roles combine 25 permissions in 11 groups; admins can build custom roles from them.
 
 > [Screenshot: Admin -> People -> Roles page with the Admin / Member / Viewer presets and a custom role]
 
@@ -16,11 +16,13 @@ Three roles ship out of the box:
 
 | Role | Permissions |
 |------|-------------|
-| **Admin** | All 23. Also the only role that can manage the Admin role, disable authentication, or enable dev mode. |
-| **Member** (default for new accounts) | All `projects.*` and `experiments.*`; `plugins.view`, `plugins.use`, `plugins.configure`; `users.view`; `platform.view_logs`; `filesystem.browse` |
-| **Viewer** | `projects.view`, `experiments.view`, `plugins.view`, `plugins.use`, `users.view` |
+| **Admin** | All 25. Also the only role that can manage the Admin role, disable authentication, or enable dev mode. |
+| **Member** (default for new accounts) | All `projects.*` and `experiments.*`; `instruments.view`; `plugins.view`, `plugins.use`, `plugins.configure`; `users.view`; `platform.view_logs`; `filesystem.browse` |
+| **Viewer** | `projects.view`, `experiments.view`, `instruments.view`, `plugins.view`, `plugins.use`, `users.view` |
 
 Every user has exactly one system role. Change it on **Admin -> People -> Users**.
+
+When a database is upgraded to MINT @MINT_VERSION@, every existing role, custom roles included, receives `instruments.view`, and the Admin role also receives `instruments.edit`. Roles created later get neither automatically. Grant `instruments.edit` to the roles that maintain the [instrument directory](/guide/instruments).
 
 ## Custom roles
 
@@ -59,7 +61,7 @@ Do not use project membership instead of system roles. A user still needs `exper
 
 > [Screenshot: project Team card listing members and their project roles]
 
-## The 23 permissions
+## The 25 permissions
 
 Permissions are `resource.action` strings. The backend checks them on every route; the role editor shows them as grouped toggles.
 
@@ -67,6 +69,7 @@ Permissions are `resource.action` strings. The backend checks them on every rout
 |-------|-------------|
 | **`projects.*`** (5) | `view`, `create`, `edit`, `delete`, `manage_members` |
 | **`experiments.*`** (4) | `view`, `create`, `edit`, `delete` |
+| **`instruments.*`** (2) | `view`, `edit` |
 | **`plugins.*`** (4) | `view`, `use`, `configure`, `install` |
 | **`jobs.*`** (2) | `read_all`, `manage_all` |
 | **`filesystem.*`** (1) | `browse` |

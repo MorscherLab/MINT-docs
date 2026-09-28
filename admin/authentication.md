@@ -21,7 +21,7 @@ Accounts come from two places:
 - **Self-registration.** When `auth.allowRegistration` is `true` (the default), the login page shows **No account yet? Create one**, which opens `/register`. New accounts get the default role, Member.
 - **Admin creation.** An admin creates accounts with `mint admin user create <username> --role <slug>` (see [CLI](/admin/cli)).
 
-Anyone who can reach the login page can register while self-registration is on. To turn it off, set `auth.allowRegistration` to `false` in `config.json` (or `MINT_AUTH__ALLOW_REGISTRATION=false`) and restart. The `/register` page then sends visitors to `/login`, and the registration API returns 403.
+Anyone who can reach the login page can register while self-registration is on. To turn it off, switch off **Admin -> Platform -> Configuration -> Authentication -> Registration** (needs `platform.configure`), or set `auth.allowRegistration` to `false` in `config.json` (or `MINT_AUTH__ALLOW_REGISTRATION=false`), then restart. The `/register` page then sends visitors to `/login`, and the registration API returns 403.
 
 Every password (registration, profile change, admin create or reset) must be at least 8 characters.
 
@@ -39,6 +39,8 @@ Enter a username or email and the password on the login page, then click **Sign 
 A locked account gets "Too many failed login attempts. Try again later." until the lockout ends.
 
 Login cookies carry `Secure` when `server.externalUrl` starts with `https://`. If `externalUrl` is unset, MINT uses the scheme of the incoming request, so behind a TLS proxy set `externalUrl`.
+
+Changing a password, by the user or through an admin reset, revokes every session token issued for that account before the change. A user who changes their own password stays signed in in the current browser; every other session must sign in again. Personal access tokens are not affected; see [Personal access tokens](#personal-access-tokens). An open admin terminal re-checks its session every 15 seconds and closes with "access revoked" once the session is revoked; see [Admin terminal](/reference/permissions#admin-terminal).
 
 ::: warning Rotate the JWT secret carefully
 Rotating `auth.jwtSecretKey` invalidates every active session, signing every user out.:::
@@ -98,6 +100,26 @@ Key requirements:
 
 If `autoProvision` is enabled (default), a first edu-ID login creates the MINT user automatically. The stable edu-ID claim defaults to `swissEduIDUniqueID`; the local username defaults to the `email` claim.
 
+## Personal access tokens
+
+Users create personal access tokens for scripts, the `mint` CLI (`MINT_TOKEN`) and AI assistants connected over MCP. How users create and use them is described in [AI assistants and API access](/guide/ai-and-api).
+
+For administrators:
+
+| Property | Behavior |
+|----------|----------|
+| Format | Starts with `mint_pat_`; the secret is shown once at creation. MINT stores only a digest |
+| Lifetime | 30, 90 or 365 days (default 90), capped by `auth.patMaxLifetimeDays` (default 365). Set the cap under **Admin -> Platform -> Configuration -> Authentication -> Access token lifetime** |
+| Scope | Acts with the owner's role. A read-only token is refused with 403 for any request other than a read (`GET`, `HEAD`, `OPTIONS`), and MCP write tools are hidden from it |
+| Accepted by | Every REST route as `Authorization: Bearer`, the plugin proxy, and `/mcp`. The plugin proxy does not forward the token to plugins |
+| Ends | On revocation, on expiry, or when the account is deactivated. A password change does **not** revoke tokens |
+
+**Admin -> People -> Access Tokens** (needs `users.manage`) lists every user's unrevoked tokens and revokes any of them. The API equivalents are `GET /api/admin/tokens` and `DELETE /api/admin/tokens/{id}`. Creating and revoking tokens is recorded in the audit log as `api_token.create` and `api_token.revoke`.
+
+> [Screenshot: Admin -> People -> Access Tokens listing tokens of several users with a Revoke action]
+
+When an account is compromised, deactivate it: sessions and tokens of an inactive account are refused. Revoke its tokens before reactivating it.
+
 ## Disabling authentication
 
 `auth.enableAuth: false` or `devMode: true` turns sign-in off, and every visitor becomes an implicit administrator. Only administrators can change either setting through **Admin -> Platform -> Configuration**; `platform.configure` alone is not enough. Never run a reachable server this way.
@@ -110,7 +132,7 @@ MINT takes the client IP from `X-Forwarded-For` only when the request comes from
 
 ## Audit log
 
-MINT records security-relevant events in the database, including `auth.login_success` and `auth.login_failure` for password and passkey logins, `user.register`, and project, experiment, and plugin changes. Read them through the API; there is no audit page in the UI yet. See [Audit log](/admin/platform-settings#logs-and-audit-log).
+MINT records security-relevant events in the database, including `auth.login_success` and `auth.login_failure` for password and passkey logins, `user.register`, `api_token.create` and `api_token.revoke`, MCP write calls (`mcp.tool_call`), and project, experiment, and plugin changes. Read them through the API; there is no audit page in the UI yet. See [Audit log](/admin/platform-settings#logs-and-audit-log).
 
 For tracing, MINT can export OpenTelemetry spans for FastAPI, SQLAlchemy, and logging when `observability.enabled` is `true`.
 

@@ -18,7 +18,7 @@ MLD (Morscher Laboratory Database) was the platform's original name. It was rena
 
 - Packages are `mint-sdk` (PyPI) and `@morscherlab/mint-sdk` (npm). The `mld-sdk` packages are frozen and receive no releases.
 - Plugins are discovered only through the `mint.plugins` entry-point group. A plugin that still declares `mld.plugins` is not loaded, and no error is shown.
-- Settings use the `MINT_` environment prefix. General `MLD_*` variables are ignored; only a few legacy aliases remain, such as `MLD_CONFIG_PATH` and the `MLD_*` GitHub-token and JWT-secret names.
+- Settings use the `MINT_` environment prefix. General `MLD_*` variables are ignored; only a few legacy aliases remain. `MLD_CONFIG_PATH` and the `MLD_*` GitHub-token names log a one-time warning naming their `MINT_` replacement; the `MLD_*` JWT-secret names are still accepted without a warning.
 - The CLI is `mint`.
 
 Rebuild old plugins against `mint-sdk` and rename any `MLD_*` variables in your deployment. Background: [rebrand decision](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-04-30-mld-to-mint-rebrand.md).
@@ -37,11 +37,11 @@ There is intentionally no desktop / single-user install path: MINT is a multi-us
 
 ## Do plugins isolate from each other?
 
-Yes — when needed. The plugin loader checks each plugin's dependencies against everything already installed; if there's a clash, the plugin runs in its own `uv`-managed venv, in a separate subprocess that the platform proxies HTTP to. Otherwise plugins share the platform's environment for efficiency. Either way, plugin crashes don't take down the platform: middleware wraps every plugin call with error isolation.
+Partly. In-process plugins share the platform's environment under a hashed [dependency lock](/admin/plugins#plugin-dependency-lock): an install that clashes with the platform or another plugin is blocked or reported as a conflict before anything changes. Subprocess plugins run in their own `uv`-managed venv, in a separate process that the platform proxies HTTP to. Either way, plugin crashes don't take down the platform: middleware wraps every plugin call with error isolation.
 
 ## What database backends are supported?
 
-PostgreSQL is the only supported MINT platform database in 1.2. The SDK's local-db extra still uses SQLite when a plugin runs standalone; that is separate from the installed platform.
+PostgreSQL is the only supported MINT platform database. The SDK's local-db extra still uses SQLite when a plugin runs standalone; that is separate from the installed platform.
 
 ## How big a deployment can MINT handle?
 
@@ -52,9 +52,9 @@ MINT runs as a single server process. Rate limits, presence, in-flight plugin op
 Two layers:
 
 1. **Database** — standard `pg_dump` / `pg_dumpall` for PostgreSQL.
-2. **Filesystem** — `server.dataPath` for plugin registry state, uploaded `.mint` bundles, plugin environment snapshots, object storage, and plugin-owned files.
+2. **Filesystem** — `server.dataPath` for plugin registry state, uploaded `.mint` bundles, the plugin dependency lock, object storage, and plugin-owned files.
 
-Plugin environment snapshots under `<server.dataPath>/plugins/snapshots/` are short-lived rollback points for plugin upgrades, but those aren't a backup substitute — they're a local rollback aid.
+The plugin lock history under `<server.dataPath>/plugins/locks/history/` holds rollback points for plugin package changes, but it isn't a backup substitute — it's a local rollback aid.
 
 ## Does MINT support SSO?
 

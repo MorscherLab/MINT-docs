@@ -96,7 +96,7 @@ deployments can point `marketplace.registryUrl` at an aggregate registry.
 The default role for new users: can create and edit projects and experiments and use plugins, but has no platform-admin rights. Write access comes from the role's permissions, not from project membership. Most lab users are Members.
 
 **Migration (platform)**
-An Alembic revision under `api/db_revisions/` that the platform applies on startup. Tracked via `alembic_version`. Older databases first run the legacy integer migrations v001–v031 in `api/migrations/versions/`.
+An Alembic revision under `api/db_revisions/` that the platform applies on startup. Tracked via `alembic_version`. A database from before 1.2.2 must be adopted by MINT 1.2.x (≥ 1.2.2) first; see [Updates](/admin/updates).
 
 **Migration (plugin)**
 A schema change for a plugin's own tables. Plugins opt into the shared Alembic runtime with `MigrationSpec` / `get_migration_spec()` from `mint_sdk.migrations`; the platform runs revisions under a migration lock, and a failed migration keeps the plugin disabled. The older `PluginMigration` runner is tracked in `plugin_schema_migrations`.

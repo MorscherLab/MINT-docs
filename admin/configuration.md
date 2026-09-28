@@ -3,7 +3,7 @@
 MINT reads configuration from four sources, in increasing order of precedence:
 
 1. **Built-in defaults** — used when no other source overrides them.
-2. **`config.json`** — `MINT_CONFIG_PATH` wins when set; otherwise, when `MINT_SERVER__DATA_PATH` is set, MINT uses `<MINT_SERVER__DATA_PATH>/config.json` if that file exists or if `./config.json` does not; otherwise it uses `./config.json`. The legacy `MLD_CONFIG_PATH` is also honored.
+2. **`config.json`** — `MINT_CONFIG_PATH` wins when set; otherwise, when `MINT_SERVER__DATA_PATH` is set, MINT uses `<MINT_SERVER__DATA_PATH>/config.json` if that file exists or if `./config.json` does not; otherwise it uses `./config.json`. The legacy `MLD_CONFIG_PATH` is also honored and logs a one-time warning naming `MINT_CONFIG_PATH`.
 3. **`.env`** — `dotenv`-style key/value pairs in the working directory.
 4. **Environment variables** — keys prefixed `MINT_`, with nested fields joined by `__` (e.g., `MINT_DATABASE__HOST=postgres`).
 
@@ -33,6 +33,7 @@ For most installations, editing `config.json` is the only configuration step. Us
   "notifications": { "...": "..." },
   "logging": { "...": "..." },
   "errorReporting": { "...": "..." },
+  "audit": { "...": "..." },
   "observability": { "...": "..." },
   "access": { "...": "..." },
   "filesystem": { "...": "..." },
@@ -72,8 +73,8 @@ Dev mode is for local development and evaluation only. Never enable it on a host
 | `instanceId` | generated if empty | Durable deployment namespace for public identifiers |
 | `rpId` | `""` | WebAuthn relying-party ID |
 | `rpName` | `MINT` | WebAuthn relying-party display name |
-| `externalUrl` | `""` | Public platform URL, used for frontend/plugin context and to decide whether auth cookies are `Secure` |
-| `trustedProxyCidrs` | `["127.0.0.1/32", "::1/128"]` | Proxy source networks trusted for `X-Forwarded-For` / `X-Forwarded-Host`. An explicit `[]` trusts no proxy |
+| `externalUrl` | `""` | Public platform URL, used for frontend/plugin context, to decide whether auth cookies are `Secure`, and as the only non-local host `/mcp` accepts |
+| `trustedProxyCidrs` | `["127.0.0.1/32", "::1/128"]` | Proxy source networks trusted for `X-Forwarded-For` / `X-Forwarded-Host` / `X-Forwarded-Proto`. An explicit `[]` trusts no proxy |
 | `healthReadyToken` | `""` | Bearer token that lets a monitor read `GET /api/health/ready` without a user login; empty means only users with `platform.view_logs` can read it |
 
 The `apiMountPath` key was removed; the API is always mounted at `/api`. An old `config.json` that still has it starts with a one-time warning.
@@ -86,7 +87,7 @@ The `apiMountPath` key was removed; the API is always mounted at `/api`. An old 
 | `port` | `5432` | PostgreSQL port |
 | `databaseName` | `mint_db` | PostgreSQL database name |
 
-PostgreSQL is the only MINT platform database in 1.2. SQLite remains available only to plugins running standalone through the SDK's local-db support.
+PostgreSQL is the only MINT platform database. SQLite remains available only to plugins running standalone through the SDK's local-db support.
 
 ```json
 {
@@ -148,19 +149,19 @@ aliases such as `MINT_S3_ACCESS_KEY_ID`, `MINT_S3_SECRET_ACCESS_KEY`,
 | `tokenExpireMinutes` | `10080` (7 days) | Token lifetime; the admin UI accepts 15–43200 |
 | `failedLoginLimit` | `5` | Failed password logins before the account is locked |
 | `loginLockoutMinutes` | `15` | Lockout duration |
+| `patMaxLifetimeDays` | `365` | Longest lifetime a [personal access token](/admin/authentication#personal-access-tokens) may be issued for: `30`, `90` or `365` |
 
 See [Security settings](#security-settings) for how these behave.
 
 ## Security settings
 
-These behaviors apply from MINT 1.2.7.
-
-- **Self-registration.** With `auth.allowRegistration: false`, `POST /api/users/register` returns 403 and the `/register` page sends visitors to `/login`. **Admin -> Platform -> Configuration** shows the setting but cannot change it; set it in `config.json` or with `MINT_AUTH__ALLOW_REGISTRATION=false`.
+- **Self-registration.** With `auth.allowRegistration: false`, `POST /api/users/register` returns 403 and the `/register` page sends visitors to `/login`. Switch it under **Admin -> Platform -> Configuration -> Authentication -> Registration**, in `config.json`, or with `MINT_AUTH__ALLOW_REGISTRATION=false`.
 - **Passwords.** Every password (registration, self-service change, admin create, update and reset) must be at least 8 characters. Shorter ones are rejected with 422.
 - **Account lockout.** After `auth.failedLoginLimit` failed password logins, the account is locked for `auth.loginLockoutMinutes`.
 - **Rate limit.** `/api/auth`, `/api/passkey`, `/api/setup` and `/api/users/register` allow 20 requests per 60 seconds per client IP, then return 429.
 - **Secure cookies.** The `mint_access_token` and `passkey_session` cookies carry `Secure` when `server.externalUrl` starts with `https://`, or, if it is unset, when the request arrived over HTTPS. If `externalUrl` is `https://` but users open MINT over plain HTTP, the browser drops the cookie and login fails.
-- **Trusted proxies.** The client IP (rate limit, audit log) and the passkey relying-party host come from `X-Forwarded-For` / `X-Forwarded-Host` only when the direct peer is in `server.trustedProxyCidrs`. An explicit empty list trusts no proxy. Add your reverse proxy's address when it is not on the same host.
+- **Trusted proxies.** The client IP (rate limit, audit log), the passkey relying-party host, and the `platformOrigin` injected into plugin frontends come from `X-Forwarded-For` / `X-Forwarded-Host` / `X-Forwarded-Proto` only when the direct peer is in `server.trustedProxyCidrs`. An explicit empty list trusts no proxy. Add your reverse proxy's address when it is not on the same host.
+- **MCP host check.** `/mcp` accepts only requests whose `Host` is `localhost`, `127.0.0.1`, `[::1]` or the host (with port, if any) of `server.externalUrl`; any other host gets 421. Set `externalUrl` to the address AI clients use, make the reverse proxy pass the original `Host` header, and restart MINT after changing `externalUrl`.
 - **Disabling auth.** Only users with the `admin` role can set `auth.enableAuth: false` or `devMode: true` through the admin config API.
 - **Setup password.** When initial setup completes, MINT clears the administrator password stored in `ADMIN_PASSWORD` in `config.json`.
 
@@ -242,7 +243,11 @@ edu-ID SSO stores linked users in the platform's required PostgreSQL database an
 | Key | Default | Description |
 |-----|---------|-------------|
 | `autoCheckEnabled` | `false` | Enable background update checks |
-| `checkIntervalHours` | `24` | Polling interval |
+| `checkIntervalHours` | `24` | Polling interval in hours; at least `1` |
+| `autoApplyEnabled` | `false` | Install updates daily at `autoApplyTime`; needs a restart supervisor |
+| `autoApplyTime` | `03:00` | Daily run time, server-local `HH:MM` |
+| `autoApplyPlatform` | `true` | Scheduled updates include the platform |
+| `autoApplyPlugins` | `true` | Scheduled updates include plugins |
 | `platformRepo` | `MorscherLab/MINT` | Source of platform releases |
 | `githubToken` | `""` | Optional GitHub API token; also read from `MINT_GITHUB_TOKEN` or `GITHUB_TOKEN` |
 | `includePrereleases` | `false` | Include prereleases when checking GitHub releases |
@@ -250,7 +255,7 @@ edu-ID SSO stores linked users in the platform's required PostgreSQL database an
 
 See [Updates](/admin/updates) for the wider picture.
 
-Docker startup auto-update is controlled by the container entrypoint environment variable `MINT_UPDATES__AUTO_APPLY_ON_STARTUP`, not by `config.json`.
+Docker startup auto-update is controlled by the container entrypoint environment variable `MINT_UPDATES__AUTO_APPLY_ON_STARTUP`, not by `config.json`, and is separate from `autoApplyEnabled`.
 
 ## `notifications`
 
@@ -265,6 +270,14 @@ retry state, and recipient policy.
 | `notifications.slack` | `enabled`, `webhookUrl` |
 
 Only enable an integration when its required host/webhook fields are set.
+
+## `audit`
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `retentionDays` | `0` | Days to keep audit events (`0`–`36500`). `0` keeps every event |
+
+With `retentionDays` above 0, a daily job deletes older audit events and records each purge as an `audit.purge` event. Edit it under **Admin -> Platform -> Configuration -> Audit log**, or set `MINT_AUDIT__RETENTION_DAYS`.
 
 ## `observability`
 
@@ -311,7 +324,7 @@ When empty, production CORS allows no cross-origin browser calls. In dev mode, M
 
 Nested keys use `__` (double underscore) as the separator, and `MINT_` as the prefix. Names are case-insensitive. How a multi-word key is written depends on the section:
 
-- In `server`, `auth`, `filesystem`, `notifications.*` and at top level, use snake_case: `MINT_SERVER__DATA_PATH`, `MINT_AUTH__ALLOW_REGISTRATION`.
+- In `server`, `auth`, `filesystem`, `notifications.*`, `audit` and at top level, use snake_case: `MINT_SERVER__DATA_PATH`, `MINT_AUTH__ALLOW_REGISTRATION`, `MINT_AUDIT__RETENTION_DAYS`. These variables override the matching camelCase key in `config.json`.
 - In every other section (`database`, `sso.eduid`, `marketplace`, `updates`, `access`, `observability`, `logging`, `errorReporting`, `plugins`), write the camelCase key without separators: `MINT_DATABASE__DATABASENAME`, `MINT_UPDATES__AUTOCHECKENABLED`.
 - The `errorReporting` section's prefix is `MINT_ERROR_REPORTING__`, for example `MINT_ERROR_REPORTING__MINLEVEL`.
 - Single-word keys work the same everywhere: `MINT_DATABASE__HOST`, `MINT_SSO__EDUID__ENABLED`.
@@ -323,11 +336,14 @@ Nested keys use `__` (double underscore) as the separator, and `MINT_` as the pr
 | `server.trustedProxyCidrs` | `MINT_SERVER__TRUSTED_PROXY_CIDRS` |
 | `auth.jwtSecretKey` | `MINT_AUTH__JWT_SECRET_KEY` |
 | `auth.allowRegistration` | `MINT_AUTH__ALLOW_REGISTRATION` |
+| `auth.patMaxLifetimeDays` | `MINT_AUTH__PAT_MAX_LIFETIME_DAYS` |
+| `audit.retentionDays` | `MINT_AUDIT__RETENTION_DAYS` |
 | `database.databaseName` | `MINT_DATABASE__DATABASENAME` |
 | `sso.eduid.enabled` | `MINT_SSO__EDUID__ENABLED` |
 | `sso.eduid.clientId` | `MINT_SSO__EDUID__CLIENTID` |
 | `marketplace.registryUrl` | `MINT_MARKETPLACE__REGISTRYURL` |
 | `updates.platformRepo` | `MINT_UPDATES__PLATFORMREPO` |
+| `updates.autoApplyEnabled` | `MINT_UPDATES__AUTOAPPLYENABLED` |
 | `notifications.email.host` | `MINT_NOTIFICATIONS__EMAIL__HOST` |
 | `notifications.teams.webhookUrl` | `MINT_NOTIFICATIONS__TEAMS__WEBHOOK_URL` |
 | `adminTerminalEnabled` | `MINT_ADMIN_TERMINAL_ENABLED` |
@@ -338,6 +354,8 @@ In the sections of the second bullet, snake_case forms such as `MINT_DATABASE__D
 :::
 
 Booleans accept `true`/`false`/`1`/`0`. JSON values can be embedded literally.
+
+The remaining legacy `MLD_` aliases (`MLD_CONFIG_PATH` and the `MLD_` GitHub-token names) log a one-time warning naming their `MINT_` replacement. The `MLD_` JWT-secret aliases stay supported without a warning, because dropping one would sign every user out.
 
 ## Storage path layout
 
@@ -350,13 +368,14 @@ The configured `server.dataPath` (default `./data`) holds platform runtime state
 | `marketplace/` | Marketplace registry cache |
 | `plugins/uploads/` | Uploaded `.mint` bundles and extracted install payloads |
 | `plugins/manifest.json` | Restore manifest for dynamically installed plugin bundles |
-| `plugins/snapshots/` | Pre-install / pre-upgrade Python environment snapshots |
+| `plugins/locks/` | In-process [plugin dependency lock](/admin/plugins#plugin-dependency-lock): `requirements.in`, `plugins.lock`, `state.json` and `history/` |
 | `plugins/<plugin>/venv/` | Isolated plugin virtual environments when subprocess isolation is used |
 | `plugins/<plugin>/config.json` | Legacy per-plugin settings fallback |
 | `logs/mint.log` | Log file when `logging.fileEnabled` is true (default `logging.filePath`) |
 | `admin-terminal/startup.sh` | Optional startup script managed by **Admin -> Platform -> Terminal** |
+| `cache/uv/` | Docker only: uv wheel cache (`UV_CACHE_DIR=/app/data/cache/uv`), used to restore plugins from their locks after an image rebuild |
 
-Removing `marketplace/` is safe; it regenerates on demand. Removing `plugins/snapshots/` discards rollback history.
+Removing `marketplace/` is safe; it regenerates on demand. Removing `plugins/locks/history/` discards plugin rollback points; do not remove the rest of `plugins/locks/`.
 
 ## Next
 

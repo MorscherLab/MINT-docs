@@ -37,7 +37,9 @@ docker compose -f deploy/docker/docker-compose.yml up -d --build --wait
 docker compose -f deploy/docker/docker-compose.yml logs -f app
 ```
 
-The Compose file builds `deploy/docker/Dockerfile`, starts PostgreSQL 17, and keeps the database in the `mint-postgres-data` volume. Platform config, objects, and plugin state live in the repository's `data/` directory, mounted at `/app/data`.
+The Compose file builds `deploy/docker/Dockerfile`, starts PostgreSQL 17, and keeps the database in the `mint-postgres-data` volume. Platform config, objects, plugin state and the uv wheel cache (`UV_CACHE_DIR=/app/data/cache/uv`) live in the repository's `data/` directory, mounted at `/app/data`. Keeping the cache on the volume lets a rebuilt image restore plugins from their [dependency lock](/admin/plugins#plugin-dependency-lock) without downloading them again.
+
+The Compose file also sets `MINT_RESTART_SUPERVISED=1`: the `app` service has `restart: unless-stopped`, so Docker starts MINT again after a restart that MINT requests itself. This is what allows [scheduled updates](/admin/updates#scheduled-updates).
 
 ### `.env` settings
 
@@ -55,7 +57,7 @@ The Compose file builds `deploy/docker/Dockerfile`, starts PostgreSQL 17, and ke
 
 Compose only passes the variables listed in `deploy/docker/docker-compose.yml`. For any other setting, such as `server.externalUrl` or `auth.allowRegistration`, edit `data/config.json` after first start or add the `MINT_...` variable to the `app` service `environment:` block. Set `server.externalUrl` to your public `https://` URL so login cookies carry `Secure` behind a TLS proxy.
 
-Expected output once startup completes (the container runs `mint daemon`, which serves the app with Uvicorn):
+Expected output once startup completes (the container runs `uv run --no-sync mint daemon`, which serves the app with Uvicorn; `--no-sync` keeps a restart from reverting packages that plugins installed):
 
 ```
 app  | INFO:     Started server process [1]
@@ -151,7 +153,7 @@ Two persistent stores hold the database and runtime files:
 | `mint-postgres-data` | `docker compose -f deploy/docker/docker-compose.yml exec postgres pg_dump -U mint mint_db > backup.sql` |
 | Repository `data/` directory | Back up the bind-mounted directory with the lab's normal filesystem backup tool |
 
-Run both before any major upgrade and on a regular schedule. Snapshots taken by `snapshot.py` for plugin upgrades are short-lived rollback aids — not a backup substitute.
+Run both before any major upgrade and on a regular schedule. The plugin lock history under `data/plugins/locks/history/` is a short-lived rollback aid for Python packages, not a backup substitute.
 
 ## Troubleshooting
 
@@ -162,7 +164,7 @@ Run both before any major upgrade and on a regular schedule. Snapshots taken by 
 | Platform migration fails on startup | Container exits non-zero. Check the log line and restore the matching database backup if needed. |
 | Plugin migration fails | MINT keeps running and that plugin stays disabled; the error shows in **Admin -> Plugins -> Installed**. Fix the plugin release and redeploy. |
 | 502 from the reverse proxy | Container not running, or the proxy is targeting the wrong host/port. `curl -I http://127.0.0.1:8001/api/health` from the host. For database and plugin readiness, see [Server health](/admin/platform-settings#server-health). |
-| Disk fills up unexpectedly | Runtime data under the repository `data/` directory grew, often from plugin uploads or cached bundles. Add monitoring; consider moving the bind mount to a larger disk. |
+| Disk fills up unexpectedly | Runtime data under the repository `data/` directory grew, often from plugin uploads, cached bundles, or the uv wheel cache in `data/cache/uv`. Add monitoring; consider moving the bind mount to a larger disk. |
 | Need to inspect the database | `docker compose -f deploy/docker/docker-compose.yml exec postgres psql -U mint mint_db` |
 
 ## Next step
