@@ -22,6 +22,7 @@ develop ──▶ test ──▶ build ──▶ publish ──▶ install ─�
 | [CI patterns](/sdk/operations/ci-patterns) | Scaffold GitHub Actions workflows plus checksum, registry PR and SDK-compatibility additions |
 | [Versioning](/sdk/operations/versioning) | SemVer, `hatch-vcs`, SDK ranges, `requires_mint`/`min_platform_version`, committed lockfiles |
 | [Deploying](/sdk/operations/deploying) | `mint verify`, `mint deploy` and what it confirms, storage and recovery |
+| [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3) | Removed Python and frontend APIs, settings `access`, SDK range, deprecated legacy migrations |
 | [Migrate from 1.1 to 1.2](/sdk/operations/migrate-1.1-to-1.2) | PostgreSQL, repository, frontend, and plugin-discovery changes from 1.1 |
 | [Upgrading the SDK](/sdk/operations/upgrading) | `mint sdk update`, lockfiles, regenerate and verify |
 

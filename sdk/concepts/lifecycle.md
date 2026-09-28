@@ -288,7 +288,7 @@ configuration, then restart/reload the server so startup can retry.
 | `@on_event(...)` | no | Use for experiment or plugin-local events |
 | `@on_config_change(...)` | no | Requires a `@mint_plugin(config=...)` model |
 | `get_migration_spec()` | no | Returns `None`; opt into the shared Alembic runtime with `MigrationSpec` |
-| `get_migrations_package()` | no | Returns `None`; retained legacy integer protocol, mutually exclusive with a spec |
+| `get_migrations_package()` | no | Returns `None`; deprecated legacy integer protocol, removed in MINT 1.4, mutually exclusive with a spec |
 | `get_shared_models()` | no | Returns `[]` (no tables) |
 
 Health is a runtime diagnostic; an unhealthy report alone should not be described as an automatic route unload. Inspect the admin error and logs for the actual startup/runtime failure.

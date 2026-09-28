@@ -71,7 +71,7 @@ The frontend's `dist/` is *not* a separate top-level directory in the bundle —
     "name": "my-plugin",
     "version": "1.0.0",
     "description": "Drug-response panel design",
-    "requires_mint": ">=@MINT_VERSION@,<1.3",
+    "requires_mint": ">=@MINT_VERSION@,<1.4",
     "has_frontend": true,
     "frontend_revision": "sha256:…"
   },

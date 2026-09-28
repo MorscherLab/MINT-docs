@@ -90,6 +90,11 @@ Tokens are stored per host in `~/.config/mint/credentials.json`, or `$XDG_CONFIG
 | `mint auth login [--url URL] [--username\|-u USER]` | Log in and store the token; prompts for missing values. A host without a scheme gets `https://` |
 | `mint auth logout [--url URL]` | Discard the stored token for `URL` (default: the current host) |
 | `mint auth status` | Print the current host and user |
+| `mint auth token create <name> [--days 30\|90\|365] [--read-only] [--json]` | Issue a personal access token (default lifetime 90 days) and print it once, with a `claude mcp add` command for the platform's `/mcp` endpoint |
+| `mint auth token list [--json]` | List your personal access tokens by prefix, access, expiry and last use |
+| `mint auth token revoke <token-id>` | Revoke one of your tokens (ID from `token list`) |
+
+A personal access token works as `MINT_TOKEN` for the CLI and `MINTClient`, and as the Bearer token for MCP clients. `--read-only` limits the token to reads. See [AI Assistants and API Access](/guide/ai-and-api).
 
 ### `mint experiment`
 
@@ -198,7 +203,7 @@ These run the platform on the local host from a platform directory. `--platform-
 | `mint platform daemon install-service [--platform-dir PATH] [--name NAME] [--host HOST] [--port\|-p N] [--app TARGET] [--no-enable] [--no-start] [--json]` | Install a Linux user-level systemd service (default name `mint-platform`) |
 | `mint platform daemon uninstall-service [--name NAME] [--no-stop] [--json]` | Remove that service |
 
-`mint dev` serves a plugin; these commands serve the platform. Production setup is covered in [Install on Linux](/admin/install-direct).
+`start` and `install-service` run the platform with `MINT_DAEMON=1`, which marks it as supervised so the platform can restart itself after a scheduled update; see [Updates](/admin/updates). `mint dev` serves a plugin; these commands serve the platform. Production setup is covered in [Install on Linux](/admin/install-direct).
 
 ## Develop commands
 
@@ -229,6 +234,8 @@ mint init [DIRECTORY] [flags]
 
 Without `--yes`, missing fields are prompted interactively. With `--yes`, the AI-assistant file defaults to `claude`, which creates `CLAUDE.md`. If `mint doctor` says that file is missing current SDK guidance, run `mint doctor --fix` once to refresh it. `--ai-assistant none` skips assistant files, but the current `mint doctor` check still expects one of those files; run `mint doctor --fix` if you later want a passing doctor report.
 
+The standard scaffold includes a read-only `@mcp_tool` example (`double_value`) with a test; see [MCP tools](/sdk/recipes/mcp-tools). The scaffolded CI workflow builds the `.mint` bundle (`uv run mint build . --output-dir dist/`) on every push and pull request to `main`, after `mint doctor --strict` and the tests. Frontend templates pin pinia `^4`, vue-router `^5`, vitest `^5`, vue-tsc `^3` and jsdom `^30`. The `mint-sdk` range follows the running SDK's minor: a @MINT_VERSION@ CLI writes `>=1.3.0b1,<1.4`.
+
 The parser accepts `workflow`, although `init --help` still omits it from its type description. Generated mode accepts only `analysis`; use standard mode for the other types.
 
 Use `generated` mode for the first plugin unless you know you need a custom Vue workspace. Use `standard` mode when the UI needs custom layout, custom controls, or multiple interactive views.
@@ -250,6 +257,8 @@ mint dev <subcommand>     # see logs, below
 | `--platform` | Also start a local platform process and configure dev proxy |
 | `--platform-dir` | Path to platform directory (otherwise auto-detected) |
 | `--prefix` | Override the routes prefix for the dev proxy |
+
+On startup `mint dev` lists the plugin's MCP tools under their published names and prints a `mint mcp call` command to try one.
 
 Stop with **Ctrl+C**.
 
@@ -305,7 +314,14 @@ mint doctor [PATH] [flags]
 | `--strict` | Exit non-zero when doctor reports warnings |
 | `--json` | Output machine-readable check results |
 
-`--deps` and `--r` run only their own check. The deprecated-API check flags deprecated Python and frontend APIs in plugin sources, including the removed `AppSidebar` `variant` prop in `.vue` files and in agent docs such as `CLAUDE.md` and `AGENTS.md`; the fix hint is `AppSidebar :floating="false" collapsible` (plus `width="20rem"` for the former analysis width).
+`--deps` and `--r` run only their own check. The default run also:
+
+- checks `@mcp_tool` / `@mcp_prompt` / `@mcp_resource` names, docstrings, signatures and schemas (the platform publishes none of a plugin's declarations while any is invalid);
+- warns when the plugin declares legacy `get_migrations_package()` migrations, which are removed in MINT 1.4;
+- reports removed frontend APIs with their replacements: `PlateMapEditor` / `RackEditor` (use `PlateEditor`), `FileBrowserModal` (use `FilePicker`), `AppPluginSwitcher` and the `pluginSwitcher` prop (use the `AppTopBar` plugin identity), `ColorSlider`, `DropdownButton`, `InstrumentAlertLog`, `InstrumentStatusCard`, `LcmsSequenceTable`, the removed composables, and `ProgressBar` `variant="segmented"` / `steps` / `current-step`;
+- accepts `mint-sdk` ranges for the 1.1, 1.2 and 1.3 lines.
+
+The deprecated-API check flags deprecated Python and frontend APIs in plugin sources, including the removed `AppSidebar` `variant` prop in `.vue` files and in agent docs such as `CLAUDE.md` and `AGENTS.md`; the fix hint is `AppSidebar :floating="false" collapsible` (plus `width="20rem"` for the former analysis width).
 
 ### `mint info`
 
@@ -334,7 +350,7 @@ Add common plugin pieces to an existing project.
 | `mint add setting <name> [--type string\|number\|integer\|boolean] [--default VALUE] [--description TEXT] [--required] [--generate] [--path PATH]` | Add a typed plugin setting |
 | `mint add endpoint <name> [--route PATH] [--method get\|post\|put\|patch\|delete] [--router NAME] [--create-router] [--request-model NAME] [--response-model NAME] [--generate] [--path PATH]` | Add a FastAPI endpoint |
 | `mint add router <name> [--prefix PATH] [--tag TAG] [--path PATH]` | Add and register a router |
-| `mint add migration <name> [--autogenerate] [--database-url URL] [--target plugin\|platform] [--path PATH]` | Add a plugin schema migration |
+| `mint add migration <name> [--autogenerate] [--database-url URL] [--target plugin\|platform] [--path PATH]` | Add a plugin schema migration; a plugin without migrations gets `get_migration_spec()` and an Alembic `db_revisions` package ([details](#developer-database-commands)) |
 | `mint add schema <name> [--file requests\|responses] [--field name:type] [--generate] [--path PATH]` | Add a Pydantic schema |
 | `mint add service <name> [--method NAME] [--path PATH]` | Add a service module |
 | `mint add artifact [--path PATH]` | Add a local artifact helper and `/artifacts` router |
@@ -347,6 +363,23 @@ Add common plugin pieces to an existing project.
 | `mint add data-template-preset [preset] [--list] [--json] [--page] [--path PATH]` | Add a ready-to-save data-template preset |
 
 There is no `mint add job` command. Use `mint init --mode generated` for the current job scaffold, or add `@job` methods by hand.
+
+### `mint mcp`
+
+Call one of the plugin's MCP tools on the running `mint dev` backend.
+
+```bash
+mint mcp call <TOOL> [--json args.json] [--url URL] [--path PATH]
+```
+
+| Flag | Effect |
+|------|--------|
+| `TOOL` (positional) | The `@mcp_tool` method name, such as `double_value` (not the published `<plugin>_<name>`) |
+| `--json` | JSON file with the tool arguments (default `{}`) |
+| `--url` | Base URL of the running `mint dev` backend (default `http://127.0.0.1:8003`) |
+| `--path` | Plugin project directory (default `.`) |
+
+Prints the tool's result as JSON, or `Error: ...` and a non-zero exit. The dev server runs standalone, so the tool sees the standalone actor and `ctx.experiments` is `None`. See [MCP tools](/sdk/recipes/mcp-tools).
 
 ### `mint verify`
 
@@ -428,7 +461,11 @@ release; Python and frontend lockfiles resolve to the same release. The newest c
 bounds, exclusions and `requires_mint`; an excluded candidate fails rather
 than falling back to an older allowed release. A valid Python
 compatibility floor is preserved, so raise it explicitly for newly required
-APIs. `--dry-run` previews changes, `--no-sync` skips installs/lock validation,
+APIs. An explicit `--version` on a newer supported minor is the exception: it
+moves every `mint-sdk` requirement, dependency groups included, to
+`>=VERSION,<next-minor` and widens a `requires_mint` that excludes the target.
+`--scope minor` alone still fails on a lower minor cap.
+`--dry-run` previews changes, `--no-sync` skips installs/lock validation,
 and `--verify` chains Docker verification against the stable/beta channel.
 See [upgrading the SDK](/sdk/operations/upgrading).
 
@@ -453,8 +490,18 @@ The TypeScript file exports `useGeneratedPluginClient()`, `useGeneratedPluginCon
 
 These commands inspect explicit development databases or
 write revision source files; they do not apply, stamp or downgrade migrations.
-The plugin must declare `get_migration_spec()`. Legacy migration declarations
-continue to use `mint add migration` without autogeneration.
+The `mint db` commands require `get_migration_spec()`.
+
+`mint add migration <name>` without `--autogenerate` follows the plugin's
+declaration. A plugin with `get_migration_spec()` gets a blank Alembic revision.
+A plugin with no migration hook gets a `get_migration_spec()` method returning
+`MigrationSpec(package="<package>.db_revisions", models=tuple(self.get_shared_models()))`,
+an empty `db_revisions` package and a first revision; no database is needed. A
+plugin that already owns tables through `get_shared_models()` but has no
+migration hook is refused with instructions to generate an autogenerated
+baseline and adopt deployed tables with `LegacyBaseline`. A plugin that declares
+the deprecated `get_migrations_package()` keeps getting legacy integer `v*.py`
+modules.
 
 | Command | Behavior |
 |---|---|

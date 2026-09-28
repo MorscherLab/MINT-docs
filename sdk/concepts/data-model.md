@@ -112,7 +112,7 @@ For complex queries (e.g., "find experiments where `result.method == 'v4'`"), pr
 
 ## Repositories
 
-MINT 1.2 consolidates repository methods on `ExperimentRepository`; `PluginDataRepository` remains a MINT 1.1 adapter. See [Python SDK → Repository return types](/sdk/api/python#repository-return-types) for the method and return-type map.
+`ExperimentRepository` holds the experiment, design, analysis and artifact methods. See [Python SDK → Repository return types](/sdk/api/python#repository-return-types) for the method and return-type map.
 
 ## Extending the model
 

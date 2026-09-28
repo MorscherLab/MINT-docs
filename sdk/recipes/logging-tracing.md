@@ -18,8 +18,7 @@ Inside an installed plugin, records propagate to the platform's root handlers:
 the JSON formatter in production or the readable development formatter. The
 platform's log configuration sets the level.
 
-`mint_sdk.get_plugin_logger()` is deprecated and scheduled for removal in
-MINT 1.3; importing it emits a `DeprecationWarning`. It only wrapped
+`mint_sdk.get_plugin_logger()` has been removed. It only wrapped
 `logging.getLogger("mint.plugin.<name>")` and added `plugin=<name>` to
 `extra`. Pass that field yourself when you want it (see below).
 
