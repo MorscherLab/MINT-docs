@@ -1,6 +1,6 @@
-# Migrations reference — 1.2.6
+# Migrations reference — @MINT_VERSION@
 
-`mint_sdk.migrations` exports the shared Alembic runtime and the retained legacy integer framework. Alembic opt-in is available from 1.2.2. Source: [v1.2.6 migrations package](https://github.com/MorscherLab/MINT/tree/v1.2.6/packages/sdk-python/src/mint_sdk/migrations).
+`mint_sdk.migrations` exports the shared Alembic runtime and the retained legacy integer framework. Alembic opt-in is available from 1.2.2. Source: [v@MINT_VERSION@ migrations package](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations).
 
 ## `MigrationSpec` and `LegacyBaseline`
 
@@ -162,7 +162,7 @@ class PluginMigration(ABC):
     def has_downgrade(self) -> bool: ...
 ```
 
-A metaclass checks that `version` is an integer and `name` a string at instantiation. Use unique positive increasing versions and stable labels such as `add_panel_notes`. `depends_on` is not interpreted by the v1.2.6 runner. `has_downgrade` reports whether the subclass overrides `downgrade`; the runner does not invoke it automatically.
+A metaclass checks that `version` is an integer and `name` a string at instantiation. Use unique positive increasing versions and stable labels such as `add_panel_notes`. `depends_on` is not interpreted by the v@MINT_VERSION@ runner. `has_downgrade` reports whether the subclass overrides `downgrade`; the runner does not invoke it automatically.
 
 ### `MigrationOps`
 

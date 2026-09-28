@@ -133,7 +133,7 @@ class DashboardPlugin(AnalysisPlugin):
 
 ## Source and next steps
 
-Verified against [v1.2.6 context](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/context.py), [remote context](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/remote_context.py), and [platform scope enforcement](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/repositories/scoped_experiment_repository.py).
+Verified against [v@MINT_VERSION@ context](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/context.py), [remote context](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/remote_context.py), and [platform scope enforcement](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/repositories/scoped_experiment_repository.py).
 
 - [Reading and managing experiments](/sdk/recipes/reading-experiments)
 - [Writing results and files](/sdk/recipes/writing-results)

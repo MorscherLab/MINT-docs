@@ -1,6 +1,6 @@
 # Plugin tables and migrations
 
-MINT 1.2.6 offers two supported migration protocols. New plugins can opt into the shared **Alembic runtime**, introduced in 1.2.2, by returning `MigrationSpec` from `get_migration_spec()`. Existing plugins can keep `get_migrations_package()` and integer `PluginMigration` revisions. These declarations are mutually exclusive; adopting Alembic is an explicit database transition, not a rename of the old hook.
+MINT @MINT_VERSION@ offers two supported migration protocols. New plugins can opt into the shared **Alembic runtime**, introduced in 1.2.2, by returning `MigrationSpec` from `get_migration_spec()`. Existing plugins can keep `get_migrations_package()` and integer `PluginMigration` revisions. These declarations are mutually exclusive; adopting Alembic is an explicit database transition, not a rename of the old hook.
 
 Use plugin-owned tables for structured drafts, run metadata, or records that need relational queries. Use [platform data repositories](/sdk/concepts/data-model) and object storage when data should participate in the experiment workflow. Neither migration protocol supplies row-level user authorization for custom tables.
 
@@ -170,4 +170,4 @@ Standard Alembic drop-table/column/index/constraint operations require module-le
 
 Continue with the [table tutorial](/sdk/tutorials/design-plugin-with-tables), [backfill upgrade test](/sdk/recipes/backfill-migration), and [API reference](/sdk/api/migrations).
 
-Release sources: [migration contract](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/migrations/runtime.py), [Alembic runtime](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/migrations/_alembic_runtime.py), and [plugin database lifecycle](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/plugin_database.py).
+Release sources: [migration contract](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations/runtime.py), [Alembic runtime](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations/_alembic_runtime.py), and [plugin database lifecycle](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/plugin_database.py).

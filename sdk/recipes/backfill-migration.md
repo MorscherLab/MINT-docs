@@ -1,6 +1,6 @@
 # Backfill migrations
 
-Add a new column and populate historical rows without overwriting values users already supplied. This recipe extends the Alembic-based `panels` table from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), using MINT 1.2.6. For an existing integer-migration plugin, keep the [legacy API](/sdk/api/migrations#legacy-integer-migration-api) until you explicitly adopt the new protocol.
+Add a new column and populate historical rows without overwriting values users already supplied. This recipe extends the Alembic-based `panels` table from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), using MINT @MINT_VERSION@. For an existing integer-migration plugin, keep the [legacy API](/sdk/api/migrations#legacy-integer-migration-api) until you explicitly adopt the new protocol.
 
 ## Add a nullable value first
 

@@ -6,7 +6,7 @@ MINT's update story has three related checks: the **platform** runtime, the bund
 
 ## Current documented release: 1.2.6
 
-This guide covers **MINT 1.2.6, released 17 September 2026**. Keep the platform,
+This guide covers **MINT @MINT_VERSION@, released 17 September 2026**. Keep the platform,
 Python SDK and frontend SDK on matching releases; plugins retain their own
 package versions and are distributed as `.mint` bundles.
 
@@ -18,7 +18,7 @@ package versions and are distributed as `.mint` bundles.
 | 1.2.5 | Large process workers receive up to 30 seconds to exit after SIGKILL before cleanup failure discards a result. |
 | 1.2.6 | Failed jobs show their handler exception; worker tracebacks reach platform logs. |
 
-Read the [release notes](https://github.com/MorscherLab/MINT/blob/v1.2.6/CHANGELOG.md)
+Read the [release notes](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md)
 and [SDK upgrade guide](/sdk/operations/upgrading-sdk) before updating.
 
 ## Platform updates

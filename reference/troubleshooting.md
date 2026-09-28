@@ -7,7 +7,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Problem | Cause | Fix |
 |---------|-------|-----|
 | `command not found: mint` | CLI not installed or its location is not on PATH | Install `mint-sdk[cli]`, then run `uv tool update-shell` (uv) or add `~/.local/bin` to PATH (pip); see [CLI setup](/cli/overview#install-the-1-2-cli) |
-| `mint` reports missing `typer` | Plain `mint-sdk` was installed without CLI dependencies | For a uv tool, run `uv tool install --force 'mint-sdk[cli]==1.2.6'`; in a scaffolded project, run `uv sync` and use `uv run mint` |
+| `mint` reports missing `typer` | Plain `mint-sdk` was installed without CLI dependencies | For a uv tool, run `uv tool install --force 'mint-sdk[cli]==@MINT_VERSION@'`; in a scaffolded project, run `uv sync` and use `uv run mint` |
 | Local serving reports missing `uvicorn` | Server dependencies are missing in the active environment | Keep `mint-sdk[cli,server]` in the project's dev dependency group, run `uv sync`, then `uv run mint dev` |
 | Port 8001 already in use | Another process is on the port | Stop the conflicting process or change `--port` in the systemd unit |
 | Browser shows "Cannot connect" | Platform process crashed | `journalctl -u mint -n 200` (direct install) or `docker compose logs mint` (Docker); restart |
@@ -113,9 +113,9 @@ not repair commands. The separate platform `python -m api.migrations
 implicitly at startup. Follow the [migration guide](/sdk/operations/migrating-to-1.2#database-migrations-from-1-2-2)
 before using it explicitly.
 
-Release evidence: [1.2.6 changelog](https://github.com/MorscherLab/MINT/blob/v1.2.6/CHANGELOG.md),
-[adoption validator](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/migrations/alembic_adoption.py),
-[plugin loader](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/plugins/loader.py).
+Release evidence: [1.2.6 changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md),
+[adoption validator](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/migrations/alembic_adoption.py),
+[plugin loader](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/plugins/loader.py).
 
 ## Hosted (lab) mode
 

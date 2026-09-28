@@ -1,6 +1,6 @@
 # Frontend platform integration
 
-This guide targets MINT **1.2.6**. Start with the [standard frontend tutorial](/sdk/tutorials/adding-a-frontend); it already installs Vue, Pinia, the SDK, styles, and a generated API client.
+This guide targets MINT **@MINT_VERSION@**. Start with the [standard frontend tutorial](/sdk/tutorials/adding-a-frontend); it already installs Vue, Pinia, the SDK, styles, and a generated API client.
 
 ## Choose the right source of state
 
@@ -219,7 +219,7 @@ The file-browser changes introduced in 1.2.4 are included in 1.2.6. The platform
 
 Keep `@refresh="browser.refresh"` connected. It sends `refresh=true` for the current location and invalidates cached listings for that mount, including descendants. Listing responses are capped at 2,000 entries by default, so display `truncated` and counts instead of claiming the visible rows are a complete directory inventory. `typeRules` classifies matching entries rather than hiding other files. The helper cancels superseded requests and starts at a reachable mount when the preferred mount is offline.
 
-Cache size, TTL, and entry limits are Python `FileBrowser` settings; they are not `useFileBrowser()` options. See the [release filesystem implementation](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/filesystem.py) if you own a standalone file browser service.
+Cache size, TTL, and entry limits are Python `FileBrowser` settings; they are not `useFileBrowser()` options. See the [release filesystem implementation](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/filesystem.py) if you own a standalone file browser service.
 
 ### Adapter-driven FilePicker
 
@@ -281,7 +281,7 @@ The picker warms at most 20 immediate folders with two requests at a time and re
 
 ## Release source
 
-- [Platform context and message validation](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/usePlatformContext.ts)
-- [Shared experiment selection](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/stores/experiment.ts)
-- [Experiment data persistence](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/useExperimentSave.ts)
-- [Server file browser API](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/useFileBrowser.ts)
+- [Platform context and message validation](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/usePlatformContext.ts)
+- [Shared experiment selection](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/stores/experiment.ts)
+- [Experiment data persistence](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/useExperimentSave.ts)
+- [Server file browser API](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/useFileBrowser.ts)

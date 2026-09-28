@@ -10,7 +10,7 @@ Install **`mint-sdk[cli]`** to use the `mint` command-line interface. It covers 
 ## Install the 1.2 CLI
 
 ```bash
-uv tool install 'mint-sdk[cli]==1.2.6'
+uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
 ```
 
 `mint-sdk` is the package name; `[cli]` selects its optional command-line
@@ -28,7 +28,7 @@ If Typer is missing, the command exits with the `mint-sdk[cli]` install hint.
 For an existing bare uv tool installation, reinstall with the extra:
 
 ```bash
-uv tool install --force 'mint-sdk[cli]==1.2.6'
+uv tool install --force 'mint-sdk[cli]==@MINT_VERSION@'
 ```
 
 After scaffolding, use the generated project's environment:
@@ -45,8 +45,8 @@ The scaffold keeps the runtime dependency as `mint-sdk` and supplies
 group by default. `[cli]` is sufficient to create the project; its own dev
 environment supplies the server dependency for running it.
 
-Source: [SDK dependencies](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/pyproject.toml),
-[scaffold dependency policy](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/init_versions.py).
+Source: [SDK dependencies](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/pyproject.toml),
+[scaffold dependency policy](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/init_versions.py).
 
 ## Verifying the install
 
@@ -56,7 +56,7 @@ mint --version
 mint --help
 ```
 
-If the command isn't found, the install location isn't on your `PATH`. With `uv tool install 'mint-sdk[cli]==1.2.6'`, run `uv tool update-shell`. With `pip install --user 'mint-sdk[cli]'`, add `~/.local/bin` to `PATH`.
+If the command isn't found, the install location isn't on your `PATH`. With `uv tool install 'mint-sdk[cli]==@MINT_VERSION@'`, run `uv tool update-shell`. With `pip install --user 'mint-sdk[cli]'`, add `~/.local/bin` to `PATH`.
 
 ## Command index
 

@@ -105,7 +105,7 @@ budget or hide a handler exception. If `Job worker could not be stopped`
 persists on 1.2.6, inspect host/process resource pressure and the logs before
 rerunning a write-producing job.
 
-Source: [v1.2.6 job manager](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/job_manager.py).
+Source: [v@MINT_VERSION@ job manager](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/job_manager.py).
 
 ## Reading errors on the client
 
@@ -126,4 +126,4 @@ with MINTClient() as client:
 
 SDK-created apps install the handlers automatically. For a custom host, use the shared `mint_sdk.api_errors.register_api_error_handlers(app)` integration or implement the same contract explicitly.
 
-Verified against [v1.2.6 error handlers](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/api_errors.py), [exception mapping](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/exceptions.py), and [client exceptions](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/client/_exceptions.py).
+Verified against [v@MINT_VERSION@ error handlers](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/api_errors.py), [exception mapping](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/exceptions.py), and [client exceptions](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/client/_exceptions.py).

@@ -1,6 +1,6 @@
 # Migrating to MINT 1.2
 
-This guide targets the released **MINT v1.2.6** (17 September 2026). Platform administrators must use PostgreSQL. New plugin code should use the unified experiment repository and current frontend job/client APIs; several legacy APIs remain as compatibility adapters in this release.
+This guide targets the released **MINT v@MINT_VERSION@** (17 September 2026). Platform administrators must use PostgreSQL. New plugin code should use the unified experiment repository and current frontend job/client APIs; several legacy APIs remain as compatibility adapters in this release.
 
 ## Before upgrading
 
@@ -111,11 +111,11 @@ applies to `mint add migration --autogenerate`. SQLite targets must already
 exist, and the platform target requires PostgreSQL. See [Migrations](/sdk/concepts/migrations)
 for revision layout, adoption and runtime verification.
 
-Source: [v1.2.6 platform startup](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/repositories/database.py), [legacy adoption checks](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/migrations/alembic_adoption.py), and [developer database commands](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/db_commands.py).
+Source: [v@MINT_VERSION@ platform startup](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/repositories/database.py), [legacy adoption checks](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/migrations/alembic_adoption.py), and [developer database commands](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/db_commands.py).
 
 ## Load plugins through entry points
 
-The platform deprecates plugin module/class pairs listed in `config.json` but still loads them in v1.2.6. Migrate these declarations to package entry points in `pyproject.toml`:
+The platform deprecates plugin module/class pairs listed in `config.json` but still loads them in v@MINT_VERSION@. Migrate these declarations to package entry points in `pyproject.toml`:
 
 ```toml
 [project.entry-points."mint.plugins"]
@@ -151,7 +151,7 @@ repo = context.get_experiment_repository()
 await repo.save_design_data(experiment_id, plugin_id, design)
 ```
 
-Repository access remains scoped by the plugin's type, explicit data-access capabilities, allowed experiment types, current user visibility, and `analysis_result_readers` declaration. The old getter still returns a compatibility adapter in v1.2.6. Use the new getter in new code; do not bypass it with direct platform database access.
+Repository access remains scoped by the plugin's type, explicit data-access capabilities, allowed experiment types, current user visibility, and `analysis_result_readers` declaration. The old getter still returns a compatibility adapter in v@MINT_VERSION@. Use the new getter in new code; do not bypass it with direct platform database access.
 
 ## Replace legacy frontend helpers
 
@@ -163,7 +163,7 @@ Update imports and call sites as follows:
 | `usePluginClient()` | generated `useGeneratedPluginClient()` |
 | `usePluginApi()` | generated `useGeneratedPluginClient()` |
 
-`usePluginConfig()` and `usePluginClient()` remain exported in v1.2.6 for compatibility. Migrate new code to the current helpers instead of relying on those aliases.
+`usePluginConfig()` and `usePluginClient()` remain exported in v@MINT_VERSION@ for compatibility. Migrate new code to the current helpers instead of relying on those aliases.
 
 `createPluginClient()` remains available as the lower-level runtime used by generated clients. Plugin application code should normally import the generated wrapper from `frontend/src/generated/mint-plugin.ts`.
 
@@ -192,7 +192,7 @@ const tray = usePluginJobCenter({ source: jobs })
 <JobsStatusTray :source="jobs" />
 ```
 
-When migrating a job center, replace imports of `useJobsStatusTray` and its legacy adapter types with the source-based API. The v1.2.6 release still exports the legacy helper for compatibility. For several job runtimes, combine their sources with `combinePluginJobSources(...)` and pass the result through the same `source` prop.
+When migrating a job center, replace imports of `useJobsStatusTray` and its legacy adapter types with the source-based API. The v@MINT_VERSION@ release still exports the legacy helper for compatibility. For several job runtimes, combine their sources with `combinePluginJobSources(...)` and pass the result through the same `source` prop.
 
 ## Update and verify the plugin
 
@@ -226,4 +226,4 @@ The platform, `mint-sdk`, and `@morscherlab/mint-sdk` now share one `v*` release
 - [Python SDK reference](/sdk/api/python)
 - [Frontend SDK reference](/sdk/api/frontend)
 
-Release sources: [platform loader](https://github.com/MorscherLab/MINT/blob/v1.2.6/api/plugins/loader.py), [context adapters](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/context.py), [frontend exports](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/composables/index.ts).
+Release sources: [platform loader](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/plugins/loader.py), [context adapters](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/context.py), [frontend exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/index.ts).

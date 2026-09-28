@@ -18,6 +18,11 @@ export default defineConfig({
 
   markdown: {
     config(md) {
+      // `@MINT_VERSION@` works in prose, code blocks and links; one bump per release.
+      md.core.ruler.before('normalize', 'mint-version', (state) => {
+        state.src = state.src.replaceAll('@MINT_VERSION@', currentDocsVersion)
+      })
+
       const defaultFence = md.renderer.rules.fence?.bind(md.renderer.rules)
 
       md.renderer.rules.fence = (tokens, idx, options, env, self) => {

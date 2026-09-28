@@ -1,9 +1,9 @@
 # Upgrading to MINT SDK 1.2
 
-This guide targets **MINT v1.2.6**, released on 17 September 2026. Platform,
+This guide targets **MINT v@MINT_VERSION@**, released on 17 September 2026. Platform,
 Python SDK and frontend SDK releases use the same `v1.2.6` release tag. Your
-plugin has its own version. Read the [platform upgrade notes](https://github.com/MorscherLab/MINT/blob/v1.2.6/CHANGELOG.md)
-and [shared SDK changelog](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/CHANGELOG.md)
+plugin has its own version. Read the [platform upgrade notes](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md)
+and [shared SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md)
 before changing dependencies.
 
 For the platform configuration and legacy API mapping, also read the
@@ -59,12 +59,12 @@ Use a 1.2 CLI to perform the upgrade, even if the project's environment still
 contains SDK 1.1:
 
 ```bash
-uv tool install 'mint-sdk[cli]==1.2.6'
+uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
 mint --version
 ```
 
 For an existing uv tool installation, use `uv tool install --force
-'mint-sdk[cli]==1.2.6'`. Project commands below use `uv run mint` after dependency
+'mint-sdk[cli]==@MINT_VERSION@'`. Project commands below use `uv run mint` after dependency
 synchronization, so they run the SDK selected by that project's environment.
 
 Check compatibility declarations. A project constrained to `<1.2` must have
@@ -73,17 +73,17 @@ requires the released 1.2 APIs, use:
 
 ```toml
 [project]
-dependencies = ["mint-sdk>=1.2.6,<1.3"]
+dependencies = ["mint-sdk>=@MINT_VERSION@,<1.3"]
 
 [dependency-groups]
 dev = [
-  "mint-sdk[cli,server]>=1.2.6,<1.3",
+  "mint-sdk[cli,server]>=@MINT_VERSION@,<1.3",
   "pytest>=8.0.0",
   "pytest-asyncio>=0.23.0",
 ]
 
 [tool.mint]
-requires_mint = ">=1.2.6,<1.3"
+requires_mint = ">=@MINT_VERSION@,<1.3"
 ```
 
 Merge these entries into the scaffold; keep your plugin's scientific and other
@@ -95,8 +95,8 @@ version policy in the plugin.
 ## 2. Select one SDK release
 
 ```bash
-mint sdk update . --version 1.2.6 --dry-run
-mint sdk update . --version 1.2.6
+mint sdk update . --version @MINT_VERSION@ --dry-run
+mint sdk update . --version @MINT_VERSION@
 ```
 
 The updater selects a common release available on PyPI and npm when both SDKs
@@ -115,7 +115,7 @@ target excluded by Python upper bounds/exclusions or `[tool.mint].requires_mint`
 | `--scope patch` | Default: select a patch in the current minor |
 | `--scope minor` | Select the newest candidate within the current major; fail if excluded by declared bounds |
 | `--scope major` | Select across majors; fail if the candidate violates declared bounds |
-| `--version 1.2.6` | Select this exact release instead of the newest candidate |
+| `--version @MINT_VERSION@` | Select this exact release instead of the newest candidate |
 | `--channel stable` | Default release channel |
 | `--channel beta` | Allow prereleases for a development branch |
 | `--dry-run` | Preview file changes without applying them |
@@ -199,5 +199,5 @@ before using it in a multi-plugin workspace. Use linked sources to develop SDK
 changes, then unlink, synchronize and repeat build/install verification against
 the published release before distributing a plugin.
 
-Source: [update implementation](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/update_command.py),
-[dependency policy](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-python/src/mint_sdk/dependency_policy.py).
+Source: [update implementation](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/update_command.py),
+[dependency policy](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/dependency_policy.py).
