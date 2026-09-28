@@ -167,5 +167,5 @@ The terminal opens a short-lived shell in the running MINT process/container and
 
 ## Next
 
-→ [Members & roles](/workflow/members-roles) — how to assign roles in the UI
-→ [Authentication](/workflow/auth-passkeys) — how users prove who they are
+→ [Members & roles](/admin/users-roles) — how to assign roles in the UI
+→ [Authentication](/admin/authentication) — how users prove who they are

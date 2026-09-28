@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Deploy MINT
-      link: /get-started/install-direct
+      link: /admin/install-direct
     - theme: alt
       text: Build a plugin
       link: /sdk/
@@ -23,19 +23,19 @@ features:
   - icon: 🚀
     title: Deploy MINT first
     details: Install MINT on a Linux server directly or with Docker, configure Postgres, auth, passkeys, marketplace registry, and the reverse proxy before inviting lab users.
-    link: /get-started/install-direct
+    link: /admin/install-direct
     linkText: Deployment guide
 
   - icon: 🧪
     title: Understand the experiment model
     details: "Experiments are the central database object: projects group them, plugins attach design data and analysis results, and roles decide who can view or edit each workflow."
-    link: /workflow/data-model
+    link: /guide/data-model
     linkText: Data model
 
   - icon: 🔌
     title: Learn the plugin system
     details: MINT plugins can be static, analysis, experiment-design, or full workflow plugins. They mount routes, expose frontend pages, use migrations, and run isolated when dependencies require it.
-    link: /workflow/plugins
+    link: /admin/plugins
     linkText: Plugin system
 
   - icon: 🧰
@@ -47,19 +47,19 @@ features:
   - icon: 🔐
     title: Auth, roles, and passkeys
     details: JWT plus WebAuthn / passkey login. Eighteen permissions in five groups, three platform roles (Admin, Member, Viewer), project membership, and experiment collaborators. Route-level guards enforce every action.
-    link: /workflow/auth-passkeys
+    link: /admin/authentication
     linkText: Authentication
 
   - icon: 🛒
     title: Install and update plugins
     details: Browse the registry, upload .mint bundles, install from GitHub release assets, configure plugin settings, and keep compatible plugins updated.
-    link: /workflow/marketplace
+    link: /guide/marketplace
     linkText: Marketplace
 
   - icon: 📡
     title: Reference and operations
     details: Use the mint CLI, inspect permissions, troubleshoot deployments, publish plugins, and check the API reference after the core path is clear.
-    link: /cli/overview
+    link: /admin/cli
     linkText: CLI and reference
 ---
 

@@ -15,7 +15,7 @@ Use the credentials your lab admin gave you. MINT supports two authentication me
 - **Password + JWT** — username/email and password, with optional MFA via passkey
 - **Passkey only** — WebAuthn / hardware security key, no password to remember
 
-If your lab uses single sign-on (SSO), the login page redirects to your identity provider; otherwise log in directly with your MINT credentials. See [Authentication](/workflow/auth-passkeys) for the full picture.
+If your lab uses single sign-on (SSO), the login page redirects to your identity provider; otherwise log in directly with your MINT credentials. See [Authentication](/admin/authentication) for the full picture.
 
 > [Screenshot: MINT login page showing both password and passkey options]
 
@@ -55,4 +55,4 @@ The day-to-day workflow (creating experiments, running plugins, viewing results)
 
 ## Next step
 
-→ [First experiment (5 minutes)](/get-started/quickstart) — same workflow on self-managed and hosted
+→ [First experiment (5 minutes)](/guide/quickstart) — same workflow on self-managed and hosted

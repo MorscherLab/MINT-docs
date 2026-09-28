@@ -40,7 +40,7 @@ From a project's **Members** tab, click **Invite**.
 | Project role | `editor` or `viewer`; current server-side writes are still gated by system permissions |
 | Welcome message | Optional, sent in the email if SMTP is configured |
 
-Project members appear immediately on the project. In `access.experimentVisibilityMode: "restricted"`, membership contributes to which experiments appear in lists. An experiment's own [collaborators](/workflow/experiments#collaborators) can also grant visibility on a single experiment.
+Project members appear immediately on the project. In `access.experimentVisibilityMode: "restricted"`, membership contributes to which experiments appear in lists. An experiment's own [collaborators](/guide/experiments#collaborators) can also grant visibility on a single experiment.
 
 ## The 23 permissions
 
@@ -76,5 +76,5 @@ Plugins can register their own user-facing roles, distinct from platform RBAC. T
 
 ## Next
 
-→ [Authentication](/workflow/auth-passkeys) — how users prove who they are
+→ [Authentication](/admin/authentication) — how users prove who they are
 → [Permissions](/reference/permissions) — full RBAC reference

@@ -57,7 +57,7 @@ Single experiment record view:
 | **Analysis artifacts** | Outputs grouped by producing plugin, with status, artifact key, result keys, open/download/edit/archive actions, and a show-archived toggle |
 | **Metadata rail** | Type, project, timeline, creator, parent link, data lineage, collaborators, tags, and delete action |
 
-The status control in the header drives writability. See [Experiments -> Lifecycle](/workflow/experiments#lifecycle).
+The status control in the header drives writability. See [Experiments -> Lifecycle](/guide/experiments#lifecycle).
 
 > [Screenshot: experiment detail page with the Analysis artifacts card open]
 

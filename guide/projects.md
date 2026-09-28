@@ -80,5 +80,5 @@ See [Permissions](/reference/permissions) for the full RBAC matrix.
 
 ## Next
 
-→ [Experiments](/workflow/experiments) — the unit of work inside a project
-→ [Members & roles](/workflow/members-roles) — invitations, membership, and RBAC
+→ [Experiments](/guide/experiments) — the unit of work inside a project
+→ [Members & roles](/admin/users-roles) — invitations, membership, and RBAC

@@ -122,5 +122,5 @@ When the platform or a plugin raises an unhandled exception, `github_issue_servi
 
 ## Next
 
-→ [Marketplace](/workflow/marketplace) — install and request plugins
+→ [Marketplace](/guide/marketplace) — install and request plugins
 → [Plugin development → Operations](/sdk/operations/) — building, versioning, publishing

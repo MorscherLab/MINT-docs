@@ -198,7 +198,7 @@ edu-ID SSO stores linked users in the platform's required PostgreSQL database an
 | `includePrereleases` | `false` | Include prereleases when checking GitHub releases |
 | `pluginSources` | `{}` | Per-plugin GitHub release sources |
 
-See [Updates](/workflow/updates) for the wider picture.
+See [Updates](/admin/updates) for the wider picture.
 
 Docker startup auto-update is controlled by the container entrypoint environment variable `MINT_UPDATES__AUTO_APPLY_ON_STARTUP`, not by `config.json`.
 
@@ -298,5 +298,5 @@ Removing `marketplace/` is safe; it regenerates on demand. Removing `plugins/sna
 
 ## Next
 
-→ [Install on Linux (direct)](/get-started/install-direct) — start the platform with a given config
-→ [Platform commands](/cli/platform) — `mint experiment`, `mint project`, …
+→ [Install on Linux (direct)](/admin/install-direct) — start the platform with a given config
+→ [Platform commands](/admin/cli-platform) — `mint experiment`, `mint project`, …

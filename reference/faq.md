@@ -57,7 +57,7 @@ Two layers:
 
 Yes. Current MINT releases include built-in SWITCH edu-ID sign-in through OpenID Connect. Enable it under `sso.eduid` and set `server.externalUrl` to the public HTTPS URL. User accounts are stored in the platform's required PostgreSQL database.
 
-Other identity providers can still sit in front of MINT through an organization-managed reverse proxy or access gateway, but SWITCH edu-ID is the supported in-platform SSO path today. See [Authentication](/workflow/auth-passkeys).
+Other identity providers can still sit in front of MINT through an organization-managed reverse proxy or access gateway, but SWITCH edu-ID is the supported in-platform SSO path today. See [Authentication](/admin/authentication).
 
 ## Can I write a plugin in something other than Python?
 
@@ -78,7 +78,7 @@ sudo -u mint /opt/mint/venv/bin/pip install --upgrade mint
 sudo systemctl restart mint
 ```
 
-For Docker, bump the image tag or use the runtime-bundle update path described in [Updates](/workflow/updates). The `uv tool upgrade mint-sdk` / `pipx upgrade mint-sdk` style commands only update an admin shell's `mint` CLI; they do not upgrade the running platform service.
+For Docker, bump the image tag or use the runtime-bundle update path described in [Updates](/admin/updates). The `uv tool upgrade mint-sdk` / `pipx upgrade mint-sdk` style commands only update an admin shell's `mint` CLI; they do not upgrade the running platform service.
 
 For self-hosted deployments, use **Admin -> Platform -> Server** and **Admin -> Plugins** to check available platform and plugin releases. Take a normal deployment/database backup before upgrading.
 

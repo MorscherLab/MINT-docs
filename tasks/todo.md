@@ -3,7 +3,7 @@
 ## Phase A: restructure (no content fixes yet)
 
 - [x] A1 Version variable: markdown-it hook replaces `@MINT_VERSION@` (prose + code) from `versions.ts`; replace hand-written 1.2.6 pins.
-- [ ] A2 Move pages (git mv) into Use / Administer / Build / Reference; update config.ts nav + sidebars; fix internal links.
+- [x] A2 Move pages (git mv) into Use / Administer / Build / Reference; update config.ts nav + sidebars; fix internal links.
 - [ ] A3 Merge `sdk/operations/migrating-to-1.2` + `upgrading-sdk` -> `migrate-1.1-to-1.2` + evergreen `upgrading`; admin DB parts -> `admin/updates`.
 - [ ] A4 CLI: admin CLI page in `admin/cli`; `sdk/api/cli-reference` sole flag table; drop duplicate platform section.
 - [ ] A5 Single home per duplicated topic (plugin types, runtimes, migrations, component tables, proxy/first-run).

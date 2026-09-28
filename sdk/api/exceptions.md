@@ -309,4 +309,4 @@ The HTTP envelope wraps the Python exception's fields and adds transport context
 ## Related
 
 - [Recipes → Error handling](/sdk/recipes/error-handling) — patterns and anti-patterns
-- [Workflow → Updates](/workflow/updates) — auto-issue reporting (User Manual track)
+- [Workflow → Updates](/admin/updates) — auto-issue reporting (User Manual track)

@@ -85,6 +85,6 @@ MINT 1.2 uses PostgreSQL for every platform deployment. A plugin running standal
 
 ## Read next
 
-→ [Experiments](/workflow/experiments) - user workflow around the model
-→ [Plugins](/workflow/plugins) - how plugins attach to experiments
+→ [Experiments](/guide/experiments) - user workflow around the model
+→ [Plugins](/admin/plugins) - how plugins attach to experiments
 → [Plugin Development Guide](/sdk/) - build a plugin that reads an experiment and writes artifacts

@@ -169,7 +169,7 @@ The full catalog lives in the marketplace.
 
 ## Next
 
-→ [Marketplace](/workflow/marketplace) — discover, install, request, approve plugins
-→ [Updates](/workflow/updates) — keeping plugins and the platform fresh
+→ [Marketplace](/guide/marketplace) — discover, install, request, approve plugins
+→ [Updates](/admin/updates) — keeping plugins and the platform fresh
 → [Plugin development guide](/sdk/) — `mint init`, `mint dev`, `mint build`
 → [SDK concepts](/sdk/concepts/) — what's in `mint-sdk` and how plugins integrate

@@ -135,5 +135,5 @@ Match field names with what the platform's middleware emits so dashboards work u
 ## Related
 
 - [Recipes → Error handling](/sdk/recipes/error-handling) — how exceptions become structured log records
-- [Workflow → Updates](/workflow/updates) — auto-issue reporting (uses log fields to dedupe)
+- [Workflow → Updates](/admin/updates) — auto-issue reporting (uses log fields to dedupe)
 - [API Reference → Python SDK](/sdk/api/python) — `get_plugin_logger` signature

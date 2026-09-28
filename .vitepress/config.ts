@@ -46,13 +46,27 @@ export default defineConfig({
 
     nav: [
       {
-        text: 'MINT Guide',
+        text: 'Use MINT',
         items: [
-          { text: '1. Deploy MINT', link: '/get-started/install-direct' },
-          { text: '2. Data model: experiments', link: '/workflow/data-model' },
-          { text: '3. Plugin system', link: '/workflow/plugins' },
-          { text: '4. Plugin development guide', link: '/sdk/' },
-          { text: 'First experiment walkthrough', link: '/get-started/quickstart' },
+          { text: 'First experiment (5 min)', link: '/guide/quickstart' },
+          { text: 'Access MINT', link: '/guide/access' },
+          { text: 'Data model', link: '/guide/data-model' },
+          { text: 'Projects', link: '/guide/projects' },
+          { text: 'Experiments', link: '/guide/experiments' },
+          { text: 'Marketplace', link: '/guide/marketplace' },
+          { text: 'UI tour', link: '/guide/ui-tour' },
+        ],
+      },
+      {
+        text: 'Administer',
+        items: [
+          { text: 'Install (direct)', link: '/admin/install-direct' },
+          { text: 'Install (Docker)', link: '/admin/install-docker' },
+          { text: 'Configuration', link: '/admin/configuration' },
+          { text: 'Users & roles', link: '/admin/users-roles' },
+          { text: 'Plugins', link: '/admin/plugins' },
+          { text: 'Updates', link: '/admin/updates' },
+          { text: 'mint CLI', link: '/admin/cli' },
         ],
       },
       {
@@ -66,25 +80,18 @@ export default defineConfig({
           { text: 'Frontend', link: '/sdk/frontend/' },
           { text: 'Recipes', link: '/sdk/recipes/' },
           { text: 'Operations', link: '/sdk/operations/' },
+          { text: 'API reference', link: '/sdk/api/' },
         ],
       },
       {
         text: 'Reference',
         items: [
-          { text: 'CLI', link: '/cli/overview' },
-          { text: 'API Reference', link: '/sdk/api/' },
-          { text: 'UI tour', link: '/reference/ui-tour' },
           { text: 'Permissions', link: '/reference/permissions' },
           { text: 'Troubleshooting', link: '/reference/troubleshooting' },
           { text: 'FAQ', link: '/reference/faq' },
           { text: 'Glossary', link: '/reference/glossary' },
-        ],
-      },
-      {
-        text: 'More',
-        items: [
-          { text: 'Team', link: '/team' },
           { text: 'Changelog', link: '/changelog' },
+          { text: 'Team', link: '/team' },
           { text: 'Source code', link: 'https://github.com/MorscherLab/MINT' },
         ],
       },
@@ -93,39 +100,43 @@ export default defineConfig({
     ],
 
     sidebar: {
-      '/get-started/': [
+      '/guide/': [
         {
-          text: 'Get Started',
+          text: 'Use MINT',
           items: [
-            { text: 'Install on Linux (direct)', link: '/get-started/install-direct' },
-            { text: 'Install on Linux (Docker)', link: '/get-started/install-docker' },
-            { text: 'Use the hosted version', link: '/get-started/install-hosted' },
-            { text: 'First experiment (5 min)', link: '/get-started/quickstart' },
+            { text: 'First experiment (5 min)', link: '/guide/quickstart' },
+            { text: 'Access MINT', link: '/guide/access' },
+            { text: 'Data model', link: '/guide/data-model' },
+            { text: 'Projects', link: '/guide/projects' },
+            { text: 'Experiments', link: '/guide/experiments' },
+            { text: 'Marketplace', link: '/guide/marketplace' },
+            { text: 'UI tour', link: '/guide/ui-tour' },
           ],
         },
       ],
-      '/workflow/': [
+      '/admin/': [
         {
-          text: 'MINT core',
+          text: 'Install',
           items: [
-            { text: 'Data model', link: '/workflow/data-model' },
-            { text: 'Experiments', link: '/workflow/experiments' },
-            { text: 'Projects', link: '/workflow/projects' },
-            { text: 'Plugin system', link: '/workflow/plugins' },
-            { text: 'Marketplace', link: '/workflow/marketplace' },
-            { text: 'Members & roles', link: '/workflow/members-roles' },
-            { text: 'Authentication', link: '/workflow/auth-passkeys' },
-            { text: 'Updates', link: '/workflow/updates' },
+            { text: 'Install on Linux (direct)', link: '/admin/install-direct' },
+            { text: 'Install on Linux (Docker)', link: '/admin/install-docker' },
           ],
         },
-      ],
-      '/cli/': [
+        {
+          text: 'Operate',
+          items: [
+            { text: 'Configuration', link: '/admin/configuration' },
+            { text: 'Users & roles', link: '/admin/users-roles' },
+            { text: 'Authentication', link: '/admin/authentication' },
+            { text: 'Plugins', link: '/admin/plugins' },
+            { text: 'Updates', link: '/admin/updates' },
+          ],
+        },
         {
           text: 'mint CLI',
           items: [
-            { text: 'Overview', link: '/cli/overview' },
-            { text: 'Platform commands', link: '/cli/platform' },
-            { text: 'Configuration', link: '/cli/configuration' },
+            { text: 'Overview', link: '/admin/cli' },
+            { text: 'Platform commands', link: '/admin/cli-platform' },
           ],
         },
       ],
@@ -225,11 +236,11 @@ export default defineConfig({
         {
           text: 'Reference',
           items: [
-            { text: 'UI tour', link: '/reference/ui-tour' },
             { text: 'Permissions', link: '/reference/permissions' },
             { text: 'Troubleshooting', link: '/reference/troubleshooting' },
             { text: 'FAQ', link: '/reference/faq' },
             { text: 'Glossary', link: '/reference/glossary' },
+            { text: 'Changelog', link: '/changelog' },
           ],
         },
       ],

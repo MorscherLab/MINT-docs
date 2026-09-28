@@ -3,7 +3,7 @@
 Install MINT directly on a Linux server using `uv` (recommended) or `pip`. The Python wheel bundles the FastAPI backend and the Vue 3 frontend; the platform pulls in `mint-sdk[cli,server]` for command-line and server tooling.
 
 ::: tip Picking an install method
-MINT is supported on **Linux servers only**, via either this direct install or the [Docker install](/get-started/install-docker). Pick:
+MINT is supported on **Linux servers only**, via either this direct install or the [Docker install](/admin/install-docker). Pick:
 
 - **Direct** when you want process-level control — systemd unit, OS-level monitoring, host-managed Postgres.
 - **Docker** when you want a self-contained, reproducible deployment — pinned image, declarative env, clean upgrades.
@@ -73,7 +73,7 @@ The `mint` CLI is convenient for admins running platform-data commands (`mint au
 uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
 ```
 
-The `[cli]` extra supplies Typer for commands such as `mint init` and `mint auth`. This tool environment is separate from the platform venv. See [CLI installation](/cli/overview#install-the-1-2-cli) for the runtime/CLI/server distinction.
+The `[cli]` extra supplies Typer for commands such as `mint init` and `mint auth`. This tool environment is separate from the platform venv. See [CLI installation](/admin/cli#install-the-1-2-cli) for the runtime/CLI/server distinction.
 :::
 
 ## Configure
@@ -108,7 +108,7 @@ Create `/var/lib/mint/config.json`:
 }
 ```
 
-Generate a JWT secret with `openssl rand -base64 32` and never commit it. MINT reads `config.json` from `MINT_CONFIG_PATH` when that variable is set, otherwise from the working directory, or from `<server.dataPath>/config.json` when `MINT_SERVER__DATA_PATH` is set and that data-path file should win. The systemd unit below sets `MINT_SERVER__DATA_PATH=/var/lib/mint`, so `/var/lib/mint/config.json` is the file that will be loaded. Configuration priority is: environment variables (`MINT_` prefix) > `.env` > `config.json` > defaults. See [CLI configuration](/cli/configuration) for the full schema.
+Generate a JWT secret with `openssl rand -base64 32` and never commit it. MINT reads `config.json` from `MINT_CONFIG_PATH` when that variable is set, otherwise from the working directory, or from `<server.dataPath>/config.json` when `MINT_SERVER__DATA_PATH` is set and that data-path file should win. The systemd unit below sets `MINT_SERVER__DATA_PATH=/var/lib/mint`, so `/var/lib/mint/config.json` is the file that will be loaded. Configuration priority is: environment variables (`MINT_` prefix) > `.env` > `config.json` > defaults. See [CLI configuration](/admin/configuration) for the full schema.
 
 ## Initialize the database
 
@@ -208,8 +208,8 @@ Open the public URL in your browser. On a fresh install you'll see the **Setup**
 After setup:
 
 1. Configure notification delivery and the marketplace registry from **Admin -> Platform -> Configuration** and **Admin -> Plugins -> Registry**
-2. Create your first **Project** (see [Projects](/workflow/projects))
-3. Invite team members and assign system roles (see [Members & roles](/workflow/members-roles))
+2. Create your first **Project** (see [Projects](/guide/projects))
+3. Invite team members and assign system roles (see [Members & roles](/admin/users-roles))
 
 ## Upgrades
 
@@ -220,7 +220,7 @@ sudo systemctl restart mint
 
 For zero-downtime upgrades, run two MINT replicas behind the load balancer and rolling-restart them. The advisory-lock-aware migration runner handles concurrent startups safely on Postgres.
 
-See [Updates](/workflow/updates) for the in-app upgrade flow and rollback support.
+See [Updates](/admin/updates) for the in-app upgrade flow and rollback support.
 
 ::: tip Runtime daemon
 Source-checkout and runtime-bundle installs can also run the current foreground
@@ -243,8 +243,8 @@ for sessions, plugin jobs, global CPU slots, and per-user job limits. Use
 
 ## Next step
 
-→ [First experiment (5 minutes)](/get-started/quickstart)
+→ [First experiment (5 minutes)](/guide/quickstart)
 
 Or, for a self-contained Docker deployment instead of direct:
 
-→ [Install with Docker](/get-started/install-docker)
+→ [Install with Docker](/admin/install-docker)

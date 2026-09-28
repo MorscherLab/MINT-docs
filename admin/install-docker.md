@@ -3,7 +3,7 @@
 Run MINT as a Docker container, with Postgres alongside. Stable releases use published images; the current 1.2 beta must be built from the `1.2-dev` source branch.
 
 ::: tip Picking an install method
-MINT is supported on **Linux servers only**, via either Docker (this page) or the [direct install](/get-started/install-direct). Pick Docker when you want a self-contained, version-pinned deployment with clean rollback.
+MINT is supported on **Linux servers only**, via either Docker (this page) or the [direct install](/admin/install-direct). Pick Docker when you want a self-contained, version-pinned deployment with clean rollback.
 :::
 
 > [Screenshot: MINT home dashboard after a fresh Docker install]
@@ -136,8 +136,8 @@ Open the public URL in your browser. On a fresh install you'll see the **Setup**
 After setup:
 
 1. Configure notification delivery and the marketplace registry from **Admin -> Platform -> Configuration** and **Admin -> Plugins -> Registry**
-2. Create your first **Project** (see [Projects](/workflow/projects))
-3. Invite team members and assign system roles (see [Members & roles](/workflow/members-roles))
+2. Create your first **Project** (see [Projects](/guide/projects))
+3. Invite team members and assign system roles (see [Members & roles](/admin/users-roles))
 
 ## Upgrades
 
@@ -190,8 +190,8 @@ Run both before any major upgrade and on a regular schedule. Snapshots taken by 
 
 ## Next step
 
-→ [First experiment (5 minutes)](/get-started/quickstart)
+→ [First experiment (5 minutes)](/guide/quickstart)
 
 Or, if you'd rather manage the Python install and Postgres directly on the host:
 
-→ [Install directly](/get-started/install-direct)
+→ [Install directly](/admin/install-direct)

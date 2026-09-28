@@ -182,4 +182,4 @@ For programmatic access from inside a Python script (rather than via the CLI), u
 ## Next
 
 → [Plugin development guide](/sdk/) — `mint init`, `mint dev`, `mint build`
-→ [Configuration](/cli/configuration) — config file and env vars
+→ [Configuration](/admin/configuration) — config file and env vars

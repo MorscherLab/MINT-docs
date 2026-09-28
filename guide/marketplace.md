@@ -97,7 +97,7 @@ compatibility gates and restart-required behavior as a manual update.
 
 From **Admin -> Plugins -> Installed**, click **Uninstall** on the plugin. The current Admin UI and `mint plugin uninstall` use the safe default: remove the package and keep plugin-owned database tables in place.
 
-See [Plugins → Uninstall modes](/workflow/plugins#uninstall-modes) for the full discussion.
+See [Plugins → Uninstall modes](/admin/plugins#uninstall-modes) for the full discussion.
 
 ## Hosting a private registry
 
@@ -112,5 +112,5 @@ The schema for the registry feed lives in [`api/models/marketplace_schemas.py`](
 
 ## Next
 
-→ [Updates](/workflow/updates) — auto-updates and pin versions
+→ [Updates](/admin/updates) — auto-updates and pin versions
 → [Plugin development → Operations → Packaging](/sdk/operations/packaging) — `mint build` produces installable bundles

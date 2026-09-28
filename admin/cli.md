@@ -1,11 +1,11 @@
 # mint CLI
 
-Install **`mint-sdk[cli]`** to use the `mint` command-line interface. It covers plugin development and remote platform administration; production platform processes are configured separately (see [Install on Linux](/get-started/install-direct)).
+Install **`mint-sdk[cli]`** to use the `mint` command-line interface. It covers plugin development and remote platform administration; production platform processes are configured separately (see [Install on Linux](/admin/install-direct)).
 
 | Role | What it does | Detail |
 |------|--------------|--------|
 | **Plugin development** | Scaffold, run, build, and manage plugin projects | [Plugin Development → CLI reference](/sdk/api/cli-reference) |
-| **Platform-data CLI** | Talk to a running platform (auth, list experiments, create projects, check status) | [Platform commands](/cli/platform) |
+| **Platform-data CLI** | Talk to a running platform (auth, list experiments, create projects, check status) | [Platform commands](/admin/cli-platform) |
 
 ## Install the 1.2 CLI
 
@@ -73,7 +73,7 @@ If the command isn't found, the install location isn't on your `PATH`. With `uv 
 | `mint update check / apply` | Platform, SDK, and plugin update checks and platform update application |
 | `mint status` | Platform health overview |
 
-Detail: [Platform commands](/cli/platform). Configuration of how `mint` reaches the platform: [Configuration](/cli/configuration).
+Detail: [Platform commands](/admin/cli-platform). Configuration of how `mint` reaches the platform: [Configuration](/admin/configuration).
 
 ### Plugin-development commands
 
@@ -103,6 +103,6 @@ Full details — subcommands and primary flags: [Plugin Development → CLI refe
 
 ## Next
 
-→ [Platform commands](/cli/platform)
-→ [Configuration](/cli/configuration)
+→ [Platform commands](/admin/cli-platform)
+→ [Configuration](/admin/configuration)
 → [Plugin development → CLI reference](/sdk/api/cli-reference)

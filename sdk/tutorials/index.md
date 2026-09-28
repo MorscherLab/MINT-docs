@@ -13,7 +13,7 @@ You'll need:
 | **Python** | 3.12 or newer |
 | **uv** | Used by generated plugin projects |
 | **Bun** | latest (for frontend tutorials) |
-| **`mint` CLI** | Installed from `mint-sdk[cli]==@MINT_VERSION@`; see [CLI overview](/cli/overview) |
+| **`mint` CLI** | Installed from `mint-sdk[cli]==@MINT_VERSION@`; see [CLI overview](/admin/cli) |
 | **A running platform** | Optional for local code; real integration needs an installed plugin on a configured PostgreSQL-backed MINT platform |
 
 You do not need to read the whole SDK reference first. When a tutorial introduces a concept, it links to the deeper page.
@@ -35,7 +35,7 @@ The first two tutorials are intentionally separate projects. `generated` mode is
 |--------|------------------------------|
 | Tutorial 1 | [Plugin types](/sdk/concepts/plugin-types), [PlatformContext](/sdk/concepts/platform-context) |
 | Tutorial 2 | [Frontend overview](/sdk/frontend/), [Frontend SDK reference](/sdk/api/frontend) |
-| Tutorial 3 | [Data model](/workflow/data-model), [Migrations](/sdk/concepts/migrations) |
+| Tutorial 3 | [Data model](/guide/data-model), [Migrations](/sdk/concepts/migrations) |
 | Tutorial 4 | [Route permissions](/sdk/recipes/route-permissions), [Permissions](/reference/permissions) |
 
 ## How tutorials are structured

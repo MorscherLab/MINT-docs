@@ -17,7 +17,7 @@ package does not guarantee a usable CLI. `mint init` creates a project dev
 group with `[cli,server]`; after `uv sync`, prefer `uv run mint ...` inside the
 project to use its selected SDK. The scaffold's runtime dependency stays plain
 `mint-sdk`; CLI/server extras belong to its development environment. Database
-plugins also need `[local-db]`. See [which requirement to install](/cli/overview#install-the-1-2-cli).
+plugins also need `[local-db]`. See [which requirement to install](/admin/cli#install-the-1-2-cli).
 
 ## A complete development loop
 
@@ -443,7 +443,7 @@ not scaffold a platform or contact the remote CLI authentication target.
 | `mint platform daemon stop --platform-dir PATH` | Stop it |
 
 `mint dev` serves a plugin, while these commands serve the platform. Production
-platform setup remains a [Linux administration task](/get-started/install-direct).
+platform setup remains a [Linux administration task](/admin/install-direct).
 
 ## Developer database commands
 
@@ -483,6 +483,6 @@ There is still no `mint add job`; define `@job` methods in Python.
 
 ## Related
 
-- [User Manual → CLI overview](/cli/overview) — high-level CLI tour for non-developers
+- [User Manual → CLI overview](/admin/cli) — high-level CLI tour for non-developers
 - [Tutorials → First analysis plugin](/sdk/tutorials/first-analysis-plugin) — `mint init`, `mint dev`, `mint build` in context
 - [Operations → CI patterns](/sdk/operations/ci-patterns) — using the CLI in GitHub Actions

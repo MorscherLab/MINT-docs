@@ -221,8 +221,8 @@ The platform, `mint-sdk`, and `@morscherlab/mint-sdk` now share one `v*` release
 ## Related
 
 - [Upgrading the SDK](/sdk/operations/upgrading-sdk)
-- [Configuration](/cli/configuration)
-- [Platform updates](/workflow/updates)
+- [Configuration](/admin/configuration)
+- [Platform updates](/admin/updates)
 - [Python SDK reference](/sdk/api/python)
 - [Frontend SDK reference](/sdk/api/frontend)
 

@@ -65,7 +65,7 @@ Plugin types interact with experiments differently:
 
 A given experiment has exactly one design-owning plugin, selected by its type, but it can be analyzed by many `ANALYSIS` or `FULL` plugins over time.
 
-See [Plugins](/workflow/plugins) for the full plugin model.
+See [Plugins](/admin/plugins) for the full plugin model.
 
 ## Design and analysis on the detail page
 
@@ -107,7 +107,7 @@ Write actions are still gated by system permissions such as `experiments.edit` a
 | **collaborator** | Can see the experiment even if they are not a project member |
 | **owner** | Can manage collaborators and delete the experiment; MINT keeps at least one owner |
 
-Collaborators are stored on the experiment itself (in `collaborators`), not on the project. They survive even if the user is later removed from the project. See [Members & roles](/workflow/members-roles) for the underlying RBAC.
+Collaborators are stored on the experiment itself (in `collaborators`), not on the project. They survive even if the user is later removed from the project. See [Members & roles](/admin/users-roles) for the underlying RBAC.
 
 ## Search and filters
 
@@ -129,6 +129,6 @@ Deleting an experiment removes the experiment record and platform-owned dependen
 
 ## Next
 
-→ [Plugins](/workflow/plugins) — the full plugin model
-→ [Marketplace](/workflow/marketplace) — install and request plugins
-→ [Members & roles](/workflow/members-roles) — collaborators and overrides
+→ [Plugins](/admin/plugins) — the full plugin model
+→ [Marketplace](/guide/marketplace) — install and request plugins
+→ [Members & roles](/admin/users-roles) — collaborators and overrides

@@ -6,9 +6,9 @@ A complete walkthrough from logging into MINT to running your first analysis plu
 
 ## Prerequisites
 
-- A running MINT instance (hosted, direct, or Docker — see [Get Started](/get-started/install-direct))
+- A running MINT instance (hosted, direct, or Docker — see [Get Started](/admin/install-direct))
 - An account with at least the **Member** role
-- At least one analysis plugin installed and visible to your role (your admin can install one from the [marketplace](/workflow/marketplace) if not)
+- At least one analysis plugin installed and visible to your role (your admin can install one from the [marketplace](/guide/marketplace) if not)
 
 ## Step 1: Create a project
 
@@ -35,7 +35,7 @@ Click **New experiment**. MINT auto-assigns a unique code from the experiment ty
 | Status | Starts at **planned** |
 | Collaborators (optional) | Single-experiment access grants; the creator is stored as owner |
 
-Fill in the design fields exposed by the experiment type, then **Save**. The experiment is now in `planned` status. See [Experiments](/workflow/experiments) for the status flow.
+Fill in the design fields exposed by the experiment type, then **Save**. The experiment is now in `planned` status. See [Experiments](/guide/experiments) for the status flow.
 
 > [Screenshot: experiment-detail page in planned status]
 
@@ -67,9 +67,9 @@ Switch the experiment status to **completed** when the work is finished. MINT re
 
 ## Further steps
 
-- **Invite collaborators** — see [Members & roles](/workflow/members-roles)
-- **Install another plugin** — see [Marketplace](/workflow/marketplace)
-- **Use the CLI** — see [`mint` overview](/cli/overview) for scripted experiment + project access
+- **Invite collaborators** — see [Members & roles](/admin/users-roles)
+- **Install another plugin** — see [Marketplace](/guide/marketplace)
+- **Use the CLI** — see [`mint` overview](/admin/cli) for scripted experiment + project access
 - **Build your own plugin** — start with the [Plugin Development Guide](/sdk/)
 
 ## Troubleshooting

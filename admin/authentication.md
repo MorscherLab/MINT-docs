@@ -92,5 +92,5 @@ MINT can instrument FastAPI, SQLAlchemy, and logging with OpenTelemetry when tra
 
 ## Next
 
-→ [Members & roles](/workflow/members-roles) — what an authenticated user can do
+→ [Members & roles](/admin/users-roles) — what an authenticated user can do
 → [Permissions](/reference/permissions) — full RBAC reference
