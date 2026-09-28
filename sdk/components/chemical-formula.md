@@ -12,7 +12,7 @@ Formula renderer with scientific typography, optional MS adduct notation, and co
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/ChemicalFormula.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ChemicalFormula.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ChemicalFormula" />
@@ -38,7 +38,7 @@ The default slot appends content after a nonempty formula and its adduct. This c
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/ChemicalFormula.vue).
+MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ChemicalFormula.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

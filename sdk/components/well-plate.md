@@ -12,7 +12,7 @@ Interactive plate map with heatmaps, selection, and editing hooks. Supported for
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/WellPlate.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/WellPlate.vue">Source</a>
 </div>
 
 <ComponentPlayground name="WellPlate" />
@@ -72,7 +72,7 @@ Both callbacks receive the resolved `Well` (including its `id`, `row`, `col`, an
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/WellPlate.vue).
+MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/WellPlate.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -113,19 +113,19 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` WellPlateFormat `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L2) | See the linked SDK type definition. |
-| [` Well `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L8) | See the linked SDK type definition. |
-| [` WellPlateSelectionMode `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L4) | ` 'none' \| 'single' \| 'multiple' \| 'rectangle' \| 'drag' ` |
-| [` HeatmapConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L26) | See the linked SDK type definition. |
-| [` WellPlateSize `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L5) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'fill' ` |
-| [` WellShape `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L6) | ` 'circle' \| 'rounded' ` |
-| [` WellEditField `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L57) | ` 'label' \| 'sampleType' \| 'injectionVolume' \| 'injectionCount' \| 'customMethod' ` |
-| [` WellLegendItem `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L83) | See the linked SDK type definition. |
-| [` ColumnCondition `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L97) | See the linked SDK type definition. |
-| [` RowCondition `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L101) | See the linked SDK type definition. |
-| [` WellSampleDropParser `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L77) | See the linked SDK type definition. |
-| [` WellClassResolver `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L19) | See the linked SDK type definition. |
-| [` WellStyleResolver `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/componentLabTypes.ts#L20) | See the linked SDK type definition. |
+| [` WellPlateFormat `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L2) | See the linked SDK type definition. |
+| [` Well `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L8) | See the linked SDK type definition. |
+| [` WellPlateSelectionMode `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L4) | ` 'none' \| 'single' \| 'multiple' \| 'rectangle' \| 'drag' ` |
+| [` HeatmapConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L26) | See the linked SDK type definition. |
+| [` WellPlateSize `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L5) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'fill' ` |
+| [` WellShape `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L6) | ` 'circle' \| 'rounded' ` |
+| [` WellEditField `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L57) | ` 'label' \| 'sampleType' \| 'injectionVolume' \| 'injectionCount' \| 'customMethod' ` |
+| [` WellLegendItem `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L83) | See the linked SDK type definition. |
+| [` ColumnCondition `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L97) | See the linked SDK type definition. |
+| [` RowCondition `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L101) | See the linked SDK type definition. |
+| [` WellSampleDropParser `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L77) | See the linked SDK type definition. |
+| [` WellClassResolver `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L19) | See the linked SDK type definition. |
+| [` WellStyleResolver `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L20) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

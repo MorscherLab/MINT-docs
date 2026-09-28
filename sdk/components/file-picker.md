@@ -71,12 +71,12 @@ The picker warms at most 20 immediate folders with two background reads at a tim
 
 Do not interchange this API with [FileBrowserModal](/sdk/components/file-browser-modal), which takes controlled listing props and emits `confirm`. See [Platform integration](/sdk/frontend/platform-integration#adapter-driven-filepicker) for decoding selections, adapter transport details, and server cache behavior.
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/FilePicker.vue)
+[Release source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/FilePicker.vue)
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/FilePicker.vue).
+MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/FilePicker.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -96,12 +96,12 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` PickerAdapter `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/filePicker.ts#L38) | See the linked SDK type definition. |
-| [` PickerSelectionMode `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/filePicker.ts#L3) | ` 'single-file' \| 'multi-file' \| 'folder' \| 'folder+files' ` |
-| [` PickerSource `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/filePicker.ts#L2) | ` 'server' \| 'localFile' ` |
-| [` PickerCapabilities `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/filePicker.ts#L56) | See the linked SDK type definition. |
-| [` PickerSelection `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/filePicker.ts#L65) | See the linked SDK type definition. |
-| [` PickerNode `](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/types/filePicker.ts#L26) | See the linked SDK type definition. |
+| [` PickerAdapter `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/filePicker.ts#L38) | See the linked SDK type definition. |
+| [` PickerSelectionMode `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/filePicker.ts#L3) | ` 'single-file' \| 'multi-file' \| 'folder' \| 'folder+files' ` |
+| [` PickerSource `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/filePicker.ts#L2) | ` 'server' \| 'localFile' ` |
+| [` PickerCapabilities `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/filePicker.ts#L56) | See the linked SDK type definition. |
+| [` PickerSelection `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/filePicker.ts#L65) | See the linked SDK type definition. |
+| [` PickerNode `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/filePicker.ts#L26) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

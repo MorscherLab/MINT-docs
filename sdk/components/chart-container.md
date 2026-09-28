@@ -12,7 +12,7 @@ description: "ChartContainer is a data display component exported by @morscherla
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/ChartContainer.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ChartContainer.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ChartContainer" />
@@ -62,7 +62,7 @@ When `loading` is true the normal body slot is not rendered. Initialize custom r
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.6**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.6/packages/sdk-frontend/src/components/ChartContainer.vue).
+MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ChartContainer.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
