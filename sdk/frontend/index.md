@@ -115,7 +115,7 @@ Body-only endpoints take the body directly. Endpoints combining parameters and a
 - **Plate decorations:** [WellPlate](/sdk/components/well-plate) accepts `wellClass` and `wellStyle` callbacks for per-well visual annotations without changing sample data.
 - **Controls and panes:** [SearchableSelect](/sdk/components/searchable-select) searches descriptive choices; [NumberInput](/sdk/components/number-input) supports steppers and drag scrubbing. [LayoutResizeHandle](/sdk/components/layout-resize-handle) and `useManualLayoutResize()` provide keyboard/pointer resizing.
 - **Server files:** [FilePicker](/sdk/components/file-picker) with `usePlatformFilePickerAdapter()` browses configured read-only mounts and returns path references; decode them with `decodePlatformPickerPath()`. Its refresh action explicitly refreshes the server's bounded metadata cache. `FileUploader` remains the local browser-file picker.
-- **Access rules:** use nested `access: { permissions: [...] }` on access-aware controls and actions. The flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields no longer gate anything.
+- **Access rules:** use nested `access: { permissions: [...] }` on access-aware controls and actions.
 - **HTTP errors:** generated clients use `MintApiError`; raw `useApi({ typedErrors: true })` opts into the same normalized error shape.
 
 ## Component library

@@ -25,7 +25,7 @@ Admin and plugin-author actions for the 1.3 minor release. Update the platform a
 | Instruments | A shared instrument directory with `instruments.view` / `instruments.edit` permissions | Review custom roles. See [Instruments](/guide/instruments). |
 | Sessions | Changing a password signs out every other session | None. |
 | Python SDK | Package-root exports deprecated in 1.2 and `PluginDataRepository` are removed; the legacy migration protocol is deprecated (removal in 1.4) | Follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3). |
-| Frontend SDK | `PlateMapEditor`, `RackEditor`, `FileBrowserModal`, `ColorSlider`, `AppPluginSwitcher` and several composables are removed; `PlateEditor` replaces the plate editors | Follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3); run `mint doctor`. |
+| Frontend SDK | `PlateMapEditor`, `RackEditor`, `FileBrowserModal`, `ColorSlider`, `AppPluginSwitcher`, `DropdownButton`, `InstrumentAlertLog`, `InstrumentStatusCard`, `LcmsSequenceTable` and several composables are removed; `PlateEditor` replaces the plate editors | Follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3); run `mint doctor`. |
 
 ## Notable changes in 1.2
 

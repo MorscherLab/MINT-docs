@@ -25,7 +25,7 @@ There are no tests, linters, or formatters configured. CI only runs `bun install
 
 VitePress reads markdown from the project root recursively, but `srcExclude` in `.vitepress/config.ts` skips `README.md` and `node_modules/**`. Four content directories drive the navigation:
 
-- `guide/` — **Use MINT** (lab scientists): quickstart, access, data model, projects, experiments, marketplace (browse/request), UI tour.
+- `guide/` — **Use MINT** (lab scientists): quickstart, access, data model, projects, experiments, instruments, AI assistants and API access (tokens, MCP), marketplace (browse/request), UI tour.
 - `admin/` — **Administer MINT** (lab admins): install (direct, Docker; Linux servers only — no desktop/macOS/Windows path), reverse proxy + first run, `config.json` configuration, users & roles, authentication, plugin management, updates (incl. upgrading from 1.1), and the `mint` CLI for admins. The `mint` CLI ships in `mint-sdk[cli]` and is **not** the platform launcher. `sdk/api/cli-reference` is the only full command/flag table.
 - `sdk/` — full Plugin Development track: concepts, tutorials, recipes, frontend, operations, api. Six sub-sections.
 - `reference/` — RBAC permission reference, troubleshooting, FAQ, glossary

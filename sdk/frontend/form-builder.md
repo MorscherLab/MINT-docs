@@ -284,7 +284,7 @@ const adminField = {
 }
 ```
 
-The flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields are removed and no longer gate anything; use `access`. These rules control visibility, not server authorization. Settings endpoints must still require the corresponding backend permission.
+Access rules live in the nested `access` field. These rules control visibility, not server authorization. Settings endpoints must still require the corresponding backend permission.
 
 ## Conditional fields
 
