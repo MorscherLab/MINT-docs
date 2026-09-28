@@ -2,211 +2,162 @@
 
 ## Goal
 
-Run an R analysis from inside a Python plugin and ship the result back into the platform's data model.
+Run an R analysis from a Python plugin, with validated input and output, and save the result as a platform artifact.
 
-Two viable patterns:
+The SDK's `RAnalysisBridge` keeps FastAPI and Pydantic as the plugin contract and runs R as a child process:
 
-| Pattern | When |
-|---------|------|
-| **`rpy2`** — embed R inside the Python process | Frequent calls; small payloads; full data marshaling |
-| **Subprocess + `Rscript`** — run R as a child process | Occasional calls; large payloads; the R script is self-contained |
+```text
+Rscript <script.R> <input.json> <output.json>
+```
 
-Pick subprocess for most cases — it's simpler, isolates failures, and avoids R-Python ABI hazards. Reach for `rpy2` only when call latency matters or you need fine-grained data type marshaling.
+The bridge validates the input model, writes it to `input.json`, runs the script, and validates `output.json` against the output model. It also enforces a timeout, stops the whole R process group on cancellation, and records provenance.
 
-## Subprocess pattern
+## Scaffold it
+
+```bash
+uv run mint add r-analysis dose_response --generate
+uv run mint doctor --r
+```
+
+`mint add r-analysis NAME` writes:
+
+| File | Content |
+|------|---------|
+| `src/<module>/schemas/<name>_r.py` | Request and response Pydantic models |
+| `src/<module>/services/<name>_r.py` | A cached `RAnalysisBridge` with `RScriptSpec` |
+| `src/<module>/routers/<name>_r.py` | `POST /run/{experiment_id}`, registered on the plugin |
+| `src/<module>/r_scripts/<name>.R` | Starter script |
+| `src/<module>/r_scripts/mint_bridge.R` | Helpers: `mint_read_input()`, `mint_parameter()`, `mint_write_output()`, `mint_experiment_id()`, `mint_artifact_dir()` |
+| `r-requirements.txt` | `jsonlite` |
+
+Other options: `--script PATH` uses an existing script, `--generate` regenerates the frontend contract, and `--page` adds a starter Vue page. `mint doctor --r` checks that `Rscript` is found, that `jsonlite` is declared (in `renv.lock` or `r-requirements.txt`), and that scripts can find `mint_bridge.R`.
+
+## Define the bridge
 
 ```python
-# src/my_plugin/r_runner.py
-import asyncio
-import json
-import shutil
+# src/my_plugin/services/dose_response_r.py
 from pathlib import Path
 
-from mint_sdk import ConfigurationException
+from pydantic import BaseModel
+from mint_sdk import RAnalysisBridge, RScriptSpec
 
 
-def _ensure_rscript() -> str:
-    rscript = shutil.which("Rscript")
-    if rscript is None:
-        raise ConfigurationException(
-            "Rscript not found on PATH. Install R or set the script path explicitly.",
-            config_key="rscript_path",
-        )
-    return rscript
+class DoseResponseInput(BaseModel):
+    doses: list[float]
+    response: list[float]
 
 
-async def run_r_script(
-    script: Path,
-    *,
-    input_data: dict,
-    timeout_s: int = 60,
-) -> dict:
-    rscript = _ensure_rscript()
-    payload = json.dumps(input_data)
+class DoseResponseFit(BaseModel):
+    IC50: float
+    slope: float
+    top: float
+    bottom: float
 
-    process = await asyncio.create_subprocess_exec(
-        rscript, "--vanilla", str(script),
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+
+bridge = RAnalysisBridge(
+    RScriptSpec(
+        script="r_scripts/dose_response.R",
+        working_dir=str(Path(__file__).resolve().parents[1]),  # the package root
+        input_schema=DoseResponseInput,
+        output_schema=DoseResponseFit,
+        timeout_seconds=120,
     )
-
-    try:
-        stdout, stderr = await asyncio.wait_for(
-            process.communicate(input=payload.encode()),
-            timeout=timeout_s,
-        )
-    except asyncio.TimeoutError:
-        process.kill()
-        raise
-
-    if process.returncode != 0:
-        raise RuntimeError(
-            f"R script failed (exit {process.returncode}):\n"
-            + stderr.decode(errors="replace")
-        )
-
-    return json.loads(stdout.decode())
+)
 ```
+
+| `RScriptSpec` field | Default | Meaning |
+|---------------------|---------|---------|
+| `script` | required | Script path, relative to `working_dir` unless absolute |
+| `working_dir` | current directory | Child working directory and base for relative paths |
+| `input_schema` / `output_schema` | required | Pydantic models for `input.json` / `output.json` |
+| `timeout_seconds` | `600` | Hard limit; the process group is killed and `RBridgeError` is raised |
+| `executable` | `MINT_RSCRIPT`, then `Rscript` on `PATH` | R executable |
+| `extra_args` | `[]` | Appended after the two JSON paths |
+| `artifact_dir` | none | Directory exposed to R as `MINT_R_ARTIFACT_DIR` |
+
+Only JSON input and output are supported.
+
+## Write the R script
 
 ```r
-# scripts/dose_response_fit.R
-library(jsonlite)
+# src/my_plugin/r_scripts/dose_response.R
+source("r_scripts/mint_bridge.R")
 
-# Read JSON from stdin
-input <- fromJSON(file("stdin", "r"), simplifyVector = TRUE)
+input <- mint_read_input()   # argv[1] or MINT_R_INPUT
+fit <- nls(response ~ bottom + (top - bottom) / (1 + (dose / IC50)^slope),
+           data = list(dose = input$doses, response = input$response),
+           start = list(bottom = 0, top = 100, IC50 = median(input$doses), slope = 1))
 
-doses    <- input$doses
-response <- input$response
-
-fit <- nls(response ~ bottom + (top - bottom) / (1 + (dose/IC50)^slope),
-           data = list(dose=doses, response=response),
-           start = list(bottom=0, top=100, IC50=median(doses), slope=1))
-
-result <- list(
-  IC50  = unname(coef(fit)["IC50"]),
-  slope = unname(coef(fit)["slope"]),
-  top   = unname(coef(fit)["top"]),
-  bottom = unname(coef(fit)["bottom"])
-)
-
-cat(toJSON(result, auto_unbox = TRUE))
+mint_write_output(as.list(coef(fit)))   # argv[2] or MINT_R_OUTPUT
 ```
 
+The script receives the input and output paths as `argv[1]` and `argv[2]`, also exposed as `MINT_R_INPUT` and `MINT_R_OUTPUT`. `MINT_EXPERIMENT_ID` is set when you pass `experiment_id`. Write the output file; stdout is kept only for logs.
+
+## Call it from a route or job
+
 ```python
-# src/my_plugin/plugin.py
-from pathlib import Path
-from my_plugin.r_runner import run_r_script
+from mint_sdk import AnalysisPlugin, CurrentExperiment, endpoint
+
+from my_plugin.services.dose_response_r import DoseResponseFit, DoseResponseInput, bridge
+
 
 class MyPlugin(AnalysisPlugin):
-    async def fit_dose_response(self, experiment_id: int, doses: list[float],
-                                 response: list[float]):
-        script = Path(__file__).parent.parent / "scripts" / "dose_response_fit.R"
-        result = await run_r_script(script,
-                                    input_data={"doses": doses, "response": response})
-        await self.save_analysis(experiment_id, {"fit": result})
-        return result
+    @endpoint.post("/experiments/{experiment_id}/dose-response")
+    async def fit_dose_response(
+        self, body: DoseResponseInput, experiment: CurrentExperiment,
+    ) -> DoseResponseFit:
+        fit = await bridge.run(payload=body, experiment_id=experiment.id)
+        await self.save_analysis_artifact(
+            experiment.id,
+            {"fit": fit.model_dump(), "elapsed_s": bridge.last_run.elapsed_seconds},
+            artifact_key="dose-response",
+            display_name="Dose-response fit",
+        )
+        return fit
 ```
 
-## `rpy2` pattern
+For long fits, call the bridge inside a `@job` and pass the job context as `bridge.run(payload=..., context=context)`. On cancellation, the bridge stops the R process group and raises `asyncio.CancelledError`. See [Writing results](/sdk/recipes/writing-results) for artifact keys and run history.
 
-`rpy2` embeds R into the Python process. It's faster per call (~ms instead of ~100ms for a fresh `Rscript` startup) but harder to debug and reproduce.
+## Environment, errors and provenance
 
-```python
-# src/my_plugin/r_inproc.py
-from rpy2 import robjects
-from rpy2.robjects import pandas2ri
-from rpy2.robjects.packages import importr
+- **Environment.** The R child does not inherit the plugin environment. Only `PATH`, `HOME`, `LANG`, `TMPDIR`, `LC_*` and `R_*` pass through, plus the `MINT_R_*` and `MINT_EXPERIMENT_ID` variables the bridge sets. Plugin tokens and database or S3 credentials stay in the parent. Pass anything else explicitly: `bridge.run(payload=..., extra_env={"MY_TOOL_HOME": "/opt/tool"})`.
+- **Errors.** Input validation, a missing script or executable, a non-zero exit, a timeout, a missing output file and output validation all raise `RBridgeError` (code `R_BRIDGE_ERROR`). The error details that reach API clients contain only the last part of stderr (`stderr_tail`) and never stdout. The full stdout and stderr go to the plugin log.
+- **Provenance.** `bridge.last_run` is an `RRunProvenance` with the executable, script, paths, exit code, elapsed time and full output. Store what you need for reproducibility in the artifact payload.
 
-pandas2ri.activate()
-base = importr("base")
-stats = importr("stats")
+## Packaging and deployment
 
+With the scaffold's `[tool.hatch.build.targets.wheel] packages = ["src/<module>"]`, the files under `src/<module>/r_scripts/` ship inside the wheel. Check with `unzip -l` on the built wheel. Setting `working_dir` from `Path(__file__)`, as above, resolves the script in the installed package.
 
-def fit_lm(x, y):
-    df = pandas2ri.py2rpy({"x": x, "y": y})
-    model = stats.lm("y ~ x", data=df)
-    return {
-        "coef": list(stats.coef(model)),
-        "r_squared": float(stats.summary_lm(model).rx2("r.squared")[0]),
-    }
-```
-
-::: warning rpy2 deployment caveats
-`rpy2` requires R installed at build time and at runtime, with matching versions. In Docker deployments, install R in the image alongside Python. In direct installs, mark R as an explicit dependency in your plugin's README.
-:::
-
-## Packaging the R scripts
-
-Ship the `.R` files inside your plugin package so they're available in installed wheels:
-
-```toml
-# pyproject.toml
-[tool.hatch.build]
-include = [
-    "src/my_plugin/**/*.py",
-    "src/my_plugin/scripts/*.R",       # ← R scripts
-]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/my_plugin"]
-```
-
-Or for `setuptools`, use `package_data`. Either way, reference the script via `Path(__file__).parent / "scripts" / "...R"`.
-
-## Standalone vs integrated
-
-The pattern works in both modes — neither `rpy2` nor `Rscript` cares about the platform context. In standalone mode, the analysis still runs and `save_analysis` no-ops; in integrated mode, the result lands in `PluginAnalysisResult`.
-
-## Performance considerations
-
-| Concern | Subprocess | rpy2 |
-|---------|-----------|------|
-| Startup cost | ~100–300 ms per call (R interpreter spin-up) | ~0 ms (R initialized once at plugin start) |
-| Memory | Forked process, dies after | Long-lived in plugin process |
-| Crash blast radius | Subprocess only | Plugin process — affects every other route |
-| Concurrency | Per-call subprocess | One global R interpreter (GIL-equivalent — serialize calls) |
-
-For analyses that run on the order of seconds, subprocess overhead is negligible. For sub-second analyses called many times per request, rpy2 wins.
+The SDK does not install R or R packages. Install `Rscript` and the packages your script loads (at least `jsonlite`) on the platform host or image, or set `MINT_RSCRIPT`. See [Deploying](/sdk/operations/deploying#native-libraries-and-offline-installs).
 
 ## Testing R-backed routes
 
-For unit tests, mock the R call:
+Replace the bridge in unit tests. Run the real script only where R is installed:
 
 ```python
-import pytest
 from unittest.mock import AsyncMock
 
+from my_plugin.services import dose_response_r
+from my_plugin.services.dose_response_r import DoseResponseFit
 
-@pytest.mark.asyncio
-async def test_fit_dose_response_saves_result(plugin, monkeypatch):
-    fake_result = {"IC50": 1.5, "slope": 1.2, "top": 100, "bottom": 0}
-    monkeypatch.setattr(
-        "my_plugin.plugin.run_r_script",
-        AsyncMock(return_value=fake_result),
-    )
 
-    result = await plugin.fit_dose_response(
-        experiment_id=1,
-        doses=[0.1, 1.0, 10.0],
-        response=[10, 50, 90],
-    )
-    assert result == fake_result
-    saved = await plugin.load_analysis(1)
-    assert saved.result["fit"] == fake_result
+async def test_fit_uses_bridge_output(monkeypatch):
+    fit = DoseResponseFit(IC50=1.5, slope=1.2, top=100, bottom=0)
+    monkeypatch.setattr(dose_response_r.bridge, "run", AsyncMock(return_value=fit))
+    assert await dose_response_r.bridge.run(payload={"doses": [1.0], "response": [50.0]}) == fit
 ```
 
-For integration tests, install R in your CI runner and let the real script run. Cache the R installation across CI runs — it's one of the slowest parts of the workflow.
+For integration tests, install R in CI (for example with `r-lib/actions/setup-r`) and cache the R library.
 
 ## Notes
 
-- `--vanilla` makes the R subprocess deterministic — no user `.Rprofile`, no saved workspace.
-- Always feed input through stdin / structured JSON, not via command-line args. R's argument quoting on Windows is unreliable.
-- For mathematical results that may be `Inf` / `NaN` / `null`, `jsonlite::toJSON` has options (`na = "string"`, `auto_unbox = TRUE`) — pin them so your plugin parser can rely on the shape.
-- Don't use R for things Python can do natively — adding an R dependency raises the deployment cost. Reserve it for genuinely R-specific libraries (`limma`, `DESeq2`, specialized stats packages).
+- `rpy2`, which embeds R in the plugin process, is not part of the SDK. It shares one interpreter across all requests, and an R crash takes down the plugin process. Prefer the bridge unless you have measured that per-call `Rscript` startup is the bottleneck.
+- Use R only for R-specific libraries (`limma`, `DESeq2`, specialized statistics); each R dependency adds deployment work.
+
+Source: [R bridge](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/r.py), [scaffold templates](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/add_r_templates.py).
 
 ## Related
 
 - [Recipes → Writing results](/sdk/recipes/writing-results) — how the R output gets persisted
-- [Recipes → Error handling](/sdk/recipes/error-handling) — wrapping subprocess failures
+- [Recipes → Error handling](/sdk/recipes/error-handling) — typed errors and request IDs
 - [Operations → Deploying](/sdk/operations/deploying) — installing R alongside MINT

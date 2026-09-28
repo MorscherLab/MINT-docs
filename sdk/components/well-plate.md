@@ -37,7 +37,7 @@ import { WellPlate } from "@morscherlab/mint-sdk/components"
 
 ## Decorate wells without changing sample data
 
-In 1.2.6, `wellClass` and `wellStyle` let you mark a QC state or a focused well independently of sample type and heatmap values:
+`wellClass` and `wellStyle` let you mark a QC state or a focused well independently of sample type and heatmap values:
 
 ```vue
 <script setup lang="ts">

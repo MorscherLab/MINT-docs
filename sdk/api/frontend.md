@@ -6,6 +6,16 @@ Public components, composables, stores, and types from `@morscherlab/mint-sdk` *
 
 Components are documented in the [Component Library](/sdk/components/), where each page lists props and embeds a playground. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-frontend/src/components).
 
+Deprecated components, scheduled for removal in MINT 1.3:
+
+| Component | Replacement |
+|-----------|-------------|
+| `ColorSlider` | `BaseSlider` |
+| `DropdownButton` | `ActionMenu` |
+| `TimeRangeInput` | `TimePicker` |
+| `ResourceCard` | None |
+| `InstrumentAlertLog`, `InstrumentStatusCard`, `LcmsSequenceTable` | None in the SDK; instrument UI moves to the mld-ms plugins |
+
 ## Composables
 
 Typed composables and helper factories. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-frontend/src/composables).
@@ -20,7 +30,7 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 | `usePlatformContext` | integration, plugin, user, theme, features | Platform shell context |
 | `useForm` | reactive form state | Manual form management |
 | `useFormBuilder` | schema-driven form runtime | `FormBuilder` component |
-| `useAsync`, `useAsyncBatch` | async state helpers | Wrap async operations |
+| `useAsyncBatch` | async state helper | Run several async functions together |
 | `useWellPlateEditor` | plate state + helpers | Plate-design UIs |
 | `useRackEditor` | rack state | Sample rack UIs |
 | `useConcentrationUnits` | concentration math | µM / mg/mL / % conversions |
@@ -32,13 +42,27 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 | `useScheduleDrag` | drag-to-reschedule | Calendar / timeline |
 | `useProtocolTemplates` | protocol step engine | Protocol UIs |
 | `useAutoGroup` | sample auto-grouping | Group by name prefix |
-| `usePluginConfig` | plugin settings | Read plugin config |
 | `createPluginClient`, `usePluginClient` | contract-aware plugin API runtime | Generated plugin clients |
 | `buildPluginEndpointUrl`, `resolvePluginBaseUrl` | URL helpers | Link previews and diagnostics that match generated client calls |
 | `uploadPluginEndpoint`, `downloadPluginEndpoint`, `downloadBlob` | multipart / Blob helpers | Generated upload and download endpoint wrappers |
 | `usePluginEventStream` | auth-aware SSE helper | Generated event-stream endpoint wrappers |
 | `usePluginSettings` | plugin settings helpers | Load/save plugin configuration |
+| `usePluginJobs` | SDK job lifecycle client | Connect a custom frontend to the plugin's `@job` endpoints |
 | `usePluginJobCenter` | job-center view state | Render a `PluginJobCenterSource` from `usePluginJobs()` |
+| `useAnalysisArtifacts` | artifact list and actions | List and manage analysis artifacts through the platform API |
+| `useGeneratedAnalysis`, `createGeneratedAnalysisTransport` | generated-workspace runtime | Experimental runtime behind the SDK-managed generated analysis UI |
+| `usePluginWorkspace` | shell, sidebar, and control state | Build a custom shell with the same behavior as `PluginWorkspaceView` |
+| `createPluginResourceClient` | list/create/update/remove adapter | Wrap a generated client as a CRUD resource |
+| `useExperimentSamples` | design data and derived samples | Feed `SampleSelector`-style UIs from an experiment |
+| `useSampleGroups`, `useGroupAssignment` | group hierarchy and two-zone assignment | Sample selectors and control/treatment assignment |
+| `useTemplateCollection` | template collection state | Load and save a biology template collection in design data |
+| `useBioTemplateControls`, `useBioTemplateComponents` | template schemas and component mappings | Lower-level parts of `useBioTemplateWorkspace` |
+| `defineControlComponentBindings`, `defineWellPlateControlProps`, `defineDoseCalculatorControlProps`, `defineWellPlateDoseControlProps`, `defineWellPlateDoseComponentBindings` | control-to-component mappings | Bind generated controls to `WellPlate` / `DoseCalculator` |
+| `useRuntimeAlignment` | frontend/backend revision state | Keep a loaded frontend aligned with the backend revision |
+| `usePresenceHeartbeat` | presence reporting | Report a visible integrated tab to the platform presence tracker |
+| `useMobileSupportGate` | viewport support state | Drive `MobileSupportGate` |
+| `useFocusTrap`, `useRovingFocus`, `useMenuKeyboard`, `useListReorder`, `useReorderAnnouncer` | keyboard and screen-reader helpers | Accessible dialogs, tabs, menus, and reorderable lists |
+| `useEventListener`, `useDebouncedWatch` | lifecycle-bound listener and debounced watcher | Small utilities used by SDK components |
 | `useCurrentExperiment` | injection/URL experiment helper | Resolve an experiment ID and fetch its record; separate from picker selection |
 | `useExperimentSelector` | reactive experiment picker | Experiment dropdowns |
 | `useExperimentData` | reactive experiment view | Live design + analysis |
@@ -60,16 +84,45 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 | `useManualLayoutResize` | Pointer resize state, start/stop, and cleanup | Connect a `LayoutResizeHandle` to application-owned dimensions |
 | `resizedLeadingPanelWidth`, `resizedTrailingPanelWidth`, `resizedVerticalSplitPercent` | Bounded dimension helpers | Convert pointer deltas into pane widths or vertical percentages |
 
+### Deprecated composables
+
+Scheduled for removal in MINT 1.3:
+
+| Composable | Replacement |
+|------------|-------------|
+| `useAsync` | `useRequestSyncState()` |
+| `useOptimisticMutation` | `useRequestSyncState()` |
+| `usePluginConfig` | `usePluginSettings()` |
+| `useResourceCrud` | `useGeneratedPluginClient()` |
+| `useWellPlateAdapter` (with `createWellPlateWells`, `createRowConditions`, `createColumnConditions`), `useWellPainting`, `useWellPlateValidation` | `useWellPlateEditor()` |
+| `useCommandHistory` | Keep command stacks in the plugin |
+| `useJobsStatusTray` | `usePluginJobCenter()` |
+
 ## Stores and access policies
 
 | Export | State and methods |
 |--------|-------------------|
 | `useAuthStore()` | `userInfo`, `isAuthenticated`, `needsAuth`, `isAdmin`, `isLoading`, `error`, `hasPermission(...)` |
 | `useExperimentStore()` | `current`, `currentId`, `isResolving`, `error`, `select(record)`, `selectById(id)`, `clear()` |
-| `useSettingsStore()` | Shared SDK theme, API, and display settings |
+| `useSettingsStore()`, `tryUseSettingsStore()` | Shared SDK theme, color palette, table density, and API settings; `tryUseSettingsStore()` returns `null` without an active Pinia |
+| `colorPalettes`, `paletteCssVariables()`, `PALETTE_CSS_VARIABLES`, `tableDensityToSize()` | Palette definitions, the `<html>` overrides a palette writes, and the table size for a density |
 | `AccessPolicy`, `AccessControlled` | Nested `access: { permissions, anyPermissions, requiresAuth, requiresAdmin, ... }` policies for access-aware UI |
 
 Destructure Pinia state with `storeToRefs()` or read it through the store object. In 1.2, experiment selection is stored once per plugin Pinia instance; `ExperimentSelectorModal` emits only open-state updates. Use `useAppExperiment()` or `PluginWorkspaceView experiment-shell` for top-bar presentation and saving. Backend permissions remain authoritative.
+
+## Utility exports
+
+| Area | Exports |
+|------|---------|
+| Permissions | `ADMIN_ROLE`, `ADMIN_PANEL_PERMISSIONS`, `getRoleInfo`, `isAdminRole`, `isAdminUser`, `getAccessAudience`, `getUserPermissions`, `hasAllPermissions`, `hasAnyPermission`, `canAccessAdmin`, `canAccessPlugin`, `normalizeAccessPolicy`, `canAccessByPolicy` |
+| Plugin secrets | `PLUGIN_SECRET_FORMAT_KEY`, `PLUGIN_SECRET_FORMAT_REF`, `PLUGIN_SECRET_REF_KEY`, `setPluginSecret`, `keepPluginSecret`, `clearPluginSecret`, `isPluginSecretRef`, `isPluginSecretLocked`, `pluginSecretId`, `pluginSecretLabel`, `pluginSecretState`, `usesPluginSecretReferences` |
+| Jobs | `resolveJobCapabilities`, `normalizeJobPercent`, `normalizeJobState`, `isActiveJobStatus`, `isTerminalJobStatus`, `jobStatusLabel` |
+| Instrument sequences | `sequenceProgressPercent`, `sequenceSamplesRemaining`, `estimateSequenceRemainingSeconds`, `estimateSequenceFinishDate`, `formatSequenceRemaining`, `formatSequenceEta` |
+| LC-MS | `DEFAULT_LCMS_SEQUENCE_COLUMNS`, `extractLcmsCommonPrefix`, `extractLcmsSampleName`, `lcmsWellIdFromPosition`, `inferLcmsPlateTypeFromWellIds`, `reconstructLcmsPlateCellsFromSequenceItems`, `basenameFromWindowsPath` |
+| Racks and LC-MS plates | `LCMS_DEFAULT_CONTROL_POSITIONS`, `createLcmsControlWellEditData`, `getLcmsDefaultControlWellId`, `lcmsPlateCellsToRack`, `lcmsPlateCellsToRacks`, `lcmsPlateTypeToRackFormat`, `lcmsWellId`, `parseLcmsWellId`, `rackFormatToLcmsPlateType`, `rackToLcmsPlateCells`, `racksToLcmsPlateCells` |
+| Generated job forms (experimental) | `generatedJobFormSchema`, `generatedJobDefaults`, `normalizeGeneratedJobInput` |
+| Color | `hexToHsl`, `hslToHex`, `deriveShade` |
+| Biology templates | Everything from `@morscherlab/mint-sdk/templates` is also re-exported from the package root |
 
 ## Generated plugin client helpers
 
@@ -136,9 +189,6 @@ import {
   type FieldRules,
   type FieldState,
   type UseFormReturn,
-  type AsyncError,              // useAsync
-  type AsyncState,
-  type UseAsyncReturn,
   type ConcentrationValue,      // useConcentrationUnits
   type ConcentrationUnit,
   type MolarityUnit,
@@ -181,7 +231,7 @@ Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `Fi
 - Prefer named imports. Installing `MINTSdk` globally registers the SDK components; do not assume that a global install includes only one component. `PlotlyChart` loads its Plotly runtime on mount.
 - Current plugin scaffolds import Tailwind v4 and the SDK style bundle from `frontend/src/style.css`: `@import "tailwindcss";` then `@import "@morscherlab/mint-sdk/styles";`. Keep the SDK import unlayered so Tailwind preflight cannot outrank SDK component styles. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
 - For plugin-scoped API calls, prefer `useGeneratedPluginClient()` from `frontend/src/generated/mint-plugin.ts`; use raw `useApi()` for platform APIs outside the plugin contract.
-- `mint doctor` flags legacy `usePluginApi()`, private SDK subpath imports, direct frontend composable file subpaths, and raw plugin API `fetch('/api/...')` calls.
+- `mint doctor` flags legacy `usePluginApi()`, private SDK subpath imports, direct frontend composable file subpaths, raw plugin API `fetch('/api/...')` calls, and the removed `AppSidebar` `variant` prop (in `.vue` files and in agent docs such as `CLAUDE.md` / `AGENTS.md`).
 
 ## Related
 

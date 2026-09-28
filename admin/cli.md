@@ -28,7 +28,7 @@ If the command isn't found, the install location isn't on your `PATH`. With `uv 
 mint auth login --url https://mint.morscherlab.org
 ```
 
-Prompts for username and password, then stores the resulting JWT in `~/.config/mint/credentials.json` (or `$XDG_CONFIG_HOME/mint/credentials.json`). Subsequent commands use it automatically.
+Prompts for the platform URL if none is stored, your username or email, and your password, then stores the resulting JWT in `~/.config/mint/credentials.json` (or `$XDG_CONFIG_HOME/mint/credentials.json`). Subsequent commands use it automatically.
 
 | Subcommand | Purpose |
 |------------|---------|
@@ -55,7 +55,7 @@ mint experiment data 42 --view summary            # design-data summary
 mint experiment results 42 --plugin dose-response # one plugin result
 ```
 
-Other subcommands read design data (`data`), results (`results`), list types (`types`) and delete (`delete`).
+Other subcommands read design data (`data`), results (`results`), list types (`types`), show the next experiment code for a type (`next-seq`) and delete (`delete`).
 
 ## Projects
 
@@ -97,8 +97,7 @@ Prints a one-screen health overview:
 
 - Configured host
 - Stored username
-- Platform reachability
-- Loaded plugins returned by `/health`
+- Platform reachability via the public `/api/health` endpoint (it reports status, version and a per-process `boot_id`, not the plugin list)
 - Token validity / expiry when the server can verify it
 
 For deeper operational status, use **Admin -> Platform -> Server** in the browser UI.
@@ -111,6 +110,10 @@ For deeper operational status, use **Admin -> Platform -> Server** in the browse
 
 `mint debug summary | health | system | config | logs | updates` are read-only diagnostics for support and ops checks.
 
+## Restart and run the platform
+
+`mint platform restart` asks the configured platform to restart (requires `platform.configure`). All platform commands are also available under `mint platform …`, for example `mint platform admin user list`. `mint daemon` and `mint platform daemon start|stop|restart|status|logs` run the platform without Docker; see the [CLI reference](/sdk/api/cli-reference#platform-daemon-commands).
+
 ## Updates
 
 ```bash
@@ -118,7 +121,7 @@ mint update check
 mint update apply --yes
 ```
 
-`mint update check` reports platform, SDK, and plugin update sources. `mint update apply` applies the latest platform update and requires admin permissions.
+`mint update check` reports platform, SDK, and plugin update sources. `mint update apply` applies the latest platform update and requires `platform.configure`.
 
 ## Scripting tips
 
@@ -131,7 +134,7 @@ mint experiment list --project-id 12 --status ongoing --json \
   | xargs -n1 -I{} mint experiment update {} --status completed
 ```
 
-Authentication tokens are short-lived (24 hours by default). For long-running scripts, catch 401s and re-run `mint auth login`; the Python `MINTClient` can attempt token refresh automatically during requests.
+Authentication tokens expire after `auth.tokenExpireMinutes` (7 days by default). For long-running scripts, catch 401s and re-run `mint auth login`; the Python `MINTClient` can attempt token refresh automatically during requests.
 
 ## What `mint` is not
 

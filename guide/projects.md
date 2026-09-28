@@ -1,6 +1,6 @@
 # Projects
 
-A **project** is the top-level grouping in MINT. It owns a set of experiments and a set of members; every experiment lives in exactly one project, and access is governed primarily through project membership.
+A **project** is the top-level grouping in MINT. It groups experiments and members. An experiment belongs to at most one project. What each person can do is decided mainly by their system role; project membership adds who works on it.
 
 > [Screenshot: project detail page with header, rollup filters, experiments table, and metadata rail]
 
@@ -19,15 +19,18 @@ Projects are inexpensive to create and renaming is allowed at any time, so it's 
 
 ## Create a project
 
-From the home dashboard, click **New project**.
+Open **Projects** from the top navigation and click **New Project**.
 
 | Field | Description |
 |-------|-------------|
 | **Name** | Human-readable label. Required. Shown on the dashboard and in breadcrumbs. |
-| **Description** | One- or two-sentence summary. Shown on the project tile. |
-| **Members** (optional) | Lab colleagues to invite at creation time. Each picks up the default project role; tune later from the **Members** tab. |
+| **Status** | Active, Completed, or Archived |
+| **Start date / End date** | Optional |
+| **Description** | Goals and scope. Shown on the project tile. |
+| **Lead** | Optional. The lead can edit the project and manage members. |
+| **Members** (optional) | Existing MINT users. They join as `editor`; change a member to `viewer` later from **Edit**. |
 
-> [Screenshot: new-project modal showing the three fields]
+> [Screenshot: new-project form with name, status, dates, description, lead, and members]
 
 ## Project anatomy
 
@@ -38,7 +41,7 @@ The project page is a compact record view:
 | **Header** | Project name, status, description, **Edit**, and **New Experiment**. |
 | **Rollup filters** | Counts for all experiments, experiments with design data, and experiments without design data. Clicking a chip filters the table. |
 | **Experiments table** | Dense list with code, name, type, status, design completeness, and created date. Click a row to open the experiment. |
-| **Metadata rail** | Project dates, lead/creator context, members, tags, and admin actions. |
+| **Metadata rail** | Project dates, lead and creator, the **Team** card with members, tags, and **Delete project**. |
 
 The rollups describe the whole project, not just the current search filter. They are meant to answer the first operational question a project lead usually has: "which experiments have a design ready to analyze?"
 
@@ -48,24 +51,24 @@ The rollups describe the whole project, not just the current search filter. They
 
 When you create an experiment inside a project, MINT auto-assigns a unique `experiment_code` in `TYPE-EXP-SEQ` format, such as `LCM-EXP-001` or `DR-EXP-001`. Codes are globally unique — they don't restart per project — so they're safe to copy across docs and grant reports.
 
-The type prefix comes from the experiment type slug via `naming_service`; consult your admin if your lab uses a custom convention.
+The prefix comes from the experiment type slug: initials for slugs with underscores (`dose_response` → `DR`), the whole slug up to three characters, otherwise its first three letters (`lcms` → `LCM`). See [Experiment types](/admin/platform-settings#experiment-types).
 
 ## Project archival
 
-Archiving hides a project from the default dashboard listings without deleting any data. Archive projects when:
+To archive a project, click **Edit** and set **Status** to **Archived**. Nothing is deleted. Archive projects when:
 
 - The associated paper has been published and the data is frozen
 - A grant period has ended
 - You want to declutter the home dashboard for active members
 
-Archived projects remain reachable by direct URL and via the **Show archived** filter. Only admins, the project creator, or the project lead can archive or restore.
+On the **Projects** page, the **Archived** status chip lists archived projects; set the status back to **Active** to restore one. Only an admin, the project creator, or the project lead can change the status, and they need `projects.edit`.
 
 ## Deleting a project
 
-Deletion is irreversible — every experiment in the project is also removed, including design data and platform analysis artifact records. Plugin-owned tables and files can have their own cleanup policy, so prefer archiving unless the project was created by mistake. The action requires admin privilege and a confirmation dialog with the project name typed back.
+Use **Delete** under **Delete project** in the metadata rail, then confirm. The project and its member list are removed. Its experiments are **not** deleted; they stay in MINT without a project. Deleting needs `projects.delete`, and only an admin, the project creator, or the project lead can do it. It cannot be undone.
 
 ::: warning Prefer archival
-For nearly every "I'm done with this" case, archive instead of delete. Deletion is for genuinely accidental projects.
+For nearly every "I'm done with this" case, archive instead of delete. Deletion is for projects created by mistake.
 :::
 
 ## Visibility and access
@@ -81,4 +84,4 @@ See [Permissions](/reference/permissions) for the full RBAC matrix.
 ## Next
 
 → [Experiments](/guide/experiments) — the unit of work inside a project
-→ [Members & roles](/admin/users-roles) — invitations, membership, and RBAC
+→ [Users & roles](/admin/users-roles) — membership and system roles

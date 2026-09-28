@@ -1,6 +1,6 @@
 # Runtime isolation and storage
 
-MINT @MINT_VERSION@ can run an installed plugin in the platform process or in a separate Python subprocess. Choose a compatible dependency/runtime arrangement **and** check that it supports the services your plugin needs. Process isolation does not make every `PlatformContext` method remotely available.
+MINT @MINT_VERSION@ can run an installed plugin in the platform process, in a separate Python subprocess, behind an external HTTP URL, or in a platform-managed Docker container. Choose a compatible dependency/runtime arrangement **and** check that it supports the services your plugin needs. Process isolation does not make every `PlatformContext` method remotely available.
 
 ## Runtime comparison
 
@@ -11,10 +11,12 @@ MINT @MINT_VERSION@ can run an installed plugin in the platform process or in a 
 | External server | Platform must reach its URL | Owned by the service | An already running plugin service; the service owns its process lifecycle |
 | Docker runtime | Containerized plugin runtime | Owned by the container | Container image, networking and native libraries must be provided |
 | Standalone `mint dev` | `context=None`; no platform repositories, selected helpers return empty values | Local SQLite when declared | Plugin API/UI development and local database tests |
-| `mint dev --platform` | Development proxy into the standalone server | Local SQLite | Testing platform URL/proxy behavior during development |
+| `mint dev --platform` | Starts the platform and a development proxy into the standalone server | Local SQLite | Testing platform URL/proxy behavior during development |
 | External notebook, script, CI | No plugin context; synchronous `MINTClient` with the caller's credentials | Use platform APIs | Scripts outside a plugin |
 
 The **table-owning plugin tutorial must be deployed in-process** for PostgreSQL. `requires_shared_database=True` combined with `RemotePlatformContext` fails validation with `ConfigurationException`. Calling the remote context's `get_shared_db_session()` directly raises `NotImplementedError`; the SDK does not silently switch an installed remote plugin to SQLite.
+
+External HTTP and Docker-managed runtimes are registered rather than installed: the platform records where to proxy the plugin's routes and wires the proxy at startup. The runtime owns its process, dependencies and storage; plan plugin-owned tables as in-process only.
 
 ## In-process plugins
 

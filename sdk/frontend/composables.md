@@ -17,7 +17,7 @@ This page covers the public **@MINT_VERSION@** composables and helper factories 
 | `useFormBuilder` | Schema-driven form runtime | The `FormBuilder` component (rare to use directly) |
 | `defineControls`, `defineControlModel` | Typed compact control schemas | Generate FormBuilder, SettingsModal, AppSidebar, and ControlWorkspaceView bindings from one model |
 | `useControlSchema`, `useControlWorkspace` | Derived form/sidebar/topbar/component bindings | Custom generated workspaces |
-| `useAsync`, `useAsyncBatch` | Async-state helpers (loading/data/error) | Wrap any async operation |
+| `useAsyncBatch` | Async-state helper for several calls | Run async functions together (`useAsync` is deprecated; use `useRequestSyncState`) |
 | `useWellPlateEditor` | Well-plate state + helpers | Plate-design UIs |
 | `useRackEditor` | Rack-layout state | Sample-rack UIs |
 | `useConcentrationUnits` | Concentration parsing / conversion | Anything dealing with µM / mg/mL / % |
@@ -235,7 +235,7 @@ toast.dismiss(toastId)
 At most two `actions` are retained; each has `label`, `onClick` and optional
 `primary`. `count` shows a grouped count. `progress: 'indeterminate'` prevents
 auto-dismiss; `progress: 'none'` hides the bar but still uses the normal timeout.
-The default duration remains 3500ms.
+The default duration is 3500 ms. The toast stack sits 1rem from the top of the viewport; when an `AppTopBar` is mounted, it starts 1rem below the bar (the bar publishes `--mint-toast-offset-top` on `<html>`).
 
 ### `usePlatformContext`
 
@@ -377,7 +377,6 @@ For lower-level layouts, `useControlSchema()` gives you `formSchema`, `settingsS
 
 | Composable | Use it when |
 |------------|-------------|
-| `useAsync` | Wrap any async function so the template can show loading / error / data states |
 | `useDoseCalculator` | Building dose-response calculators or serial dilution helpers |
 | `useConcentrationUnits` | Parsing user input like "5 mM" and converting between unit families |
 | `useChemicalFormula` | Show elemental composition of a formula string |

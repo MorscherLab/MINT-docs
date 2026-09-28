@@ -136,6 +136,36 @@ The model hook defaults to `[]`, both migration hooks to `None`. `ensure_standal
 
 With a spec, `run_migrations=False` inspects the existing database and rejects a missing head, pending revisions, or model drift; it does not initialize a fresh schema. Normal standalone app startup prepares storage automatically. Integrated shared sessions use PostgreSQL; `RemotePlatformContext` cannot supply shared SQL sessions. Successful session exit commits, and exceptions roll back.
 
+## Schema conformance helpers
+
+`mint_sdk.migrations` also exports the helpers behind the `conformance` field of `PluginDatabaseState`. `SchemaConformanceIssue`, `SchemaConformanceReport`, and `check_model_schema_conformance` are also exported from `mint_sdk`.
+
+```python
+@dataclass(frozen=True, slots=True)
+class SchemaConformanceIssue:
+    code: str            # "missing_table" or "missing_column"
+    message: str
+    table: str
+    column: str | None = None
+
+@dataclass(frozen=True, slots=True)
+class SchemaConformanceReport:
+    issues: list[SchemaConformanceIssue] = field(default_factory=list)
+    # properties: ok, missing_tables, missing_columns
+
+async def check_model_schema_conformance(
+    engine, *, dialect: str, models: list[type] | tuple[type, ...] | None, schema: str | None = None
+) -> SchemaConformanceReport: ...
+async def inspect_database_columns(
+    engine, *, dialect: str, table_names: list[str], schema: str | None = None
+) -> dict[str, set[str]]: ...
+def model_tables(models) -> dict[str, Any]: ...
+def model_table_columns(models) -> dict[str, set[str]]: ...
+def format_conformance_issues(report: SchemaConformanceReport, *, limit: int = 5) -> str: ...
+```
+
+The check reports only missing model tables and columns; it does not compare types, defaults, or constraints. Use `check_migrations` or `mint db check` for a full comparison.
+
 ## Identity, history and locking
 
 Each database domain has `_mint_database_identity`, `alembic_version`, and `_mint_migration_history`. The owner is `plugin:<entry-point-name>`; history records applied/adopted revision checksums. A mismatched owner, unknown current revision, incomplete history, or edited applied file stops the operation. An older plugin cannot reopen a database containing a revision it does not package. Legacy/model-only startup also refuses a database with an active Alembic revision.

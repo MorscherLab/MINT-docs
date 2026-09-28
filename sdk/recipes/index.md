@@ -1,6 +1,6 @@
 # Recipes
 
-Goal-oriented patterns for the operations plugin authors do most often. Each recipe is short — a goal, a code block, a few notes, and links to related material. If the recipe doesn't fit, the [Tutorials](/sdk/tutorials/) cover end-to-end builds and the [API Reference](/sdk/api/) covers exact symbol surfaces.
+Goal-oriented patterns for the operations plugin authors do most often. Each recipe is short: a goal, working code, the pitfalls, and links to related material. If the recipe doesn't fit, the [Tutorials](/sdk/tutorials/) cover end-to-end builds and the [API Reference](/sdk/api/) covers exact symbol surfaces.
 
 ## Reading experiments
 
@@ -26,8 +26,8 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 | Recipe | When |
 |--------|------|
 | [Error handling](/sdk/recipes/error-handling) | Typed SDK errors, HTTP envelopes and request IDs |
-| [Logging & tracing](/sdk/recipes/logging-tracing) | Structured logs via `get_plugin_logger`; request-scoped fields |
-| [Testing plugins](/sdk/recipes/testing-plugins) | In-memory repos, fixtures, end-to-end tests with TestClient |
+| [Logging & tracing](/sdk/recipes/logging-tracing) | Stdlib `logging` in the platform formatter; request IDs and spans |
+| [Testing plugins](/sdk/recipes/testing-plugins) | `RecordingContext`, route tests, `PluginTestHarness` job tests, migrations |
 
 ## Schema evolution
 
@@ -39,8 +39,4 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 
 | Recipe | When |
 |--------|------|
-| [R integration](/sdk/recipes/r-integration) | Calling R from a Python plugin via `rpy2` or subprocess |
-
-::: tip Pattern
-Every recipe page follows the same shape: **Goal → Code → Notes → Related**. Read the goal and the code first; the notes are the gotchas you'll hit when adapting the pattern.
-:::
+| [R integration](/sdk/recipes/r-integration) | Calling R through the SDK `RAnalysisBridge` and `mint add r-analysis` |

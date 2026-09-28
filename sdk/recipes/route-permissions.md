@@ -36,7 +36,7 @@ class PeakQcPlugin(AnalysisPlugin):
 
 `requires_auth` is inherited by ordinary routes; a route can explicitly use `auth=True` or `auth=False`. `CurrentPluginActor` provides `user_id` (string), `username`, platform `role`, `permissions`, and `plugin_role`. Use `actor.has_permission("experiments.edit")` for a platform permission; use the separate plugin role for plugin-specific actions.
 
-`CurrentExperiment` checks `experiments.view`, visibility, and the effective experiment-type allowlist. It returns 404 for an inaccessible or missing experiment and 503 without platform integration. Knowing an experiment ID or holding a plugin role does not bypass this check.
+`CurrentExperiment` checks `experiments.view`, visibility, and the effective experiment-type allowlist. It returns 403 when the actor lacks `experiments.view`, 404 for an inaccessible or missing experiment, and 503 without platform integration. Knowing an experiment ID or holding a plugin role does not bypass this check.
 
 ## Experiment-scoped endpoint groups
 

@@ -1,14 +1,18 @@
 ---
 aside: false
 title: ColorSlider
-description: "ColorSlider is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Range slider with a gradient color track and color-coded value badge for threshold visualization."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # ColorSlider
 
-ColorSlider is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Range slider with a gradient color track and color-coded value badge for threshold visualization.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Use [BaseSlider](/sdk/components/base-slider) instead.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

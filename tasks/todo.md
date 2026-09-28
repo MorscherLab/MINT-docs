@@ -14,6 +14,6 @@
 
 ## Phase B: facts to 1.2.9
 
-- [ ] Bump versions.ts + SDK dep to 1.2.9; regenerate component props.
-- [ ] Apply audit findings per section; new tutorial, 12 component pages, deprecation banners.
-- [ ] Build + check-doc-versions + stale grep; commit.
+- [x] Bump versions.ts + SDK dep to 1.2.9; regenerate component props.
+- [x] Apply audit findings per section; new tutorial, 12 component pages, deprecation banners.
+- [x] Build + check-doc-versions + stale grep; commit.

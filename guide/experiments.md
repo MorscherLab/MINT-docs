@@ -20,18 +20,22 @@ An **experiment** is the central unit of work in MINT. It has a unique type-scop
 
 ## Create an experiment
 
-From a project page, click **New Experiment**.
+From a project page or the **Experiments** page, click **New Experiment**.
 
-> [Screenshot: new-experiment modal with type selector and design fields]
+> [Screenshot: new-experiment form with name, type, code preview, and collaborators]
 
 | Field | Notes |
 |-------|-------|
-| **Title** | Required. |
-| **Type** | Required. Populated from installed `EXPERIMENT_DESIGN` and `FULL` plugins (e.g., LC-MS sequence, drug-response panel). If empty, ask your admin to install a relevant plugin. |
-| **Design data** | The form here is rendered by the type's plugin; it's whatever the plugin author defined. |
-| **Collaborators** (optional) | Add now or later. New collaborators are added with the `collaborator` role; the creator is stored as `owner`. |
+| **Name** | Required. |
+| **Type** | One of the experiment types your admin created in [Admin -> Platform -> Experiment Types](/admin/platform-settings#experiment-types). Sets the code prefix. If the type you need is missing, ask your admin. |
+| **Sequence** | Optional override for the code number. Leave it empty for the next free number. |
+| **Start date / End date** | Optional |
+| **Notes** | Protocol, conditions, anything the next person needs. Searchable. |
+| **Project** | Optional; an experiment belongs to at most one project |
+| **Derived from** | Optional parent experiment |
+| **Collaborators** (optional) | Add now or later, with the role Viewer, Editor, or Admin. You are stored as `owner`. |
 
-Click **Create**. You land on the new experiment in `planned` status.
+Save the form. The new experiment starts in `planned` status. Design data is written later by the design plugin for that type.
 
 ## Lifecycle
 
@@ -50,7 +54,7 @@ Click **Create**. You land on the new experiment in `planned` status.
 
 Core MINT validates only the `cancelled` rules above. Plugins can be stricter: many gate writes on `ongoing` or `completed`, and some require `completed` before publishing downstream results.
 
-> [Screenshot: status pill control showing the three states]
+> [Screenshot: status stepper showing planned, ongoing, completed, and the cancel action]
 
 ## Plugin interaction
 
@@ -95,22 +99,25 @@ Write actions are still gated by system permissions such as `experiments.edit` a
 
 | Collaborator role | Effect |
 |-------------------|--------|
-| **collaborator** | Can see the experiment even if they are not a project member |
-| **owner** | Can manage collaborators and delete the experiment; MINT keeps at least one owner |
+| **Viewer / Editor / Admin** | Can see the experiment even if they are not a project member. The label is stored with the collaborator; edits still need `experiments.edit`. |
+| **owner** | Set for the creator. Can manage collaborators and delete the experiment; MINT keeps at least one owner. |
 
-Collaborators are stored on the experiment itself (in `collaborators`), not on the project. They survive even if the user is later removed from the project. See [Members & roles](/admin/users-roles) for the underlying RBAC.
+Collaborators are stored on the experiment itself (in `collaborators`), not on the project. They survive even if the user is later removed from the project. See [Users & roles](/admin/users-roles) for the underlying roles.
 
 ## Search and filters
 
-The experiments list inside a project supports:
+The **Experiments** page (top navigation) lists every experiment you can see:
 
 | Filter | Notes |
 |--------|-------|
+| **Search** | Matches name, experiment code, and notes |
 | **Status** | planned / ongoing / completed / cancelled |
-| **Type** | Faceted by installed experiment types |
-| **Owner** | Anyone in the project |
-| **Created in** | Date range |
-| **Free text** | Searches name and notes |
+| **Type** | The active experiment types |
+| **Filters -> Project** | One project, or all |
+| **Filters -> Created** | A preset or custom date range |
+| **Filters -> My experiments only** | Only experiments you created |
+
+On a project page, the rollup chips filter that project's experiments by whether they have design data.
 
 > [Screenshot: experiments list with multiple filters applied]
 
@@ -122,4 +129,4 @@ Deleting an experiment removes the experiment record and platform-owned dependen
 
 → [Plugins](/admin/plugins) — the full plugin model
 → [Marketplace](/guide/marketplace) — install and request plugins
-→ [Members & roles](/admin/users-roles) — collaborators and overrides
+→ [Users & roles](/admin/users-roles) — system roles and project membership

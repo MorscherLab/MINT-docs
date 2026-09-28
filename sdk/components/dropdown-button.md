@@ -1,14 +1,18 @@
 ---
 aside: false
 title: DropdownButton
-description: "DropdownButton is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Button that opens a dropdown menu for selecting one option from a list."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # DropdownButton
 
-DropdownButton is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Button that opens a dropdown menu for selecting one option from a list.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Use [ActionMenu](/sdk/components/action-menu) instead.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

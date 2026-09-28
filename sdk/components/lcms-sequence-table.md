@@ -1,14 +1,18 @@
 ---
 aside: false
 title: LcmsSequenceTable
-description: "LcmsSequenceTable is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Table for Xcalibur-compatible LCMS sequence rows with optional reorder/remove/duplicate controls."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # LcmsSequenceTable
 
-LcmsSequenceTable is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Table for Xcalibur-compatible LCMS sequence rows with optional reorder/remove/duplicate controls.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Instrument UI moves to the `mld-ms` plugins; there is no direct SDK replacement.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

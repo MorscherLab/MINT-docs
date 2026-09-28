@@ -12,15 +12,14 @@ mint build
 
 What happens:
 
-1. Read `pyproject.toml` to determine the wheel name and version
+1. Read `[project]` and `[tool.mint]` from `pyproject.toml`. If `requires_mint` is omitted, derive a floor from the `mint-sdk` dependency; without one, the manifest uses `>=` the build SDK version
 2. Run `uv run pytest`; packaging stops if the test suite fails
-3. If `frontend/` exists (and `--no-frontend` isn't set), run the detected JS package manager's `install` and `run build` commands to produce `frontend/dist/`
-4. Warn if `pyproject.toml` does not force-include `frontend/dist/` in the wheel
-5. Read `[tool.mint].requires_mint`; if omitted, derive a floor from the SDK dependency requirement, falling back to the build SDK
-6. Build the Python wheel via `uv build --wheel`
-7. (If `--vendor-deps`) Resolve and download dependency wheels alongside the main wheel
-8. Assemble: `manifest.json` + wheel + dependency wheels into a zip
-9. Rename the zip to `.mint`
+3. If the frontend directory exists (`frontend/`, or `[tool.mint].frontend_dir`) and `--no-frontend` isn't set: run the detected JS package manager's `install` and `run build`, require Python and frontend SDKs to resolve to the same release, validate the build output and record its content revision
+4. When a frontend was built, warn if `pyproject.toml` does not force-include `frontend/dist` in the wheel
+5. Build the Python wheel via `uv build --wheel`; the version comes from `[project].version` or the wheel filename
+6. (If `--vendor-deps`) Export runtime requirements with `uv export --no-dev` and download binary-only wheels
+7. Add any `--include-wheel` files
+8. Write `manifest.json`, the main wheel and dependency wheels directly into `dist/<name>-<version>.mint`
 
 ## Flags
 
@@ -30,11 +29,11 @@ What happens:
 | `--no-frontend` | Skip the frontend build step. Use for backend-only plugins or fast iteration on the Python side. |
 | `--include-wheel PATH` | Vendor an existing extra wheel; repeat for multiple files. This does not export the main wheel separately. |
 | `--output-dir` | Override the default `dist/` directory. |
-| `--vendor-deps` | Include dependency wheels in the bundle (opt-in). Without it, the platform resolves dependencies from its configured package indexes. |
+| `--vendor-deps` | Include dependency wheels in the bundle (opt-in). Without it, the platform resolves dependencies from its configured package indexes. A failed export or download prints a warning and continues with **no** vendored wheels; check the build output before calling a bundle offline-ready. |
 
 The frontend build verifies that Python `mint-sdk` and frontend
 `@morscherlab/mint-sdk` resolve to the same release. Use `mint sdk update
---version @MINT_VERSION@` and commit both lockfiles before packaging. `--no-frontend`
+--version @MINT_VERSION@` and [commit both lockfiles](/sdk/operations/versioning#commit-lockfiles) before packaging. `--no-frontend`
 skips building and marks the bundle without a frontend; do not use it as a
 substitute for building the UI you intend to ship.
 
@@ -73,7 +72,8 @@ The frontend's `dist/` is *not* a separate top-level directory in the bundle —
     "version": "1.0.0",
     "description": "Drug-response panel design",
     "requires_mint": ">=@MINT_VERSION@,<1.3",
-    "has_frontend": true
+    "has_frontend": true,
+    "frontend_revision": "sha256:…"
   },
   "wheels": {
     "main": "my_plugin-1.0.0-py3-none-any.whl",
@@ -82,19 +82,11 @@ The frontend's `dist/` is *not* a separate top-level directory in the bundle —
 }
 ```
 
-The schema is owned by the SDK builder and consumed by the platform bundle installer. `mint build` generates it from `pyproject.toml`, the built wheel filename, optional vendored wheels, and whether `frontend/` was built.
+The schema is owned by the SDK builder and consumed by the platform bundle installer. `mint build` generates it from `pyproject.toml`, the built wheel filename, optional vendored wheels, and the frontend build. `frontend_revision` is present only when a frontend was built.
 
-Set the MINT compatibility floor deliberately in `pyproject.toml`:
-
-```toml
-[tool.mint]
-requires_mint = ">=@MINT_VERSION@,<1.3"
-```
-
-The platform checks this specifier when installing a `.mint` bundle. It also
-pins plugin installs to the platform's own `mint-sdk` version, so a wheel whose
-`mint-sdk` dependency excludes that version fails preflight instead of changing
-the platform SDK under an installed server.
+The platform checks `plugin.requires_mint` before installing the bundle, then
+checks the wheel's `mint-sdk` requirement against its own SDK. How to choose
+that range is covered in [Versioning](/sdk/operations/versioning#declare-compatibility-deliberately).
 
 ## What gets included
 
@@ -123,15 +115,10 @@ packages = ["src/my_plugin"]
 
 ## Reproducible builds
 
-Commit Python/frontend lockfiles and use a reviewed build-backend version policy.
-For exact reproducibility, pin the build backend versions your release CI has
-verified and build from a clean tagged checkout.
-
-Use `bun.lock` (committed) for the frontend. CI builds should fail if the lockfile is out of date:
-
-```bash
-bun install --frozen-lockfile
-```
+Build from a clean tagged checkout with committed lockfiles; see
+[Commit lockfiles](/sdk/operations/versioning#commit-lockfiles). For exact
+reproducibility, also pin the build-backend versions your release CI has
+verified.
 
 ## Inspect a built bundle
 
@@ -147,11 +134,7 @@ uv run mint info .
 uv run mint doctor .
 ```
 
-To validate an install end-to-end, upload the bundle to a disposable platform or use the platform CLI against a test instance:
-
-```bash
-mint plugin upload dist/my-plugin-1.0.0.mint
-```
+To validate an install end-to-end, use `mint verify --bundle`; see [Deploying and verifying](/sdk/operations/deploying).
 
 ## Sizes
 

@@ -62,7 +62,7 @@ The component defaults to responsive rendering and hides the Plotly logo. Your `
 
 ## Workbench charts and point clicks
 
-In 1.2.6, set `variant="frame"` for compact chrome that fills a workbench panel. Give the parent a definite height and set `height="100%"` on the plot canvas. Numeric `height` values are pixels. Use `active` to pause rendering and resize work while a retained tab is hidden.
+Set `variant="frame"` for compact chrome that fills a workbench panel. Give the parent a definite height and set `height="100%"` on the plot canvas. Numeric `height` values are pixels. Use `active` to pause rendering and resize work while a retained tab is hidden.
 
 ```vue
 <script setup lang="ts">

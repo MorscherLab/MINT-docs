@@ -2,7 +2,7 @@
 
 MINT's update story has three related checks: the **platform** runtime, the bundled **mint-sdk** package, and the **plugins** installed on top of it. Platform and SDK updates are checked from GitHub releases; marketplace plugin updates are checked from the configured registry.
 
-> [Screenshot: Admin -> Platform -> Server and Admin -> Plugins showing platform and plugin update statuses]
+> [Screenshot: Admin -> Plugins -> Installed showing the platform release card and plugin update badges]
 
 Keep the platform, Python SDK and frontend SDK on matching releases; plugins retain their own
 package versions and are distributed as `.mint` bundles. Read the
@@ -26,21 +26,20 @@ Configured under `updates` in `config.json`:
 
 | Field | Effect |
 |-------|--------|
-| `autoCheckEnabled` | Master on/off switch for background update checks |
+| `autoCheckEnabled` | Background update checks (default `false`) |
 | `checkIntervalHours` | How often `update_service` polls the GitHub release feed |
 | `platformRepo` | Where to pull platform releases from — usually unchanged |
 | `includePrereleases` | Include GitHub prereleases in the update list |
 | `pluginSources` | Optional per-plugin GitHub release sources used outside the marketplace registry |
 
-Update status appears in **Admin -> Platform -> Server** alongside platform health and runtime details. Apply the release using the update path supported by your deployment, then
-restart when required. Startup applies pending platform migrations; it does not
+When a newer platform release is found, a release card appears in **Admin -> Plugins -> Installed** for users with `platform.configure`. Click **Apply Bundle** (or **Update** when the release has no runtime bundle), then restart when asked. The CLI equivalent is `mint platform update check` followed by `mint platform update apply --yes`. Startup applies pending platform migrations; it does not
 rerun completed revisions. Plan a maintenance window and verify readiness and
 plugin status after restart. A rolling restart alone does not guarantee a
 zero-downtime schema upgrade.
 
 ### Runtime bundles
 
-Docker/runtime deployments do not have a `.git` checkout inside the container. For that install path, MINT applies the platform release's `mint-platform-*.tar.gz` runtime bundle instead of running `git checkout`. If the GitHub release asset is private or rate-limited, set `MINT_UPDATES__GITHUB_TOKEN` in the container environment before applying updates.
+By default MINT updates itself by applying the release's `mint-platform-<version>.tar.gz` runtime bundle; it does not run `git checkout`. This covers both Docker and the [direct install](/admin/install-direct). If the release asset is private or rate-limited, set `updates.githubToken` (`MINT_UPDATES__GITHUB_TOKEN`) before applying updates.
 
 For unattended Docker updates, opt in with:
 
@@ -48,7 +47,7 @@ For unattended Docker updates, opt in with:
 MINT_UPDATES__AUTO_APPLY_ON_STARTUP=true
 ```
 
-On each container creation or recreation, the entrypoint checks for a newer platform bundle, applies it when available, and continues startup even if the preflight update check fails. Leave this off when your lab requires scheduled maintenance windows or manual release review.
+On each container creation or recreation, the entrypoint checks for a newer platform bundle and applies it when available. A safely rejected candidate leaves the current version running; a staging or activation failure that could leave a mixed runtime stops the container from starting. Leave this off when your lab requires scheduled maintenance windows or manual release review.
 
 ### Database adoption and migration status
 
@@ -124,14 +123,21 @@ baseline merely to make startup pass.
 
 ## Plugin updates
 
-Plugin updates are surfaced in **Admin -> Plugins -> Installed** and **Admin -> Plugins -> Registry**, with an **Update** action when the registry advertises a newer compatible version. Each plugin has its own marketplace auto-update preference in `marketplace.autoUpdatePlugins`:
+Plugin updates are surfaced in **Admin -> Plugins -> Installed** and **Admin -> Plugins -> Registry**, with an **Update** action when the registry advertises a newer compatible version.
 
-> [Screenshot: per-plugin upgrade card with Auto-update toggle and version picker]
+> [Screenshot: installed plugin row with Update ready badge]
 
-| Toggle | Behavior |
-|--------|----------|
-| **Auto-update off** | Admin upgrades manually |
-| **Auto-update enabled** | Platform installs newer compatible versions automatically during the daily check |
+Automatic plugin updates are set per plugin in `config.json`; there is no toggle in the web UI:
+
+```json
+{
+  "marketplace": {
+    "autoUpdatePlugins": { "my-plugin": true }
+  }
+}
+```
+
+A user with `plugins.configure` can also set it with `PUT /api/marketplace/auto-update/{plugin_name}`. When at least one plugin is listed at startup, MINT checks every `marketplace.cacheTtlMinutes` (default 60) and installs newer compatible versions of the enabled plugins. A restart is still needed before new code runs.
 
 The marketplace compatibility check compares registry metadata and package/bundle constraints against the running platform version. If a plugin requires a newer MINT platform, install/update actions are disabled until the platform itself is upgraded. Registry data can fall back to the local cache when the remote catalog is temporarily unavailable.
 
@@ -160,7 +166,7 @@ Plugin environment snapshots are useful for Python package recovery, but they ar
 
 ## Auto-issued bug reports
 
-When the platform or a plugin raises an unhandled exception, `github_issue_service` can automatically open a deduplicated GitHub issue with the stack trace and request context (no PII). For the platform itself, it's controlled by the `errorReporting` config section. Disabled by default.
+With `errorReporting.enabled`, MINT opens a GitHub issue in `errorReporting.githubRepo` for log records at or above `errorReporting.minLevel` (default `CRITICAL`). Issues are de-duplicated per fingerprint with a cooldown (`cooldownSeconds`, default 3600). The issue body contains the message, traceback, and context fields such as request ID, user ID, plugin, and experiment ID, so point it at a private repository. Disabled by default.
 
 ## Next
 

@@ -131,6 +131,7 @@ export default defineConfig({
             { text: 'Authentication', link: '/admin/authentication' },
             { text: 'Plugins', link: '/admin/plugins' },
             { text: 'Updates', link: '/admin/updates' },
+            { text: 'Platform settings', link: '/admin/platform-settings' },
           ],
         },
         {
@@ -160,6 +161,7 @@ export default defineConfig({
             { text: 'Design plugin with tables', link: '/sdk/tutorials/design-plugin-with-tables' },
             { text: 'Plugin roles', link: '/sdk/tutorials/plugin-roles' },
             { text: 'Types & workflow plugin', link: '/sdk/tutorials/plugin-types-workflow' },
+            { text: 'Analyze an experiment', link: '/sdk/tutorials/analyze-an-experiment' },
           ],
         },
         {

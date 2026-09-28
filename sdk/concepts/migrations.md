@@ -98,9 +98,9 @@ mint db revision "add panel notes" --path . --database-url sqlite:////absolute/p
 
 `current` validates and prints revision/history state without creating migration infrastructure. `check` fails on model differences and requires the database to be at the packaged head. `revision` compares models against that database and writes a draft into the source migration package; if the comparison is empty, it creates **no file**. It does not write into an installed package. SQLite paths must already exist; the CLI rejects a missing file or `:memory:` URL.
 
-There is no `mint db upgrade`, `stamp`, or `downgrade` command. Application startup applies migrations. Use the [runtime API](/sdk/api/migrations) for isolated upgrade tests. Hand-author the first baseline as in [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), or deliberately author/generate a reviewed source revision; don't confuse a generated draft with an applied change.
+There is no `mint db upgrade`, `stamp`, or `downgrade` command. Application startup applies migrations. Use the [runtime API](/sdk/api/migrations) for isolated upgrade tests. Hand-author the first baseline as in [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), create a blank revision with `mint add migration "<name>"`, or generate a reviewed draft; don't confuse a generated draft with an applied change.
 
-`mint add migration <name>` remains the legacy scaffolder. It does not switch an existing integer migration package to Alembic.
+`mint add migration <name>` follows the plugin's declared protocol. When the plugin defines `get_migration_spec()`, it writes a blank Alembic revision into the source migration package (no database needed). With `--autogenerate --database-url <url>`, it writes a draft from model differences, like `mint db revision`. A plugin without a spec gets a legacy integer `v*.py` module and a `get_migrations_package()` method. The command never switches an existing integer package to Alembic.
 
 ## Adopting existing tables
 

@@ -48,16 +48,9 @@ If the project has a generated frontend client, also run
 `uv run mint sdk generate --check` before building. Review warnings and test
 failures before proceeding.
 
-Verify the exact bundle that will be published:
-
-```bash
-uv run mint verify . --bundle dist/my-plugin-0.2.0.mint
-```
-
-Use the actual filename emitted by `mint build`; its prefix comes from
-`[project].name`. `verify` needs Docker. For plugins with tables, also test an
-upgrade from the previous release on a disposable platform with representative
-data. See [deploying and verifying](/sdk/operations/deploying).
+Verify the exact bundle that will be published with `mint verify --bundle`
+(Docker required); see [Deploying and verifying](/sdk/operations/deploying).
+The bundle filename prefix comes from `[project].name`.
 
 ## Publish the `.mint` asset
 
@@ -111,20 +104,9 @@ The platform reads `marketplace.registryUrl`. A plugin entry supplies
 the release bundle. Listing a plugin in the catalog adds discovery and update
 information; it does not create another package format.
 
-Two compatibility declarations matter:
-
-| Declaration | Lives in | Checked when |
-|---|---|---|
-| `min_platform_version` | Registry entry | Catalog compatibility and marketplace installation |
-| `[tool.mint].requires_mint` | Plugin `pyproject.toml`, copied into the bundle manifest | Bundle upload or marketplace bundle installation |
-
-Keep them consistent. `min_platform_version` is a version floor;
-`requires_mint` is a PEP 440 specifier. For example:
-
-```toml
-[tool.mint]
-requires_mint = ">=@MINT_VERSION@,<1.3"
-```
+An entry's `min_platform_version` must agree with the bundle's
+`requires_mint`; see [Versioning](/sdk/operations/versioning#declare-compatibility-deliberately)
+for both declarations.
 
 ### Register a release
 
@@ -164,6 +146,11 @@ A `registry.json` file can contain:
 }
 ```
 
+Optional entry fields are `license`, `homepage`, `documentation_url`,
+`icon_url`, `auto_update`, `source.private` and
+`capabilities` (`requires_auth`, `requires_database`, `has_frontend`).
+`asset_pattern` defaults to `*.mint`.
+
 The platform reads one registry URL. Host an aggregate catalog if a deployment
 needs entries from several catalogs.
 
@@ -173,11 +160,8 @@ needs entries from several catalogs.
 the scaffold's Git-based versioning, the tag determines that version. A file
 rename does not change the manifest or installed version.
 
-| Git tag | Version recorded by the Python package | Release usage |
-|---|---|---|
-| `v0.2.0-beta.1` | `0.2.0b1` | Prerelease for testing |
-| `v0.2.0-rc.1` | `0.2.0rc1` | Release candidate |
-| `v0.2.0` | `0.2.0` | Stable release |
+See [Versioning](/sdk/operations/versioning#git-lockfiles-and-release-artifacts)
+for how prerelease tags map to package versions.
 
 Mark beta/RC GitHub Releases as prereleases. GitHub-source update checks use
 `includePrereleases`; only advertise a prerelease as a catalog's latest version

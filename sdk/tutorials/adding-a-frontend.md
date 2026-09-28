@@ -124,7 +124,7 @@ class HelloStandardPlugin(AnalysisPlugin):
 
 ## 3. Inspect the Backend Test
 
-The scaffold tests the real SDK runtime app:
+The scaffold tests the real SDK runtime app. The generated test builds the app with the frontend mounted, so it fails while `frontend/dist` is still the empty placeholder. Add the `monkeypatch` line and the status assertion shown here so backend tests do not depend on a frontend build:
 
 ```python
 from fastapi.testclient import TestClient
@@ -387,6 +387,25 @@ mint build .
 ```
 
 That is why `mint build .` can place the built workspace inside the `.mint` bundle.
+
+## 8. Verify and deploy
+
+Check the real install path in a disposable platform container (requires Docker):
+
+```bash
+mint verify .
+```
+
+`mint verify` builds the bundle, boots the MINT platform image, installs the bundle through the normal upload path, restarts, and waits until the plugin loads.
+
+Then deploy to a test platform you administer:
+
+```bash
+mint auth login --url https://mint-test.example.org
+mint deploy . --to https://mint-test.example.org
+```
+
+`mint deploy` builds the same bundle, uploads it, restarts the platform, and confirms the restart by the new server `boot_id`. The restart requires the `platform.configure` permission; `--timeout` (default 180 s) covers the restart and the plugin load together. Use a test platform, not production.
 
 ## Where You've Landed
 

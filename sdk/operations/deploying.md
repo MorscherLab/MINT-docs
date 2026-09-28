@@ -29,7 +29,8 @@ throwaway platform and PostgreSQL service, completes initial setup, uploads the
 bundle, waits for restart/loading and then tears down the environment. Defaults
 use the stable platform image; use `--channel beta` for a prerelease or `--image
 IMAGE` to choose a particular platform image. `--keep` preserves the environment
-for inspection.
+for inspection. `--timeout` (default 300 seconds) bounds setup, restart and
+plugin load.
 
 To include your plugin's own API smoke checks:
 
@@ -72,6 +73,32 @@ GitHub-hosted release, use `mint plugin github install REPO --tag TAG` to fetch
 its `.mint` asset. Settings use
 the runtime plugin name, while upgrade/uninstall commands take the installed
 package name; `plugin list --json` shows both.
+
+### What deploy confirms
+
+Without `--bundle`, `mint deploy` first builds the bundle exactly like
+`mint build` (tests included). Without `--to`, it targets the stored host. It
+then uploads the bundle, which requires `plugins.install`. If the platform
+reports that a restart is needed, it restarts the platform and waits:
+
+1. **Restart.** Before restarting, it reads `boot_id` from `GET /api/health`;
+   every server process reports a new one. The restart counts only once a
+   different `boot_id` appears, so redeploying the same version (for example,
+   uncommitted edits) is confirmed as well. A platform older than 1.2.9 reports
+   no `boot_id`; the command then waits for health and for the plugin to load
+   the version recorded in the bundle's `manifest.json`.
+2. **Load.** It waits until the plugin appears in the platform's loaded list.
+   If the loaded version differs from the bundle version, it prints a warning
+   naming both and still succeeds; check that `PluginMetadata.version` follows
+   the package version.
+
+`--timeout` (default 180 seconds) is one budget for restart and load together.
+Failures print `Error: ...` and exit 1; with `--json` they print
+`{"success": false, "message": ...}`. Restarting requires
+`platform.configure`. An account without it gets an error saying the plugin
+is installed but not running. Ask an administrator to restart, or deploy with
+`--no-restart`, which prints `Uploaded. Restart the platform to load the
+plugin.`
 
 ## 4. Check behavior after installation
 

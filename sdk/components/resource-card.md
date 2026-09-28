@@ -1,14 +1,18 @@
 ---
 aside: false
 title: ResourceCard
-description: "ResourceCard is a layout component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Card displaying a lab resource with availability status, specs, tags, and a book action."
 ---
 
 <p class="mint-component-library__eyebrow">Layout</p>
 
 # ResourceCard
 
-ResourceCard is a layout component exported by @morscherlab/mint-sdk for plugin frontends.
+Card displaying a lab resource with availability status, specs, tags, and a book action.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. No platform replacement is planned.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

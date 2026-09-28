@@ -98,7 +98,8 @@ uv run mint doctor --strict
 uv run pytest
 ```
 
-For a standard plugin, also run from `frontend/`:
+For a standard plugin, also run from `frontend/` (`--frozen-lockfile` needs a
+[committed lockfile](/sdk/operations/versioning#commit-lockfiles)):
 
 ```bash
 bun install --frozen-lockfile
@@ -120,7 +121,8 @@ plugin schema when migrations change. Check login, experiment selection,
 forbidden operations, saved results, settings and reload after installation;
 a successful frontend build alone does not verify platform integration.
 
-Commit source changes, generated contracts and the updated lockfiles together.
+Commit source changes, generated contracts and the updated lockfiles together
+(see [Commit lockfiles](/sdk/operations/versioning#commit-lockfiles)).
 Release the plugin under its own next version after these checks. Updating the
 SDK does not publish the plugin or upgrade a running platform.
 

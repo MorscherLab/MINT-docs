@@ -1,14 +1,18 @@
 ---
 aside: false
 title: InstrumentStatusCard
-description: "InstrumentStatusCard is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Compact card for live instrument monitor status, sample, method, sequence progress, and ETA."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # InstrumentStatusCard
 
-InstrumentStatusCard is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Compact card for live instrument monitor status, sample, method, sequence progress, and ETA.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Instrument UI moves to the `mld-ms` plugins; there is no direct SDK replacement.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

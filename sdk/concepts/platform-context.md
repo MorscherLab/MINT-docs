@@ -74,7 +74,7 @@ These rules also apply over isolated-plugin internal HTTP. Even `FULL` receives 
 | `get_optional_plugin_actor_dependency()` | Optional actor dependency |
 | `require_plugin_role(*roles)` | `Depends` guard; platform admins bypass the plugin-role check |
 | `get_allowed_experiment_types()` | Effective type restrictions |
-| `get_data_store(experiment_id, plugin_id=None)` | Experiment/plugin-scoped object storage |
+| `get_data_store(experiment_id, *, plugin_id=None)` | Experiment/plugin-scoped object storage |
 | `get_file_browser()` | Read-only access to configured server mounts |
 | `get_shared_db_session()` | In-process SQL session for declared plugin-owned tables |
 | `get_plugin_config()` | Persisted settings; can return a dict or an awaitable depending on host |

@@ -265,7 +265,7 @@ vi.mock('../generated/mint-plugin', () => ({
 }))
 
 it('creates an experiment and refreshes the visible list', async () => {
-  const experiment = { id: 7, name: 'QC batch', experiment_type: 'custom', status: 'draft' }
+  const experiment = { id: 7, name: 'QC batch', experiment_type: 'custom', status: 'planned' }
   client.listExperiments.mockResolvedValueOnce({ items: [], total: 0 })
   client.listExperiments.mockResolvedValueOnce({ items: [experiment], total: 1 })
   client.createExperiment.mockResolvedValue(experiment)
@@ -300,7 +300,17 @@ mint sdk generate --check
 mint build .
 ```
 
-Install the `.mint` bundle in a disposable MINT instance and configure its allowed experiment types. Then verify the actual platform boundary:
+Check that the bundle installs and loads, then deploy it to a test platform you administer:
+
+```bash
+mint verify .
+mint auth login --url https://mint-test.example.org
+mint deploy . --to https://mint-test.example.org
+```
+
+`mint verify` boots the MINT platform image in Docker, installs the bundle through the normal upload path, restarts, and waits until the plugin loads. `mint deploy` uploads the same bundle, restarts the platform (requires `platform.configure`), and confirms the restart by the new server `boot_id`; `--timeout` (default 180 s) covers restart and load together.
+
+On the test platform, configure the plugin's allowed experiment types. Then verify the actual platform boundary:
 
 | Action | Expected result |
 |---|---|

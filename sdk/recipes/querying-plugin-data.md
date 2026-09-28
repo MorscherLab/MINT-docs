@@ -25,7 +25,7 @@ async def recent_panels(self, actor: CurrentPluginActor) -> list[PanelOutput]:
 
 The session is an SQLAlchemy `AsyncSession`: use `await session.execute(...)`, then `result.scalars()` for ORM rows. Do not assume the SQLModel synchronous `session.exec()` convenience method is available.
 
-PostgreSQL integrated sessions set the plugin schema search path. Standalone sessions use SQLite. An installed isolated subprocess has no shared database session in @MINT_VERSION@, so this capability requires in-process deployment.
+PostgreSQL integrated sessions set the plugin schema search path. Standalone sessions use SQLite. An installed isolated subprocess has no shared database session in MINT 1.2, so this capability requires in-process deployment.
 
 Schema scoping is table ownership, not user authorization. The platform cannot infer ownership rules for arbitrary rows. Filter every read/update/delete by the trusted actor or an explicitly authorized experiment. `requires_auth=True` authenticates the caller; it does not add SQL predicates. Build response objects while the session is open to avoid detached objects or lazy-loading surprises.
 
@@ -97,6 +97,6 @@ MINT does not automatically cascade platform experiment deletion into arbitrary 
 
 Do not query another plugin's SQL schema. Publish supported design data, analysis results/artifacts, or an authorized API contract. Cross-plugin analysis reads require an explicit `analysis_result_readers` allowlist on the consuming plugin; published results are not unconditionally visible to all plugins or users.
 
-Use `load_analysis(experiment_id, plugin_id="producer-id")` through the SDK for allowed analysis-result reads, and object-store APIs for referenced data. Platform services enforce the permitted producer identity and experiment access. See [PlatformContext](/sdk/concepts/platform-context) and [Data model](/sdk/concepts/data-model).
+Use `load_analysis_artifact(experiment_id, plugin_id="producer-id", artifact_key="summary")` through the SDK for allowed analysis-result reads (`load_analysis()` reads only your own plugin's legacy result), and object-store APIs for referenced data. Platform services enforce the permitted producer identity and experiment access. See [PlatformContext](/sdk/concepts/platform-context) and [Data model](/sdk/concepts/data-model).
 
 Use [Migrations](/sdk/concepts/migrations) for schema evolution and [Backfill migrations](/sdk/recipes/backfill-migration) for historical row updates.

@@ -1,6 +1,6 @@
 # Python SDK reference
 
-This reference targets the released **MINT SDK @MINT_VERSION@** (17 September 2026).
+This reference targets the released **MINT SDK @MINT_VERSION@**.
 
 Core public symbols exported from `mint_sdk`, grouped by area. Each entry has a one-line description and links to the source on GitHub; check `mint_sdk/__init__.py` in your installed version for the exact export list.
 
@@ -68,14 +68,14 @@ Convenience methods:
 | `save_analysis_file_artifact(experiment_id, data, *, filename=None, artifact_key=None, kind="file", ...)` | Create-only file artifact; existing key conflicts |
 | `update_analysis_file_artifact(experiment_id, artifact_key, data, *, expected_object_key=None, ...)` | CAS-replace an active file artifact; returns artifact and cleanup status |
 | `save_managed_job_artifact(...)` | Publish a managed job output as a durable artifact |
-| `load_analysis(experiment_id, fields=None)` | Load this plugin's `PluginAnalysisResult`; optionally project selected top-level result keys |
+| `load_analysis(experiment_id, *, fields=None)` | Load this plugin's `PluginAnalysisResult`; optionally project selected top-level result keys |
 | `load_analysis_artifact(experiment_id, *, artifact_key="default", plugin_id=None, fields=None)` | Load one active named artifact |
 | `load_analysis_file_artifact(experiment_id, path, *, artifact_key="default", plugin_id=None)` | Stream a file-backed artifact to a local path |
 | `load_analysis_artifacts(experiment_id, *, include_others=False, include_archived=False)` | Load artifact metadata for an experiment |
 | `archive_analysis_artifact(experiment_id, *, artifact_key="default")` | Archive one of this plugin's artifacts |
 | `restore_analysis_artifact(experiment_id, *, artifact_key="default")` | Restore one of this plugin's archived artifacts |
 | `load_artifacts(experiment_id)` | Legacy helper: load only `result["artifacts"]` (or a custom key) from `PluginAnalysisResult` |
-| `load_analyses(experiment_id, include_others=False)` | Load analysis results; defaults to this plugin's own result only |
+| `load_analyses(experiment_id, *, include_others=False)` | Load analysis results; defaults to this plugin's own result only |
 | `save(experiment_id, *, design=..., analysis=...)` | Sequential design and compatibility result saves; not atomic |
 | `load(experiment_id)` | Load both |
 | `delete_design(experiment_id)` | Delete design |
@@ -104,7 +104,6 @@ Standalone helpers:
 | Method | Purpose |
 |--------|---------|
 | `ensure_standalone_database(storage_dir=None)` | Public async standalone database initialization |
-| `_teardown_standalone_db()` | Close local SQLite |
 | `is_standalone` (property) | True when `_context is None` |
 
 ### `PluginMetadata`
@@ -210,7 +209,6 @@ Legacy defaults are read-only metadata plus analysis writes for `ANALYSIS`, CRUD
 |--------|-------------|
 | `Experiment` | Dataclass — experiment row |
 | `DesignData` | Dataclass — per-experiment design payload |
-| `PluginExperimentData` | Backward-compat alias for `DesignData` |
 | `PluginAnalysisResult` | Dataclass — compatibility per-(experiment, plugin) analysis output |
 | `AnalysisArtifactInput` | Dataclass — one named artifact to save in an atomic batch |
 | `AnalysisArtifactSummary` | Dataclass — metadata-only artifact record |
@@ -356,7 +354,7 @@ All repository methods are async. MINT 1.2 uses one scoped experiment repository
 | `PluginDataRepository.archive_analysis_artifact` / `restore_analysis_artifact` | `AnalysisArtifactSummary \| None` | Artifact status |
 | `PluginDataRepository.get_analysis_results` | `list[PluginAnalysisResult]` (calling plugin by default; pass `include_others=True` for every plugin's result on one experiment) | — |
 | `UserRepository` | `User` | — |
-| `PluginRoleRepository` | `UserPluginRole`, `str | None` (a single role) | `UserPluginRole` |
+| `PluginRoleRepository` | `UserPluginRole`, `str \| None` (a single role) | `UserPluginRole` |
 
 MINT 1.2 consolidates these methods on `ExperimentRepository`. `PluginDataRepository` remains a MINT 1.1 adapter, including its old `save_experiment_data` / `get_experiment_data` / `delete_experiment_data` names. New code should use `save_design_data` / `get_design_data` / `delete_design_data` on the experiment repository or the plugin convenience helpers.
 
@@ -381,7 +379,7 @@ Source: [`mint_sdk/local_database.py`](https://github.com/MorscherLab/MINT/blob/
 
 | Symbol | Description |
 |--------|-------------|
-| `get_plugin_logger(name)` | Structured logger with auto-attached fields |
+| `get_plugin_logger(plugin_name)` | **Deprecated**, removal in MINT 1.3. Use the standard library `logging.getLogger()` |
 
 Source: [`mint_sdk/logging.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/logging.py).
 
@@ -443,7 +441,7 @@ See [Recipes → Testing plugins](/sdk/recipes/testing-plugins) for usage. Prefe
 | `mint_sdk.runtime:create_plugin_app` | SDK-owned Uvicorn factory used by current `mint init` projects and `mint dev` |
 | `SPAStaticFiles` | StaticFiles subclass that falls through to `index.html` for SPA routing |
 | `PluginDependency` | Helper for declaring plugin-aware FastAPI deps |
-| `require_context` | FastAPI dependency that yields the active `PlatformContext` |
+| `require_context(context)` | Returns `context` when it is set; raises HTTP 503 otherwise (integrated-only routes). Not a FastAPI dependency |
 
 Source: [`mint_sdk/app.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/app.py).
 
@@ -456,6 +454,79 @@ Current `mint init` projects use the SDK-owned runtime target `mint_sdk.runtime:
 | `MINTClient` | Typed REST client for cross-platform calls |
 
 See [REST client](/sdk/api/client) for full signatures.
+
+## Other exports
+
+The tables above cover the core surface. Every other package-root export is listed here by source module; `mint docs python` shows signatures for the installed SDK. Names marked `*` are deprecated (see the next section).
+
+| Module | Exports |
+|--------|---------|
+| `mint_sdk.actors` | `JobVisibility`, `JobVisibilityScope` |
+| `mint_sdk.analysis` | `ArtifactResult`, `ImageResult`, `JobFinalizationContext`, `JobPresentation`, `JsonResult`, `JobContext`, `ManagedFile`, `ManagedFileResult`, `ServiceJob`, `StagedInputs`, `StagedJob`, `StagedPart`, `TableResult`, `TextResult`, `job_finalizer` |
+| `mint_sdk.app` | `register_plugin_exception_handlers`* |
+| `mint_sdk.config` | `JsonSettingsStore`, `MemorySettingsStore`, `PluginRuntimeMode`, `ResolvedSettings`*, `ResolvedSettingsProvider`, `SettingsFieldState`*, `SettingsCompareAndSwapAdapter`, `SettingsResolver`, `SettingsSource`, `SettingsStore`* |
+| `mint_sdk.data_store` | `DataTransferProgress`, `TransferProgressCallback`, `LocalExperimentDataStore`, `validate_object_key` |
+| `mint_sdk.design_validation` | `FieldError`, `validate_design_data`, `ensure_valid_design_data` |
+| `mint_sdk.endpoint` | `PluginRouterMount` |
+| `mint_sdk.exceptions` | `UnsupportedExperimentTypeException`, `EventVetoException`, `DesignDataOwnershipConflictException`, `get_plugin_exception_status_code` |
+| `mint_sdk.filesystem` | `FileBrowser`, `ServerMount`, `MountInfo`, `DirectoryEntry`, `DirectoryListing`, `PathCrumb`, `EntryKind`, `SortKey`, `MountNotFoundError`, `MountPathError`, `MountPathNotFoundError` |
+| `mint_sdk.instrument` | `AlertLevel`, `InstrumentAlert`, `InstrumentAlertBody`, `InstrumentState`, `InstrumentStatus`, `SampleInfo`, `SequenceProgress`, `build_sequence_progress` |
+| `mint_sdk.integrations` | `NotificationSeverity`, `NotificationChannel`, `NotificationEvent`, `NotificationDispatchError`, `CalendarEvent`, `CalendarEventCancellation`, `CalendarPublishError`, `notify`, `calendar_event` |
+| `mint_sdk.job_manager` | `JobActivitySnapshot`, `JobManager` |
+| `mint_sdk.job_stream` | `JOB_EVENT_STREAM_OPENAPI_EXTRA`*, `JOB_EVENT_STREAM_RESPONSES`*, `JobEventStream`, `JobEventStreamResponse`, `create_job_event_stream_response` |
+| `mint_sdk.jobs` | `JobCallback`, `JobClearPayload`*, `JobDeletePayload`*, `JobEventPayload`*, `JobListPayload`, `JobProgress`, `JobProgressPayload`*, `JobId`*, `JobState`, `JobStatePayload`, `JobStatus`, `JobSnapshotPayload`, `JobSubscription`, `JobUpdate`, `JobWatch`, `JobWatchCallback`, `TERMINAL_JOB_STATUSES`, `clone_job_state`, `job_can_cancel`, `job_can_delete`, `serialize_job_state` |
+| `mint_sdk.lcms` | `LcmsContainerType`, `LcmsMethodPathEntry`, `LcmsPlateCell`, `LcmsPlateType`, `LcmsPolarity`, `LcmsSequenceItem`, `LcmsSequenceParams`*, `combine_lcms_sequence_csvs`*, `extract_lcms_common_prefix`, `extract_lcms_sample_name`, `infer_lcms_plate_type_from_positions`*, `insert_lcms_item_at_intervals`*, `lcms_sequence_items_to_csv`, `lcms_well_id_from_position`*, `number_lcms_sequence_items`, `parse_lcms_sequence_csv`, `plate_cells_to_lcms_sequence_items`, `reconstruct_lcms_plate_cells_from_sequence_items`, `reorder_lcms_sequence_numbers`*, `resolve_lcms_method_path` |
+| `mint_sdk.migrations` | `MigrationOps`, `MigrationResult`, `MigrationRunner`, `LegacyBaseline`, `SchemaConformanceIssue`, `SchemaConformanceReport`, `check_model_schema_conformance` |
+| `mint_sdk.permissions` | `ADMIN_ROLE`, `ADMIN_PANEL_PERMISSIONS`, `can_access_admin`, `can_access_plugin`, `can_access_policy`, `get_access_audience`, `get_user_permissions`*, `has_all_permissions`, `has_any_permission`, `is_admin_role`*, `is_admin_user`, `requires_permissions`, `requires_plugin_admin` |
+| `mint_sdk.plugin_database` | `PluginDatabaseState`*, `ensure_standalone_plugin_database`, `plugin_has_shared_database_contract`, `plugin_requires_shared_database`*, `validate_plugin_database_runtime` |
+| `mint_sdk.plugin_decorators` | `health_check`, `on_config_change`, `on_event`, `resolve_plugin_config_model` |
+| `mint_sdk.plugin_lifecycle` | `BeforeExperimentSave`, `AfterExperimentSave`, `ExperimentStatusChanged`, `EventActor` |
+| `mint_sdk.plugin_persistence` | `ANALYSIS_FILE_ARTIFACT_SCHEMA` |
+| `mint_sdk.plugin_settings` | `SettingsChangeSource`, `ConfigChange`, `SettingsCommitState`*, `SettingsConflictError`, `SettingsReconciliationRequiredError`, `SettingsTransactionError`, `SettingsTransactionStage` |
+| `mint_sdk.r` | `RAnalysisBridge`, `RScriptSpec`, `RBridgeError`, `RRunProvenance` |
+| `mint_sdk.runtime_dependencies` | `PluginRuntimeContext`*, `CurrentJobVisibility`, `CurrentReadableJob`, `CurrentManageableJob`, `current_plugin_runtime`*, `current_plugin_actor`, `authorize_plugin_settings`, `current_experiment`, `current_job_visibility`*, `current_readable_job`*, `current_manageable_job`* |
+| `mint_sdk.schema` | `config_model_to_form_fields`, `config_model_to_settings_schema` |
+| `mint_sdk.settings_router` | `InMemorySettingsProvider`, `SettingsProvider`*, `create_settings_router` |
+| `mint_sdk.templates` | `BioTemplateEnvelope`, `TEMPLATE_COLLECTION_KEY`, `BioTemplateCatalogEntry`, `BioTemplatePackEntry`, `BioTemplatePresetEntry`, `PlateMapTemplate`, `SampleSheetTemplate`, `SamplePrepTemplate`, `CalibrationCurveTemplate`, `DoseResponseTemplate`, `FlowCytometryPanelTemplate`, `InstrumentRunTemplate`, `QpcrPlateTemplate`, `TimeCourseTemplate`, `AssayMatrixTemplate`, `ReagentListTemplate`, `ProtocolStepsTemplate`, `TemplateValidationError`, `get_template_info`, `list_template_catalog`, `require_template_info`, `get_template_pack_info`, `list_template_packs`, `require_template_pack_info`, `get_template_preset_info`, `list_template_presets`, `require_template_preset_info`, `save_template_preset_collection`, `create_template_collection`, `create_template_preset_collection`, `create_elisa_assay_collection`, `create_flow_cytometry_assay_collection`, `create_lcms_batch_collection`, `create_qpcr_expression_collection`, `create_targeted_metabolomics_collection`, `create_wellplate_screen_collection`, `create_western_blot_assay_collection`, `extract_template_collection` |
+| `mint_sdk.token_auth` | `ApiTokenVerifier`, `create_bearer_token_dependency`, `create_header_token_dependency` |
+
+## Deprecated exports
+
+These names still import from `mint_sdk` but emit a `DeprecationWarning` once per name and are scheduled for removal in MINT 1.3. `mint doctor` flags them. `PluginExperimentData` has already been removed; use `DesignData`.
+
+| Export | Replacement |
+|--------|-------------|
+| `JOB_EVENT_STREAM_OPENAPI_EXTRA` | None |
+| `JOB_EVENT_STREAM_RESPONSES` | None |
+| `JobClearPayload` | None |
+| `JobDeletePayload` | None |
+| `JobEventPayload` | Import `JobStatePayload` / `JobSnapshotPayload` directly |
+| `JobId` | The `str \| int` union |
+| `JobProgressPayload` | `JobStatePayload.progress` |
+| `LcmsSequenceParams` | None |
+| `PluginDatabaseState` | None |
+| `PluginRuntimeContext` | `CurrentPluginRuntime` |
+| `ResolvedSettings` | `SettingsResolver` |
+| `SettingsCommitState` | `SettingsTransactionStage` |
+| `SettingsFieldState` | None |
+| `SettingsProvider` | `InMemorySettingsProvider` |
+| `SettingsStore` | `JsonSettingsStore` / `MemorySettingsStore` |
+| `combine_lcms_sequence_csvs` | `parse_lcms_sequence_csv()` per file, then `lcms_sequence_items_to_csv()` |
+| `current_job_visibility` | `CurrentJobVisibility` |
+| `current_manageable_job` | `CurrentManageableJob` |
+| `current_plugin_runtime` | `CurrentPluginRuntime` |
+| `current_readable_job` | `CurrentReadableJob` |
+| `get_plugin_logger` | Standard library `logging.getLogger()` |
+| `get_user_permissions` | `has_any_permission()` / `has_all_permissions()` |
+| `infer_lcms_plate_type_from_positions` | None |
+| `insert_lcms_item_at_intervals` | None |
+| `is_admin_role` | `is_admin_user()` |
+| `lcms_well_id_from_position` | None |
+| `plugin_requires_shared_database` | `plugin_has_shared_database_contract()` |
+| `register_plugin_exception_handlers` | `create_standalone_app()` (registers handlers automatically) |
+| `reorder_lcms_sequence_numbers` | `number_lcms_sequence_items()` |
+
+Source: [`mint_sdk/__init__.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/__init__.py).
 
 ## Notes
 

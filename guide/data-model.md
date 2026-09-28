@@ -14,7 +14,7 @@ This page is the conceptual database map before you install or write plugins.
 | **Design data** | The plugin-authored JSON document that describes what was planned or measured | Experiment-design or full plugin |
 | **Analysis artifact** | A named analysis output for one experiment, plugin, and artifact key | Analysis or full plugin |
 | **User** | A person or service account | Platform |
-| **Role** | Platform permissions such as viewing projects, managing users, or installing plugins | Platform |
+| **Role** | Platform permissions such as viewing projects, managing users, or installing plugins, plus which projects and plugins the role can reach | Platform |
 | **Project member** | A user's role inside one project | Platform |
 | **Plugin role** | A plugin-specific role string such as `viewer`, `editor`, or `admin` | Plugin + platform |
 | **Plugin table** | Plugin-owned relational tables for domain-specific data | Plugin |
@@ -25,7 +25,7 @@ An experiment combines platform fields with plugin-defined fields:
 
 | Field group | Examples | Notes |
 |-------------|----------|-------|
-| Identity | `id`, `experiment_code`, `name` | `experiment_code` is generated from type + sequence, e.g. `LCM-EXP-001` |
+| Identity | `id`, `experiment_code`, `name` | `experiment_code` is generated from type + sequence, e.g. `DR-EXP-001` for type `dose_response` |
 | Classification | `experiment_type`, `status`, project link | Status is `planned`, `ongoing`, `completed`, or `cancelled` |
 | Ownership | creator, collaborators, project members | Access is resolved from platform RBAC and project membership |
 | Design data | sample layout, plate map, run sequence, treatment plan | One JSON payload written when the plugin's resolved policy allows `design_data_write` |

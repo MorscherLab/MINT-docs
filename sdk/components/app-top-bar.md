@@ -23,6 +23,14 @@ Platform-style top bar for shells that need custom navigation chrome.
 import { AppTopBar } from "@morscherlab/mint-sdk/components"
 ```
 
+## Toast positioning
+
+A mounted `AppTopBar` publishes `--mint-toast-offset-top` on `<html>`, measured from the
+top-most bar and refreshed on resize and scroll. [AppToastContainer](/sdk/components/app-toast-container)
+reads this variable so toasts render 1rem below the top bar instead of covering its
+right-hand controls. Without a mounted `AppTopBar`, the toast container stays 1rem from
+the top of the viewport.
+
 <!-- sdk-props:start -->
 ## Props
 

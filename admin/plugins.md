@@ -47,10 +47,10 @@ stateDiagram-v2
 | **Resolving** | Marketplace or upload install checks `min_platform_version`, bundle `[tool.mint].requires_mint`, dependency conflicts, and the running platform's `mint-sdk` version. |
 | **Package installed** | The wheel or `.mint` bundle is installed, the source artifact is cached when needed, a manifest entry is written, and a Python-environment snapshot is kept for best-effort rollback. |
 | **Restart required** | A successful install or update does not guarantee the new code is serving traffic yet. The package can appear as **Installed but not loaded yet** until the server restarts. |
-| **Discovering** | On startup, MINT restores missing manifest packages, imports loadable entry points, and keeps non-in-process manifest packages out of normal in-process discovery. |
-| **Migrating** | Optional plugin migrations run before startup. A migration failure blocks route mounting and surfaces in admin status. |
+| **Discovering** | On startup, MINT restores missing manifest packages from their recorded wheels, imports loadable entry points, and keeps non-in-process manifest packages out of normal in-process discovery. A recorded wheel path that is absolute outside the data directory, or escapes it through `..`, is rejected: the plugin stays disabled and the rejection is logged. |
+| **Migrating** | Optional plugin migrations run before the plugin initializes. A failure disables only that plugin; MINT keeps running. |
 | **Initializing** | Decorator-declared config is resolved, `@on_config_change` startup hooks run, then `initialize(context)` runs if the plugin overrides it. |
-| **Running** | Decorated endpoints, native routers, jobs, generated UI manifests, and frontend assets are mounted under the plugin route prefix. Admin UI shows **Running**, **Update ready**, **Disabled**, or **Pending restart**. |
+| **Running** | Decorated endpoints, native routers, jobs, generated UI manifests, and frontend assets are mounted under the plugin route prefix. Admin UI shows **Running**, **Updating**, **Update ready**, **Migration failed**, **Disabled**, or **Pending restart**. |
 | **Updating** | Updates repeat the install path against the newer package. The new code becomes active after the required restart/load cycle. |
 | **Uninstalling** | The package and manifest entry are removed; plugin-owned data follows the selected cleanup mode. |
 
@@ -81,6 +81,20 @@ running state.
 
 From **Admin -> Plugins -> Installed**, click **Uninstall** on a plugin to remove it; see [Uninstall modes](#uninstall-modes).
 
+## Install requests
+
+Users who have `plugins.view` but not `plugins.install` see **Request Install** in **Admin -> Plugins -> Registry** and enter a justification. The Registry section itself also needs `plugins.configure` or `plugins.install`, so a Member can file requests but a Viewer cannot reach the Registry.
+
+Approving or denying a request is not in the web UI yet. A user with `plugins.install` uses the API:
+
+| Action | Route |
+|--------|-------|
+| List requests | `GET /api/marketplace/requests` (admins see all; others see their own) |
+| Approve (starts the install) | `POST /api/marketplace/requests/{id}/approve` |
+| Deny | `POST /api/marketplace/requests/{id}/deny` |
+
+Both review routes accept an optional `{"message": "..."}`. When authentication is disabled, filing a request returns 403 because there is no user account to attach it to.
+
 ## Isolation
 
 Plugins run with one of two isolation strategies:
@@ -96,7 +110,7 @@ Administrators can inspect isolated subprocesses from the server status view:
 plugin name, status, port, start time, and restart count are shown in the
 **Plugin processes** card.
 
-The middleware in [`api/plugins/middleware.py`](https://github.com/MorscherLab/MINT/blob/main/api/plugins/middleware.py) wraps every plugin call with error isolation — a plugin crash never takes down the platform.
+The middleware in [`api/plugins/middleware.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/plugins/middleware.py) wraps every plugin call with error isolation — a plugin crash never takes down the platform.
 
 ## Plugin migrations
 
@@ -106,7 +120,7 @@ Plugins that own database tables ship versioned migrations (see [Migrations](/sd
 - `pending_migrations` — revisions known to the plugin but not yet applied
 - `migration_error` — the failure reason, if a migration crashed
 
-If a migration fails, the plugin stays in an `error` state and its routes are not mounted. Fix the migration, reload the plugin, and the runner retries.
+If a migration fails, the plugin shows **Migration failed**, stays disabled, and its routes are not mounted. The rest of MINT keeps running. Install a fixed plugin release and restart; the runner retries pending migrations.
 
 ## Uninstall modes
 

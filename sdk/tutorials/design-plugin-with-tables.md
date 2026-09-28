@@ -4,7 +4,7 @@ Build **panel-designer**, a standard experiment-design plugin that stores reusab
 
 This tutorial targets **MINT / mint-sdk @MINT_VERSION@** and uses the Alembic opt-in: `get_migration_spec()` returns a `MigrationSpec`. Existing plugins can retain the [legacy integer migrations](/sdk/concepts/migrations#existing-plugins-with-integer-migrations); do not declare both migration protocols on one plugin.
 
-**Prerequisites:** [Tutorial 2](/sdk/tutorials/adding-a-frontend), Python with the SDK installed, and a disposable MINT instance for the final PostgreSQL check.
+**Prerequisites:** [Tutorial 2](/sdk/tutorials/adding-a-frontend), Python with the SDK installed, Docker for `mint verify`, and a test MINT platform for the final PostgreSQL check.
 
 ## 1. Scaffold and declare dependencies
 
@@ -267,9 +267,124 @@ def test_panel_crud_and_owner_boundary(tmp_path: Path, monkeypatch: pytest.Monke
 
 This tests standalone persistence and row authorization with explicit test actors. Add the [migration upgrade check](/sdk/recipes/backfill-migration#test-the-real-upgrade-path) to test historical data preservation in addition to this fresh-database path.
 
+Delete the scaffold's `tests/test_plugin.py`. It posts to the `/analyze` route that this plugin no longer has, and it builds the app against the empty `frontend/dist` placeholder:
+
 ```bash
+rm tests/test_plugin.py
 uv run pytest -q
+```
+
+## 6. Connect the frontend
+
+The scaffolded `WorkspaceView.vue` calls `client.analyze()`, which no longer exists. Regenerate the typed client first:
+
+```bash
+mint sdk generate
+mint docs contract .
+```
+
+Generated client methods are camelCase versions of the Python method names: `listPanels()`, `createPanel(body)`, `replacePanel(...)`, `deletePanel(...)`, and `publishPanel(...)`. `mint docs contract .` prints the exact call shape for methods with path parameters.
+
+Replace `frontend/src/views/WorkspaceView.vue`:
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { useGeneratedPluginClient, type PanelOutput } from '../generated/mint-plugin'
+
+const client = useGeneratedPluginClient()
+const panels = ref<PanelOutput[]>([])
+const name = ref('')
+const drug = ref('')
+const error = ref('')
+
+async function refresh(): Promise<void> {
+  panels.value = await client.listPanels()
+}
+
+async function create(): Promise<void> {
+  error.value = ''
+  try {
+    await client.createPanel({
+      name: name.value.trim(),
+      drugs: [{ name: drug.value.trim(), doses_uM: [0.1, 1, 10] }],
+    })
+    name.value = ''
+    drug.value = ''
+    await refresh()
+  } catch (cause) {
+    error.value = cause instanceof Error ? cause.message : 'Could not create panel'
+  }
+}
+
+onMounted(() => {
+  refresh().catch((cause) => {
+    error.value = cause instanceof Error ? cause.message : 'Could not load panels'
+  })
+})
+</script>
+
+<template>
+  <section aria-labelledby="panels-title">
+    <h2 id="panels-title">Drug panels</h2>
+    <p v-if="error" role="alert">{{ error }}</p>
+    <form @submit.prevent="create">
+      <label for="panel-name">Panel name</label>
+      <input id="panel-name" v-model="name" required maxlength="200" />
+      <label for="panel-drug">Drug</label>
+      <input id="panel-drug" v-model="drug" required maxlength="200" />
+      <button type="submit">Create panel</button>
+    </form>
+    <ul>
+      <li v-for="panel in panels" :key="panel.id">
+        {{ panel.name }} ({{ panel.drugs.length }} drugs)
+      </li>
+    </ul>
+  </section>
+</template>
+```
+
+Replace `frontend/src/views/WorkspaceView.test.ts`:
+
+```typescript
+import { flushPromises, mount } from '@vue/test-utils'
+import { expect, it, vi } from 'vitest'
+import WorkspaceView from './WorkspaceView.vue'
+
+const client = vi.hoisted(() => ({
+  listPanels: vi.fn(),
+  createPanel: vi.fn(),
+}))
+vi.mock('../generated/mint-plugin', () => ({
+  useGeneratedPluginClient: () => client,
+}))
+
+it('should create a panel and refresh the list when the form is submitted', async () => {
+  const panel = { id: 'p1', name: 'Pilot', drugs: [{ name: 'Cisplatin', doses_uM: [0.1, 1, 10] }] }
+  client.listPanels.mockResolvedValueOnce([])
+  client.listPanels.mockResolvedValueOnce([panel])
+  client.createPanel.mockResolvedValue(panel)
+  const wrapper = mount(WorkspaceView)
+  await flushPromises()
+
+  await wrapper.get('#panel-name').setValue('Pilot')
+  await wrapper.get('#panel-drug').setValue('Cisplatin')
+  await wrapper.get('form').trigger('submit')
+  await flushPromises()
+
+  expect(wrapper.get('li').text()).toContain('Pilot')
+})
+```
+
+Check the contract and frontend, then build the frontend. The backend refuses to start while `frontend/dist` has no `index.html`:
+
+```bash
 mint doctor --strict
+cd frontend
+bun run type-check
+bun run test
+bun run build
+cd ..
 mint dev
 ```
 
@@ -282,29 +397,47 @@ curl -X POST http://127.0.0.1:8003/api/panel-designer/panels \
 curl http://127.0.0.1:8003/api/panel-designer/panels
 ```
 
-For an installed platform test, authenticate through MINT, create a compatible experiment, and POST to `/api/panel-designer/experiments/{experiment_id}/panels/{panel_id}/publish`. Verify the saved design via the platform, repeat with a user lacking edit permission, and verify another user cannot modify the draft. `mint dev --platform` supplies a development proxy; it does not turn SQLite into the installed PostgreSQL database.
+Publishing needs a platform context, so `POST /api/panel-designer/experiments/{experiment_id}/panels/{panel_id}/publish` returns 503 under `mint dev`. Test it after deployment in step 8.
 
-## 6. Evolve the schema and connect the frontend
+## 7. Evolve the schema
 
 When adding a field, update `Panel` **and add** a new revision whose `down_revision` names the current head. Keep `p001_initial.py` unchanged. Test an old populated database and a fresh database. See the [backfill recipe](/sdk/recipes/backfill-migration) for a complete `p002` revision and upgrade test.
 
-Inspect an existing local development database after the first successful `mint dev` startup:
+Inspect the local development database after the first successful `mint dev` startup:
 
 ```bash
 mint db current --path . --database-url "sqlite:///$HOME/.mint/plugins/panel-designer/data.db"
 mint db check --path . --database-url "sqlite:///$HOME/.mint/plugins/panel-designer/data.db"
 ```
 
-After changing the model, use `mint db revision "add panel notes" --path . --database-url <development-url>` to generate a draft **instead of** hand-writing that same revision. The development database must already be at the packaged head. Review generated operations and backfills before restarting the development runtime. If models already match, no revision file is created. These CLI commands do not apply, upgrade, or stamp a database.
-
-Regenerate the TypeScript contract after editing endpoints:
+After changing the model, generate a draft instead of hand-writing it:
 
 ```bash
-mint sdk generate
-mint docs contract .
-mint build .
+mint add migration "add panel notes" --autogenerate \
+  --database-url "sqlite:///$HOME/.mint/plugins/panel-designer/data.db"
 ```
 
-In the scaffolded Vue workspace, import `useGeneratedPluginClient` from `frontend/src/generated/mint-plugin.ts` and follow its generated signatures for `create_panel`, `list_panels`, and the other operation IDs. Use the contract output to determine method names and the `body`/`pathParams` wrapper; do not derive those names by guessing from the URL. Render controls with the [frontend SDK](/sdk/frontend/).
+The development database must already be at the packaged head. Review the generated operations and backfills before restarting the development runtime. If the models already match, no file is created. Without `--autogenerate`, the command writes a blank revision for you to fill in. None of these commands applies, upgrades, or stamps a database.
 
-For deployment, this plugin must run **in-process** to access PostgreSQL. A plugin with `requires_shared_database=True` cannot use the installed remote subprocess context in v@MINT_VERSION@. See [Isolation](/sdk/concepts/isolation), [Migrations](/sdk/concepts/migrations), and [Querying plugin data](/sdk/recipes/querying-plugin-data).
+## 8. Verify and deploy
+
+Check the real install path in a disposable platform container (requires Docker):
+
+```bash
+mint verify .
+```
+
+`mint verify` builds the bundle (running `uv run pytest` and the frontend build first), boots the MINT platform image, installs the bundle through the normal upload path, restarts, and waits until the plugin loads. Startup runs the `p001` baseline against the platform's PostgreSQL schema.
+
+Then deploy to a test platform you administer:
+
+```bash
+mint auth login --url https://mint-test.example.org
+mint deploy . --to https://mint-test.example.org
+```
+
+`mint deploy` uploads the same bundle, restarts the platform, and confirms the restart by the new server `boot_id`. The restart requires the `platform.configure` permission; `--timeout` (default 180 s) covers the restart and the plugin load together. Use a test platform, not production.
+
+On the test platform, create a compatible experiment and POST to `/api/panel-designer/experiments/{experiment_id}/panels/{panel_id}/publish`. Verify the saved design, repeat with a user lacking `experiments.edit`, and verify another user cannot modify the draft.
+
+For deployment, this plugin must run **in-process** to access PostgreSQL. A plugin with `requires_shared_database=True` cannot use the installed remote subprocess context. See [Isolation](/sdk/concepts/isolation), [Migrations](/sdk/concepts/migrations), and [Querying plugin data](/sdk/recipes/querying-plugin-data).

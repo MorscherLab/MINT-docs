@@ -15,7 +15,7 @@ one does not automatically change or migrate the others.
 | Platform requirement | `[tool.mint].requires_mint` | `>=@MINT_VERSION@,<1.3` | Constrains `.mint` installation |
 | Marketplace floor | Registry `min_platform_version` | `@MINT_VERSION@` | Informs catalog compatibility |
 | Design-data schema | `@mint_plugin(schema_version=...)` and stored `DesignData` | `"2.0"` | Labels the JSON design format |
-| Database revision | `Migration.version` | `1`, `2`, `3` | Orders changes to plugin-owned SQL tables |
+| Database revision | Alembic `revision` (or legacy `PluginMigration.version`) | `"p002"` (legacy: `2`) | Orders changes to plugin-owned SQL tables |
 
 MINT 1.2 uses a shared release for the platform, Python SDK and frontend SDK.
 Your plugin does **not** need to be version `@MINT_VERSION@`: a plugin `0.2.0` can target
@@ -99,6 +99,13 @@ bundle requirement. If `requires_mint` is omitted, the builder derives a floor
 from the Python SDK requirement when possible, otherwise from its build SDK;
 set it explicitly for releases with a documented support range.
 
+The two platform declarations differ in form and in when they are checked:
+
+| Declaration | Lives in | Form | Checked when |
+|---|---|---|---|
+| `[tool.mint].requires_mint` | `pyproject.toml`, copied into the bundle manifest | PEP 440 specifier, e.g. `">=@MINT_VERSION@,<1.3"` | Every `.mint` install (upload, GitHub, marketplace) |
+| `min_platform_version` | Marketplace registry entry | Version floor, e.g. `"@MINT_VERSION@"` | Catalog compatibility and marketplace install |
+
 Use [the SDK updater](/sdk/operations/upgrading) to keep Python and frontend
 resolutions aligned. It preserves a valid existing Python compatibility floor;
 selecting a newer lockfile version is not a declaration that older versions
@@ -127,12 +134,14 @@ when a design is too old for the current editor.
 
 | Plugin release | Migrations shipped |
 |---|---|
-| `0.1.0` | `v001_initial` |
-| `0.2.0` | `v001_initial`, `v002_add_note` |
+| `0.1.0` | `p001_initial` |
+| `0.2.0` | `p001_initial`, `p002_add_notes` |
 | `0.2.1` | Same revisions; code fix only |
-| `1.0.0` | Previous revisions plus `v003_convert_values` |
+| `1.0.0` | Previous revisions plus `p003_convert_values` |
 
-Never reset numbering or rewrite an already applied revision. Update the
+Alembic revisions chain by `revision` / `down_revision` ids; legacy
+`PluginMigration` classes use an integer `version`. Never reset the chain or
+rewrite an already applied revision. Update the
 SQLModel definition and add the corresponding migration together. Test both
 fresh table creation and upgrade from the last deployed schema: they take
 different paths. See [migrations](/sdk/concepts/migrations) and the
@@ -147,6 +156,22 @@ database/storage backup. Prefer a forward corrective release when practical.
 Keep code, migrations, generated contracts, lockfiles and `CHANGELOG.md` in the
 same review. Exclude `.venv`, `node_modules`, secrets, local SQLite databases
 and development data. Do not edit generated clients by hand.
+
+### Commit lockfiles
+
+The `mint init` scaffold's `.gitignore` excludes `uv.lock`,
+`frontend/bun.lock` and `frontend/bun.lockb`. To record the resolved SDK
+release and build reproducibly, delete those three lines from `.gitignore`,
+then commit both lockfiles:
+
+```bash
+uv lock
+(cd frontend && bun install)
+git add .gitignore uv.lock frontend/bun.lock
+```
+
+After that, CI can use `uv sync --locked` and `bun install --frozen-lockfile`,
+which fail when a lockfile is out of date.
 
 A release sequence after the review and checks pass:
 

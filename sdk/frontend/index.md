@@ -37,7 +37,7 @@ The scaffold's local `views/WorkspaceView.vue` is your **page content**, not ano
 |----------|---------|--------|
 | Components | Workspace, form, data, and biology components | [Component Library](/sdk/components/) provides component pages and playgrounds |
 | Composables | Typed state and API helpers | [Composables](/sdk/frontend/composables) — generated clients, `useCurrentExperiment`, `usePluginSettings`, `defineControlModel`, … |
-| Design tokens | 500+ CSS custom properties | [Design tokens](/sdk/frontend/design-tokens) — colors, spacing, motion, focus rings |
+| Design tokens | About 90 CSS custom properties | [Design tokens](/sdk/frontend/design-tokens) — colors, spacing, motion, focus rings |
 | Theming | Light/dark/density support | [Theming](/sdk/frontend/theming) — `prefers-reduced-motion`, palette overrides, accessibility |
 | FormBuilder + controls | Schema-driven forms from either full schemas or compact controls | [FormBuilder](/sdk/frontend/form-builder) — shared form/settings/sidebar definitions |
 

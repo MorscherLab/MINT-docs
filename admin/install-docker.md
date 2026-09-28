@@ -1,6 +1,6 @@
 # Install on Linux (Docker)
 
-Run MINT as a Docker container, with Postgres alongside. Stable releases use published images; the current 1.2 beta must be built from the `1.2-dev` source branch.
+Run MINT as a Docker container, with PostgreSQL 17 alongside, using the Compose stack checked into the MINT repository at the release tag.
 
 ::: tip Picking an install method
 MINT is supported on **Linux servers only**, via either Docker (this page) or the [direct install](/admin/install-direct). Pick Docker when you want a self-contained, version-pinned deployment with clean rollback.
@@ -18,30 +18,44 @@ MINT is supported on **Linux servers only**, via either Docker (this page) or th
 | **RAM** | 4 GB minimum, 8 GB recommended once plugins are installed |
 | **Reverse proxy** | Required for production: nginx, Caddy, or Traefik on the host or in another container |
 
-## Published images and the 1.2 beta
+## Build and start
 
-The published Docker install remains stable-only; no 1.2 beta image is available. Check [GitHub Releases](https://github.com/MorscherLab/MINT/releases) for published production images.
-
-To evaluate 1.2 now, build the repository's checked-in Compose stack from `1.2-dev`:
+Check out the release tag and create the `.env` file:
 
 ```bash
 git clone https://github.com/MorscherLab/MINT.git /opt/mint
 cd /opt/mint
-git checkout 1.2-dev
+git checkout v@MINT_VERSION@
 cp .env.example .env
 openssl rand -hex 32
 ```
 
-Paste the generated value into `MINT_DB_PASSWORD` in `.env`. To keep the app behind a host reverse proxy, also add `MLD_PORT=127.0.0.1:8001`. Then build and start the exact source checkout:
+Paste the generated value into `MINT_DB_PASSWORD` in `.env`, and add the settings from the table below. Then build and start:
 
 ```bash
 docker compose -f deploy/docker/docker-compose.yml up -d --build --wait
 docker compose -f deploy/docker/docker-compose.yml logs -f app
 ```
 
-These commands match the source Compose file: it builds `deploy/docker/Dockerfile`, starts PostgreSQL 17, and persists PostgreSQL in the `mint-postgres-data` volume. Treat `1.2-dev` as evaluation software until a stable 1.2 image is published.
+The Compose file builds `deploy/docker/Dockerfile`, starts PostgreSQL 17, and keeps the database in the `mint-postgres-data` volume. Platform config, objects, and plugin state live in the repository's `data/` directory, mounted at `/app/data`.
 
-Expected output once startup completes (uvicorn is the platform's process):
+### `.env` settings
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `MINT_DB_PASSWORD` | none (required) | PostgreSQL password for the bundled database |
+| `MLD_PORT` | `8000` | Host side of the app port mapping. Set `127.0.0.1:8001` to keep MINT behind a host reverse proxy. The legacy `MLD_` name is what the Compose file reads. |
+| `MINT_SERVER__RP_ID` | empty | Passkey relying-party ID, e.g. `mint.example.org`. Empty derives it from the request host. |
+| `MINT_POSTGRES_HOST_PORT` | `5432` | Loopback host port for PostgreSQL. Change it if the host already runs PostgreSQL on 5432. |
+| `MINT_DATA_PATH` | `../../data` (repo `data/`) | Host directory mounted at `/app/data` |
+| `RAW_FILES_PATH` | `./Data` | Host directory mounted read-only at `/app/Data` |
+| `MINT_UPDATES__GITHUB_TOKEN` | empty | GitHub token for update checks and private release assets |
+| `MINT_UPDATES__AUTO_APPLY_ON_STARTUP` | `false` | See [startup auto-update](#optional-startup-auto-update) |
+| `MINT_ADMIN_TERMINAL_ENABLED` | `false` | See [Admin terminal](#optional-admin-terminal) |
+
+Compose only passes the variables listed in `deploy/docker/docker-compose.yml`. For any other setting, such as `server.externalUrl` or `auth.allowRegistration`, edit `data/config.json` after first start or add the `MINT_...` variable to the `app` service `environment:` block. Set `server.externalUrl` to your public `https://` URL so login cookies carry `Secure` behind a TLS proxy.
+
+Expected output once startup completes (the container runs `mint daemon`, which serves the app with Uvicorn):
 
 ```
 app  | INFO:     Started server process [1]
@@ -50,7 +64,7 @@ app  | INFO:     Application startup complete.
 app  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
-With `MLD_PORT=127.0.0.1:8001`, Compose binds the container's port 8000 to `127.0.0.1:8001` on the host. MINT is **not** directly reachable from the network until you put a reverse proxy in front.
+With `MLD_PORT=127.0.0.1:8001`, Compose binds the container's port 8000 to `127.0.0.1:8001` on the host. MINT is **not** directly reachable from the network until you put a reverse proxy in front. Without `MLD_PORT`, the app listens on port 8000 on all host interfaces.
 
 ## Reverse proxy
 
@@ -98,14 +112,19 @@ See [First-run setup](/admin/proxy-and-setup#first-run-setup).
 
 ## Upgrades
 
+Back up first (see [Backups](#backups)), then check out the new release tag and rebuild the app:
+
 ```bash
 cd /opt/mint
-git pull --ff-only origin 1.2-dev
+git fetch --tags
+git checkout v<new-version>
 docker compose -f deploy/docker/docker-compose.yml up -d --build --no-deps app
 docker compose -f deploy/docker/docker-compose.yml logs -f app
 ```
 
-For beta evaluation, roll back by checking out the previously tested commit and rebuilding `app`. The Postgres volume retains data; the platform's own migrations are forward-only, so restore the matching database backup when a newer commit applied incompatible migrations.
+You can also apply a release from **Admin -> Plugins -> Installed** without rebuilding; the container installs the release's `mint-platform-<version>.tar.gz` runtime bundle (see [Updates](/admin/updates)).
+
+To roll back, check out the previous tag and rebuild `app`. Platform migrations are forward-only, so restore the matching database backup when the newer release applied migrations.
 
 ### Optional startup auto-update
 
@@ -117,7 +136,7 @@ environment:
   MINT_UPDATES__GITHUB_TOKEN: "${GITHUB_TOKEN:-}"
 ```
 
-Use this only when you intentionally want recreated containers to move to the latest compatible MINT release automatically. The entrypoint checks GitHub releases, applies the bundle when one is available, and starts MINT anyway if the update check fails.
+Use this only when you intentionally want recreated containers to move to the latest compatible MINT release automatically. The entrypoint checks GitHub releases and applies the bundle when one is available. If the candidate is rejected safely, MINT starts on the current version; if staging or activation fails in a way that could leave a mixed runtime, the container refuses to start and logs the reason.
 
 ### Optional Admin terminal
 
@@ -140,8 +159,9 @@ Run both before any major upgrade and on a regular schedule. Snapshots taken by 
 |---------|-----|
 | Container exits immediately | `docker compose -f deploy/docker/docker-compose.yml logs app` for the trace. Most often: bad config or unreachable Postgres. |
 | `connection refused` to Postgres | The `depends_on.condition: service_healthy` should prevent this - check `docker compose -f deploy/docker/docker-compose.yml ps` and the Postgres healthcheck output. |
-| Migration fails on startup | Container exits non-zero. Check the log line; if it's a plugin migration, fix the plugin's release and redeploy. |
-| 502 from the reverse proxy | Container not running, or the proxy is targeting the wrong host/port. `curl -I http://127.0.0.1:8001/api/health` from the host. |
+| Platform migration fails on startup | Container exits non-zero. Check the log line and restore the matching database backup if needed. |
+| Plugin migration fails | MINT keeps running and that plugin stays disabled; the error shows in **Admin -> Plugins -> Installed**. Fix the plugin release and redeploy. |
+| 502 from the reverse proxy | Container not running, or the proxy is targeting the wrong host/port. `curl -I http://127.0.0.1:8001/api/health` from the host. For database and plugin readiness, see [Server health](/admin/platform-settings#server-health). |
 | Disk fills up unexpectedly | Runtime data under the repository `data/` directory grew, often from plugin uploads or cached bundles. Add monitoring; consider moving the bind mount to a larger disk. |
 | Need to inspect the database | `docker compose -f deploy/docker/docker-compose.yml exec postgres psql -U mint mint_db` |
 

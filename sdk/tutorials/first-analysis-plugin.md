@@ -48,10 +48,9 @@ hello-mint/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml
-│       ├── release.yml
-│       └── sdk-auto-update.yml
+│       └── release.yml
 ├── .gitignore
-├── CLAUDE.md                 # Default; --ai-assistant codex emits Codex guidance
+├── CLAUDE.md                 # Default; --ai-assistant codex writes AGENTS.md instead
 ├── README.md
 ├── pyproject.toml
 ├── src/
@@ -254,6 +253,25 @@ dist/mint-plugin-hello-mint-<version>.mint
 ```
 
 A `.mint` bundle contains the plugin wheel, manifest, and any bundled frontend assets. Generated-mode plugins usually have no `frontend/` directory because the UI is supplied by the SDK.
+
+## 7. Verify and deploy
+
+Check the real install path in a disposable platform container (requires Docker):
+
+```bash
+mint verify .
+```
+
+`mint verify` builds the bundle, boots the MINT platform image, installs the bundle through the normal upload path, restarts, and waits until the plugin loads.
+
+Then deploy to a test platform you administer:
+
+```bash
+mint auth login --url https://mint-test.example.org
+mint deploy . --to https://mint-test.example.org
+```
+
+`mint deploy` builds the same bundle, uploads it, restarts the platform, and confirms the restart by the new server `boot_id`. The restart requires the `platform.configure` permission; `--timeout` (default 180 s) covers the restart and the plugin load together. Use a test platform, not production.
 
 ## Where You've Landed
 

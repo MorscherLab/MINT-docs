@@ -78,7 +78,7 @@ The first-class result object shown on experiment pages.
 
 ### `UserPluginRole`
 
-`role` is whatever string your plugin defines. Plugin role checks are performed by `PlatformContext.require_plugin_role(*roles)`.
+`role` is whatever string your plugin defines. Read the current user's role for this plugin from `CurrentPluginActor.plugin_role`; native routers can use `PlatformContext.require_plugin_role(*roles)`.
 
 ## Relationships
 

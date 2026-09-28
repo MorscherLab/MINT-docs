@@ -3,7 +3,7 @@
 MINT reads configuration from four sources, in increasing order of precedence:
 
 1. **Built-in defaults** — used when no other source overrides them.
-2. **`config.json`** — `MINT_CONFIG_PATH` wins when set; otherwise MINT uses `./config.json`, or `<server.dataPath>/config.json` when `MINT_SERVER__DATA_PATH` points at a data directory and that file should be used.
+2. **`config.json`** — `MINT_CONFIG_PATH` wins when set; otherwise, when `MINT_SERVER__DATA_PATH` is set, MINT uses `<MINT_SERVER__DATA_PATH>/config.json` if that file exists or if `./config.json` does not; otherwise it uses `./config.json`. The legacy `MLD_CONFIG_PATH` is also honored.
 3. **`.env`** — `dotenv`-style key/value pairs in the working directory.
 4. **Environment variables** — keys prefixed `MINT_`, with nested fields joined by `__` (e.g., `MINT_DATABASE__HOST=postgres`).
 
@@ -35,11 +35,16 @@ For most installations, editing `config.json` is the only configuration step. Us
   "errorReporting": { "...": "..." },
   "observability": { "...": "..." },
   "access": { "...": "..." },
-  "corsOrigins": []
+  "filesystem": { "...": "..." },
+  "corsOrigins": [],
+  "ADMIN_USERNAME": "",
+  "ADMIN_PASSWORD": "",
+  "DB_USERNAME": "",
+  "DB_PASSWORD": ""
 }
 ```
 
-The full schema is defined in [`api/config/models.py`](https://github.com/MorscherLab/MINT/blob/main/api/config/models.py) using Pydantic — that file is the authoritative reference. The summary below covers the keys most installations touch.
+The full schema is defined in [`api/config/models.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/config/models.py) using Pydantic — that file is the authoritative reference. The summary below covers the keys most installations touch.
 
 ## `devMode`
 
@@ -50,7 +55,10 @@ The full schema is defined in [`api/config/models.py`](https://github.com/Morsch
 When `true`:
 
 - Authentication is bypassed on every route; anyone hitting the URL is treated as admin
-- The configured PostgreSQL connection is unchanged
+- Passkey login is disabled
+- The configured PostgreSQL connection is kept; if `DB_USERNAME` / `DB_PASSWORD` are unset, dev mode falls back to `mint` / `mint`
+
+Only users with the `admin` role can turn dev mode on through **Admin -> Platform -> Configuration**; `platform.configure` alone is refused.
 
 ::: warning Never expose dev mode
 Dev mode is for local development and evaluation only. Never enable it on a host reachable from the network.
@@ -60,13 +68,15 @@ Dev mode is for local development and evaluation only. Never enable it on a host
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `apiMountPath` | `/api` | API mount path |
 | `dataPath` | `./data` | Runtime state directory |
 | `instanceId` | generated if empty | Durable deployment namespace for public identifiers |
 | `rpId` | `""` | WebAuthn relying-party ID |
 | `rpName` | `MINT` | WebAuthn relying-party display name |
-| `externalUrl` | `""` | Public platform URL, used for frontend/plugin context |
-| `trustedProxyCidrs` | `["127.0.0.1/32", "::1/128"]` | Proxy source networks trusted for forwarded client IP headers |
+| `externalUrl` | `""` | Public platform URL, used for frontend/plugin context and to decide whether auth cookies are `Secure` |
+| `trustedProxyCidrs` | `["127.0.0.1/32", "::1/128"]` | Proxy source networks trusted for `X-Forwarded-For` / `X-Forwarded-Host`. An explicit `[]` trusts no proxy |
+| `healthReadyToken` | `""` | Bearer token that lets a monitor read `GET /api/health/ready` without a user login; empty means only users with `platform.view_logs` can read it |
+
+The `apiMountPath` key was removed; the API is always mounted at `/api`. An old `config.json` that still has it starts with a one-time warning.
 
 ## `database`
 
@@ -133,8 +143,48 @@ aliases such as `MINT_S3_ACCESS_KEY_ID`, `MINT_S3_SECRET_ACCESS_KEY`,
 |-----|---------|-------------|
 | `enableAuth` | `true` | Require authentication |
 | `enablePasskey` | `true` | Enable WebAuthn registration and login |
+| `allowRegistration` | `true` | Allow self-registration on `/register` |
 | `jwtSecretKey` | auto-generated if empty | Secret used to sign JWTs |
-| `tokenExpireMinutes` | `1440` | Token lifetime |
+| `tokenExpireMinutes` | `10080` (7 days) | Token lifetime; the admin UI accepts 15–43200 |
+| `failedLoginLimit` | `5` | Failed password logins before the account is locked |
+| `loginLockoutMinutes` | `15` | Lockout duration |
+
+See [Security settings](#security-settings) for how these behave.
+
+## Security settings
+
+These behaviors apply from MINT 1.2.7.
+
+- **Self-registration.** With `auth.allowRegistration: false`, `POST /api/users/register` returns 403 and the `/register` page sends visitors to `/login`. **Admin -> Platform -> Configuration** shows the setting but cannot change it; set it in `config.json` or with `MINT_AUTH__ALLOW_REGISTRATION=false`.
+- **Passwords.** Every password (registration, self-service change, admin create, update and reset) must be at least 8 characters. Shorter ones are rejected with 422.
+- **Account lockout.** After `auth.failedLoginLimit` failed password logins, the account is locked for `auth.loginLockoutMinutes`.
+- **Rate limit.** `/api/auth`, `/api/passkey`, `/api/setup` and `/api/users/register` allow 20 requests per 60 seconds per client IP, then return 429.
+- **Secure cookies.** The `mint_access_token` and `passkey_session` cookies carry `Secure` when `server.externalUrl` starts with `https://`, or, if it is unset, when the request arrived over HTTPS. If `externalUrl` is `https://` but users open MINT over plain HTTP, the browser drops the cookie and login fails.
+- **Trusted proxies.** The client IP (rate limit, audit log) and the passkey relying-party host come from `X-Forwarded-For` / `X-Forwarded-Host` only when the direct peer is in `server.trustedProxyCidrs`. An explicit empty list trusts no proxy. Add your reverse proxy's address when it is not on the same host.
+- **Disabling auth.** Only users with the `admin` role can set `auth.enableAuth: false` or `devMode: true` through the admin config API.
+- **Setup password.** When initial setup completes, MINT clears the administrator password stored in `ADMIN_PASSWORD` in `config.json`.
+
+## `filesystem`
+
+Read-only server directories that the file browser may list:
+
+```json
+{
+  "filesystem": {
+    "mounts": [
+      { "id": "raw", "path": "/mnt/instruments/raw", "label": "Raw data" }
+    ],
+    "allowUnauthenticated": false
+  }
+}
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `mounts` | `[]` | Each mount needs a unique `id` and an absolute `path`; `label` defaults to the id. The path is never sent to browsers |
+| `allowUnauthenticated` | `false` | When auth is disabled, browsing stays closed unless this is `true` |
+
+Users also need the `filesystem.browse` permission.
 
 ## `sso`
 
@@ -259,22 +309,33 @@ When empty, production CORS allows no cross-origin browser calls. In dev mode, M
 
 ## Environment variable mapping
 
-Nested keys use `__` (double underscore) as the separator, and `MINT_` as the prefix. Examples:
+Nested keys use `__` (double underscore) as the separator, and `MINT_` as the prefix. Names are case-insensitive. How a multi-word key is written depends on the section:
+
+- In `server`, `auth`, `filesystem`, `notifications.*` and at top level, use snake_case: `MINT_SERVER__DATA_PATH`, `MINT_AUTH__ALLOW_REGISTRATION`.
+- In every other section (`database`, `sso.eduid`, `marketplace`, `updates`, `access`, `observability`, `logging`, `errorReporting`, `plugins`), write the camelCase key without separators: `MINT_DATABASE__DATABASENAME`, `MINT_UPDATES__AUTOCHECKENABLED`.
+- The `errorReporting` section's prefix is `MINT_ERROR_REPORTING__`, for example `MINT_ERROR_REPORTING__MINLEVEL`.
+- Single-word keys work the same everywhere: `MINT_DATABASE__HOST`, `MINT_SSO__EDUID__ENABLED`.
 
 | Config key | Env var |
 |------------|---------|
 | `devMode` | `MINT_DEV_MODE` |
 | `server.dataPath` | `MINT_SERVER__DATA_PATH` |
 | `server.trustedProxyCidrs` | `MINT_SERVER__TRUSTED_PROXY_CIDRS` |
-| `database.databaseName` | `MINT_DATABASE__DATABASE_NAME` |
 | `auth.jwtSecretKey` | `MINT_AUTH__JWT_SECRET_KEY` |
+| `auth.allowRegistration` | `MINT_AUTH__ALLOW_REGISTRATION` |
+| `database.databaseName` | `MINT_DATABASE__DATABASENAME` |
 | `sso.eduid.enabled` | `MINT_SSO__EDUID__ENABLED` |
-| `sso.eduid.clientId` | `MINT_SSO__EDUID__CLIENT_ID` |
-| `marketplace.registryUrl` | `MINT_MARKETPLACE__REGISTRY_URL` |
-| `updates.platformRepo` | `MINT_UPDATES__PLATFORM_REPO` |
+| `sso.eduid.clientId` | `MINT_SSO__EDUID__CLIENTID` |
+| `marketplace.registryUrl` | `MINT_MARKETPLACE__REGISTRYURL` |
+| `updates.platformRepo` | `MINT_UPDATES__PLATFORMREPO` |
 | `notifications.email.host` | `MINT_NOTIFICATIONS__EMAIL__HOST` |
 | `notifications.teams.webhookUrl` | `MINT_NOTIFICATIONS__TEAMS__WEBHOOK_URL` |
 | `adminTerminalEnabled` | `MINT_ADMIN_TERMINAL_ENABLED` |
+| `DB_USERNAME` / `DB_PASSWORD` | `MINT_DB_USERNAME` / `MINT_DB_PASSWORD` |
+
+::: warning Snake_case names that are ignored
+In the sections of the second bullet, snake_case forms such as `MINT_DATABASE__DATABASE_NAME`, `MINT_SSO__EDUID__CLIENT_ID`, `MINT_MARKETPLACE__REGISTRY_URL` or `MINT_UPDATES__PLATFORM_REPO` are silently ignored in MINT @MINT_VERSION@. The setting keeps its `config.json` or default value, and no error is logged. Storage keys are the exception: `MINT_STORAGE__S3__...` and `MINT_STORAGE__SWIFT__...` accept both forms.
+:::
 
 Booleans accept `true`/`false`/`1`/`0`. JSON values can be embedded literally.
 
@@ -292,6 +353,7 @@ The configured `server.dataPath` (default `./data`) holds platform runtime state
 | `plugins/snapshots/` | Pre-install / pre-upgrade Python environment snapshots |
 | `plugins/<plugin>/venv/` | Isolated plugin virtual environments when subprocess isolation is used |
 | `plugins/<plugin>/config.json` | Legacy per-plugin settings fallback |
+| `logs/mint.log` | Log file when `logging.fileEnabled` is true (default `logging.filePath`) |
 | `admin-terminal/startup.sh` | Optional startup script managed by **Admin -> Platform -> Terminal** |
 
 Removing `marketplace/` is safe; it regenerates on demand. Removing `plugins/snapshots/` discards rollback history.

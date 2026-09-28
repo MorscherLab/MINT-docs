@@ -1,18 +1,20 @@
 # CI patterns
 
-Three GitHub Actions workflows cover the common plugin lifecycle: PR validation, release publishing, and a periodic SDK-compatibility check. The current `mint init` scaffold creates lighter `ci.yml` and `release.yml` files; use these examples when you want stricter gates around `mint doctor`, generated frontend contracts, frontend builds, and `.mint` bundle creation.
+`mint init` writes two GitHub Actions workflows: `.github/workflows/ci.yml`
+(pull requests and pushes to `main`) and `.github/workflows/release.yml` (`v*`
+tags). Start from those files. This page shows them and the additions that are
+worth making: a checksum and prerelease flag on releases, a registry PR, and a
+scheduled SDK-compatibility check.
 
 ## Build on PR
 
-Validate every PR against the plugin project exactly as a contributor would run it locally.
-
 ```yaml
-# .github/workflows/ci.yml
 name: CI
 
 on:
-  pull_request:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
 
 jobs:
@@ -23,139 +25,100 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Set up Python
-        run: uv python install 3.12
-
       - name: Check for frontend
         id: frontend
         run: |
           if [[ -f frontend/package.json ]]; then
-            echo "HAS_FRONTEND=true" >> "$GITHUB_OUTPUT"
+            echo "HAS_FRONTEND=true" >> $GITHUB_OUTPUT
           else
-            echo "HAS_FRONTEND=false" >> "$GITHUB_OUTPUT"
+            echo "HAS_FRONTEND=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Setup Bun
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         uses: oven-sh/setup-bun@v2
 
-      - name: Frontend install
+      - name: Frontend install and build
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: cd frontend && bun install
+        run: |
+          cd frontend
+          bun install
+          bun run type-check
+          bun run test
+          bun run build
 
-      - name: Frontend type check
-        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: cd frontend && bun run type-check
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Frontend build
-        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: cd frontend && bun run build
+      - name: Set up Python
+        run: uv python install 3.12
 
       - name: Install dependencies
         run: uv sync
+
+      - name: Validate plugin runtime
+        run: uv run mint doctor --strict
+
+      - name: Verify generated frontend contract
+        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        run: uv run mint sdk generate --check
 
       - name: Lint
         run: uv run ruff check .
 
-      - name: Verify generated frontend contract
-        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: uv run mint sdk generate --check
-
       - name: Test
         run: uv run pytest -v
-
-      - name: Validate plugin structure
-        run: uv run mint doctor
-
-      - name: Build .mint bundle
-        run: uv run mint build . --output-dir _ci_build
 ```
 
-The frontend is built before `uv sync` and backend checks because the standard
-plugin wheel includes `frontend/dist`. This also gives runtime tests real assets
-in a fresh checkout.
+The frontend is built before `uv sync` because the standard plugin wheel
+force-includes `frontend/dist`, and runtime tests then see real assets.
+`mint doctor --strict` fails on warnings as well as errors;
+`mint sdk generate --check` catches a generated client that no longer matches
+the backend routes and schemas. Backend-only plugins skip the Bun steps.
 
-Key choices:
+The scaffold git-ignores `uv.lock` and `frontend/bun.lock`. After you
+[commit lockfiles](/sdk/operations/versioning#commit-lockfiles), change the
+install steps to `uv sync --locked` and `bun install --frozen-lockfile`.
 
-- **One job with conditional frontend steps** keeps backend-only plugins simple and avoids skipped-job dependency surprises.
-- **`mint sdk generate --check`** catches frontend client drift after backend route or schema changes.
-- **`mint doctor`** catches structural mistakes such as missing entry points, stale generated contracts, frontend SDK misuse, and missing navigation metadata.
-- **`mint build` runs `uv run pytest` again** before packaging. The duplicate test run is intentional: it verifies the release command itself.
-
-If your team commits `uv.lock` and `frontend/bun.lock`, change install steps to `uv sync --locked` and `bun install --frozen-lockfile`. The generated scaffold does not require committed lockfiles by default. For backend-only plugins, keep the frontend detection step but the Bun steps will skip.
+Optional addition: a build step (`uv run mint build . --output-dir _ci_build`)
+checks packaging on every PR. It runs `pytest` again before packaging.
 
 ## Publish on tag
 
-Tag a release, then build and attach the `.mint` bundle to its GitHub Release.
-The checksum is optional supporting metadata; `.mint` is the plugin release artifact.
+The scaffold's release workflow repeats the CI steps in a `test` job, then
+builds and publishes in a `build` job that depends on it:
 
 ```yaml
-# .github/workflows/release.yml
-name: Release
-
-on:
-  push:
-    tags: ['v*']
-
-permissions:
-  contents: write       # GitHub Release
-
-jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
+    needs: [test]
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Set up Python
-        run: uv python install 3.12
-
-      - name: Check for frontend
-        id: frontend
-        run: |
-          if [[ -f frontend/package.json ]]; then
-            echo "HAS_FRONTEND=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "HAS_FRONTEND=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Setup Bun
-        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        uses: oven-sh/setup-bun@v2
-
-      - name: Frontend install
-        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: cd frontend && bun install
-
-      - name: Frontend type check
-        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: cd frontend && bun run type-check
-
-      - name: Frontend build before backend runtime checks
-        if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: cd frontend && bun run build
-
-      - name: Install dependencies
-        run: uv sync
-
+      # checkout (fetch-depth: 0), frontend detection, Bun, frontend
+      # install/type-check/test/build, uv, Python 3.12, uv sync
       - name: Verify generated frontend contract
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         run: uv run mint sdk generate --check
 
       - name: Build .mint bundle
-        run: uv run mint build . --output-dir dist
+        run: uv run mint build . --output-dir dist/
 
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.mint
+          generate_release_notes: true
+```
+
+The workflow sets `permissions: contents: write` so the repository's
+`GITHUB_TOKEN` can attach the release asset. `fetch-depth: 0` lets `hatch-vcs`
+read the tag.
+
+Two optional additions to the `build` job: a SHA-256 checksum, and marking
+`-beta`/`-rc` tags as GitHub prereleases:
+
+```yaml
       - name: Compute checksum
-        run: |
-          cd dist
-          sha256sum *.mint > plugin-bundle.sha256
+        run: cd dist && sha256sum *.mint > plugin-bundle.sha256
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -168,13 +131,10 @@ jobs:
           fail_on_unmatched_files: true
 ```
 
-The workflow uses the repository's `GITHUB_TOKEN` with `contents: write` to
-attach release assets. Keep release artifacts limited to `dist/*.mint` and the
-optional checksum file. Python wheels and built frontend files stay inside
-the bundle.
-
-Before pushing a release tag, run the [bundle verification flow](/sdk/operations/publishing#build-and-verify-the-release).
-The workflow's build checks do not replace a real install/upgrade test.
+Keep release assets limited to the `.mint` file and the optional checksum; the
+wheel and frontend files are inside the bundle. The workflow does not run
+`mint verify`. Run it on the exact bundle before tagging; see
+[Deploying and verifying](/sdk/operations/deploying).
 
 ## Submit to a registry on release
 
@@ -183,7 +143,7 @@ Extend the release workflow to PR a registry update:
 ```yaml
   submit-to-registry:
     runs-on: ubuntu-latest
-    needs: build-and-publish
+    needs: build
     if: ${{ !contains(github.ref_name, '-') }}    # stable releases only
     steps:
       - uses: actions/checkout@v4
@@ -265,7 +225,7 @@ jobs:
         run: uv run pytest -v
 
       - name: mint doctor
-        run: uv run mint doctor
+        run: uv run mint doctor --strict
 
       - name: Write failure report
         if: failure()
@@ -301,7 +261,7 @@ Both `uv` and `bun` caches speed up CI:
       ${{ runner.os }}-mint-
 ```
 
-If your project does not commit lockfiles, key the cache on `pyproject.toml` and `frontend/package.json` instead.
+If your project does not [commit lockfiles](/sdk/operations/versioning#commit-lockfiles), key the cache on `pyproject.toml` and `frontend/package.json` instead.
 
 ## Pre-commit hooks
 

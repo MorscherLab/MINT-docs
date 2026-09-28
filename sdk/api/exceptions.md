@@ -104,7 +104,7 @@ if user.id != panel.owner_id:
     )
 ```
 
-`code = "PERMISSION_DENIED"`.
+`code = "PERMISSION_DENIED"`. `PermissionException` also subclasses Python's built-in `PermissionError`, so `except PermissionError` catches it and `UnsupportedExperimentTypeException`.
 
 ## `ConfigurationException`
 
@@ -246,7 +246,7 @@ async def initialize(self, context=None):
 | `UnsupportedExperimentTypeException(experiment_type, allowed_experiment_types, message=None, details=None)` | `EXPERIMENT_TYPE_NOT_ALLOWED`; write targets a disallowed type |
 | `DesignDataOwnershipConflictException(*, experiment_id, current_owner_plugin_id, requested_owner_plugin_id)` | `DESIGN_DATA_OWNERSHIP_CONFLICT`; another plugin already owns this design |
 | `EventVetoException(message=..., details=None)` | `EVENT_VETO`; reject a blocking before-save event |
-| `PlatformCompatibilityError(message, sdk_api_version=None, platform_api_version=None, details=None)` | Internal platform/SDK API mismatch; HTTP code is `plugin.api_version_mismatch` |
+| `PlatformCompatibilityError(message, sdk_api_version=None, platform_api_version=None, details=None)` | Internal platform/SDK API mismatch; exception `code` is `PLATFORM_API_VERSION_MISMATCH`, HTTP envelope code is `plugin.api_version_mismatch`. Import it from `mint_sdk.exceptions`; it is not exported from `mint_sdk` |
 
 A veto in an observer event is a failed observer, not a rollback of an already committed experiment. A settings CAS conflict or artifact replacement conflict is a `ConflictException`; reload the authoritative state before creating a new edit.
 

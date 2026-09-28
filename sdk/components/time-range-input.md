@@ -1,14 +1,18 @@
 ---
 aside: false
 title: TimeRangeInput
-description: "TimeRangeInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Paired start/end time pickers that validate range order and display computed duration."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # TimeRangeInput
 
-TimeRangeInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Paired start/end time pickers that validate range order and display computed duration.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Use [TimePicker](/sdk/components/time-picker) instead.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

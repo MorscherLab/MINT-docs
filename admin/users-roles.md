@@ -1,50 +1,67 @@
-# Members & Roles
+# Users & Roles
 
-MINT uses platform role-based access control (RBAC) plus project membership. A **system role** governs route-level rights across the platform. Project membership decides who belongs to a project, who leads it, and, in restricted visibility mode, which project experiments a user can see. Twenty-three permissions are grouped across nine resource families; admins can also build custom roles by composing those permissions.
+MINT controls access with a **system role** per user plus project membership. The system role decides which actions a user may take anywhere in the platform. Project membership records who works on a project and, in restricted visibility mode, which experiments a user can see. Roles combine 23 permissions in 10 groups; admins can build custom roles from them.
 
 > [Screenshot: Admin -> People -> Roles page with the Admin / Member / Viewer presets and a custom role]
+
+## Accounts
+
+People get an account by self-registration (on by default, controlled by `auth.allowRegistration`) or from an admin with `mint admin user create`. See [Authentication → Accounts and registration](/admin/authentication#accounts-and-registration).
+
+**Admin -> People -> Users** (needs `users.view`) lists accounts. With `users.manage` you can edit a user, change the role, reset the password, deactivate, reactivate, or delete.
 
 ## System roles
 
 Three roles ship out of the box:
 
-| Role | Effective rights |
-|------|------------------|
-| **Admin** | All 23 permissions. Manages users, roles, plugins, jobs, notices, the marketplace, and the platform itself. |
-| **Member** | Create and edit projects/experiments they belong to. Run analysis plugins. No platform admin. |
-| **Viewer** | Read-only across the platform. No writes. |
+| Role | Permissions |
+|------|-------------|
+| **Admin** | All 23. Also the only role that can manage the Admin role, disable authentication, or enable dev mode. |
+| **Member** (default for new accounts) | All `projects.*` and `experiments.*`; `plugins.view`, `plugins.use`, `plugins.configure`; `users.view`; `platform.view_logs`; `filesystem.browse` |
+| **Viewer** | `projects.view`, `experiments.view`, `plugins.view`, `plugins.use`, `users.view` |
 
-Every user has exactly one system role. Set on **Admin -> People -> Users** for a single user, or via the in-app onboarding flow when invitations are accepted.
+Every user has exactly one system role. Change it on **Admin -> People -> Users**.
+
+## Custom roles
+
+**Admin -> People -> Roles** (needs `users.manage`) edits roles. Besides the permission toggles, each role has:
+
+| Setting | Options | Effect |
+|---------|---------|--------|
+| **Project scope** | All projects / Assigned only | Whether the role sees every project or only projects the user is assigned to |
+| **Plugin access** | All plugins / Selected only | Which plugins users with this role can see and open |
+
+> [Screenshot: role editor with permission toggles, project scope, and plugin access]
+
+A custom role suits narrow jobs, for example a "Plugin operator" with `plugins.view`, `plugins.use`, and `plugins.configure` but not `plugins.install`.
+
+### Who can manage whom
+
+A non-admin with `users.manage` can only act within their own rights:
+
+- They cannot assign the Admin role or edit it.
+- They cannot create, edit, or assign a role that has permissions or plugin access they lack.
+- They cannot create a user in a role that outranks theirs, or edit, activate, deactivate, delete, or reset the password of such a user.
 
 ## Project membership
 
-Each project has a creator and optional `lead_id`. The creator, lead, or an Admin can edit project metadata, delete the project, and manage project members. Members can currently be labeled `editor` or `viewer`; that label is stored with the membership and shown in the UI, but route-level write access still requires the user's system role to include the relevant permission.
+Each project has a creator and an optional lead. The creator, the lead, or an Admin can edit the project, delete it, and manage its members; they also need the matching permission (`projects.edit`, `projects.delete`, `projects.manage_members`).
 
-| Project relationship | Current effect |
-|----------------------|----------------|
-| **Creator / lead** | Can update/delete the project and manage members, if their system role also has the required project permission |
-| **Member: editor** | Project membership label; contributes to restricted experiment visibility |
-| **Member: viewer** | Project membership label; contributes to restricted experiment visibility |
+Add members from the project's **Edit** form: pick an existing user under **Members**. Members are labelled `editor` or `viewer`. The label is shown in the UI, but write access still comes from the system role.
 
-In other words: do not use project membership as a substitute for system RBAC. A user still needs `experiments.edit` to edit experiments, `projects.manage_members` to manage members, and so on.
+| Project relationship | Effect |
+|----------------------|--------|
+| **Creator / lead** | Can edit or delete the project and manage members, given the matching permission |
+| **Member: editor** | Label only; counts toward restricted experiment visibility |
+| **Member: viewer** | Label only; counts toward restricted experiment visibility |
 
-> [Screenshot: project Members tab showing each member's project role]
+Do not use project membership instead of system roles. A user still needs `experiments.edit` to edit experiments, and so on. An experiment's own [collaborators](/guide/experiments#collaborators) can also grant visibility on a single experiment.
 
-## Invite a member
-
-From a project's **Members** tab, click **Invite**.
-
-| Field | Notes |
-|-------|-------|
-| Email | The user must already have a MINT account, or be invited by email if your platform allows it |
-| Project role | `editor` or `viewer`; current server-side writes are still gated by system permissions |
-| Welcome message | Optional, sent in the email if SMTP is configured |
-
-Project members appear immediately on the project. In `access.experimentVisibilityMode: "restricted"`, membership contributes to which experiments appear in lists. An experiment's own [collaborators](/guide/experiments#collaborators) can also grant visibility on a single experiment.
+> [Screenshot: project Team card listing members and their project roles]
 
 ## The 23 permissions
 
-Permissions are referenced by `resource.action` strings. The platform's backend routes check them via FastAPI dependencies; the admin UI surfaces grouped toggles for each.
+Permissions are `resource.action` strings. The backend checks them on every route; the role editor shows them as grouped toggles.
 
 | Group | Permissions |
 |-------|-------------|
@@ -52,29 +69,22 @@ Permissions are referenced by `resource.action` strings. The platform's backend 
 | **`experiments.*`** (4) | `view`, `create`, `edit`, `delete` |
 | **`plugins.*`** (4) | `view`, `use`, `configure`, `install` |
 | **`jobs.*`** (2) | `read_all`, `manage_all` |
+| **`filesystem.*`** (1) | `browse` |
 | **`notifications.*`** (1) | `receive_important` |
 | **`calendar.*`** (1) | `read_all` |
 | **`notices.*`** (1) | `publish` |
-| **`users.*`** (3) | `view`, `invite`, `manage` |
+| **`users.*`** (2) | `view`, `manage` |
 | **`platform.*`** (2) | `configure`, `view_logs` |
 
-The full mapping of role → permissions lives at [`api/permissions.py`](https://github.com/MorscherLab/MINT/blob/main/api/permissions.py) in the platform repo. The reference in this manual is at [Permissions](/reference/permissions).
-
-## Custom roles
-
-Admins can compose custom roles from any subset of the 23 permissions:
-
-> [Screenshot: custom-role editor with permissions checkboxes]
-
-Custom roles are useful for narrow scopes — e.g., a "Plugin operator" role that has `plugins.view`, `plugins.use`, and `plugins.configure` but not `plugins.install`. Once defined, they appear alongside the built-in roles when assigning a system role to a user.
-
-The role-design rationale for the original RBAC model is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/MINT/blob/main/decisions/2026-04-10-rbac-roles-design.md). The current authoritative permission list is [`api/permissions.py`](https://github.com/MorscherLab/MINT/blob/main/api/permissions.py).
+The authoritative list is [`api/permissions.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/permissions.py). See also [Permissions](/reference/permissions).
 
 ## Plugin-specific roles
 
-Plugins can register their own user-facing roles, distinct from platform RBAC. These are stored in `UserPluginRole` and only restrict access **within** that plugin — they don't grant any platform-level permissions. A plugin's role tells the plugin who can do what inside its UI; it does not affect MINT's project / experiment guards.
+Plugins can define their own roles, separate from system roles. They only restrict what a user can do **inside** that plugin and grant no platform permissions. Set them from **Admin -> Plugins -> Installed -> plugin actions -> Access control**.
+
+Whether a user sees a plugin at all is decided by the system role's **Plugin access** and `plugins.use`, not by the plugin role.
 
 ## Next
 
-→ [Authentication](/admin/authentication) — how users prove who they are
+→ [Authentication](/admin/authentication) — how users sign in
 → [Permissions](/reference/permissions) — full RBAC reference

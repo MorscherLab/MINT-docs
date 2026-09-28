@@ -3,7 +3,7 @@
 Build plugins for **MINT @MINT_VERSION@**: start with an installable scaffold, choose its
 data permissions, connect it to experiments, add storage and a frontend, then
 test and version the bundle. The examples in this track are checked against
-the released `v@MINT_VERSION@` source, dated 17 September 2026.
+the released `v@MINT_VERSION@` source.
 
 ## What to learn
 
@@ -66,6 +66,7 @@ experience cannot be described by typed job inputs and standard result views.
 | 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | Build an experiment-design plugin with SQLModel tables, CRUD routes, and migrations |
 | 4 | [Plugin roles](/sdk/tutorials/plugin-roles) | Add plugin-specific viewer/editor/admin roles and enforce them in backend routes |
 | 5 | [Types and workflow plugin](/sdk/tutorials/plugin-types-workflow) | Create a workflow that manages experiments without taking design ownership |
+| 6 | [Analyze an experiment](/sdk/tutorials/analyze-an-experiment) | Read a visible experiment's design, compute a summary, and save it as a named analysis artifact |
 
 The tutorials are written so you can follow them in order without reading the full API reference first. Each step links to the concept page or recipe you need at that moment.
 

@@ -53,7 +53,7 @@ saved = await self.save_analysis_artifacts(experiment.id, [
 ])
 ```
 
-In **v@MINT_VERSION@**, the batch commits every member or restores the repository to its pre-call state and raises the member failure. Results preserve input order. Duplicate keys in a batch are rejected. Empty batches return `[]`; nonempty batches require a context and an atomic-capable platform repository.
+In MINT 1.2, the batch commits every member or restores the repository to its pre-call state and raises the member failure. Results preserve input order. Duplicate keys in a batch are rejected. Empty batches return `[]`; nonempty batches require a context and an atomic-capable platform repository.
 
 This transaction covers this artifact batch, not preceding uploads, design saves, external computation, or writes to a different experiment. A loop across experiments consists of separate commits.
 

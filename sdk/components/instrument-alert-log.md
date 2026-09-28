@@ -1,14 +1,18 @@
 ---
 aside: false
 title: InstrumentAlertLog
-description: "InstrumentAlertLog is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Filterable instrument alert/event list keyed by each alert's required stable event_key."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # InstrumentAlertLog
 
-InstrumentAlertLog is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Filterable instrument alert/event list keyed by each alert's required stable event_key.
+
+::: warning Deprecated
+Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Instrument UI moves to the `mld-ms` plugins; there is no direct SDK replacement.
+:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

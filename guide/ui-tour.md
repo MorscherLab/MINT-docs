@@ -25,13 +25,27 @@ The landing page after logging in. The dashboard is built for quick triage:
 |--------|---------------|
 | **Status strip** | Today's date, open items that need attention, and the lab notice board |
 | **Notice board** | The pinned or newest active notice, with an earlier-notices modal when history exists |
-| **Recent experiments** | Recently updated experiments with status and code |
-| **Recent projects** | Recently updated projects with experiment counts and project status |
-| **Plugins launcher** | Searchable grid/list of enabled plugins, with per-user pinning and entry-point links |
+| **Experiments** | Recently updated experiments with status and code; a toggle shows only your own |
+| **Projects** | Recently updated projects with experiment counts and project status; a toggle shows only your own |
+| **Plugins** | Searchable grid/list of enabled plugins, with per-user pinning and entry-point links |
 
 Admins who can manage notices see a shortcut from the notice board to **Admin -> Platform -> Notices**.
 
 > [Screenshot: home dashboard with status strip, notice board, recent records, and plugin launcher labeled]
+
+## Sign-in pages
+
+| Page | What it does |
+|------|--------------|
+| `/login` | Password, passkey and (when enabled) SWITCH edu-ID sign-in |
+| `/register` | Self-registration; sends you to `/login` when an admin has turned registration off |
+| `/setup` | First-run setup wizard (database, first admin account) shown until setup completes |
+
+MINT does not support mobile browsers: on a phone it shows **Desktop browser required** instead of the app.
+
+## Projects and Experiments lists
+
+`/projects` and `/experiments` list every record you can see, with search and filters. Click a row to open its detail page.
 
 ## Project page
 
@@ -68,10 +82,10 @@ Open this from the account menu in the top action bar.
 | Section | Contains |
 |---------|----------|
 | **Profile** | First name, last name, display shortname, email, and read-only username |
-| **Password** | Current password, new password, confirmation, and the password-change action |
+| **Password** | Current password, new password (at least 8 characters), confirmation, and the password-change action |
 | **Security** | Passkeys and SWITCH edu-ID linking, when those auth features are enabled |
 
-The account modal is for identity and sign-in settings. Shell appearance is controlled by the theme toggle in the top action bar.
+The account modal is for identity and sign-in settings; **Log out** sits at the bottom of its side rail. Shell appearance is controlled by the theme toggle in the top action bar.
 
 > [Screenshot: Your account modal with Profile, Password, and Security sections]
 
@@ -112,6 +126,8 @@ Generated analysis plugin pages can include a job status tray inside the plugin 
 Plugins should use the `AppLayout`, `PluginWorkspaceView`, `AppTopBar`, and related components from `@morscherlab/mint-sdk`. See [Frontend SDK](/sdk/frontend/).
 
 ## Notes on shortcuts and notifications
+
+After the platform is updated, open tabs show a notice with a reload action so the page picks up the new version.
 
 Current MINT releases rely on standard browser and component keyboard behavior for focus, menus, tables, and modal dismissal. Do not assume global shortcut overlays are available unless your deployment or plugin adds them.
 

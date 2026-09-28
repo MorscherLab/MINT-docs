@@ -16,6 +16,14 @@ MINT follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The pla
 
 Plugin-author and admin actions per patch release. Guides elsewhere on this site describe current behavior only; the full notes are in the changelogs linked above.
 
+### 1.2.7 – 1.2.9
+
+| Release | Change | Plugin author action |
+|---|---|---|
+| 1.2.7 | Frontend SDK bundles `axios` 1.20.0 (fixes four GHSA advisories); toasts start below a mounted `AppTopBar`; `mint doctor` no longer suggests the removed `AppSidebar variant="analysis"` | Update both SDK packages together. Replace any leftover `variant` with `AppSidebar :floating="false" collapsible` (add `width="20rem"` for the former analysis width). Admins: self-registration can be disabled with `auth.allowRegistration`, and passwords now need at least 8 characters. |
+| 1.2.8 | `mint deploy` waits until the restarted platform loads the version recorded in the bundle's `manifest.json` | Do not treat a deploy that times out as successful; the timeout message names the loaded and bundle versions. |
+| 1.2.9 | `GET /api/health` returns a per-process `boot_id`; `mint deploy` confirms the restart by it, treats `--timeout` as one budget, and reports failures as `Error: ...` or JSON | Accounts without `platform.configure` cannot restart: deploy reports the plugin as installed but not running. Use `--no-restart` and ask an administrator. See [What deploy confirms](/sdk/operations/deploying#what-deploy-confirms). |
+
 ### 1.2.2 – 1.2.6
 
 Update the platform and both SDK packages together. These patches introduce an

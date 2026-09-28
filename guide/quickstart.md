@@ -7,35 +7,38 @@ A complete walkthrough from logging into MINT to running your first analysis plu
 ## Prerequisites
 
 - A running MINT instance (hosted, direct, or Docker — see [Get Started](/admin/install-direct))
-- An account with at least the **Member** role
-- At least one analysis plugin installed and visible to your role (your admin can install one from the [marketplace](/guide/marketplace) if not)
+- An account with the **Member** role (the default for new accounts) or equivalent permissions
+- At least one experiment type created by your admin, and one analysis plugin installed and visible to your role (see [Marketplace](/guide/marketplace))
 
 ## Step 1: Create a project
 
-From the home dashboard, click **New project**.
+Open **Projects** from the top navigation and click **New Project**.
 
-> [Screenshot: New-project modal with name and description fields]
+> [Screenshot: New project form with name, status, dates, description, lead, and members]
 
 | Field | What it's for |
 |-------|---------------|
 | Name | Human-readable label, e.g., "TCA flux pilot" |
-| Description | One-line summary shown on the dashboard |
-| Members (optional) | Lab colleagues to invite — they get the default project role |
+| Description | Goals and scope |
+| Lead (optional) | The person responsible; the lead can edit the project and manage members |
+| Members (optional) | Existing MINT users to add; they join as `editor` |
 
 Click **Create**. You're now inside the project page.
 
 ## Step 2: Create an experiment
 
-Click **New experiment**. MINT auto-assigns a unique code from the experiment type, such as `LCM-EXP-001` for an `lcms_batch` type or `DR-EXP-001` for `dose_response`.
+On the project page, click **New Experiment**. MINT assigns a unique code from the experiment type, such as `DR-EXP-001` for a `dose_response` type or `LCM-EXP-001` for `lcms`.
 
 | Field | What it's for |
 |-------|---------------|
-| Title | Human label |
-| Type | Pick an experiment type registered by an installed design plugin (e.g., LCMS sequence, drug-response panel). Determines the design fields below. |
-| Status | Starts at **planned** |
-| Collaborators (optional) | Single-experiment access grants; the creator is stored as owner |
+| Name | Human label |
+| Type | One of the experiment types your admin created. Sets the code prefix. |
+| Sequence (optional) | Override the code number; leave empty for the next free number |
+| Start / End date, Notes (optional) | Planning details |
+| Project | Preset when you start from a project page |
+| Collaborators (optional) | Single-experiment access; you are stored as owner |
 
-Fill in the design fields exposed by the experiment type, then **Save**. The experiment is now in `planned` status. See [Experiments](/guide/experiments) for the status flow.
+Save the form. The experiment starts in `planned` status. Design data is added later by the design plugin for that type. See [Experiments](/guide/experiments) for the status flow.
 
 > [Screenshot: experiment-detail page in planned status]
 
@@ -67,7 +70,7 @@ Switch the experiment status to **completed** when the work is finished. MINT re
 
 ## Further steps
 
-- **Invite collaborators** — see [Members & roles](/admin/users-roles)
+- **Add collaborators** — see [Experiments → Collaborators](/guide/experiments#collaborators)
 - **Install another plugin** — see [Marketplace](/guide/marketplace)
 - **Use the CLI** — see [`mint` overview](/admin/cli) for scripted experiment + project access
 - **Build your own plugin** — start with the [Plugin Development Guide](/sdk/)

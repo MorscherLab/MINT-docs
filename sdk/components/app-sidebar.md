@@ -30,10 +30,19 @@ density is compact; use `density="comfortable"` for more spacing. The old
 `variant` prop has been removed, and `dense` is deprecated. Use `collapsible`
 explicitly when you need a collapse button; it defaults to `false` on AppSidebar.
 
-When AppLayout owns placement, pass `:floating="false"` to the sidebar:
+When AppLayout owns placement, pass `:floating="false"` to the sidebar. The former
+"analysis chrome" width is now explicit: use `collapsible` plus `width="20rem"`
+instead of a variant:
 
 ```vue
-<AppSidebar :panels="panels" active-view="analysis" :floating="false" density="compact" />
+<AppSidebar
+  :panels="panels"
+  active-view="analysis"
+  :floating="false"
+  density="compact"
+  collapsible
+  width="20rem"
+/>
 ```
 
 <!-- sdk-props:start -->
