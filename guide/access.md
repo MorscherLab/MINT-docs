@@ -20,6 +20,8 @@ No account yet? If the login page shows **No account yet? Create one**, you can 
 
 After five failed password attempts, the account is locked for 15 minutes by default.
 
+Changing your password in **Your account -> Password** keeps you signed in on that browser and signs you out everywhere else. To connect an AI assistant or a script, create a personal access token instead of sharing your password; see [AI Assistants and API Access](/guide/ai-and-api).
+
 > [Screenshot: MINT login page showing the password form, Continue with Passkey, and the Create one link]
 
 ## Find your projects and plugins
@@ -30,7 +32,7 @@ After logging in, the **Home** page shows:
 - **Experiments** and **Projects** cards, each with a switch to show only yours
 - A **Plugins** launcher with the plugins your role may open; pin the ones you use most
 
-Use the top navigation to open the full **Experiments** and **Projects** lists.
+Use the top navigation to open the full **Experiments** and **Projects** lists. **Instruments** in the top navigation opens the lab's [shared instrument directory](/guide/instruments).
 
 > [Screenshot: home dashboard with projects, experiments, and plugins highlighted]
 

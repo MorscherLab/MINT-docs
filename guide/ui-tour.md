@@ -11,7 +11,7 @@ The top action bar appears on platform pages and SDK plugin shells. The exact co
 | Element | What it does |
 |---------|--------------|
 | **MINT logo / platform name** | Returns to the home dashboard |
-| **Navigation / breadcrumb** | Moves between Home, Projects, Experiments, Admin, and record detail pages |
+| **Navigation / breadcrumb** | Moves between Home, Instruments, Projects, Experiments, Admin, and record detail pages |
 | **Plugins control** | Opens installed plugin entry points that your account can access |
 | **Theme toggle** | Switches the active light/dark/system theme for the shell |
 | **Admin** | Opens the Admin workspace when your role exposes at least one admin section |
@@ -30,6 +30,8 @@ The landing page after logging in. The dashboard is built for quick triage:
 | **Plugins** | Searchable grid/list of enabled plugins, with per-user pinning and entry-point links |
 
 Admins who can manage notices see a shortcut from the notice board to **Admin -> Platform -> Notices**.
+
+The top navigation on Home also links to [Instruments](/guide/instruments), the shared equipment directory, when your role can view it.
 
 > [Screenshot: home dashboard with status strip, notice board, recent records, and plugin launcher labeled]
 
@@ -82,12 +84,13 @@ Open this from the account menu in the top action bar.
 | Section | Contains |
 |---------|----------|
 | **Profile** | First name, last name, display shortname, email, and read-only username |
-| **Password** | Current password, new password (at least 8 characters), confirmation, and the password-change action |
+| **Password** | Current password, new password (at least 8 characters), confirmation, and the password-change action. Changing it keeps you signed in here and signs out your other sessions |
 | **Security** | Passkeys and SWITCH edu-ID linking, when those auth features are enabled |
+| **AI & API** | MCP URL for AI assistants, and your personal access tokens. See [AI Assistants and API Access](/guide/ai-and-api) |
 
-The account modal is for identity and sign-in settings; **Log out** sits at the bottom of its side rail. Shell appearance is controlled by the theme toggle in the top action bar.
+The account modal is for identity, sign-in, and access-token settings; **Log out** sits at the bottom of its side rail. Shell appearance is controlled by the theme toggle in the top action bar.
 
-> [Screenshot: Your account modal with Profile, Password, and Security sections]
+> [Screenshot: Your account modal with Profile, Password, Security, and AI & API sections]
 
 ## Admin workspace
 
@@ -97,6 +100,7 @@ Open **Admin** from the top action bar or go to `/admin`. Users only see section
 |-------|---------|----------|
 | **People** | **Users** | Account list, role assignment, disable / re-enable, and password reset |
 | **People** | **Roles** | Built-in role presets and custom-role editor |
+| **People** | **Access Tokens** | Every user's personal access tokens, with revoke |
 | **Plugins** | **Installed** | Installed plugins, runtime state, access control, update, and uninstall actions |
 | **Plugins** | **Registry** | Marketplace catalog, install/request install, refresh, compatibility, and update badges |
 | **Platform** | **Experiment Types** | Experiment type registration and platform-owned design metadata |
