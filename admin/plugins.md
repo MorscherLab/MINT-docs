@@ -12,28 +12,14 @@ Think of the plugin system as five layers:
 | Layer | What it owns |
 |-------|--------------|
 | **Package** | A Python wheel or `.mint` bundle with one `mint.plugins` entry point |
-| **Runtime metadata** | The `@mint_plugin(...)` declaration: type, route prefix, capabilities, nav items, config schema |
+| **Runtime metadata** | The plugin's declared type, route prefix, capabilities, nav items, and config schema |
 | **Install record** | The platform manifest and registry metadata stored under `server.dataPath` |
 | **Runtime load** | Startup discovery, migrations, settings resolution, `initialize(context)`, route/job/frontend mounting |
 | **Access and services** | Plugin roles, settings, jobs, notifications, calendar feeds, and uninstall cleanup |
 
-## Five plugin types
+## Plugin types
 
-Plugin type supplies the default write policy through `PlatformContext`; all plugin types can still have their own routes and, when they declare migrations, their own plugin-owned tables.
-
-| Type | Typical role | Experiment CRUD | Design-data writes | Analysis-result writes |
-|------|--------------|-----------------|--------------------|------------------------|
-| `STATIC` | Read-only reference UI, calculators, viewers | No | No | No |
-| `ANALYSIS` | Reads experiments and writes analysis outputs | No | No | Yes |
-| `EXPERIMENT_DESIGN` | Creates or edits experiment design data | Yes | Yes | No |
-| `FULL` | Combines design and analysis in one plugin | Yes | Yes | Yes |
-| `WORKFLOW` | Schedulers and lifecycle orchestrators | No; opt in explicitly | No | No |
-
-Authors often split a related lab capability into two plugins: a design plugin for experiment metadata and workflow, and one or more analysis plugins that read those experiments and produce results. Use `FULL` only when one plugin genuinely owns both sides.
-
-`PluginCapabilities.experiment_crud`, `design_data_write`, and `analysis_result_write` override these defaults independently. Each field accepts `True`, `False`, or `None`; `None` keeps the type default. This lets a `WORKFLOW` plugin manage experiment lifecycle without also claiming design data or analysis outputs.
-
-Analysis artifact and compatibility-result reads are scoped to the calling plugin by default in the SDK. Plugins that intentionally summarize or compare outputs from other plugins must request cross-plugin reads explicitly.
+Each plugin has a type that sets its default experiment write policy. See [How plugins attach data](/guide/data-model#how-plugins-attach-data); developers see [Plugin types](/sdk/concepts/plugin-types).
 
 ## Plugin lifecycle
 
@@ -57,7 +43,7 @@ stateDiagram-v2
 
 | Phase | What happens |
 |-------|--------------|
-| **Registered** | The package declares one `mint.plugins` entry point. Identity comes from PEP 621; runtime behavior comes from `@mint_plugin(...)` or legacy metadata. |
+| **Registered** | The package declares one `mint.plugins` entry point. Identity comes from PEP 621; runtime behavior comes from the plugin's declared metadata. |
 | **Resolving** | Marketplace or upload install checks `min_platform_version`, bundle `[tool.mint].requires_mint`, dependency conflicts, and the running platform's `mint-sdk` version. |
 | **Package installed** | The wheel or `.mint` bundle is installed, the source artifact is cached when needed, a manifest entry is written, and a Python-environment snapshot is kept for best-effort rollback. |
 | **Restart required** | A successful install or update does not guarantee the new code is serving traffic yet. The package can appear as **Installed but not loaded yet** until the server restarts. |
@@ -70,28 +56,30 @@ stateDiagram-v2
 
 > [Screenshot: plugin lifecycle visualization with state pills]
 
-## Capabilities
+For what the platform does at each phase from the plugin side, see [Lifecycle](/sdk/concepts/lifecycle). Capability flags are covered in [Plugin types](/sdk/concepts/plugin-types).
 
-`PluginCapabilities` tell the platform which platform-owned services the plugin
-expects. The current SDK includes flags for authentication, experiments,
-database access, shared plugin tables, experiment linking, external
-notifications, and calendar events.
+## Install steps
 
-| Capability area | What it means in practice |
-|-----------------|---------------------------|
-| Auth | Plugin routes inherit platform user identity when `requires_auth` is true |
-| Experiments | The plugin expects experiment repositories and experiment-scoped routes |
-| Database | The plugin needs the platform's PostgreSQL database |
-| Shared plugin DB | The plugin owns tables through `get_plugin_db_session()` / migrations |
-| Experiment CRUD | `experiment_crud` explicitly allows or denies experiment create/update/delete |
-| Design data | `design_data_write` explicitly allows or denies writes to owned design data |
-| Analysis results | `analysis_result_write` explicitly allows or denies writes to this plugin's results/artifacts |
-| Notifications | `@notify` events are routed through platform SMTP, Teams, or Slack integrations |
-| Calendar | `@calendar_event` publishes durable calendar events and user ICS subscriptions |
+1. The marketplace service confirms the registry entry is compatible with the running platform version.
+2. The plugin manager downloads the GitHub release asset matching `source.asset_pattern`.
+3. If the asset is a `.mint` bundle, the platform checks the bundle manifest's `requires_mint` specifier unless the admin explicitly forces the install.
+4. The install path pins `mint-sdk` to the platform's own version so a plugin cannot silently upgrade or downgrade the platform SDK.
+5. Dependency preflight checks whether the plugin can share the platform environment. Conflicts are reported as a retry-with-force dialog.
+6. The package or bundle is installed, the source artifact is recorded for restore, and a snapshot is kept for best-effort Python package rollback.
+7. The platform reports whether a restart is required before the plugin is loaded.
+8. On startup, MINT discovers the entry point, applies migrations, resolves plugin settings, runs `initialize(context)`, and mounts endpoints, jobs, generated UI, and frontend assets.
 
-Plugins do not send email, Teams messages, Slack messages, or ICS files
-directly. They publish typed events; MINT owns recipients, retries,
-subscriptions, and admin configuration.
+If install fails, the operation reports the failing step and leaves the plugin uninstalled or requiring administrator cleanup, depending on where the failure occurred. Dependency conflicts surface as a retry-with-force dialog; use that only when you understand the dependency change.
+
+> [Screenshot: install progress dialog with each step ticking through]
+
+After a successful install, check **Admin -> Plugins -> Installed**. A package can appear as
+**Installed but not loaded yet** with a **Restart required** badge. It is not
+serving plugin routes until the server restarts and the plugin reaches the
+running state.
+
+
+From **Admin -> Plugins -> Installed**, click **Uninstall** on a plugin to remove it; see [Uninstall modes](#uninstall-modes).
 
 ## Isolation
 
@@ -102,7 +90,7 @@ Plugins run with one of two isolation strategies:
 | **Shared environment** | When dependency sets are compatible | Plugin shares the platform's venv |
 | **Per-plugin venv** | When the manifest/runtime installs the plugin as a subprocess because dependency isolation is needed | `uv` creates a separate venv; plugin runs in a subprocess and the platform proxies HTTP to it |
 
-In both cases the plugin's HTTP surface is mounted at the `routes_prefix` declared with `@mint_plugin(...)` or legacy metadata. The user can't tell from the URL whether the plugin is in-process or out-of-process; the platform handles the proxy transparently.
+In both cases the plugin's HTTP surface is mounted at the `routes_prefix` declared by the plugin. The user can't tell from the URL whether the plugin is in-process or out-of-process; the platform handles the proxy transparently.
 
 Administrators can inspect isolated subprocesses from the server status view:
 plugin name, status, port, start time, and restart count are shown in the
@@ -112,20 +100,7 @@ The middleware in [`api/plugins/middleware.py`](https://github.com/MorscherLab/M
 
 ## Plugin migrations
 
-Plugins that own database tables use `mint_sdk.migrations` for versioned schema evolution:
-
-```python
-from mint_sdk.migrations import PluginMigration, MigrationOps
-
-class Migration(PluginMigration):
-    version = 1
-    name = "create_plates_table"
-
-    async def upgrade(self, op: MigrationOps) -> None:
-        await op.create_table("plates", ...)
-```
-
-Save this as a module such as `migrations/v001_create_plates_table.py`. Migrations are recorded in `plugin_schema_migrations` and run advisory-locked so two replicas can't race. The admin UI surfaces:
+Plugins that own database tables ship versioned migrations (see [Migrations](/sdk/concepts/migrations)). The admin UI surfaces:
 
 - `schema_version` — the plugin's currently applied revision
 - `pending_migrations` — revisions known to the plugin but not yet applied
@@ -149,9 +124,7 @@ manual schema removal.
 
 ## Plugin roles
 
-Plugins can register their own `UserPluginRole` entries, separate from platform RBAC. A plugin role is a string the plugin author chose; it lets the plugin gate features per user without burdening the platform's role model.
-
-A user's plugin role for a given plugin is set from **Admin -> Plugins ->
+Plugin roles are described in [Members & Roles → Plugin-specific roles](/admin/users-roles#plugin-specific-roles). Set a user's plugin role from **Admin -> Plugins ->
 Installed -> plugin actions -> Access control**.
 
 ## Built-in plugins

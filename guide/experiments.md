@@ -54,18 +54,9 @@ Core MINT validates only the `cancelled` rules above. Plugins can be stricter: m
 
 ## Plugin interaction
 
-Plugin types interact with experiments differently:
-
-| Type | Experiment role |
-|------|-----------------|
-| `STATIC` | Can read experiment context for viewers or reference tools, but cannot write design data or analysis artifacts. |
-| `ANALYSIS` | Reads existing experiments and writes named analysis artifacts. Legacy `save_analysis` writes remain available for compatibility. |
-| `EXPERIMENT_DESIGN` | Owns an experiment type and writes that experiment's `design_data`. |
-| `FULL` | Owns design data and can also write analysis artifacts. |
+Each plugin type has a default write policy for experiments; see [How plugins attach data](/guide/data-model#how-plugins-attach-data). Developers: [Plugin types](/sdk/concepts/plugin-types).
 
 A given experiment has exactly one design-owning plugin, selected by its type, but it can be analyzed by many `ANALYSIS` or `FULL` plugins over time.
-
-See [Plugins](/admin/plugins) for the full plugin model.
 
 ## Design and analysis on the detail page
 

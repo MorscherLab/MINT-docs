@@ -90,12 +90,7 @@ connect frontend failures with backend logs.
 
 ## Runtime choices and storage
 
-| Runtime | Appropriate use | Important boundary |
-|---|---|---|
-| In-process plugin | `.mint` bundle with compatible Python dependencies | Required for platform shared-table sessions in 1.2 |
-| Isolated subprocess | Conflicting/heavy Python dependency sets | Remote scoped repositories; no direct shared SQL sessions |
-| External server | An already running plugin service | Platform must reach its URL; the service owns its process lifecycle |
-| Docker runtime | Plugin with a containerized runtime | Container image, networking and native libraries must be provided |
+See [Isolation](/sdk/concepts/isolation#runtime-comparison) for the runtime table.
 
 External and Docker runtimes can be registered using `mint plugin runtime
 external` / `docker`; see the [CLI reference](/sdk/api/cli-reference) and

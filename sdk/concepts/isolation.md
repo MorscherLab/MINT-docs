@@ -6,10 +6,13 @@ MINT @MINT_VERSION@ can run an installed plugin in the platform process or in a 
 
 | Runtime | Platform access | Plugin-owned SQL tables | Typical use |
 |---|---|---|---|
-| Installed in-process | Direct platform context and repositories | PostgreSQL schema through `get_plugin_db_session()` | Plugins requiring shared database access |
-| Installed isolated subprocess | Remote context over authenticated internal HTTP APIs | No shared SQL-session bridge | Plugins with isolated dependencies using supported platform service adapters |
-| Standalone `mint dev` | No integrated context | Local SQLite | Plugin API/UI development and local database tests |
+| Installed in-process | Platform `PlatformContext`; direct async scoped repositories | PostgreSQL schema through `get_plugin_db_session()`; required for shared-table sessions in 1.2 | Plugins requiring shared database access; `.mint` bundle with compatible Python dependencies |
+| Installed isolated subprocess | SDK `RemotePlatformContext`; same async protocol over authenticated internal HTTP APIs | No shared SQL-session bridge | Conflicting or heavy Python dependency sets using supported platform service adapters |
+| External server | Platform must reach its URL | Owned by the service | An already running plugin service; the service owns its process lifecycle |
+| Docker runtime | Containerized plugin runtime | Owned by the container | Container image, networking and native libraries must be provided |
+| Standalone `mint dev` | `context=None`; no platform repositories, selected helpers return empty values | Local SQLite when declared | Plugin API/UI development and local database tests |
 | `mint dev --platform` | Development proxy into the standalone server | Local SQLite | Testing platform URL/proxy behavior during development |
+| External notebook, script, CI | No plugin context; synchronous `MINTClient` with the caller's credentials | Use platform APIs | Scripts outside a plugin |
 
 The **table-owning plugin tutorial must be deployed in-process** for PostgreSQL. `requires_shared_database=True` combined with `RemotePlatformContext` fails validation with `ConfigurationException`. Calling the remote context's `get_shared_db_session()` directly raises `NotImplementedError`; the SDK does not silently switch an installed remote plugin to SQLite.
 

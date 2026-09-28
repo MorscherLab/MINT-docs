@@ -4,12 +4,7 @@ MINT 1.2 gives an integrated plugin one long-lived `PlatformContext`. Use its sc
 
 ## Choose the right integration boundary
 
-| Runtime | Context | Platform data | Plugin-owned SQL tables |
-|---------|---------|---------------|-------------------------|
-| Installed, in process | Platform `PlatformContext` implementation | Async scoped repositories | `get_plugin_db_session()` with shared database capability |
-| Installed, isolated subprocess | SDK `RemotePlatformContext` | Same async protocol over trusted internal HTTP | Shared SQL sessions unavailable |
-| Standalone (`mint dev` without platform binding) | `None` | No platform repositories; selected helpers return empty values | SDK-managed local SQLite when declared |
-| External notebook, script, CI | No plugin context | Synchronous `MINTClient` using the caller's credentials | Use platform APIs |
+See [Isolation](/sdk/concepts/isolation#runtime-comparison) for the context, platform data and SQL-table access of each runtime.
 
 An isolated plugin is still **integrated**: `context is not None`. Do not construct a `RemotePlatformContext` or forge forwarded user headers in application code. The platform host establishes its trusted binding and checks internal API compatibility at startup.
 
@@ -59,7 +54,7 @@ class PeakQcPlugin(AnalysisPlugin):
 
 Access is the intersection of these rules:
 
-1. **Plugin write policy**: `experiment_crud`, `design_data_write`, and `analysis_result_write`, with defaults derived from `PluginType`.
+1. **Plugin write policy**: see [Plugin types](/sdk/concepts/plugin-types#_2-choose-a-category).
 2. **Experiment compatibility**: the plugin's declared types plus any tighter platform/admin restriction. `None` means unrestricted; `[]` blocks all types.
 3. **Actor visibility**: deployment visibility settings, project membership, experiment ownership/collaboration, and platform administrator access.
 4. **Data ownership**: writes use the calling plugin's ID. A plugin cannot overwrite another plugin's design or artifacts.

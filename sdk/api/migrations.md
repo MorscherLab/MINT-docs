@@ -1,6 +1,6 @@
 # Migrations reference — @MINT_VERSION@
 
-`mint_sdk.migrations` exports the shared Alembic runtime and the retained legacy integer framework. Alembic opt-in is available from 1.2.2. Source: [v@MINT_VERSION@ migrations package](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations).
+`mint_sdk.migrations` exports the shared Alembic runtime and the retained legacy integer framework. Source: [v@MINT_VERSION@ migrations package](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations).
 
 ## `MigrationSpec` and `LegacyBaseline`
 
@@ -136,6 +136,12 @@ The model hook defaults to `[]`, both migration hooks to `None`. `ensure_standal
 
 With a spec, `run_migrations=False` inspects the existing database and rejects a missing head, pending revisions, or model drift; it does not initialize a fresh schema. Normal standalone app startup prepares storage automatically. Integrated shared sessions use PostgreSQL; `RemotePlatformContext` cannot supply shared SQL sessions. Successful session exit commits, and exceptions roll back.
 
+## Identity, history and locking
+
+Each database domain has `_mint_database_identity`, `alembic_version`, and `_mint_migration_history`. The owner is `plugin:<entry-point-name>`; history records applied/adopted revision checksums. A mismatched owner, unknown current revision, incomplete history, or edited applied file stops the operation. An older plugin cannot reopen a database containing a revision it does not package. Legacy/model-only startup also refuses a database with an active Alembic revision.
+
+All pending revisions run inside the host's transaction. PostgreSQL uses advisory locks on the physical database/schema domain and the legacy plugin key; DDL lock waits are bounded to 30 seconds after the advisory locks are acquired. SQLite uses `BEGIN IMMEDIATE` with a 30-second busy timeout. During SQLite upgrades the runtime temporarily disables foreign-key enforcement for batch table replacement, checks foreign-key integrity before commit, and restores the connection setting. A migration failure rolls back the migration batch and its history changes.
+
 ## Alembic errors and recovery
 
 The modern runtime uses `MigrationError` for invalid owner/scope, invalid revision graph, unknown stored revision, history/checksum mismatch, rejected baseline adoption, and incompatible model drift. Managed drops can raise `DestructiveMigrationError`; SQL/database errors and errors raised inside revision code can propagate directly. Do not assume all failures are the legacy `MigrationChecksumError` or `SchemaVersionAheadError` subclasses.
@@ -234,7 +240,7 @@ class MigrationRunner:
     def discover(package_path: str) -> list[PluginMigration]: ...
 ```
 
-Use `dialect="sqlite"` or `"postgresql"`; `schema` is used only for PostgreSQL operations. The legacy runner rejects an active Alembic domain, creates the integer tracking table, sorts by integer version, checks the database-ahead guard and applied class checksums, and runs pending revisions in one transaction. PostgreSQL uses an advisory transaction lock; the released SQLite implementation uses an ordinary `engine.begin()` block.
+Use `dialect="sqlite"` or `"postgresql"`; `schema` is used only for PostgreSQL operations. The legacy runner rejects an active Alembic domain, creates the integer tracking table, sorts by integer version, checks the database-ahead guard and applied class checksums, and runs pending revisions in one transaction. It stores integers in `public.plugin_schema_migrations` on PostgreSQL or `_plugin_migrations` on SQLite. PostgreSQL uses an advisory transaction lock; the released SQLite implementation uses an ordinary `engine.begin()` block and does not provide the Alembic runtime's `BEGIN IMMEDIATE` behavior.
 
 `tables_already_exist=True` stamps all supplied revisions only when there is no history. Stamping executes no migration bodies. Existing successful history is skipped after checksum validation; supplied unsuccessful history can be retried. The runner itself does not write failed-history rows when an upgrade raises.
 
@@ -262,6 +268,6 @@ Successful calls return the current version and applied/stamped revision lists. 
 | `SchemaVersionAheadError` | Highest recorded version exceeds the highest supplied version |
 | `DestructiveMigrationError` | Drop helper called without opt-in; becomes the cause of `MigrationError` during a runner call |
 
-Checksums are SHA-256 of the migration **class source**, with a class-string fallback if source inspection fails. Do not edit shipped migrations or the dependencies that affect their behavior.
+Checksums are SHA-256 of the migration **class source**, with a class-string fallback if source inspection fails. Legacy class checksums do not include arbitrary external helpers. Do not edit shipped migrations or the dependencies that affect their behavior.
 
 See [Migrations](/sdk/concepts/migrations) for installation behavior, [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) for a complete plugin, and [Backfill migrations](/sdk/recipes/backfill-migration) for executable upgrade checks.

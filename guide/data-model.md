@@ -61,7 +61,7 @@ The experiment page groups artifacts by producing plugin. It marks active artifa
 | `FULL` | Yes | Yes | Yes | End-to-end workflows that own design and analysis |
 | `WORKFLOW` | No; opt in explicitly | No | No | Schedulers and lifecycle orchestration |
 
-The plugin type is declared with `@mint_plugin(plugin_type=...)` or legacy metadata. `PluginCapabilities.experiment_crud`, `design_data_write`, and `analysis_result_write` can override each default independently. The platform enforces the resolved policy through `PlatformContext`.
+The plugin type is declared with `@mint_plugin(plugin_type=...)` or legacy metadata. `PluginCapabilities.experiment_crud`, `design_data_write`, and `analysis_result_write` can override each default independently. The platform enforces the resolved policy through `PlatformContext`. Developer detail: [Plugin types](/sdk/concepts/plugin-types).
 
 ## Storage layers
 

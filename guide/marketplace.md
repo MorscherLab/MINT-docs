@@ -62,23 +62,7 @@ Approval requests retain their context — who requested, when, why — so an ad
 
 ## What happens during install
 
-1. The marketplace service confirms the registry entry is compatible with the running platform version.
-2. The plugin manager downloads the GitHub release asset matching `source.asset_pattern`.
-3. If the asset is a `.mint` bundle, the platform checks the bundle manifest's `requires_mint` specifier unless the admin explicitly forces the install.
-4. The install path pins `mint-sdk` to the platform's own version so a plugin cannot silently upgrade or downgrade the platform SDK.
-5. Dependency preflight checks whether the plugin can share the platform environment. Conflicts are reported as a retry-with-force dialog.
-6. The package or bundle is installed, the source artifact is recorded for restore, and a snapshot is kept for best-effort Python package rollback.
-7. The platform reports whether a restart is required before the plugin is loaded.
-8. On startup, MINT discovers the entry point, applies migrations, resolves plugin settings, runs `initialize(context)`, and mounts endpoints, jobs, generated UI, and frontend assets.
-
-If install fails, the operation reports the failing step and leaves the plugin uninstalled or requiring administrator cleanup, depending on where the failure occurred. Dependency conflicts surface as a retry-with-force dialog; use that only when you understand the dependency change.
-
-> [Screenshot: install progress dialog with each step ticking through]
-
-After a successful install, check **Admin -> Plugins -> Installed**. A package can appear as
-**Installed but not loaded yet** with a **Restart required** badge. It is not
-serving plugin routes until the server restarts and the plugin reaches the
-running state.
+See [Plugins → Install steps](/admin/plugins#install-steps) for the install lifecycle.
 
 ## Upgrade
 
@@ -95,9 +79,7 @@ compatibility gates and restart-required behavior as a manual update.
 
 ## Uninstall
 
-From **Admin -> Plugins -> Installed**, click **Uninstall** on the plugin. The current Admin UI and `mint plugin uninstall` use the safe default: remove the package and keep plugin-owned database tables in place.
-
-See [Plugins → Uninstall modes](/admin/plugins#uninstall-modes) for the full discussion.
+An admin uninstalls plugins; see [Plugins → Uninstall modes](/admin/plugins#uninstall-modes).
 
 ## Hosting a private registry
 

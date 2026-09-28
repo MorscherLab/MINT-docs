@@ -54,40 +54,7 @@ With `MLD_PORT=127.0.0.1:8001`, Compose binds the container's port 8000 to `127.
 
 ## Reverse proxy
 
-::: code-group
-
-```nginx [nginx (host)]
-# /etc/nginx/sites-available/mint
-server {
-    listen 443 ssl http2;
-    server_name mint.example.org;
-
-    ssl_certificate     /etc/letsencrypt/live/mint.example.org/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/mint.example.org/privkey.pem;
-
-    client_max_body_size 1G;
-
-    location / {
-        proxy_pass         http://127.0.0.1:8001;
-        proxy_http_version 1.1;
-        proxy_set_header   Host              $host;
-        proxy_set_header   X-Real-IP         $remote_addr;
-        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-        proxy_set_header   Upgrade           $http_upgrade;
-        proxy_set_header   Connection        "upgrade";
-    }
-}
-```
-
-```text [Caddy (host)]
-mint.example.org {
-    reverse_proxy 127.0.0.1:8001
-    request_body {
-        max_size 1GB
-    }
-}
-```
+For the host nginx or Caddy configuration, see [Reverse proxy](/admin/proxy-and-setup#reverse-proxy). To run Caddy as a Compose service instead:
 
 ```yaml [Caddy (compose service)]
 # Add to docker-compose.yml
@@ -110,8 +77,6 @@ volumes:
   caddy-config:
 ```
 
-:::
-
 If Caddy runs as a Compose service, point that Caddyfile at `app:8000` instead of `127.0.0.1:8001`, because both containers share the Compose network.
 
 MINT trusts forwarded client headers only from loopback proxies by default. If
@@ -129,15 +94,7 @@ from users.
 
 ## First-run setup
 
-Open the public URL in your browser. On a fresh install you'll see the **Setup** page (only shown when no admin exists). Create the first admin account; everything else is configured from the in-app **Admin** view.
-
-> [Screenshot: setup page showing the first-admin form]
-
-After setup:
-
-1. Configure notification delivery and the marketplace registry from **Admin -> Platform -> Configuration** and **Admin -> Plugins -> Registry**
-2. Create your first **Project** (see [Projects](/guide/projects))
-3. Invite team members and assign system roles (see [Members & roles](/admin/users-roles))
+See [First-run setup](/admin/proxy-and-setup#first-run-setup).
 
 ## Upgrades
 

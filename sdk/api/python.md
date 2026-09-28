@@ -51,7 +51,7 @@ Optional lifecycle hooks (default to no-op):
 | `@on_event("experiment.after_save")` or legacy `on_after_experiment_save(...)` | After platform-service design-data save |
 | `@on_event("experiment.status_changed")` or legacy `on_experiment_status_change(...)` | On status flip |
 | `@on_config_change(...)` / `apply_settings(settings)` | When plugin settings are applied |
-| `get_migration_spec()` | Opt-in Alembic `MigrationSpec`; `None` by default (since 1.2.2) |
+| `get_migration_spec()` | Opt-in Alembic `MigrationSpec`; `None` by default |
 | `get_migrations_package()` | Legacy integer migration package; mutually exclusive with `get_migration_spec()` |
 | `get_shared_models()` | List of SQLAlchemy models for owned tables |
 | `get_frontend_dir()` | Path to built frontend (auto-detected by default) |
@@ -220,6 +220,112 @@ Legacy defaults are read-only metadata plus analysis writes for `ANALYSIS`, CRUD
 | `UserPluginRole` | Dataclass — per-(user, plugin) role row |
 | `PlatformConfig` | Type alias `dict[str, Any]` for platform config view |
 
+### Dataclass fields
+
+#### `Experiment`
+
+```python
+@dataclass(slots=True)
+class Experiment:
+    id: int
+    name: str
+    experiment_type: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    created_by: int | None = None
+    parent_experiment_id: int | None = None
+    project: str | None = None
+    notes: str | None = None
+    tags: dict = field(default_factory=dict)
+    custom_metadata: dict = field(default_factory=dict)
+    start_date: date | None = None
+    end_date: date | None = None
+    design_owner_plugin_id: str | None = None
+```
+
+#### `DesignData`
+
+```python
+@dataclass(slots=True)
+class DesignData:
+    id: int
+    experiment_id: int
+    plugin_id: str
+    data: dict[str, Any]
+    schema_version: str
+    created_at: datetime
+    updated_at: datetime
+```
+
+#### `PluginAnalysisResult`
+
+```python
+@dataclass(slots=True)
+class PluginAnalysisResult:
+    id: int
+    experiment_id: int
+    plugin_id: str
+    result: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+    artifact_id: int | None = None
+    artifact_key: str | None = None
+    display_name: str | None = None
+    status: str | None = None
+    result_keys: list[str] = field(default_factory=list)
+```
+
+#### `AnalysisArtifact`
+
+```python
+@dataclass(slots=True)
+class AnalysisArtifact:
+    id: int
+    experiment_id: int
+    plugin_id: str
+    artifact_key: str
+    display_name: str
+    status: str
+    result: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+    result_keys: list[str] = field(default_factory=list)
+    note: str | None = None
+    archived_at: datetime | None = None
+    archived_by: int | None = None
+```
+
+#### `User`
+
+```python
+@dataclass(slots=True)
+class User:
+    id: int
+    username: str
+    role: str
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    email: str | None = None
+    shortname: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+```
+
+#### `UserPluginRole`
+
+```python
+@dataclass(slots=True)
+class UserPluginRole:
+    id: int
+    user_id: int
+    plugin_id: str
+    role: str
+    created_at: datetime
+    updated_at: datetime
+```
+
 Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/repositories.py).
 
 ## Repository protocols
@@ -234,6 +340,25 @@ Source: [`mint_sdk/repositories.py`](https://github.com/MorscherLab/MINT/blob/v@
 All repository methods are async. MINT 1.2 uses one scoped experiment repository governed by the effective write capabilities, actor visibility, experiment-type restrictions, data ownership, and reader declarations. Even `FULL` is scoped. `PluginDataRepository` retains the old design-method names for MINT 1.1 compatibility; new code should use the experiment repository or convenience helpers.
 
 `ExperimentRepository.get_analysis_results(experiment_id)` and `list_analysis_artifacts(experiment_id)` return only the calling plugin's own data by default. Pass `include_others=True` only for intentional cross-plugin reader plugins whose `analysis_result_readers` declaration allows those plugin IDs. `get_analysis_result_fields(...)` and `get_analysis_artifact(..., fields=[...])` project selected top-level keys from `result`.
+
+### Repository return types
+
+| Repository | Returns | Writes |
+|------------|---------|--------|
+| `ExperimentRepository` | Experiment, design, result, and artifact records | Effective `experiment_crud`, `design_data_write`, and `analysis_result_write` capabilities |
+| `ExperimentRepository.save_design_data` | `DesignData` | Owner-scoped design upsert |
+| `PluginDataRepository.save_experiment_data` | `DesignData` | `DesignData` |
+| `PluginDataRepository.save_analysis_result` | `PluginAnalysisResult` | `PluginAnalysisResult` compatibility payload |
+| `PluginDataRepository.save_analysis_artifact` | `AnalysisArtifact` | Named analysis artifact |
+| `PluginDataRepository.save_analysis_artifacts` | `list[AnalysisArtifact]` | Atomic batch of named artifacts |
+| `PluginDataRepository.list_analysis_artifacts` | `list[AnalysisArtifactSummary]` | — |
+| `PluginDataRepository.get_analysis_artifact` | `AnalysisArtifact \| None` | — |
+| `PluginDataRepository.archive_analysis_artifact` / `restore_analysis_artifact` | `AnalysisArtifactSummary \| None` | Artifact status |
+| `PluginDataRepository.get_analysis_results` | `list[PluginAnalysisResult]` (calling plugin by default; pass `include_others=True` for every plugin's result on one experiment) | — |
+| `UserRepository` | `User` | — |
+| `PluginRoleRepository` | `UserPluginRole`, `str | None` (a single role) | `UserPluginRole` |
+
+MINT 1.2 consolidates these methods on `ExperimentRepository`. `PluginDataRepository` remains a MINT 1.1 adapter, including its old `save_experiment_data` / `get_experiment_data` / `delete_experiment_data` names. New code should use `save_design_data` / `get_design_data` / `delete_design_data` on the experiment repository or the plugin convenience helpers.
 
 ## Local database (standalone)
 
@@ -279,38 +404,7 @@ MINT 1.2 SDK hosts map typed exceptions to the canonical HTTP envelope automatic
 
 ## Migrations
 
-Since 1.2.2, platform and opt-in plugin migrations use a shared Alembic runtime.
-The v@MINT_VERSION@ public contract below is available from `mint_sdk.migrations`;
-`MigrationSpec` is also exported from `mint_sdk`.
-
-| Symbol | Purpose |
-|--------|---------|
-| `MigrationSpec(package, models=(), legacy=None, managed_tables=())` | Packaged Alembic revisions and owned models/tables |
-| `LegacyBaseline(revision, validate)` | Explicit adoption boundary approved by a domain-specific validator |
-| `MigrationStatus` | `schema_revision`, `target_revision`, `pending_migrations`, `migration_backend`, `schema_version`, `migration_error` |
-| `run_migrations(engine, spec, *, owner, schema)` | Host startup: applies packaged revisions atomically before traffic |
-| `inspect_migrations(engine, spec, *, owner, schema)` | Reads/validates history without creating migration infrastructure |
-| `check_migrations(engine, spec, *, owner, schema)` | Reports owned model/schema differences; does not apply or stamp |
-| `generate_revision(engine, spec, *, owner, schema, message, autogenerate=True)` | Writes a source draft; returns `None` for an empty diff |
-
-Plugins declare `get_migration_spec()`; the SDK/platform host owns execution.
-Do not call `run_migrations()` from an HTTP handler. Developer `mint db`
-commands only inspect or author revisions. An existing database needs a
-validated adoption plan before changing backends, and an Alembic database
-cannot silently reopen through the legacy path.
-
-The following integer migration API remains supported for existing plugins.
-Do not declare both hooks on one plugin. See [Migrations](/sdk/api/migrations)
-for full signatures and [migration upgrade guidance](/admin/updates#upgrading-from-mint-1-1).
-
-Source: [v@MINT_VERSION@ migration contract](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations/runtime.py).
-
-| Symbol | Description |
-|--------|-------------|
-| `PluginMigration` | Base class — set `version: int` and `name: str` class attrs |
-| `MigrationOps` | Portable DDL helpers (10 methods: add_column, drop_column, rename_column, alter_column, create_table, drop_table, create_index, drop_index, backfill, execute) |
-| `MigrationRunner` | Applies pending migrations via `run()` and `discover()` |
-| `MigrationResult` | Dataclass with `current_version`, `applied`, `stamped`, `errors` |
+`MigrationSpec` (also exported from `mint_sdk`), the Alembic runtime functions and the legacy `PluginMigration` API are documented in [Migrations reference](/sdk/api/migrations).
 
 ## Testing harness
 
