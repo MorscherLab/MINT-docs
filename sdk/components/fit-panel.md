@@ -1,14 +1,14 @@
 ---
 aside: false
 title: FitPanel
-description: "FitPanel is a layout component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "FitPanel is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends."
 ---
 
-<p class="mint-component-library__eyebrow">Layout</p>
+<p class="mint-component-library__eyebrow">Lab widgets</p>
 
 # FitPanel
 
-FitPanel is a layout component exported by @morscherlab/mint-sdk for plugin frontends.
+FitPanel is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

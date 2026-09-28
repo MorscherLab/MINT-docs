@@ -157,8 +157,8 @@ export default defineConfig({
             { text: 'First analysis plugin', link: '/sdk/tutorials/first-analysis-plugin' },
             { text: 'Adding a frontend', link: '/sdk/tutorials/adding-a-frontend' },
             { text: 'Design plugin with tables', link: '/sdk/tutorials/design-plugin-with-tables' },
-            { text: 'Types & workflow plugin', link: '/sdk/tutorials/plugin-types-workflow' },
             { text: 'Plugin roles', link: '/sdk/tutorials/plugin-roles' },
+            { text: 'Types & workflow plugin', link: '/sdk/tutorials/plugin-types-workflow' },
           ],
         },
         {

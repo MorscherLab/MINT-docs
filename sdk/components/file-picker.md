@@ -4,7 +4,7 @@ title: FilePicker
 description: "Adapter-driven file and folder selection with tree navigation, search, and metadata preview."
 ---
 
-<p class="mint-component-library__eyebrow">Theming + utilities</p>
+<p class="mint-component-library__eyebrow">Forms</p>
 
 # FilePicker
 

@@ -64,8 +64,8 @@ experience cannot be described by typed job inputs and standard result views.
 | 1 | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | Scaffold `hello-mint` in `generated` mode, run a `@job`, test it with `PluginTestHarness`, and build a `.mint` bundle |
 | 2 | [Adding a frontend](/sdk/tutorials/adding-a-frontend) | Scaffold `hello-standard` in `standard` mode, call `@endpoint` handlers through the generated client, and render an SDK form |
 | 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | Build an experiment-design plugin with SQLModel tables, CRUD routes, and migrations |
-| 4 | [Types and workflow plugin](/sdk/tutorials/plugin-types-workflow) | Create a workflow that manages experiments without taking design ownership |
-| 5 | [Plugin roles](/sdk/tutorials/plugin-roles) | Add plugin-specific viewer/editor/admin roles and enforce them in backend routes |
+| 4 | [Plugin roles](/sdk/tutorials/plugin-roles) | Add plugin-specific viewer/editor/admin roles and enforce them in backend routes |
+| 5 | [Types and workflow plugin](/sdk/tutorials/plugin-types-workflow) | Create a workflow that manages experiments without taking design ownership |
 
 The tutorials are written so you can follow them in order without reading the full API reference first. Each step links to the concept page or recipe you need at that moment.
 

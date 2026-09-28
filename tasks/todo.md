@@ -8,7 +8,7 @@
 - [x] A4 CLI: admin CLI page in `admin/cli`; `sdk/api/cli-reference` sole flag table; drop duplicate platform section.
 - [ ] A5 Single home per duplicated topic (plugin types, runtimes, migrations, component tables, proxy/first-run).
 - [ ] A6 "since X" notes + release tables -> `changelog.md` "Notable changes".
-- [ ] A7 Delete `sdk/frontend/components.md`, `playground.md`; FitPanel category; tutorial order roles=4, workflow=5.
+- [x] A7 Delete `sdk/frontend/components.md`, `playground.md`; FitPanel category; tutorial order roles=4, workflow=5.
 - [ ] A8 Update README layout + CLAUDE.md architecture section.
 - [ ] Build passes; commit.
 

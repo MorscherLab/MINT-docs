@@ -26,7 +26,6 @@ const groups: Record<ComponentCategory, string[]> = {
     'PluginIcon',
     'Breadcrumb',
     'Divider',
-    'FitPanel',
     'LayoutResizeHandle',
     'ResourceCard',
     'CollapsibleCard',
@@ -97,6 +96,7 @@ const groups: Record<ComponentCategory, string[]> = {
     'BasePill',
   ],
   'Lab widgets': [
+    'FitPanel',
     'WellPlate',
     'RackEditor',
     'SampleLegend',

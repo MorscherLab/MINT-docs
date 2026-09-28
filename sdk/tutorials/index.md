@@ -26,6 +26,7 @@ You do not need to read the whole SDK reference first. When a tutorial introduce
 | 2 | [Adding a frontend](/sdk/tutorials/adding-a-frontend) | `hello-standard` | `standard` mode plugin with `@endpoint` handlers, a Vue 3 workspace, and the generated typed client |
 | 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | `panel-designer` | `EXPERIMENT_DESIGN` plugin with SQLModel tables, CRUD endpoints, local SQLite, and installed-mode migrations |
 | 4 | [Plugin roles](/sdk/tutorials/plugin-roles) | `panel-designer` | Plugin-specific `viewer` / `editor` / `admin` roles enforced by backend routes and reflected in the UI |
+| 5 | [Types and workflow plugin](/sdk/tutorials/plugin-types-workflow) | `batch-coordinator` | `WORKFLOW` plugin that manages experiments without taking design ownership |
 
 The first two tutorials are intentionally separate projects. `generated` mode is the fastest first plugin; `standard` mode is the custom UI path. The last two build a design plugin, which mirrors real MINT deployments: design plugins usually define experiment structure, while analysis plugins read experiments and attach results.
 
