@@ -495,7 +495,7 @@ The tables above cover the core surface. Every other package-root export is list
 | `mint_sdk.design_validation` | `FieldError`, `validate_design_data`, `ensure_valid_design_data` |
 | `mint_sdk.endpoint` | `PluginRouterMount` |
 | `mint_sdk.exceptions` | `UnsupportedExperimentTypeException`, `EventVetoException`, `DesignDataOwnershipConflictException`, `get_plugin_exception_status_code` |
-| `mint_sdk.filesystem` | `FileBrowser`, `ServerMount`, `MountInfo`, `DirectoryEntry`, `DirectoryListing`, `PathCrumb`, `EntryKind`, `SortKey`, `MountNotFoundError`, `MountPathError`, `MountPathNotFoundError` |
+| `mint_sdk.filesystem` | `FileBrowser`, `file_browser_router`, `ServerMount`, `MountInfo`, `MountListResponse`, `DirectoryEntry`, `DirectoryListing`, `DirectoryTree`, `SearchResult`, `PathCrumb`, `EntryKind`, `SortKey`, `MountNotFoundError`, `MountPathError`, `MountPathForbiddenError`, `MountPathNotFoundError` |
 | `mint_sdk.instruments` | `InstrumentComponent`, `InstrumentCreate`, `InstrumentUpdate`, `InstrumentRecord`, `InstrumentRepository` |
 | `mint_sdk.instrument` | `AlertLevel`, `InstrumentAlert`, `InstrumentAlertBody`, `InstrumentState`, `InstrumentStatus`, `SampleInfo`, `SequenceProgress`, `build_sequence_progress` |
 | `mint_sdk.integrations` | `NotificationSeverity`, `NotificationChannel`, `NotificationEvent`, `NotificationDispatchError`, `CalendarEvent`, `CalendarEventCancellation`, `CalendarPublishError`, `notify`, `calendar_event` |
