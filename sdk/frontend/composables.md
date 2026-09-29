@@ -453,7 +453,7 @@ Each resolved target provides a container element, a starting value, and an `onR
 
 ### File picker adapters
 
-`usePlatformFilePickerAdapter()` connects `FilePicker` to authenticated platform mounts. `createFilePickerAdapter()` instead accepts a transport with `listMounts(request?)` and `browse(location, request?)`, allowing a generated plugin client to reuse the SDK's navigation and search. Both accept `rootLocation` to confine browsing to a mount-relative directory.
+`usePlatformFilePickerAdapter()` connects `FilePicker` to authenticated platform mounts. `createFilePickerAdapter()` instead accepts a transport with `listMounts(request?)` and `browse(location, request?)`, plus optional `tree` and `search`, allowing a generated plugin client to reuse the SDK's navigation and search. Both accept `rootLocation` to confine browsing to a mount-relative directory.
 
 Preserve abort signals and explicit refresh flags in custom transports. Decode opaque server selections with `decodePlatformPickerPath()` before calling mount-scoped backend APIs. See [the complete picker example and cache behavior](/sdk/frontend/platform-integration#adapter-driven-filepicker).
 
