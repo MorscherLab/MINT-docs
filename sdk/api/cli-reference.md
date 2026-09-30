@@ -87,8 +87,9 @@ Tokens are stored per host in `~/.config/mint/credentials.json`, or `$XDG_CONFIG
 
 | Command | Purpose |
 |---------|---------|
-| `mint auth login [--url URL] [--username\|-u USER]` | Log in and store the token; prompts for missing values. A host without a scheme gets `https://` |
-| `mint auth logout [--url URL]` | Discard the stored token for `URL` (default: the current host) |
+| `mint auth login [--url URL] [--read-only]` | Sign in with a device code: prints a code to type at `<externalUrl>/device` in a signed-in browser, where you approve the request and pick the token lifetime; the CLI then stores the personal access token it is granted. `--read-only` asks for a read-only token. A host without a scheme gets `https://` |
+| `mint auth login --token [--url URL]` | Store an existing personal access token instead (prompted, or read from stdin) |
+| `mint auth logout [--url URL]` | Revoke the stored personal access token on the platform and discard it (default: the current host) |
 | `mint auth status` | Print the current host and user |
 | `mint auth token create <name> [--days 30\|90\|365] [--read-only] [--json]` | Issue a personal access token (default lifetime 90 days) and print it once, with a `claude mcp add` command for the platform's `/mcp` endpoint |
 | `mint auth token list [--json]` | List your personal access tokens by prefix, access, expiry and last use |
@@ -520,7 +521,7 @@ Review every generated revision before release. See [migrations](/sdk/concepts/m
 
 | Path | Purpose |
 |------|---------|
-| `~/.config/mint/credentials.json` | Per-user JWT storage (written by `mint auth login`; honors `XDG_CONFIG_HOME`) |
+| `~/.config/mint/credentials.json` | Per-user token storage (written by `mint auth login`; honors `XDG_CONFIG_HOME`) |
 | `<plugin>/pyproject.toml` | Plugin dependencies, entry points, build config |
 | `<workspace>/MINT/config.dev.toml` | Dev proxy mapping (created by `mint dev --platform`) |
 

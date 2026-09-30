@@ -39,7 +39,7 @@ MINT-docs/
     theme/              # MINT brand color overrides
     public/
       CNAME             # mint-docs.morscherlab.org
-      mint-icon.png     # site icon (master in MorscherLab/MINT/assets/)
+      mint-icon.png     # site icon (master in MorscherLab/MINT at frontend/public/logo.png)
   .github/workflows/
     deploy.yml          # build + GitHub Pages on push to main
 ```

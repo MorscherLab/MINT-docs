@@ -28,12 +28,12 @@ If the command isn't found, the install location isn't on your `PATH`. With `uv 
 mint auth login --url https://mint.morscherlab.org
 ```
 
-Prompts for the platform URL if none is stored, your username or email, and your password, then stores the resulting JWT in `~/.config/mint/credentials.json` (or `$XDG_CONFIG_HOME/mint/credentials.json`). Subsequent commands use it automatically.
+Prompts for the platform URL if none is stored, then prints a short code and the platform's `/device` address (`<externalUrl>/device`), and opens it when run in a terminal. Open that page in a browser where you are signed in, type the code, choose the token lifetime and approve. The CLI then stores the personal access token it is granted in `~/.config/mint/credentials.json` (or `$XDG_CONFIG_HOME/mint/credentials.json`). Subsequent commands use it automatically. Add `--read-only` for a read-only token, or pass `--token` to paste an existing personal access token instead. Password login (`--username`) was removed in 1.3.
 
 | Subcommand | Purpose |
 |------------|---------|
-| `mint auth login` | Acquire a JWT for the given platform URL |
-| `mint auth logout` | Discard the stored JWT |
+| `mint auth login` | Sign in with a device code and store a personal access token for the given platform URL |
+| `mint auth logout` | Revoke the stored token on the platform and discard it |
 | `mint auth status` | Print the active platform URL, user, expiration |
 | `mint auth token create\|list\|revoke` | Manage your personal access tokens for scripts and AI assistants |
 
@@ -135,7 +135,7 @@ mint experiment list --project-id 12 --status ongoing --json \
   | xargs -n1 -I{} mint experiment update {} --status completed
 ```
 
-Authentication tokens expire after `auth.tokenExpireMinutes` (7 days by default). For long-running scripts, catch 401s and re-run `mint auth login`; the Python `MINTClient` can attempt token refresh automatically during requests.
+The token stored by `mint auth login` is a personal access token: it lasts the lifetime chosen at approval (30, 90 or 365 days, capped by `auth.patMaxLifetimeDays`). For unattended scripts, pass a dedicated token as `MINT_TOKEN` rather than relying on the stored one.
 
 ## What `mint` is not
 

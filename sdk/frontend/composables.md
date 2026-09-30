@@ -8,8 +8,6 @@ This page covers the public **@MINT_VERSION@** composables and helper factories 
 | Composable | What it returns | When to reach for it |
 |------------|-----------------|----------------------|
 | `useApi` | Axios-based API wrapper | Platform routes outside the plugin contract |
-| `useAuth` | Login/logout/register/token helpers | Authentication flows |
-| `usePasskey` | WebAuthn registration / login flows | Building passkey UX |
 | `useTheme` | Theme state + toggle | Light/dark switcher |
 | `useToast` | Toast dispatcher | User feedback |
 | `usePlatformContext` | Integration, plugin, user, theme, feature flags | Plugins mounted inside the platform shell |
@@ -17,7 +15,6 @@ This page covers the public **@MINT_VERSION@** composables and helper factories 
 | `useFormBuilder` | Schema-driven form runtime | The `FormBuilder` component (rare to use directly) |
 | `defineControls`, `defineControlModel` | Typed compact control schemas | Generate FormBuilder, SettingsModal, AppSidebar, and ControlWorkspaceView bindings from one model |
 | `useControlSchema`, `useControlWorkspace` | Derived form/sidebar/topbar/component bindings | Custom generated workspaces |
-| `useWellPlateEditor` | Well-plate state + helpers | Plate-design UIs |
 | `useRackEditor` | Rack state, undo/redo, and `PlateEditor` listeners | Holding the plates of a [`PlateEditor`](/sdk/components/plate-editor) |
 | `useConcentrationUnits` | Concentration parsing / conversion | Anything dealing with µM / mg/mL / % |
 | `useDoseCalculator` | Dilution + serial-dilution math | Drug-screening tools |
@@ -172,16 +169,15 @@ const settingsConfig = settings.settingsConfig
 
 The return shape includes `settings`, `values`, `config`, `settingsConfig`, `isLoading`, `isSaving`, `error`, `lastLoadedAt`, `lastSavedAt`, `isDirty`, `load()`, `save()`, `reset()`, and `setValues()`. Load the saved values before editing. The helper tracks revisions internally, sends changed fields through platform PATCH routes, and uses `If-Match` for managed plugin PUT saves. Surface conflicts; do not discard unsaved edits with an automatic reload.
 
-### `useAuth`
+### `useAuthStore`
 
-Authentication actions and token helpers. Reactive auth state lives in the Pinia auth store.
+Reactive identity and permission state. The platform signs users in, refreshes the token and handles passkeys; a plugin only reads the result. `useAuth` and `usePasskey` were removed in 1.3.
 
 ```ts
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useAuth, useAuthStore } from '@morscherlab/mint-sdk'
+import { useAuthStore } from '@morscherlab/mint-sdk'
 
-const { login, logout, initializeAuth, updateProfile } = useAuth()
 const authStore = useAuthStore()
 const { userInfo, isAuthenticated, isLoading, error } = storeToRefs(authStore)
 
@@ -189,14 +185,9 @@ const { userInfo, isAuthenticated, isLoading, error } = storeToRefs(authStore)
 const canConfigurePlugins = computed(() =>
   authStore.hasPermission('plugins.configure')
 )
-
-// Programmatic logout
-function signOut() {
-  logout()
-}
 ```
 
-`useAuth()` returns methods such as `login`, `logout`, `register`, `verifyToken`, `refreshToken`, `initializeAuth`, `getCurrentUser`, `getAuthHeader`, and `updateProfile`. `useAuthStore()` exposes `userInfo`, `isAuthenticated`, `isAdmin`, `needsAuth`, `isLoading`, and `error` as reactive store state. Plugin roles are separate; fetch them from your plugin's own `/me/role` endpoint as needed.
+`useAuthStore()` exposes `token`, `userInfo`, `isAuthenticated`, `isAdmin`, `needsAuth`, `permissions`, `isLoading`, and `error`, plus `hasPermission(...)` and `canAccessPlugin(name)`. Plugin roles are separate; fetch them from your plugin's own `/me/role` endpoint as needed.
 
 ### `useToast`
 

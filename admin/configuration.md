@@ -149,6 +149,7 @@ aliases such as `MINT_S3_ACCESS_KEY_ID`, `MINT_S3_SECRET_ACCESS_KEY`,
 | `tokenExpireMinutes` | `10080` (7 days) | Token lifetime; the admin UI accepts 15–43200 |
 | `failedLoginLimit` | `5` | Failed password logins before the account is locked |
 | `loginLockoutMinutes` | `15` | Lockout duration |
+| `requireSecondFactor` | `true` | Require a passkey after a password or edu-ID sign-in. Enforced only with auth and passkeys on, dev mode off and an `https://` `server.externalUrl`; see [Second factor](/admin/authentication#second-factor) |
 | `patMaxLifetimeDays` | `365` | Longest lifetime a [personal access token](/admin/authentication#personal-access-tokens) may be issued for: `30`, `90` or `365` |
 
 See [Security settings](#security-settings) for how these behave.
@@ -336,6 +337,7 @@ Nested keys use `__` (double underscore) as the separator, and `MINT_` as the pr
 | `server.trustedProxyCidrs` | `MINT_SERVER__TRUSTED_PROXY_CIDRS` |
 | `auth.jwtSecretKey` | `MINT_AUTH__JWT_SECRET_KEY` |
 | `auth.allowRegistration` | `MINT_AUTH__ALLOW_REGISTRATION` |
+| `auth.requireSecondFactor` | `MINT_AUTH__REQUIRE_SECOND_FACTOR` |
 | `auth.patMaxLifetimeDays` | `MINT_AUTH__PAT_MAX_LIFETIME_DAYS` |
 | `audit.retentionDays` | `MINT_AUDIT__RETENTION_DAYS` |
 | `database.databaseName` | `MINT_DATABASE__DATABASENAME` |

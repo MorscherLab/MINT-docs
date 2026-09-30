@@ -34,7 +34,7 @@ Plus `index.md` (home), `team.md` (Vue components from `vitepress/theme`), and `
 
 `.vitepress/config.ts` is the single source of truth for nav bar, sidebar groups, search, and the GitHub edit-link pattern. **Adding a page requires two edits**: create the `.md` file, then register it in the matching `sidebar` group in `config.ts` — otherwise it won't appear in navigation.
 
-`.vitepress/theme/` only adds `custom.css` on top of the default theme (MINT brand color overrides — indigo primary + orange CTA). The brand palette there is intentionally kept in sync with `packages/sdk-frontend/src/styles/variables.css` in the MINT platform repo — change both together if you change either. `.vitepress/public/` ships static assets straight to the site root — notably `CNAME` (custom domain) and `mint-icon.png` (mastered in the platform repo under `assets/MINT-ICON-1024x1024@1x.png`). The Vite config sets `publicDir` explicitly so the CNAME survives builds run from any cwd.
+`.vitepress/theme/` only adds `custom.css` on top of the default theme (MINT brand color overrides — indigo primary + orange CTA). The brand palette there is intentionally kept in sync with `packages/sdk-frontend/src/styles/variables.css` in the MINT platform repo — change both together if you change either. `.vitepress/public/` ships static assets straight to the site root — notably `CNAME` (custom domain) and `mint-icon.png` (mastered in the platform repo as `frontend/public/logo.png`). The Vite config sets `publicDir` explicitly so the CNAME survives builds run from any cwd.
 
 Edit links in the footer point to `MorscherLab/MINT-docs` on GitHub. The dev server uses `lastUpdated` git timestamps, which is why CI checks out with `fetch-depth: 0`.
 

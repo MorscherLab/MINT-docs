@@ -49,7 +49,7 @@ If you scaffolded with `mint init --mode standard`, all of this is already done.
    ```bash
    bun add @morscherlab/mint-sdk@^@MINT_VERSION@
    ```
-   Peer dependencies: `vue` ^3.5, `pinia` ^2.1, ^3 or ^4, `tailwindcss` ^4.1, and optionally `vue-router` ^4.2 or ^5 and `@simplewebauthn/browser` ^14 (passkeys).
+   Peer dependencies: `vue` ^3.5, `pinia` ^2.1, ^3 or ^4, `tailwindcss` ^4.1, and optionally `vue-router` ^4.2 or ^5.
 
 2. **Import design tokens** in your app entry:
    ```css

@@ -26,14 +26,11 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 | Composable | Returns | Purpose |
 |------------|---------|---------|
 | `useApi` | typed fetch helper | Auth-aware API calls |
-| `useAuth` | auth actions and token helpers | Login/logout/register flows |
-| `usePasskey` | passkey registration / login | WebAuthn flows |
 | `useTheme` | theme state + setter | Theme switcher |
 | `useToast` | toast dispatcher | User feedback |
 | `usePlatformContext` | integration, plugin, user, theme, features | Platform shell context |
 | `useForm` | reactive form state | Manual form management |
 | `useFormBuilder` | schema-driven form runtime | `FormBuilder` component |
-| `useWellPlateEditor` | plate state + helpers | Plate-design UIs |
 | `useRackEditor` | rack state, undo/redo, `plateEditorListeners` | Hold the plates of a `PlateEditor` |
 | `useConcentrationUnits` | concentration math | µM / mg/mL / % conversions |
 | `useDoseCalculator` | dilution math | Dose-response calculators |
