@@ -7,7 +7,6 @@ This guide targets MINT **@MINT_VERSION@**. Start with the [standard frontend tu
 | Need | Public API | Important boundary |
 |------|------------|--------------------|
 | Embedded/standalone mode, platform user, theme, navigation | `usePlatformContext()` | Describes the host; it does not own login or the experiment picker |
-| Login actions and token lifecycle | `useAuth()` | Actions such as `initializeAuth()`, `login()`, `logout()` |
 | Reactive authentication and permission state | `useAuthStore()` | `isAuthenticated`, `needsAuth`, `userInfo`, and permission helpers |
 | Experiment selected by the workspace picker | `useExperimentStore()` | Shared selection for the plugin's Pinia instance |
 | Top-bar experiment selector/save/detach UX | `PluginWorkspaceView experiment-shell` or `useAppExperiment()` | Reads the shared experiment store |
@@ -44,26 +43,16 @@ Detection happens on mount using the injected `window.__MINT_PLATFORM__` context
 
 ## Authentication
 
-The SDK's API helpers use the auth store's bearer token. `useAuth()` returns methods; read reactive state from `useAuthStore()`:
+The SDK's API helpers use the auth store's bearer token. The platform owns sign-in, token refresh and passkeys; a plugin reads identity and permissions from `useAuthStore()` and never logs a user in itself (`useAuth` and `usePasskey` were removed in 1.3):
 
 ```ts
-import { onMounted } from 'vue'
-import { useAuth, useAuthStore } from '@morscherlab/mint-sdk'
+import { useAuthStore } from '@morscherlab/mint-sdk'
 
-const auth = useAuth()
 const authState = useAuthStore()
-
-// For a custom shell that owns authentication initialization.
-onMounted(async () => {
-  await auth.initializeAuth()
-})
-
-async function signIn(username: string, password: string): Promise<boolean> {
-  return auth.login(username, password)
-}
+const canEdit = authState.hasPermission('experiments.edit')
 ```
 
-Render `authState.needsAuth`, `authState.isLoading`, and `authState.error` in the surrounding login UI. Use the SDK's existing workspace/account controls where they cover the flow. Do not assume `usePlatformContext().user` automatically initializes an auth store or grants access. Hiding a button is only presentation; protect its endpoint on the backend too.
+Use `authState.needsAuth`, `authState.isLoading`, and `authState.error` to gate the page. Do not assume `usePlatformContext().user` automatically initializes an auth store or grants access. Hiding a button is only presentation; protect its endpoint on the backend too.
 
 ## Select, load, edit, and save an experiment
 

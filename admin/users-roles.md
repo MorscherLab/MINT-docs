@@ -8,7 +8,7 @@ MINT controls access with a **system role** per user plus project membership. Th
 
 People get an account by self-registration (on by default, controlled by `auth.allowRegistration`) or from an admin with `mint admin user create`. See [Authentication → Accounts and registration](/admin/authentication#accounts-and-registration).
 
-**Admin -> People -> Users** (needs `users.view`) lists accounts. With `users.manage` you can edit a user, change the role, reset the password, deactivate, reactivate, or delete.
+**Admin -> People -> Users** (needs `users.view`) lists accounts. With `users.manage` you can edit a user, change the role, reset the password, reset the passkeys (see [Recovery](/admin/authentication#recovery)), deactivate, reactivate, or delete.
 
 ## System roles
 

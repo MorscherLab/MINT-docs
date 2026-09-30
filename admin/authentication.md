@@ -1,6 +1,6 @@
 # Authentication
 
-MINT supports three sign-in methods: username or email plus password, WebAuthn passkeys (a security key, Touch ID, Windows Hello, or another passkey-capable authenticator), and optional SWITCH edu-ID single sign-on. A passkey is an alternative way to sign in, not a second factor.
+MINT supports three sign-in methods: username or email plus password, WebAuthn passkeys (a security key, Touch ID, Windows Hello, or another passkey-capable authenticator), and optional SWITCH edu-ID single sign-on. By default a password or edu-ID sign-in must be followed by a passkey step; see [Second factor](#second-factor).
 
 > [Screenshot: login page showing the password form, the "SWITCH edu-ID" button, and "Continue with Passkey"]
 
@@ -12,7 +12,7 @@ MINT supports three sign-in methods: username or email plus password, WebAuthn p
 | **Passkey (WebAuthn)** | Nothing - your device authenticates you | A public key only | Per-device unless you sync via iCloud Keychain / Google Password Manager |
 | **SWITCH edu-ID** | Your institutional edu-ID login | A linked external identity and normal MINT user record | Yes |
 
-All methods can be enabled at the same time. Users sign in with a password, register a passkey from their profile, link an edu-ID account, and then choose the available method on the login page.
+All methods can be enabled at the same time. Users sign in with a password or edu-ID, confirm with a passkey (or register one on first sign-in), and can then sign in with the passkey alone.
 
 ## Accounts and registration
 
@@ -60,13 +60,29 @@ The passkey relying-party ID and origin come from:
 
 Set `server.rpId` to your public host name in production. A passkey is bound to its relying-party ID, so changing the host name later makes existing passkeys unusable.
 
+## Second factor
+
+`auth.requireSecondFactor` (default `true`, env `MINT_AUTH__REQUIRE_SECOND_FACTOR`, **Admin -> Platform -> Configuration -> Authentication -> Second factor**) makes a passkey the second step after a password or edu-ID sign-in. A direct **Continue with Passkey** sign-in already proves two factors and stays one step.
+
+It is enforced only when authentication and passkeys are enabled, dev mode is off, **and `server.externalUrl` starts with `https://`**; `server.rpId` alone does not count. A site that does not meet this stays single-factor and shows a warning at startup and in the admin panel, so an upgrade locks nobody out. Behind a TLS proxy, set an HTTPS `server.externalUrl` or the second factor stays off.
+
+When enforced:
+
+- After the password or edu-ID step, an account with a passkey confirms with it. An account without one must enrol one before it can continue; there is no skip.
+- Sessions issued before the upgrade do the passkey step once, without retyping the password.
+- A password-only session is refused with 401 `auth.second_factor_required` on every route, including plugin routes, plugin frontends and the admin terminal.
+- A user cannot delete their last passkey.
+- Personal access tokens, service tokens and `/mcp` are unchanged. Scripts, CI and the Python `MINTClient` must use a personal access token: `MINTClient.login(username, password)` raises `auth.second_factor_required`. The `mint` CLI signs in with a device code approved in the browser; see [CLI](/admin/cli#authenticate).
+
 ## Recovery
 
 | Scenario | Resolution |
 |----------|------------|
-| Lost passkey, password still known | Sign in with the password, then remove the old credential and register a new passkey from **Your account -> Security**. |
+| Lost passkey, password still known | Without an enforced second factor, sign in with the password, then remove the old credential and register a new passkey from **Your account -> Security**. With it, ask an admin to reset the passkeys (next row). |
+| Lost every passkey | An admin opens **Admin -> People -> Users** and chooses **Reset passkeys** for the user. This removes all of the user's passkeys and ends their sessions; at the next sign-in they enrol a new one. It needs `users.manage`, cannot be used on your own account, and is recorded as `passkey.admin_reset`. |
 | Forgotten password | An admin resets it from **Admin -> People -> Users**. There is no self-service email reset. |
-| All authenticators lost | Ask an admin to reset the password after the lab's normal identity check, then register a fresh passkey. |
+| Password and every passkey lost | After the lab's normal identity check, an admin resets the password and the passkeys; the user signs in and enrols a fresh passkey. |
+| Last administrator lost their passkey | Set `MINT_AUTH__REQUIRE_SECOND_FACTOR=false`, restart, sign in with the password, replace the passkey in **Your account -> Security**, then unset the variable and restart. |
 | Account compromised | An admin deactivates or deletes the user from **Admin -> People -> Users**, then restores access after a password reset and passkey review. |
 
 Resetting passwords and deactivating users needs `users.manage`, and only for users whose role does not outrank yours (see [Users & roles](/admin/users-roles#who-can-manage-whom)).

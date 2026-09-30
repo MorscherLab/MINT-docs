@@ -59,6 +59,8 @@ When `timeout=None`, the client uses the shared platform transport policy: `MINT
 
 `login`, `logout`, and `whoami` are thin wrappers over `client.auth`.
 
+On a platform that enforces a second factor (`auth.requireSecondFactor`), `login` raises `auth.second_factor_required` and stores no token; use a personal access token (`MINT_TOKEN`) there.
+
 ## Resource clients
 
 `MINTClient` exposes typed sub-clients per resource. Each is a `@cached_property` that lazy-imports its module on first access:

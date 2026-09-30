@@ -154,7 +154,8 @@ Remove `get_migrations_package()` in the same change. `plugin_name` is the plugi
 | `ProgressBar` `variant="segmented"`, `steps`, `currentStep`, `ProgressVariant` | [`StepWizard`](/sdk/components/step-wizard) for steps; [`ProgressBar`](/sdk/components/progress-bar) `value` / `indeterminate` for percentages |
 | `useAsync`, `useOptimisticMutation` | `useRequestSyncState()` |
 | `useResourceCrud` | `useGeneratedPluginClient()` |
-| `useWellPainting`, `useWellPlateAdapter`, `useWellPlateValidation` | `useWellPlateEditor()` |
+| `useWellPainting`, `useWellPlateAdapter`, `useWellPlateValidation`, `useWellPlateEditor` | `useRackEditor()` |
+| `useAuth`, `usePasskey` | `useAuthStore()` for identity and permissions; sign-in, token refresh and passkeys are handled by the platform |
 | `useCommandHistory` | None |
 | `usePluginConfig` | `usePluginSettings()` |
 | SmartGroup `--grp-1` … `--grp-5`, `--grp-qc` | `var(--mint-sample-N)` |
@@ -181,15 +182,16 @@ Remove `get_migrations_package()` in the same change. `plugin_name` is the plugi
 | `vue` | `^3.5.0` |
 | `pinia` | `^2.1.0 \|\| ^3.0.0 \|\| ^4.0.0` |
 | `vue-router` (optional) | `^4.2.0 \|\| ^5.0.0` |
-| `@simplewebauthn/browser` (optional) | `^14.0.0` |
 | `tailwindcss` | `^4.1.0` |
 
-New `mint init` projects pin pinia `^4`, vue-router `^5`, vitest `^5`, vue-tsc `^3` and jsdom `^30`. Existing projects can stay on pinia 2/3 and vue-router 4; a project that uses passkeys must move `@simplewebauthn/browser` to 14.
+New `mint init` projects pin pinia `^4`, vue-router `^5`, vitest `^5`, vue-tsc `^3` and jsdom `^30`. Existing projects can stay on pinia 2/3 and vue-router 4. The optional `@simplewebauthn/browser` peer is gone with `usePasskey`; remove it unless the plugin uses it directly.
 
 ## Platform behavior plugins see
 
 - Routes of in-process plugins, including job, generated-manifest and WebSocket routes, enforce `plugins.use` (403 `plugin.permission_denied`) and the role's plugin access (403 `plugin.not_visible`), as the proxy already did for subprocess plugins.
 - The plugin proxy never forwards a personal access token to a plugin; identity headers stand in. Writes with a read-only token are refused with 403 `auth.read_only_token`.
+- Where the platform enforces a second factor (`auth.requireSecondFactor`, see [Authentication](/admin/authentication#second-factor)), a password-only session is refused with 401 `auth.second_factor_required` on every route, plugin routes and frontends included. Scripts and CI use a personal access token.
+- `mint auth login` signs in with a device code; `mint auth login --username` is removed. Use `--token` to store an existing personal access token.
 
 ## Update and verify the plugin
 
