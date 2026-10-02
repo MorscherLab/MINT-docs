@@ -27,6 +27,10 @@ This component renders a piece of the SDK's backend-driven **generated UI** syst
 import { GeneratedResultRenderer } from "@morscherlab/mint-sdk/components"
 ```
 
+## Artifact downloads
+
+For an `artifact` result with a `download_url`, the renderer downloads the file through the SDK transport. The transport adds the Bearer credential. With auth enabled, the platform does not read the session cookie on plugin routes. A plain link or a `fetch` without a Bearer gets a 401, so do not use them for plugin routes.
+
 ## Basic Usage
 
 ```vue

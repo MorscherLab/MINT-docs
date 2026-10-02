@@ -62,16 +62,18 @@ For what the platform does at each phase from the plugin side, see [Lifecycle](/
 
 1. The marketplace service confirms the registry entry is compatible with the running platform version.
 2. The plugin manager downloads the GitHub release asset matching `source.asset_pattern`.
-3. If the asset is a `.mint` bundle, the platform checks the bundle manifest's `requires_mint` specifier unless the admin explicitly forces the install.
+3. If the asset is a `.mint` bundle, the platform reads the bundle's `manifest.json` and checks its `requires_mint` specifier unless the admin explicitly forces the install. A bundle without `manifest.json` is rejected with "Invalid .mint bundle: bundle has no manifest.json". Rebuild it with `mint build`, which always writes the manifest.
 4. The plugin's `mint-sdk` requirement is checked against the platform's own `mint-sdk`. Plugins always run the platform's `mint-sdk`, so a plugin that excludes it is rejected, for example: `Plugin requires mint-sdk<1.3, platform has 1.3.0.` The same check runs for isolated installs and on startup restore.
 5. The [plugin dependency lock](#plugin-dependency-lock) is recompiled with the new plugin. A lock that cannot be resolved blocks the install; a lock that changes or removes packages other plugins use is reported as a conflict (retry-with-force dialog).
 6. The package or bundle is installed exactly as the new lock pins it, the source artifact is recorded for restore, and the previous lock is kept in the lock history.
 7. The platform reports whether a restart is required before the plugin is loaded.
 8. On startup, MINT discovers the entry point, applies migrations, resolves plugin settings, runs `initialize(context)`, and mounts endpoints, jobs, generated UI, and frontend assets.
 
+A GitHub plugin update whose bundle is invalid is refused when MINT stages it, not at the next start. If a staged plugin update is later missing or not a valid ZIP archive, or excludes the running platform, MINT sets it aside under `<server.dataPath>/updates/failed/plugins` with the reason and starts normally.
+
 If install fails, the operation reports the failing step and leaves the plugin uninstalled or requiring administrator cleanup, depending on where the failure occurred. Dependency conflicts surface as a retry-with-force dialog; use that only when you understand the dependency change.
 
-Plugin installs (including installs from GitHub), upgrades, uninstalls, lock rollbacks, and plugin, platform and SDK updates run one at a time. A second operation waits until the first one finishes.
+Plugin installs (including installs from GitHub), upgrades, uninstalls, lock rollbacks, and plugin and platform updates run one at a time. A second operation waits until the first one finishes.
 
 > [Screenshot: install progress dialog with each step ticking through]
 
@@ -147,6 +149,22 @@ Rolling back applies a lock from `history/` and makes it current. There is no UI
 
 A lock compiled for another platform version is refused, so rollback cannot undo a platform upgrade. Rollback restores Python packages only; it does not undo plugin database migrations.
 
+## Plugin requests and credentials
+
+With authentication enabled, every request to a plugin route needs an `Authorization: Bearer` credential. This applies to the plugin proxy and to in-process plugin routes. The credential is one of:
+
+- a session token;
+- a [personal access token](/admin/authentication#personal-access-tokens);
+- a [service token](/admin/authentication#service-tokens), which reaches only the routes of its own plugin.
+
+| Situation | Response |
+|-----------|----------|
+| No credential, or one that does not resolve (including a deactivated account) | 401 `auth.required` |
+| MINT cannot reach the database to check the credential | 503 `auth.unavailable` |
+| A read-only personal access token sends a write | 403 `auth.read_only_token` |
+
+MINT does not read the session cookie for plugin routes, and a plugin cannot declare a public path. A plugin that checked its own ingest key must use a service token instead. Plugin frontends call the API through the SDK client, which sends the Bearer credential. With authentication disabled, plugin routes stay open.
+
 ## Isolation
 
 Plugins run with one of two isolation strategies:
@@ -156,7 +174,7 @@ Plugins run with one of two isolation strategies:
 | **Shared environment** | When dependency sets are compatible | Plugin shares the platform's venv |
 | **Per-plugin venv** | When the plugin's manifest entry installs it as a subprocess | `uv` creates a separate venv; plugin runs in a subprocess and the platform proxies HTTP to it |
 
-A subprocess plugin gets its own hashed `plugin.lock` next to its persisted wheel, and its venv is installed and restored with `uv pip install --no-deps -r plugin.lock`. When that lock pins a different `mint-sdk` than the platform (after a platform upgrade), MINT recompiles it and rebuilds the venv.
+A subprocess plugin gets its own hashed `plugin.lock` next to its persisted wheel, and its venv is installed and restored with `uv pip install --no-deps -r plugin.lock`. MINT installs `mint-sdk[server]` into each plugin venv, so `uvicorn` comes from the SDK and the plugin does not declare it. An offline `find-links` directory must therefore also hold the `uvicorn[standard]` wheels. When that lock pins a different `mint-sdk` than the platform (after a platform upgrade), MINT recompiles it and rebuilds the venv.
 
 In both cases the plugin's HTTP surface is mounted at the `routes_prefix` declared by the plugin. The user can't tell from the URL whether the plugin is in-process or out-of-process; the platform handles the proxy transparently.
 

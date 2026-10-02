@@ -16,9 +16,11 @@ The login page offers up to three ways in, depending on how your admin set up MI
 - **Continue with Passkey** — a passkey on your device (Touch ID, Windows Hello, a security key). Register one from **Your account -> Security**.
 - **SWITCH edu-ID** — your institutional login, if your lab enabled it.
 
-No account yet? If the login page shows **No account yet? Create one**, you can register yourself; passwords need at least 8 characters, and new accounts start with the Member role. If the link is missing, ask your admin to create an account for you.
+No account yet? If the login page shows **No account yet? Create one**, you can register yourself; passwords need at least 8 characters and at most 72 bytes (UTF-8), and new accounts start with the Member role. An admin must activate a new account before you can sign in. If the link is missing, ask your admin to create an account for you.
 
 If your lab requires a second factor (the default on HTTPS sites), a password or edu-ID sign-in is followed by a passkey prompt. Without a passkey yet, MINT asks you to register one before you continue. If you lose every passkey, ask an admin to reset them.
+
+If you enter the right password for an account that an admin has not activated yet, MINT shows **Waiting for approval** instead of a password error. Ask an admin to activate the account in **Admin -> People -> Users**. Waiting does not count toward the lockout.
 
 After five failed password attempts, the account is locked for 15 minutes by default.
 
@@ -32,9 +34,10 @@ After logging in, the **Home** page shows:
 
 - **Needs you** reminders and the lab **Notice board**
 - **Experiments** and **Projects** cards, each with a switch to show only yours
-- A **Plugins** launcher with the plugins your role may open; pin the ones you use most
+- An **Instruments** card with live instrument status, when your role can view instruments
+- A **Plugins** launcher with the plugins your role may open, shown by display name; search by name or plugin ID and pin the ones you use most
 
-Use the top navigation to open the full **Experiments** and **Projects** lists. **Instruments** in the top navigation opens the lab's [shared instrument directory](/guide/instruments).
+Use the **Experiments** menu in the top navigation to open the full **Experiments** and **Projects** lists. **Instruments** in the top navigation opens the [live status of the lab's instruments](/guide/instruments).
 
 > [Screenshot: home dashboard with projects, experiments, and plugins highlighted]
 

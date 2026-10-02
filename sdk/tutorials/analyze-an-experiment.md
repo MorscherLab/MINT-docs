@@ -4,7 +4,7 @@ Build **panel-summary**, an `ANALYSIS` plugin that reads the design of a visible
 
 This connects Tutorial 1 (a typed calculation) to real platform data. It reads designs published by the **panel-designer** plugin from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), whose design payload is `{"panel": {"name": ..., "drugs": [...]}}`.
 
-**Prereqs:** Python 3.12+, `uv`, the `mint` CLI from `mint-sdk[cli]==@MINT_VERSION@`, Docker for `mint verify`, and a test MINT platform with panel-designer installed.
+**Prereqs:** Python 3.14+, `uv`, the `mint` CLI from `mint-sdk[cli]==@MINT_VERSION@`, Docker for `mint verify`, and a test MINT platform with panel-designer installed.
 
 ## 1. Scaffold a generated plugin
 

@@ -37,7 +37,7 @@ docker compose -f deploy/docker/docker-compose.yml up -d --build --wait
 docker compose -f deploy/docker/docker-compose.yml logs -f app
 ```
 
-The Compose file builds `deploy/docker/Dockerfile`, starts PostgreSQL 17, and keeps the database in the `mint-postgres-data` volume. Platform config, objects, plugin state and the uv wheel cache (`UV_CACHE_DIR=/app/data/cache/uv`) live in the repository's `data/` directory, mounted at `/app/data`. Keeping the cache on the volume lets a rebuilt image restore plugins from their [dependency lock](/admin/plugins#plugin-dependency-lock) without downloading them again.
+The Compose file builds `deploy/docker/Dockerfile` (based on `python:3.14-slim`), starts PostgreSQL 17, and keeps the database in the `mint-postgres-data` volume. Platform config, objects, plugin state and the uv wheel cache (`UV_CACHE_DIR=/app/data/cache/uv`) live in the repository's `data/` directory, mounted at `/app/data`. Keeping the cache on the volume lets a rebuilt image restore plugins from their [dependency lock](/admin/plugins#plugin-dependency-lock) without downloading them again.
 
 The Compose file also sets `MINT_RESTART_SUPERVISED=1`: the `app` service has `restart: unless-stopped`, so Docker starts MINT again after a restart that MINT requests itself. This is what allows [scheduled updates](/admin/updates#scheduled-updates).
 

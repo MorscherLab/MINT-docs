@@ -73,7 +73,7 @@ Dev mode is for local development and evaluation only. Never enable it on a host
 | `instanceId` | generated if empty | Durable deployment namespace for public identifiers |
 | `rpId` | `""` | WebAuthn relying-party ID |
 | `rpName` | `MINT` | WebAuthn relying-party display name |
-| `externalUrl` | `""` | Public platform URL, used for frontend/plugin context, to decide whether auth cookies are `Secure`, and as the only non-local host `/mcp` accepts |
+| `externalUrl` | `""` | Public platform URL, used for frontend/plugin context, to decide whether auth cookies are `Secure`, and as the only non-local host `/mcp` accepts. Plugin `platformOrigin` and the OAuth URLs use only its origin (scheme, host and non-default port); a path in the value is ignored |
 | `trustedProxyCidrs` | `["127.0.0.1/32", "::1/128"]` | Proxy source networks trusted for `X-Forwarded-For` / `X-Forwarded-Host` / `X-Forwarded-Proto`. An explicit `[]` trusts no proxy |
 | `healthReadyToken` | `""` | Bearer token that lets a monitor read `GET /api/health/ready` without a user login; empty means only users with `platform.view_logs` can read it |
 
@@ -157,7 +157,7 @@ See [Security settings](#security-settings) for how these behave.
 ## Security settings
 
 - **Self-registration.** With `auth.allowRegistration: false`, `POST /api/users/register` returns 403 and the `/register` page sends visitors to `/login`. Switch it under **Admin -> Platform -> Configuration -> Authentication -> Registration**, in `config.json`, or with `MINT_AUTH__ALLOW_REGISTRATION=false`.
-- **Passwords.** Every password (registration, self-service change, admin create, update and reset) must be at least 8 characters. Shorter ones are rejected with 422.
+- **Passwords.** Every password (registration, self-service change, admin create, update and reset) must be at least 8 characters and at most 72 bytes when UTF-8 encoded. Other lengths are rejected with 422.
 - **Account lockout.** After `auth.failedLoginLimit` failed password logins, the account is locked for `auth.loginLockoutMinutes`.
 - **Rate limit.** `/api/auth`, `/api/passkey`, `/api/setup` and `/api/users/register` allow 20 requests per 60 seconds per client IP, then return 429.
 - **Secure cookies.** The `mint_access_token` and `passkey_session` cookies carry `Secure` when `server.externalUrl` starts with `https://`, or, if it is unset, when the request arrived over HTTPS. If `externalUrl` is `https://` but users open MINT over plain HTTP, the browser drops the cookie and login fails.

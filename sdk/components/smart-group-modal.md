@@ -10,6 +10,10 @@ description: "Two-mode smart grouping shell combining auto field recipes and man
 
 `SmartGroupModal` is the full Smart Group UI. It switches between the auto field-recipe flow and the manual cohort builder with `v-model:mode`.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**. Use [SampleSelector](/sdk/components/sample-selector) for sample grouping; the SDK has no other replacement.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SmartGroupModal.vue">Source</a>

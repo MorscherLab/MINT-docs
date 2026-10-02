@@ -122,7 +122,7 @@ mint update check
 mint update apply --yes
 ```
 
-`mint update check` reports platform, SDK, and plugin update sources. `mint update apply` applies the latest platform update and requires `platform.configure`.
+`mint update check` reports platform and plugin update sources. `mint update apply` applies the latest platform update and requires `platform.configure`.
 
 ## Scripting tips
 

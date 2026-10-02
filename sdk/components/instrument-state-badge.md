@@ -10,10 +10,6 @@ description: "InstrumentStateBadge is a data display component exported by @mors
 
 InstrumentStateBadge is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
 
-::: warning Deprecated
-Scheduled for removal in **MINT 1.4**. Instrument UI moves to the mld-ms plugins; the SDK has no replacement.
-:::
-
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/InstrumentStateBadge.vue">Source</a>
@@ -26,6 +22,23 @@ Scheduled for removal in **MINT 1.4**. Instrument UI moves to the mld-ms plugins
 ```ts
 import { InstrumentStateBadge } from "@morscherlab/mint-sdk/components"
 ```
+
+## States
+
+The `state` prop takes an `InstrumentBadgeState`: the `InstrumentState` values plus `never` and `inactive`. Other strings render as a muted badge with a capitalized label.
+
+| State | Label | Tone |
+|-------|-------|------|
+| `running` | Running | info |
+| `connected` | Connected | success |
+| `standby` | Standby | warning |
+| `error` | Error | error |
+| `idle` | Idle | muted |
+| `disconnected` | Offline | muted |
+| `never` | Never reported | muted |
+| `inactive` | Inactive | muted |
+
+`never` and `inactive` are states that the platform derives. `never` means the instrument has sent no report yet. `label` replaces the default label. `pulseWhenRunning` (default `true`) pulses the badge in the `running` state.
 
 <!-- sdk-props:start -->
 ## Props

@@ -43,12 +43,12 @@ The **Access tokens** table lists each token's name and prefix, access (**full**
 
 To revoke a token, click **Revoke**, then **Confirm** within a few seconds. The token stops working at once. Expired tokens show **Remove** instead.
 
-Changing your password does not revoke your tokens. If a token may have leaked, revoke it. Admins can also see and revoke every user's tokens; see [Authentication](/admin/authentication).
+A token cannot create or revoke tokens. Sign in to the web UI to manage them. Changing your password does not revoke your tokens. If a token may have leaked, revoke it. Admins can also see and revoke every user's tokens; see [Authentication](/admin/authentication).
 
 ## Use a token with the API or CLI
 
 - **REST API**: send the token as `Authorization: Bearer mint_pat_...`. It works on every platform route and on plugin routes. A read-only token is refused (403) on anything other than `GET`, `HEAD`, and `OPTIONS`.
-- **`mint` CLI and Python client**: set the `MINT_TOKEN` environment variable. See [mint CLI](/admin/cli) and the [CLI reference](/sdk/api/cli-reference) for token commands.
+- **`mint` CLI and Python client**: run `mint auth login` and approve the code in your browser, or set the `MINT_TOKEN` environment variable. Add `--read-only` to `mint auth login` for a read-only token. See [mint CLI](/admin/cli) and the [CLI reference](/sdk/api/cli-reference) for token commands.
 
 ## What an AI assistant can do over MCP
 
@@ -56,7 +56,7 @@ Every tool runs as you and respects your role, project access, and plugin visibi
 
 | Group | Tools | Available to read-only tokens |
 |-------|-------|:---:|
-| **Read** | `mint_whoami`, `mint_search_experiments`, `mint_get_experiment`, `mint_list_plugins`, `mint_get_design`, `mint_list_artifacts`, `mint_get_artifact` | Yes |
+| **Read** | `mint_whoami`, `mint_search_experiments`, `mint_get_experiment`, `mint_list_plugins`, `mint_get_design`, `mint_list_artifacts`, `mint_get_artifact`, `mint_list_instruments` (needs `instruments.view`) | Yes |
 | **Write** | `mint_create_experiment`, `mint_save_design`, `mint_save_artifact`, `mint_archive_artifact`, `mint_restore_artifact` | No |
 | **Jobs** | `mint_start_job`, `mint_get_job`, `mint_get_job_result`, `mint_cancel_job` | Status and results only |
 | **Plugin tools** | Tools, prompts, and resources that installed plugins publish, named `<plugin>_<name>` | Read tools only |

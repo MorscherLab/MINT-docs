@@ -10,6 +10,10 @@ description: "DoseDesignWorkspaceView is a workflow component exported by @morsc
 
 DoseDesignWorkspaceView is a workflow component exported by @morscherlab/mint-sdk for plugin frontends.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**. Use [ControlWorkspaceView](/sdk/components/control-workspace-view) with `defineDoseDesignControlModel()` instead.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/DoseDesignWorkspaceView.vue">Source</a>

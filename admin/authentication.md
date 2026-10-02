@@ -23,7 +23,7 @@ Accounts come from two places:
 
 Anyone who can reach the login page can register while self-registration is on. To turn it off, switch off **Admin -> Platform -> Configuration -> Authentication -> Registration** (needs `platform.configure`), or set `auth.allowRegistration` to `false` in `config.json` (or `MINT_AUTH__ALLOW_REGISTRATION=false`), then restart. The `/register` page then sends visitors to `/login`, and the registration API returns 403.
 
-Every password (registration, profile change, admin create or reset) must be at least 8 characters.
+Every password (registration, profile change, admin create or reset) must be at least 8 characters and at most 72 bytes when UTF-8 encoded. A longer new password gets 422 `validation.request`. Sign-in still accepts a longer password and checks its first 72 bytes, so older accounts keep working.
 
 ## Sign in with a password
 
@@ -78,7 +78,7 @@ When enforced:
 
 | Scenario | Resolution |
 |----------|------------|
-| Lost passkey, password still known | Without an enforced second factor, sign in with the password, then remove the old credential and register a new passkey from **Your account -> Security**. With it, ask an admin to reset the passkeys (next row). |
+| Lost passkey, password still known | Without an enforced second factor, sign in with the password, then remove the old credential and register a new passkey from **Your account -> Security**. With it, ask an admin to choose **Reset passkeys** for your account (next row). |
 | Lost every passkey | An admin opens **Admin -> People -> Users** and chooses **Reset passkeys** for the user. This removes all of the user's passkeys and ends their sessions; at the next sign-in they enrol a new one. It needs `users.manage`, cannot be used on your own account, and is recorded as `passkey.admin_reset`. |
 | Forgotten password | An admin resets it from **Admin -> People -> Users**. There is no self-service email reset. |
 | Password and every passkey lost | After the lab's normal identity check, an admin resets the password and the passkeys; the user signs in and enrols a fresh passkey. |
@@ -130,11 +130,38 @@ For administrators:
 | Accepted by | Every REST route as `Authorization: Bearer`, the plugin proxy, and `/mcp`. The plugin proxy does not forward the token to plugins |
 | Ends | On revocation, on expiry, or when the account is deactivated. A password change does **not** revoke tokens |
 
-**Admin -> People -> Access Tokens** (needs `users.manage`) lists every user's unrevoked tokens and revokes any of them. The API equivalents are `GET /api/admin/tokens` and `DELETE /api/admin/tokens/{id}`. Creating and revoking tokens is recorded in the audit log as `api_token.create` and `api_token.revoke`.
+**Admin -> Platform -> Access Tokens** (needs `users.manage`) lists every user's unrevoked tokens and revokes any of them. The API equivalents are `GET /api/admin/tokens` and `DELETE /api/admin/tokens/{id}`. Creating and revoking tokens is recorded in the audit log as `api_token.create` and `api_token.revoke`.
 
-> [Screenshot: Admin -> People -> Access Tokens listing tokens of several users with a Revoke action]
+> [Screenshot: Admin -> Platform -> Access Tokens listing tokens of several users with a Revoke action]
 
 When an account is compromised, deactivate it: sessions and tokens of an inactive account are refused. Revoke its tokens before reactivating it.
+
+## Service tokens
+
+A service token is a credential for an instrument daemon that reports to a plugin. A daemon cannot use a person's session or personal access token for this job. Plugin authors: see [Instrument status](/sdk/recipes/instrument-status).
+
+Create a service token in **Admin -> Platform -> Service Tokens**. The section needs both `users.manage` and `instruments.edit`. Click **New token** and set:
+
+| Field | Meaning |
+|-------|---------|
+| **Name** | A label for the token |
+| **Plugin** | The one plugin the token belongs to. The list shows only plugins that declare `instrument_status_write` |
+| **Instruments** | A subset of the instruments granted to that plugin. At least one |
+| **Expires** | 90 days, 365 days or Never (default) |
+
+MINT shows the secret once. Copy it before you close the dialog.
+
+| Property | Behavior |
+|----------|----------|
+| Format | Starts with `mint_svc_`. MINT stores only a digest |
+| Reach | Only the routes of its own plugin. The plugin must still declare the capability, and the token must name an instrument that the plugin's grant still holds; otherwise the request gets 403 `plugin.service_token_scope`. REST `/api` routes and `/mcp` do not accept service tokens |
+| Plugin sees | MINT removes the token from the request and adds `X-MINT-Service-Token-Id` and `X-MINT-Instrument-Ids` |
+| Ends | On revocation or expiry. Click **Revoke**, then **Confirm**, in the token table |
+| Audit | `service_token.create` and `service_token.revoke` |
+
+The API equivalents are `GET` and `POST /api/admin/service-tokens` and `DELETE /api/admin/service-tokens/{id}`. A personal access token cannot create a service token; sign in as a user.
+
+The **Instruments** list shows only the instruments granted to the selected plugin. Grant them in the **Instrument status** block of the plugin's access settings (**Admin -> Plugins -> Installed -> plugin actions -> Access control**). Setting that grant needs `instruments.edit`.
 
 ## Disabling authentication
 
@@ -148,7 +175,7 @@ MINT takes the client IP from `X-Forwarded-For` only when the request comes from
 
 ## Audit log
 
-MINT records security-relevant events in the database, including `auth.login_success` and `auth.login_failure` for password and passkey logins, `user.register`, `api_token.create` and `api_token.revoke`, MCP write calls (`mcp.tool_call`), and project, experiment, and plugin changes. Read them through the API; there is no audit page in the UI yet. See [Audit log](/admin/platform-settings#logs-and-audit-log).
+MINT records security-relevant events in the database, including `auth.login_success` and `auth.login_failure` for password and passkey logins, `user.register`, `api_token.create` and `api_token.revoke`, `service_token.create` and `service_token.revoke`, `passkey.admin_reset`, MCP write calls (`mcp.tool_call`), and project, experiment, and plugin changes. Read them through the API; there is no audit page in the UI yet. See [Audit log](/admin/platform-settings#logs-and-audit-log).
 
 For tracing, MINT can export OpenTelemetry spans for FastAPI, SQLAlchemy, and logging when `observability.enabled` is `true`.
 

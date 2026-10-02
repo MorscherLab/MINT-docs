@@ -10,8 +10,9 @@ Deprecated components and props, scheduled for removal in MINT 1.4:
 
 | Component or prop | Replacement |
 |-------------------|-------------|
-| `InstrumentStateBadge`, `SequenceProgressBar` | None in the SDK; instrument UI moves to the mld-ms plugins |
-| `AutoGroupModal` | `SmartGroupModal` |
+| `SmartGroupModal`, `SmartGroupFieldRecipe`, `SmartGroupManual`, `GroupAssigner`, `AutoGroupModal` | None in the SDK; use `SampleSelector` for sample grouping |
+| `BioTemplateExperimentWorkspaceView`, `BioTemplatePackWorkspaceView`, `BioTemplatePresetWorkspaceView`, `BioTemplateRenderer`, `ReagentList`, `ReagentEditor`, `ExperimentTimeline`, `SampleLegend`, `FitPanel` | None in the SDK |
+| `DoseDesignWorkspaceView` | `ControlWorkspaceView` with `defineDoseDesignControlModel()` |
 | `WellPlate` `showSampleTypeIndicator` (no-op) | None; the sample-type marker encodes the type |
 | `JobsStatusTray` `adapter`, `jobs`, `eventStream` | Pass a `source` |
 | `AppSidebar` `dense` | Compact is the default; `density="comfortable"` for the roomier layout |
@@ -91,7 +92,23 @@ Scheduled for removal in MINT 1.4:
 |------------|-------------|
 | `usePluginClient` | `useGeneratedPluginClient()` |
 | `useJobsStatusTray` (and its `adapter`, `jobs`, `eventStream` options) | `usePluginJobCenter()` with a `PluginJobCenterSource` |
-| `useAutoGroup` | `SmartGroupModal` |
+| `useAutoGroup` | None in the SDK; use `SampleSelector` for sample grouping |
+| `useGroupAssignment` | None in the SDK |
+| `useExperimentSave` | None in the SDK |
+| `useTemplateCollection` | None in the SDK |
+| `useBioTemplateControls`, `useBioTemplateComponents`, `useBioTemplateWorkspace`, `useBioTemplatePresetWorkspace`, `useBioTemplatePackWorkspace` | None in the SDK |
+
+### Removed composables
+
+These composables are no longer exported. `mint doctor` reports them with their replacements. See [Migrate 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3).
+
+| Composable | Replacement |
+|------------|-------------|
+| `useAsync`, `useOptimisticMutation` | `useRequestSyncState()` |
+| `useResourceCrud` | `useGeneratedPluginClient()` |
+| `useWellPainting`, `useWellPlateEditor` | `useRackEditor()` with `PlateEditor` |
+| `useWellPlateAdapter`, `useWellPlateValidation`, `useCommandHistory` | None in the SDK; keep the adapter, the rules, or the command stack in the plugin |
+| `usePluginConfig` | `usePluginSettings()` |
 
 ## Stores and access policies
 
@@ -221,14 +238,15 @@ import {
 } from '@morscherlab/mint-sdk'
 ```
 
-Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `FileDirectoryListing`, `UseFileBrowserOptions`, `UseFileBrowserReturn`, and `UseRequestSyncStateReturn`. For the full list, use the release [composable exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/index.ts) and [type exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/types/index.ts).
+Instrument types include `InstrumentBadgeState`, `InstrumentLiveStatus`, `InstrumentLiveProgress`, `InstrumentStatusReporter`, and `InstrumentAlertList`. Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `FileDirectoryListing`, `UseFileBrowserOptions`, `UseFileBrowserReturn`, and `UseRequestSyncStateReturn`. For the full list, use the release [composable exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/index.ts) and [type exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/types/index.ts).
 
 ## Notes
 
 - Examples use Vue 3 Composition API and `<script setup lang="ts">`; call lifecycle-aware composables inside component setup.
-- Prefer named imports. Installing `MINTSdk` globally registers the SDK components; do not assume that a global install includes only one component. `PlotlyChart` loads its Plotly runtime on mount.
+- Prefer named imports. Installing `MINTSdk` globally registers the SDK components; do not assume that a global install includes only one component. `PlotlyChart` loads its Plotly runtime on mount. See [PlotlyChart](/sdk/components/plotly-chart#plotly-4-builds-and-types) for Plotly setup.
 - Current plugin scaffolds import Tailwind v4 and the SDK style bundle from `frontend/src/style.css`: `@import "tailwindcss";` then `@import "@morscherlab/mint-sdk/styles";`. Keep the SDK import unlayered so Tailwind preflight cannot outrank SDK component styles. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
 - For plugin-scoped API calls, prefer `useGeneratedPluginClient()` from `frontend/src/generated/mint-plugin.ts`; use raw `useApi()` for platform APIs outside the plugin contract.
+- With auth enabled, plugin routes need a Bearer credential; the platform does not read the session cookie there. Do not call them with a plain `<a href>` link or a `fetch` without a Bearer: the platform answers 401. Use the generated client, `downloadGeneratedPluginEndpoint()`, or `downloadPluginEndpoint()`.
 - Dropdown, menu, and picker panels share the `.mint-popover` class hooks (menu rows use `.mint-menu-item`). Style those instead of `.mint-action-menu__panel` or `.mint-searchable-select__panel`; the old classes remain as aliases until MINT 1.4.
 - `mint doctor` flags legacy `usePluginApi()`, private SDK subpath imports, direct frontend composable file subpaths, raw plugin API `fetch('/api/...')` calls, and the removed `AppSidebar` `variant` prop (in `.vue` files and in agent docs such as `CLAUDE.md` / `AGENTS.md`).
 

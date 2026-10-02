@@ -10,7 +10,7 @@ You'll need:
 
 | | |
 |---|---|
-| **Python** | 3.12 or newer |
+| **Python** | 3.14 or newer |
 | **uv** | Used by generated plugin projects |
 | **Bun** | latest (for frontend tutorials) |
 | **`mint` CLI** | Installed from `mint-sdk[cli]==@MINT_VERSION@`; see [CLI overview](/admin/cli) |

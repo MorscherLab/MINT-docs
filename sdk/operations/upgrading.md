@@ -34,8 +34,8 @@ dependencies = ["mint-sdk>=@MINT_VERSION@,<1.4"]
 [dependency-groups]
 dev = [
   "mint-sdk[cli,server]>=@MINT_VERSION@,<1.4",
-  "pytest>=8.0.0",
-  "pytest-asyncio>=0.23.0",
+  "pytest>=9.1.1",
+  "pytest-asyncio>=1.4.0",
 ]
 
 [tool.mint]
@@ -48,6 +48,19 @@ you own SQLModel tables. The SDK supplies its FastAPI/Pydantic/HTTPX stack;
 `[cli]` supplies Typer and `[server]` supplies Uvicorn. Do not duplicate their
 version policy in the plugin.
 
+## Python 3.14 and SDK-owned dependencies
+
+`mint-sdk` 1.3 requires Python 3.14. A plugin whose `requires-python` admits an older Python keeps resolving to `mint-sdk` 1.2. Set `requires-python = ">=3.14"` in `[project]`. `mint sdk update` to a 1.3 release does this for you (see below). Install Python 3.14 in CI as well.
+
+In the ruff configuration, set `target-version = "py314"` and add `UP037` to `ignore`. Unquoting an annotation that only `TYPE_CHECKING` imports breaks the SDK's runtime handler introspection.
+
+The SDK owns the versions of FastAPI, Starlette, Pydantic, HTTPX and the other shared libraries. A plugin that caps one of them below the SDK floor cannot install next to the SDK. Remove such a requirement and let `mint-sdk` supply it. `mint doctor` warns about direct declarations, `uvicorn` included. Check these changes in your code:
+
+- Starlette 1.x removed `on_startup`/`on_shutdown`, `on_event()`, `add_event_handler()`, `@app.route()`, `@app.websocket_route()`, `@app.exception_handler()` and `@app.middleware()` on a `Starlette` app. Use `lifespan`, `routes`, `exception_handlers` and `middleware`. `FileResponse(method=...)` is also removed.
+- A plugin table with `datetime` fields needs timezone-aware datetimes. See [Migrations](/sdk/api/migrations).
+- The typer release that the `cli` extra requires vendors Click. Click-specific customization of a Typer app does not work.
+- Starlette's `TestClient` warns when it falls back to `httpx`. The `cli` and `dev` extras supply `httpx2`, which it prefers.
+
 ## Select one SDK release
 
 ```bash
@@ -57,9 +70,13 @@ mint sdk update . --version @MINT_VERSION@
 
 The updater selects a common release available on PyPI and npm when both SDKs
 are declared. It synchronizes Python and frontend lockfiles to that release,
-normalizes supported legacy Python pins, removes redundant SDK-owned framework
-dependencies, and refreshes scaffolded assistant guidance. Review those changes
-before committing.
+normalizes supported legacy Python pins, and removes redundant SDK-owned framework
+dependencies. When the target is a 1.3 release, it raises `requires-python` to
+`>=3.14`. It only raises the value: upper bounds, exclusions, `~=`/`==` clauses
+and a stricter floor stay, and it refuses a result that excludes 3.14 (for
+example `<3.14` or `==3.12.*`). It does not rewrite AI instruction files
+(`CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules`) and prints a pointer
+to `mint doctor --fix`. Review the changes before committing.
 
 **The update target and compatibility floor are different.** Within a minor,
 updating the installed SDK does not raise an existing valid Python `>=` floor;
@@ -85,7 +102,7 @@ same range.
 `--verify` selects a **channel image**, not an exact image matching `--version`.
 Use `mint verify --image IMAGE` when your test must use one particular platform
 build. If synchronization or chained verification fails, the updater restores
-the dependency/guidance files it snapshotted; restoring installed environments
+the dependency files it snapshotted; restoring installed environments
 is best effort. Re-sync before continuing after a failure.
 
 The updater selects the newest candidate first, then checks bounds; it does

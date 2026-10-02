@@ -58,7 +58,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 <!-- sdk-props:end -->
 
-The component defaults to responsive rendering, hides the Plotly logo, and hides the modebar (`displayModeBar: false`; pass `config: { displayModeBar: true }` to restore it). It applies `mintPlotlyTemplate()` (MINT fonts, the `--mint-sample-1…8` group palette, token-based grid and axis colors) and re-reads it on every theme change. Your `layout` and `config` override those defaults.
+The component defaults to responsive rendering, hides the Plotly logo, hides the modebar (`displayModeBar: false`; pass `config: { displayModeBar: true }` to restore it), and sets `showSendToCloud: false`. Plotly 4 shows the modebar "Upload to Cloud" button by default, and that button sends the figure to cloud.plotly.com. The component applies `mintPlotlyTemplate()` (MINT fonts, the `--mint-sample-1…8` group palette, token-based grid and axis colors) and re-reads it on every theme change. Your `layout` and `config` override those defaults.
 
 With two or more legend traces, the series are listed in the chart header and a click toggles the trace. Set `headerLegend: false`, or set `layout.showlegend` (`true` keeps Plotly's in-plot legend, `false` shows none), to leave the legend to Plotly. Input traces/layout are copied before Plotly receives them, so Plotly's mutations do not modify caller-owned reactive state.
 
@@ -100,6 +100,15 @@ const selectedPoint = ref<number | null>(null)
 `plotly-click` emits Plotly's `PlotMouseEvent` only when `clickEvents` is enabled. `pointNumber` is the point index within its trace; use `curveNumber` or trace `customdata` when mapping a multi-trace plot to domain records. The SDK does not expose every Plotly event as a Vue emit.
 
 If your application already owns a compatible custom Plotly build, pass it through `:plotly="customPlotly"` to bypass the default lazy import. That build must include the trace types you use. Otherwise retain the SDK default; a custom build is optional.
+
+## Plotly 4 builds and types
+
+The SDK uses `plotly.js-dist-min` ^4.1.1. The SDK `dist/` does not bundle Plotly. `PlotlyChart` loads Plotly lazily from your plugin's `node_modules` when it first renders.
+
+- A plugin that calls `Plotly.newPlot` itself with `mintPlotlyTemplate()` does not get the `PlotlyChart` defaults. Pass `showSendToCloud: false` in the config.
+- Import Plotly types from `plotly.js-dist-min`. Do not use `@types/plotly.js`, which describes Plotly 3.
+- Remove any ambient `declare module 'plotly.js-dist-min'` shim. It hides the types that Plotly 4 ships, and the `PlotlyChart` prop types stop resolving.
+- Plotly 4 removes the `scattermapbox`, `choroplethmapbox`, and `densitymapbox` traces and the mapbox subplot. Figures that use them, such as plotly.py `px.*_mapbox` figures, do not render.
 
 ## Slots and behavior
 

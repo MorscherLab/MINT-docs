@@ -58,6 +58,10 @@ Use `authState.needsAuth`, `authState.isLoading`, and `authState.error` to gate 
 
 This complete page is for an **experiment-design plugin** whose entry-point key is `my-design`. It uses the platform picker and saves a small design payload. Replace `my-design` with your plugin ID and ensure the platform permits that plugin to edit the selected experiment.
 
+::: warning Deprecated
+`useExperimentSave()` is scheduled for removal in **MINT 1.4**. The SDK has no replacement.
+:::
+
 ```vue
 <script setup lang="ts">
 import { ref, watch } from 'vue'

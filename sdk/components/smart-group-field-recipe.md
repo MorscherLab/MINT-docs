@@ -10,6 +10,10 @@ description: "Auto grouping view that turns parsed sample-name fields into group
 
 `SmartGroupFieldRecipe` renders the automatic side of Smart Group: parsed sample fields, factor toggles, QC routing, upload/download actions, and a live group preview.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**. Use [SampleSelector](/sdk/components/sample-selector) for sample grouping; the SDK has no other replacement.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SmartGroupFieldRecipe.vue">Source</a>

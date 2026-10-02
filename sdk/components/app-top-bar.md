@@ -25,7 +25,11 @@ import { AppTopBar } from "@morscherlab/mint-sdk/components"
 
 ## Plugin identity
 
-Inside the platform, `AppTopBar` shows an integrated plugin's icon, name, and version as a static identity in place of `title` / `subtitle`; it is not a control. Users switch plugins from the platform home. Standalone plugins show `title` / `subtitle`. Every control is 32px high, so the bar stays 52px.
+Inside the platform, `AppTopBar` shows an integrated plugin's icon and name as a static identity. The name is `PluginInfo.display_name`; it falls back to `name` when the platform sends no display name. It takes the place of `title` / `subtitle` when no page selector is present. It is not a control. Users switch plugins from the platform home. Standalone plugins show `title` / `subtitle`. Every control is 32px high, so the bar stays 52px.
+
+## Pill navigation
+
+`pillNav` items take an optional `dot`. A `dot` shows a small error-colored dot after the label (for example, an unacknowledged critical alert). A pill with `children` opens a dropdown. When a child is the current item (`currentPillId`), the pill shows the label of that child.
 
 ## Toast positioning
 
