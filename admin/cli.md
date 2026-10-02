@@ -28,15 +28,16 @@ If the command isn't found, the install location isn't on your `PATH`. With `uv 
 mint auth login --url https://mint.morscherlab.org
 ```
 
-Prompts for the platform URL if none is stored, your username or email, and your password, then stores the resulting JWT in `~/.config/mint/credentials.json` (or `$XDG_CONFIG_HOME/mint/credentials.json`). Subsequent commands use it automatically.
+Prompts for the platform URL if none is stored, then prints a short code and the platform's `/device` address (`<externalUrl>/device`), and opens it when run in a terminal. Open that page in a browser where you are signed in, type the code, choose the token lifetime and approve. The CLI then stores the personal access token it is granted in `~/.config/mint/credentials.json` (or `$XDG_CONFIG_HOME/mint/credentials.json`). Subsequent commands use it automatically. Add `--read-only` for a read-only token, or pass `--token` to paste an existing personal access token instead. Password login (`--username`) was removed in 1.3.
 
 | Subcommand | Purpose |
 |------------|---------|
-| `mint auth login` | Acquire a JWT for the given platform URL |
-| `mint auth logout` | Discard the stored JWT |
+| `mint auth login` | Sign in with a device code and store a personal access token for the given platform URL |
+| `mint auth logout` | Revoke the stored token on the platform and discard it |
 | `mint auth status` | Print the active platform URL, user, expiration |
+| `mint auth token create\|list\|revoke` | Manage your personal access tokens for scripts and AI assistants |
 
-The credential file tracks one default host plus per-host tokens. To switch instances, run `mint auth login --url <other-url>`.
+The credential file tracks one default host plus per-host tokens. To switch instances, run `mint auth login --url <other-url>`. For unattended scripts, create a personal access token with `mint auth token create` and pass it as `MINT_TOKEN`; see [AI Assistants and API Access](/guide/ai-and-api) and the [CLI reference](/sdk/api/cli-reference#mint-auth).
 
 ## Experiments
 
@@ -112,7 +113,7 @@ For deeper operational status, use **Admin -> Platform -> Server** in the browse
 
 ## Restart and run the platform
 
-`mint platform restart` asks the configured platform to restart (requires `platform.configure`). All platform commands are also available under `mint platform …`, for example `mint platform admin user list`. `mint daemon` and `mint platform daemon start|stop|restart|status|logs` run the platform without Docker; see the [CLI reference](/sdk/api/cli-reference#platform-daemon-commands).
+`mint platform restart` asks the configured platform to restart (requires `platform.configure`). All platform commands are also available under `mint platform …`, for example `mint platform admin user list`. `mint daemon` and `mint platform daemon start|stop|restart|status|logs` run the platform without Docker; see the [CLI reference](/sdk/api/cli-reference#mint-daemon-and-mint-platform-daemon).
 
 ## Updates
 
@@ -121,7 +122,7 @@ mint update check
 mint update apply --yes
 ```
 
-`mint update check` reports platform, SDK, and plugin update sources. `mint update apply` applies the latest platform update and requires `platform.configure`.
+`mint update check` reports platform and plugin update sources. `mint update apply` applies the latest platform update and requires `platform.configure`.
 
 ## Scripting tips
 
@@ -134,7 +135,7 @@ mint experiment list --project-id 12 --status ongoing --json \
   | xargs -n1 -I{} mint experiment update {} --status completed
 ```
 
-Authentication tokens expire after `auth.tokenExpireMinutes` (7 days by default). For long-running scripts, catch 401s and re-run `mint auth login`; the Python `MINTClient` can attempt token refresh automatically during requests.
+The token stored by `mint auth login` is a personal access token: it lasts the lifetime chosen at approval (30, 90 or 365 days, capped by `auth.patMaxLifetimeDays`). For unattended scripts, pass a dedicated token as `MINT_TOKEN` rather than relying on the stored one.
 
 ## What `mint` is not
 

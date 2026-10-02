@@ -67,7 +67,7 @@ These rules also apply over isolated-plugin internal HTTP. Even `FULL` receives 
 | API | Use |
 |-----|-----|
 | `get_experiment_repository()` | Unified experiment CRUD, design, analysis, and artifact protocol |
-| `get_plugin_data_repository()` | MINT 1.1 compatibility adapter; design methods retain `*_experiment_data` names |
+| `get_instrument_repository()` | Shared platform instrument directory; reads need `instruments.view`, writes `instruments.edit`; bookings stay in the plugin |
 | `get_user_repository()` | Read user records |
 | `get_plugin_role_repository()` | Roles scoped to the current plugin |
 | `get_plugin_actor_dependency()` | Native FastAPI dependency returning a typed actor |

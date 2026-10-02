@@ -12,7 +12,7 @@ Gates a workspace behind a minimum viewport width, showing a desktop-required me
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/MobileSupportGate.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/MobileSupportGate.vue">Source</a>
 </div>
 
 <ComponentPlayground name="MobileSupportGate" />
@@ -34,7 +34,7 @@ import { MobileSupportGate } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/MobileSupportGate.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/MobileSupportGate.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

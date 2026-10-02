@@ -52,7 +52,7 @@ Set `server.externalUrl` to the public `https://` URL. MINT then marks its login
 Open the public URL in your browser. Until setup completes (`setupCompleted` in `config.json`), MINT shows the **Setup** wizard:
 
 1. **Database** — PostgreSQL host, port, database name, user, and password. **Test connection** checks them. The wizard saves these values to `config.json`, replacing the `database` block and `DB_USERNAME` / `DB_PASSWORD`.
-2. **Administrator** — username (at least 3 characters) and password (at least 8 characters).
+2. **Administrator** — username (at least 3 characters) and password (at least 8 characters, at most 72 bytes when UTF-8 encoded).
 3. **Restart** — MINT creates the admin account and asks for a restart before first login.
 
 > [Screenshot: setup wizard on the administrator step with the password requirements checklist]

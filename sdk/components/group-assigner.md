@@ -10,9 +10,13 @@ description: "GroupAssigner is a lab widgets component exported by @morscherlab/
 
 GroupAssigner is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**. Use [SampleSelector](/sdk/components/sample-selector) for sample grouping; the SDK has no other replacement.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/GroupAssigner.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/GroupAssigner.vue">Source</a>
 </div>
 
 <ComponentPlayground name="GroupAssigner" />
@@ -26,7 +30,7 @@ import { GroupAssigner } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/GroupAssigner.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/GroupAssigner.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -45,7 +49,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` GroupItem `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L175) | See the linked SDK type definition. |
+| [` GroupItem `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L178) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

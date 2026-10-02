@@ -10,10 +10,12 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | `mint` reports missing `typer` | Plain `mint-sdk` was installed without CLI dependencies | For a uv tool, run `uv tool install --force 'mint-sdk[cli]==@MINT_VERSION@'`; in a scaffolded project, run `uv sync` and use `uv run mint` |
 | Local serving reports missing `uvicorn` | Server dependencies are missing in the active environment | Keep `mint-sdk[cli,server]` in the project's dev dependency group, run `uv sync`, then `uv run mint dev` |
 | Port 8001 already in use | Another process is on the port | Stop the conflicting process or change `--port` in the systemd unit |
-| Browser shows "Cannot connect" | Platform process crashed | `journalctl -u mint -n 200` (direct install) or `docker compose logs mint` (Docker); restart |
+| Browser shows "Cannot connect" | Platform process crashed | `journalctl -u mint -n 200` (direct install) or `docker compose -f deploy/docker/docker-compose.yml logs app` (Docker); restart |
 | MINT starts but no logo / styles | Browser cached an old build | Hard-refresh with **⌘⇧R** (Mac) or **Ctrl+Shift+R** (Win/Linux) |
+| Restart takes a long time | A startup phase is slow, for example `plugin_restore` or `isolated_plugins` | Read the startup log. MINT writes one line per phase (`Startup phase '<name>' took 1.03s`) and a summary (`Startup complete in 3.90s (database=0.41s, ...)`). The phase with the largest time is the cause |
 | Migration fails with advisory-lock error | Two MINT processes started simultaneously | Stop one, let the other finish, restart |
-| Alembic plugin migration fails on startup | Migration, ownership, history or model/schema validation failed | The plugin remains disabled before initialization. Inspect migration status in **Admin -> Plugins -> Installed** and the platform logs; fix the cause in a reviewed plugin release. |
+| MINT exits at startup with "This database still uses the pre-Alembic integer migration history, which MINT 1.3 no longer runs" | The database was never started on MINT 1.2.2 or later, so it was not adopted into Alembic | Go back to your MINT 1.2.x deployment, upgrade it to 1.2.2 or later, start it once, then upgrade to 1.3. Do not create or stamp `alembic_version` by hand. See [Upgrading from MINT 1.1](/admin/updates#upgrading-from-mint-1-1) |
+| Plugin migration fails on startup | Migration, ownership, history or model/schema validation failed (Alembic or legacy migrations) | The plugin remains disabled before initialization. Inspect migration status in **Admin -> Plugins -> Installed** and the platform logs; fix the cause in a reviewed plugin release. |
 
 ## Authentication
 
@@ -22,8 +24,10 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Login loops back to the page | Cookies blocked for the platform domain, or `server.externalUrl` is `https://` while users open MINT over plain HTTP (the `Secure` auth cookie is then dropped) | Allow cookies and reload; open MINT at the `externalUrl` address over HTTPS, or correct `server.externalUrl` |
 | "Account is temporarily locked" | `auth.failedLoginLimit` (default 5) failed password logins | Wait `auth.loginLockoutMinutes` (default 15), then sign in again |
 | Login fails with the right password | The account is deactivated | Ask an admin to re-activate it under **Admin -> People -> Users** |
-| Password rejected when setting or changing it | Passwords must be at least 8 characters | Choose a longer password |
+| Password rejected when setting or changing it | Passwords must be at least 8 characters and at most 72 bytes in UTF-8 (422 `validation.request`) | Choose a password within these limits |
 | `/register` sends you to the login page | Self-registration is off (`auth.allowRegistration: false`) | Ask an admin to create your account |
+| Signed out after a password change | Changing a password revokes every earlier session of that account | Sign in again with the new password |
+| AI client gets 421 from `/mcp` | The request's `Host` is neither localhost nor the host of `server.externalUrl`; without `externalUrl`, only localhost is accepted | Set `server.externalUrl` to the address clients use (including a non-default port), make the reverse proxy pass the original `Host` header, and restart MINT |
 | Passkey prompt fails | Browser doesn't support WebAuthn, or platform is on `127.0.0.1` over HTTP from a non-localhost browser | Use a recent Chrome/Safari/Firefox/Edge; serve over HTTPS for non-loopback access. Behind a reverse proxy, add the proxy to `server.trustedProxyCidrs` so MINT honors `X-Forwarded-Host` |
 | SWITCH edu-ID button missing | `sso.eduid.enabled` is false or the frontend is still using cached auth config | Enable `sso.eduid`, reload the page, and confirm `/api/auth/config` returns `sso.eduid.enabled: true` |
 | edu-ID callback fails | Missing `server.externalUrl`, missing `openid` scope, or callback URL not registered with edu-ID | Set `server.externalUrl` to the public HTTPS URL and register `<externalUrl>/api/auth/sso/eduid/callback` with edu-ID |
@@ -43,9 +47,14 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| Plugin install fails with a dependency conflict | Plugin requires a clashing dep | The platform retries with an isolated venv automatically; if that also fails, the plugin's deps are inconsistent — open an issue against the plugin |
+| Plugin install fails with a dependency conflict | The plugin's requirements cannot be resolved together with the platform and the other plugins, or resolving them changes packages other plugins use | Read the conflict report (the old-vs-new lock difference). Retry with force only when you understand the change; an unresolvable lock cannot be forced. See [Plugin dependency lock](/admin/plugins#plugin-dependency-lock) |
+| Install fails with "Plugin requires mint-sdk<…, platform has …" | The plugin was built for a different `mint-sdk` range | Install a plugin release built for the running platform, or upgrade the platform |
+| After a platform upgrade, a plugin shows **Disabled by the dependency lock** | Startup reconcile found the plugin incompatible with the new platform, in conflict with an earlier-installed plugin, or not reinstallable from its lock | The row in **Admin -> Plugins -> Installed** shows the reason. Install a compatible plugin release, or uninstall the plugin. See [Startup reconcile](/admin/plugins#startup-reconcile) |
+| A plugin operation waits or a scheduled update is skipped | Plugin installs, upgrades, uninstalls, rollbacks and platform updates run one at a time | Wait for the running operation to finish; a scheduled batch retries every minute |
+| Plugin calls return 401 `auth.required` after an upgrade | The caller sends no `Authorization: Bearer` credential, or MINT cannot resolve it. Plugin routes do not read the session cookie | Send a session token, a personal access token or a service token. Use the SDK client in plugin frontends and scripts. Move a plugin that used its own ingest key to a [service token](/admin/authentication#service-tokens). See [Plugin requests and credentials](/admin/plugins#plugin-requests-and-credentials) |
+| Plugin calls return 503 `auth.unavailable` | MINT cannot reach the database to check the credential | Restore the database connection, then retry the request |
 | Plugin tile not visible to a user | The user's role lacks `plugins.use` or access to that plugin, or the user lacks the plugin role | Check the role under **Admin -> People -> Roles**, then **Admin -> Plugins -> Installed -> Access control** for the plugin role |
-| Plugin upgrade fails partway | Installation or migration failed | Inspect **Admin -> Plugins -> Installed** and logs. Package snapshots are best-effort recovery; they do not undo database changes. Use the verified deployment/database backup when needed. |
+| Plugin upgrade fails partway | Installation or migration failed | Inspect **Admin -> Plugins -> Installed** and logs. A failed install re-applies the previous lock; [lock rollback](/admin/plugins#rollback) restores Python packages but does not undo database changes. Use the verified deployment/database backup when needed. |
 | Plugin process keeps crashing | Plugin error in `initialize()` or a request handler | In development, run `mint dev logs backend --lines 100`; in production, use **Admin -> Platform -> Server**, **Admin -> Platform -> Logs**, or the platform service logs. If the failure came from a generated analysis run, also check the plugin page's job status tray. |
 | `mint dev` can't find the plugin | Working directory has no `pyproject.toml` with `mint.plugins` entry point | `cd` into the plugin root, or `mint init` to scaffold |
 | Plugin appears installed but routes return 404 | Plugin failed `initialize()` and the loader skipped mounting | **Admin -> Plugins -> Installed** shows the failure reason; fix and reload |
@@ -77,8 +86,9 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Platform update breaks a plugin | Plugin needs a fix for the new SDK | Restore the previous platform deployment/database backup until the plugin is updated |
 | Prereleases do not show up | Prerelease checks are disabled, or you're already on the newest tag | Set `updates.includePrereleases: true` if you intentionally want prereleases |
 | Docker container updates on restart when you did not expect it | Startup auto-update is enabled | Set `MINT_UPDATES__AUTO_APPLY_ON_STARTUP=false` and redeploy |
-| Docker startup auto-update is skipped but MINT still starts | The update was rejected safely; the entrypoint logs a warning and keeps the current runtime | Check `docker compose logs mint`, fix GitHub token/network/release access, then restart when ready |
-| Container exits with code 20 at startup | Staging or activating the update failed unsafely, so the entrypoint refuses to start | Read the `[mint-entrypoint] ERROR` line in `docker compose logs mint`; fix the cause or set `MINT_UPDATES__AUTO_APPLY_ON_STARTUP=false` |
+| Docker startup auto-update is skipped but MINT still starts | The update was rejected safely; the entrypoint logs a warning and keeps the current runtime | Check `docker compose -f deploy/docker/docker-compose.yml logs app`, fix GitHub token/network/release access, then restart when ready |
+| **Scheduled updates** toggle is disabled | No restart supervisor is declared ("Requires mint platform daemon or MINT_RESTART_SUPERVISED=1.") | Run MINT with `mint platform daemon`, or set `MINT_RESTART_SUPERVISED=1` under a supervisor that restarts it after a clean exit. See [Scheduled updates](/admin/updates#scheduled-updates) |
+| Container exits with code 20 at startup | Staging or activating the update failed unsafely, so the entrypoint refuses to start | Read the `[mint-entrypoint] ERROR` line in `docker compose -f deploy/docker/docker-compose.yml logs app`; fix the cause or set `MINT_UPDATES__AUTO_APPLY_ON_STARTUP=false` |
 
 ## Admin terminal
 
@@ -87,6 +97,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | **Admin -> Platform -> Terminal** shows disabled | `adminTerminalEnabled` is false | Set `MINT_ADMIN_TERMINAL_ENABLED=true` or `"adminTerminalEnabled": true`, then restart MINT |
 | Terminal tab missing | User lacks `platform.configure`, or admin tabs are filtered by role | Ask an admin to assign a role with `platform.configure` |
 | Terminal connects then closes | The short-lived WebSocket token expired or another session replaced it | Click connect again; only one terminal session per user is kept active |
+| Terminal closes with "access revoked" | The account was deactivated, its role lost `platform.configure`, or its session was revoked (for example by a password change) | Sign in again with an account that has `platform.configure` |
 | Startup command does not rerun after container recreation | Startup script was not saved/executable or path was overridden | Check `/app/data/admin-terminal/startup.sh` or `MINT_ADMIN_TERMINAL_STARTUP_SCRIPT` in container logs |
 
 ## Database / observability
@@ -98,29 +109,6 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | OpenTelemetry exporter errors in logs | OTLP endpoint unreachable | Set `observability.enabled: false` until fixed; the rest of the platform keeps working |
 | Auto-issued GitHub bug reports flooding | A recurring bug spams unique stack traces | Disable `errorReporting.enabled` until the bug is fixed |
 
-### Legacy database adoption
-
-Platform startup completes pending legacy integer migrations through v031 before
-validating the Alembic baseline. Errors naming missing history or baseline
-schema drift are genuine checks, not instructions to delete the migration
-ledger or stamp it manually.
-
-The adoption validator accepts `cancelled` experiments and
-preserves deliberate plugin-permission revocations and historical/custom Viewer
-roles. For a remaining data validation error, back up and inspect the listed
-fields and record IDs. The bridge only runs pending migrations; it does not
-repair invalid data left after a migration was already marked complete.
-
-`mint db current/check/revision` are developer inspection/authoring commands,
-not repair commands. The separate platform `python -m api.migrations
---database-url ...` command applies pending legacy migrations and normally runs
-implicitly at startup. Follow the [migration guide](/admin/updates#upgrading-from-mint-1-1)
-before using it explicitly.
-
-Release evidence: [changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md),
-[adoption validator](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/migrations/alembic_adoption.py),
-[plugin loader](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/plugins/loader.py).
-
 ## Hosted (lab) mode
 
 | Problem | Cause | Fix |
@@ -131,6 +119,6 @@ Release evidence: [changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VE
 
 ## Still stuck?
 
-1. **Check the logs** — `journalctl -u mint -n 200` (direct install), `docker compose logs mint` (Docker), or **Admin -> Platform -> Logs** in the UI — for error messages.
+1. **Check the logs** — `journalctl -u mint -n 200` (direct install), `docker compose -f deploy/docker/docker-compose.yml logs app` (Docker), or **Admin -> Platform -> Logs** in the UI — for error messages.
 2. **Search [GitHub issues](https://github.com/MorscherLab/MINT/issues)** — someone may have hit it before.
 3. **Open a new issue** with: MINT platform version (shown in the Admin navigation footer or returned by `GET /api/health`; `mint --version` shows only the CLI version), OS, the steps you took, and the error message. Include the request ID from the failing response if available — every response carries one and it indexes the structured logs.

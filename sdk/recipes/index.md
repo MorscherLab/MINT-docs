@@ -21,6 +21,18 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 |--------|------|
 | [Route permissions](/sdk/recipes/route-permissions) | Typed actors, SDK permission guards and experiment visibility |
 
+## AI assistants
+
+| Recipe | When |
+|--------|------|
+| [MCP tools](/sdk/recipes/mcp-tools) | Publish plugin tools, prompts and resources on the platform's `/mcp` endpoint |
+
+## Instruments
+
+| Recipe | When |
+|--------|------|
+| [Report instrument status](/sdk/recipes/instrument-status) | Send live instrument state from a daemon through your plugin to the platform |
+
 ## Reliability
 
 | Recipe | When |

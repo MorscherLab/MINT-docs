@@ -12,7 +12,7 @@ Fixed-position notice offering a reload when a newer plugin or platform build is
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/RuntimeUpdateNotice.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/RuntimeUpdateNotice.vue">Source</a>
 </div>
 
 <ComponentPlayground name="RuntimeUpdateNotice" />
@@ -32,7 +32,7 @@ import { RuntimeUpdateNotice } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/RuntimeUpdateNotice.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/RuntimeUpdateNotice.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

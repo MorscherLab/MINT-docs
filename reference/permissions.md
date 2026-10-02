@@ -2,7 +2,7 @@
 
 MINT's RBAC has three pieces:
 
-1. **23 permissions** in 10 resource families
+1. **25 permissions** in 11 resource families
 2. **3 system roles** (Admin / Member / Viewer) plus admin-defined custom roles
 3. **Project membership and experiment collaborators** layered around visibility
 
@@ -29,6 +29,13 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 | `experiments.edit` | Edit experiment metadata, design data, status |
 | `experiments.delete` | Delete an experiment |
 
+### `instruments.*` (2)
+
+| Permission | What it grants |
+|------------|----------------|
+| `instruments.view` | List and read the shared [instrument directory](/guide/instruments) (`GET /api/instruments`, `GET /api/instruments/{id}`), including live status. Opens the `/instruments` and `/instruments/:id` pages and the `mint_list_instruments` MCP tool |
+| `instruments.edit` | Create, edit and deactivate instruments. Also needed to set a plugin's instrument status grant and, together with `users.manage`, to manage [service tokens](/admin/authentication#service-tokens) (`/api/admin/service-tokens`) |
+
 ### `plugins.*` (4)
 
 | Permission | What it grants |
@@ -36,7 +43,7 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 | `plugins.view` | See installed plugins and their metadata |
 | `plugins.use` | Invoke plugin routes (run analyses, fill design forms, etc.) |
 | `plugins.configure` | Change plugin settings, manage per-plugin user roles |
-| `plugins.install` | Install / uninstall / upgrade plugins (gates the marketplace approval action) |
+| `plugins.install` | Install / uninstall / upgrade plugins and roll back the [plugin dependency lock](/admin/plugins#plugin-dependency-lock) (gates the marketplace approval action) |
 
 ### `jobs.*` (2)
 
@@ -74,22 +81,22 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 | Permission | What it grants |
 |------------|----------------|
 | `users.view` | List users |
-| `users.manage` | Create, update, activate, deactivate and delete users, reset passwords, assign roles, and manage roles |
+| `users.manage` | Create, update, activate, deactivate and delete users, reset passwords, assign roles, manage roles, reset a user's passkeys (`DELETE /api/admin/users/{id}/passkeys`, refused on your own account), and list and revoke every user's [personal access tokens](/admin/authentication#personal-access-tokens). With `instruments.edit` it also manages [service tokens](/admin/authentication#service-tokens) |
 
 ### `platform.*` (2)
 
 | Permission | What it grants |
 |------------|----------------|
-| `platform.configure` | Modify admin settings (SMTP, marketplace registry, observability, auth), apply platform updates, and use **Admin -> Platform -> Terminal** when enabled. Turning authentication off or dev mode on additionally requires the `admin` role |
+| `platform.configure` | Modify admin settings (SMTP, marketplace registry, observability, auth, audit retention), edit update settings and scheduled updates, apply platform updates, and use **Admin -> Platform -> Terminal** when enabled. Turning authentication off or dev mode on additionally requires the `admin` role |
 | `platform.view_logs` | View structured logs and read the `GET /api/health/ready` readiness report |
 
 ## System roles → permissions
 
 The platform ships three system roles. Their permission sets are seeded by the platform database baseline:
 
-- **Admin** — every permission (all 23)
-- **Member** — all `projects.*` and `experiments.*` permissions, plus `plugins.view`, `plugins.use`, `plugins.configure`, `users.view`, `platform.view_logs` and `filesystem.browse`
-- **Viewer** — `projects.view`, `experiments.view`, `plugins.view`, `users.view` and `plugins.use
+- **Admin** — every permission (all 25)
+- **Member** — all `projects.*` and `experiments.*` permissions, plus `instruments.view`, `plugins.view`, `plugins.use`, `plugins.configure`, `users.view`, `platform.view_logs` and `filesystem.browse`
+- **Viewer** — `projects.view`, `experiments.view`, `instruments.view`, `plugins.view`, `users.view` and `plugins.use`
 
 Tabular form:
 
@@ -104,6 +111,8 @@ Tabular form:
 | `experiments.create` | ✓ | ✓ | |
 | `experiments.edit` | ✓ | ✓ | |
 | `experiments.delete` | ✓ | ✓ | |
+| `instruments.view` | ✓ | ✓ | ✓ |
+| `instruments.edit` | ✓ | | |
 | `plugins.view` | ✓ | ✓ | ✓ |
 | `plugins.use` | ✓ | ✓ | ✓ |
 | `plugins.configure` | ✓ | ✓ | |
@@ -121,7 +130,9 @@ Tabular form:
 
 ## Custom roles
 
-Admins can build custom roles by composing any subset of the 23 permissions above. Custom roles appear alongside the built-in three when assigning a user's system role. A role also has a project scope and a plugin access list (`all` or selected plugins).
+Admins can build custom roles by composing any subset of the 25 permissions above.
+
+On upgrade to MINT @MINT_VERSION@, every existing role, custom roles included, receives `instruments.view`, and the `admin` role also receives `instruments.edit`. Roles created afterwards get neither automatically. Custom roles appear alongside the built-in three when assigning a user's system role. A role also has a project scope and a plugin access list (`all` or selected plugins).
 
 ### Limits on `users.manage`
 
@@ -132,7 +143,7 @@ A non-admin with `users.manage` cannot:
 - create a user in a default role that outranks its own;
 - update, activate, deactivate, delete or reset the password of a user whose role outranks its own.
 
-These checks apply to both the `/api/admin` and legacy `/api/users` routes.
+These checks apply to both the `/api/admin` and legacy `/api/users` routes. The legacy `PUT /api/users/{id}/role`, `PUT /api/users/{id}/activate` and `PUT /api/users/{id}/deactivate` are deprecated: responses carry a `Deprecation` header and a `Link` to the successor, `PATCH /api/admin/users/{id}` or `POST /api/admin/users/{id}/activate|deactivate`.
 
 Common custom-role recipes:
 
@@ -180,6 +191,8 @@ Plugins can register their own role enum via `UserPluginRole`. These are scoped 
 - The user has `platform.configure`
 
 The terminal opens a short-lived shell in the running MINT process/container and can write a startup script under `server.dataPath/admin-terminal/startup.sh`. Treat it as server administration access.
+
+During a session, MINT re-checks the caller every 15 seconds. If the account is deactivated, its role loses `platform.configure`, or its session is revoked (for example by a password change), the shell closes with "access revoked". A failed status lookup also closes it.
 
 ## Next
 

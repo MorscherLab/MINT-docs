@@ -31,12 +31,12 @@ The defaults are `variant="inline"`, `tone="default"`, `size="xs"`, and `font="m
 
 This is a text display component, not an adduct parser or m/z calculator. Pair it with [ChemicalFormula](/sdk/components/chemical-formula), or use that component's `adduct` prop to show formula and ion notation together.
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AdductText.vue)
+[Release source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AdductText.vue)
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AdductText.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AdductText.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

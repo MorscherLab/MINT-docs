@@ -68,12 +68,12 @@ const { startResize } = useManualLayoutResize<'sidebar'>({
 
 The example has a minimum layout width. For narrow screens, switch to your application's stacked/overlay layout and disable resizing rather than making the content unusably narrow. Persist widths only if the plugin needs to remember them; the SDK does not save layout values automatically.
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/LayoutResizeHandle.vue) · [Resize composable](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/useManualLayoutResize.ts)
+[Release source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/LayoutResizeHandle.vue) · [Resize composable](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/useManualLayoutResize.ts)
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/LayoutResizeHandle.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/LayoutResizeHandle.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

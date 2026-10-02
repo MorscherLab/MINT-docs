@@ -9,7 +9,7 @@
 | A Python calculation, parameter form, and standard result views | `generated` mode; no custom frontend build |
 | A custom results page with a small form | `standard` mode and its `PluginWorkspaceView` + `FormBuilder` scaffold |
 | A full page driven by shared controls, settings, and sidebar values | `defineControlModel()` + `ControlWorkspaceView` |
-| A built-in biological data template | `BioTemplatePresetWorkspaceView` or `BioTemplatePackWorkspaceView` |
+| A built-in biological data template | `BioTemplatePresetWorkspaceView` or `BioTemplatePackWorkspaceView`. Both are deprecated, removal in MINT 1.4, with no SDK replacement |
 | A custom top bar, sidebar, or navigation arrangement | `PluginWorkspaceView` slots; use `AppLayout` directly only when needed |
 
 Follow [Adding a frontend](/sdk/tutorials/adding-a-frontend) for the complete backend-to-Vue tutorial, then [Platform integration](/sdk/frontend/platform-integration) for login state, experiment selection, persistence, and server files.
@@ -49,6 +49,7 @@ If you scaffolded with `mint init --mode standard`, all of this is already done.
    ```bash
    bun add @morscherlab/mint-sdk@^@MINT_VERSION@
    ```
+   Peer dependencies: `vue` ^3.5.43, `pinia` ^4.0.3, `tailwindcss` ^4.3.3, and optionally `vue-router` ^5.3.1. pinia 2 and 3 and vue-router 4 do not satisfy these ranges.
 
 2. **Import design tokens** in your app entry:
    ```css
@@ -113,8 +114,8 @@ Body-only endpoints take the body directly. Endpoints combining parameters and a
 - **Chemical annotations:** [ChemicalFormula](/sdk/components/chemical-formula) accepts optional adducts, empty values, and pill styling. [AdductText](/sdk/components/adduct-text) displays adduct notation on its own.
 - **Plate decorations:** [WellPlate](/sdk/components/well-plate) accepts `wellClass` and `wellStyle` callbacks for per-well visual annotations without changing sample data.
 - **Controls and panes:** [SearchableSelect](/sdk/components/searchable-select) searches descriptive choices; [NumberInput](/sdk/components/number-input) supports steppers and drag scrubbing. [LayoutResizeHandle](/sdk/components/layout-resize-handle) and `useManualLayoutResize()` provide keyboard/pointer resizing.
-- **Server files:** `useFileBrowser()` + `FileBrowserModal` browse configured read-only mounts and return path references. Keep the refresh action connected: it explicitly refreshes the server's bounded metadata cache. `FileUploader` remains the local browser-file picker.
-- **Access rules:** use nested `access: { permissions: [...] }` on access-aware controls and actions. Flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields are deprecated in 1.2.
+- **Server files:** [FilePicker](/sdk/components/file-picker) with `usePlatformFilePickerAdapter()` browses configured read-only mounts and returns path references; decode them with `decodePlatformPickerPath()`. Its refresh action explicitly refreshes the server's bounded metadata cache. `FileUploader` remains the local browser-file picker.
+- **Access rules:** use nested `access: { permissions: [...] }` on access-aware controls and actions.
 - **HTTP errors:** generated clients use `MintApiError`; raw `useApi({ typedErrors: true })` opts into the same normalized error shape.
 
 ## Component library

@@ -12,7 +12,7 @@ Themed text and numeric input with error, placeholder, and v-model support.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/BaseInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BaseInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="BaseInput" />
@@ -33,10 +33,20 @@ import { BaseInput } from "@morscherlab/mint-sdk/components"
 </FormField>
 ```
 
+The `#prefix` slot takes a bare leading glyph (a search icon, a currency sign); the `#suffix` slot renders a unit segment inside the field border:
+
+```vue
+<BaseInput v-model="volume" type="number">
+  <template #suffix>µL</template>
+</BaseInput>
+```
+
+Without either slot, the component renders the bare `<input>` as its root.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/BaseInput.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BaseInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -61,7 +71,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` InputType `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L29) | ` 'text' \| 'password' \| 'email' \| 'number' \| 'search' \| 'tel' \| 'url' ` |
+| [` InputType `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L33) | ` 'text' \| 'password' \| 'email' \| 'number' \| 'search' \| 'tel' \| 'url' ` |
 
 <!-- sdk-props:end -->
 

@@ -6,15 +6,19 @@ Public components, composables, stores, and types from `@morscherlab/mint-sdk` *
 
 Components are documented in the [Component Library](/sdk/components/), where each page lists props and embeds a playground. Source: [`packages/sdk-frontend/src/components/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-frontend/src/components).
 
-Deprecated components, scheduled for removal in MINT 1.3:
+Deprecated components and props, scheduled for removal in MINT 1.4:
 
-| Component | Replacement |
-|-----------|-------------|
-| `ColorSlider` | `BaseSlider` |
-| `DropdownButton` | `ActionMenu` |
-| `TimeRangeInput` | `TimePicker` |
-| `ResourceCard` | None |
-| `InstrumentAlertLog`, `InstrumentStatusCard`, `LcmsSequenceTable` | None in the SDK; instrument UI moves to the mld-ms plugins |
+| Component or prop | Replacement |
+|-------------------|-------------|
+| `SmartGroupModal`, `SmartGroupFieldRecipe`, `SmartGroupManual`, `GroupAssigner`, `AutoGroupModal` | None in the SDK; use `SampleSelector` for sample grouping |
+| `BioTemplateExperimentWorkspaceView`, `BioTemplatePackWorkspaceView`, `BioTemplatePresetWorkspaceView`, `BioTemplateRenderer`, `ReagentList`, `ReagentEditor`, `ExperimentTimeline`, `SampleLegend`, `FitPanel` | None in the SDK |
+| `DoseDesignWorkspaceView` | `ControlWorkspaceView` with `defineDoseDesignControlModel()` |
+| `WellPlate` `showSampleTypeIndicator` (no-op) | None; the sample-type marker encodes the type |
+| `JobsStatusTray` `adapter`, `jobs`, `eventStream` | Pass a `source` |
+| `AppSidebar` `dense` | Compact is the default; `density="comfortable"` for the roomier layout |
+| `sidebarVariant` on workspace views (no-op) | None |
+
+`mint doctor` reports components removed in 1.3 with their replacements.
 
 ## Composables
 
@@ -23,21 +27,17 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 | Composable | Returns | Purpose |
 |------------|---------|---------|
 | `useApi` | typed fetch helper | Auth-aware API calls |
-| `useAuth` | auth actions and token helpers | Login/logout/register flows |
-| `usePasskey` | passkey registration / login | WebAuthn flows |
 | `useTheme` | theme state + setter | Theme switcher |
 | `useToast` | toast dispatcher | User feedback |
 | `usePlatformContext` | integration, plugin, user, theme, features | Platform shell context |
 | `useForm` | reactive form state | Manual form management |
 | `useFormBuilder` | schema-driven form runtime | `FormBuilder` component |
-| `useAsyncBatch` | async state helper | Run several async functions together |
-| `useWellPlateEditor` | plate state + helpers | Plate-design UIs |
-| `useRackEditor` | rack state | Sample rack UIs |
+| `useRackEditor` | rack state, undo/redo, `plateEditorListeners` | Hold the plates of a `PlateEditor` |
 | `useConcentrationUnits` | concentration math | µM / mg/mL / % conversions |
 | `useDoseCalculator` | dilution math | Dose-response calculators |
 | `useReagentSeries` | dilution series | Dose-response panel building |
 | `useChemicalFormula` | formula parsing + MW | Chemical formula display |
-| `useSequenceUtils` | DNA / protein helpers | Sequence stats |
+| `useSequenceUtils` | DNA / protein helpers, `findSequenceProblems` | Sequence stats and input validation |
 | `useTimeUtils` | time math + slots | Schedule UIs |
 | `useScheduleDrag` | drag-to-reschedule | Calendar / timeline |
 | `useProtocolTemplates` | protocol step engine | Protocol UIs |
@@ -76,7 +76,7 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 | `useListSelection`, `useSelectionLimit` | selection state | Tables, sample lists, well plates |
 | `useTextSearch`, `useSortedItems` | client-side search/sort | Filterable lists and tables |
 | `useExpansionSet` | expand/collapse state | Trees and grouped panels |
-| `useFileBrowser` | mount/listing/path selection state | Drives `FileBrowserModal` against the platform filesystem API |
+| `useFileBrowser` | mount/listing/path selection state | Custom server-file UIs against the platform filesystem API |
 | `usePlatformFilePickerAdapter` | Authenticated `PickerAdapter` | Connects `FilePicker` to platform mounts, optionally scoped by `rootLocation` |
 | `createFilePickerAdapter` | Transport-backed `PickerAdapter` | Shared navigation/search for plugin-owned mount APIs |
 | `encodePlatformPickerPath`, `decodePlatformPickerPath` | Opaque picker identity conversion | Convert between picker paths and mount-relative backend references |
@@ -86,17 +86,29 @@ Typed composables and helper factories. Source: [`packages/sdk-frontend/src/comp
 
 ### Deprecated composables
 
-Scheduled for removal in MINT 1.3:
+Scheduled for removal in MINT 1.4:
 
 | Composable | Replacement |
 |------------|-------------|
-| `useAsync` | `useRequestSyncState()` |
-| `useOptimisticMutation` | `useRequestSyncState()` |
-| `usePluginConfig` | `usePluginSettings()` |
+| `usePluginClient` | `useGeneratedPluginClient()` |
+| `useJobsStatusTray` (and its `adapter`, `jobs`, `eventStream` options) | `usePluginJobCenter()` with a `PluginJobCenterSource` |
+| `useAutoGroup` | None in the SDK; use `SampleSelector` for sample grouping |
+| `useGroupAssignment` | None in the SDK |
+| `useExperimentSave` | None in the SDK |
+| `useTemplateCollection` | None in the SDK |
+| `useBioTemplateControls`, `useBioTemplateComponents`, `useBioTemplateWorkspace`, `useBioTemplatePresetWorkspace`, `useBioTemplatePackWorkspace` | None in the SDK |
+
+### Removed composables
+
+These composables are no longer exported. `mint doctor` reports them with their replacements. See [Migrate 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3).
+
+| Composable | Replacement |
+|------------|-------------|
+| `useAsync`, `useOptimisticMutation` | `useRequestSyncState()` |
 | `useResourceCrud` | `useGeneratedPluginClient()` |
-| `useWellPlateAdapter` (with `createWellPlateWells`, `createRowConditions`, `createColumnConditions`), `useWellPainting`, `useWellPlateValidation` | `useWellPlateEditor()` |
-| `useCommandHistory` | Keep command stacks in the plugin |
-| `useJobsStatusTray` | `usePluginJobCenter()` |
+| `useWellPainting`, `useWellPlateEditor` | `useRackEditor()` with `PlateEditor` |
+| `useWellPlateAdapter`, `useWellPlateValidation`, `useCommandHistory` | None in the SDK; keep the adapter, the rules, or the command stack in the plugin |
+| `usePluginConfig` | `usePluginSettings()` |
 
 ## Stores and access policies
 
@@ -114,7 +126,7 @@ Destructure Pinia state with `storeToRefs()` or read it through the store object
 
 | Area | Exports |
 |------|---------|
-| Permissions | `ADMIN_ROLE`, `ADMIN_PANEL_PERMISSIONS`, `getRoleInfo`, `isAdminRole`, `isAdminUser`, `getAccessAudience`, `getUserPermissions`, `hasAllPermissions`, `hasAnyPermission`, `canAccessAdmin`, `canAccessPlugin`, `normalizeAccessPolicy`, `canAccessByPolicy` |
+| Permissions | `ADMIN_ROLE`, `ADMIN_PANEL_PERMISSIONS`, `getRoleInfo`, `isAdminRole`, `isAdminUser`, `getAccessAudience`, `getUserPermissions`, `hasAllPermissions`, `hasAnyPermission`, `canAccessAdmin`, `canAccessPlugin`, `canAccessByPolicy(user, policy)` (takes an `AccessPolicy`) |
 | Plugin secrets | `PLUGIN_SECRET_FORMAT_KEY`, `PLUGIN_SECRET_FORMAT_REF`, `PLUGIN_SECRET_REF_KEY`, `setPluginSecret`, `keepPluginSecret`, `clearPluginSecret`, `isPluginSecretRef`, `isPluginSecretLocked`, `pluginSecretId`, `pluginSecretLabel`, `pluginSecretState`, `usesPluginSecretReferences` |
 | Jobs | `resolveJobCapabilities`, `normalizeJobPercent`, `normalizeJobState`, `isActiveJobStatus`, `isTerminalJobStatus`, `jobStatusLabel` |
 | Instrument sequences | `sequenceProgressPercent`, `sequenceSamplesRemaining`, `estimateSequenceRemainingSeconds`, `estimateSequenceFinishDate`, `formatSequenceRemaining`, `formatSequenceEta` |
@@ -123,6 +135,9 @@ Destructure Pinia state with `storeToRefs()` or read it through the store object
 | Generated job forms (experimental) | `generatedJobFormSchema`, `generatedJobDefaults`, `normalizeGeneratedJobInput` |
 | Color | `hexToHsl`, `hslToHex`, `deriveShade` |
 | Biology templates | Everything from `@morscherlab/mint-sdk/templates` is also re-exported from the package root |
+| Plotly | `mintPlotlyTemplate(element?)`: a Plotly `Template` resolved from the MINT tokens |
+
+The instrument-sequence, LC-MS, and rack/LC-MS-plate helpers and the biology `templates/` exports are deprecated and scheduled for removal from the core SDK in MINT 1.4 (the LC-MS helpers move to the mld-ms plugins).
 
 ## Generated plugin client helpers
 
@@ -223,14 +238,16 @@ import {
 } from '@morscherlab/mint-sdk'
 ```
 
-Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `FileDirectoryListing`, `UseFileBrowserOptions`, `UseFileBrowserReturn`, and `UseRequestSyncStateReturn`. For the full list, use the release [composable exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/index.ts) and [type exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/types/index.ts).
+Instrument types include `InstrumentBadgeState`, `InstrumentLiveStatus`, `InstrumentLiveProgress`, `InstrumentStatusReporter`, and `InstrumentAlertList`. Additional public types include `FileSelection`, `FileEntry`, `ServerMount`, `FileDirectoryListing`, `UseFileBrowserOptions`, `UseFileBrowserReturn`, and `UseRequestSyncStateReturn`. For the full list, use the release [composable exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/index.ts) and [type exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/types/index.ts).
 
 ## Notes
 
 - Examples use Vue 3 Composition API and `<script setup lang="ts">`; call lifecycle-aware composables inside component setup.
-- Prefer named imports. Installing `MINTSdk` globally registers the SDK components; do not assume that a global install includes only one component. `PlotlyChart` loads its Plotly runtime on mount.
+- Prefer named imports. Installing `MINTSdk` globally registers the SDK components; do not assume that a global install includes only one component. `PlotlyChart` loads its Plotly runtime on mount. See [PlotlyChart](/sdk/components/plotly-chart#plotly-4-builds-and-types) for Plotly setup.
 - Current plugin scaffolds import Tailwind v4 and the SDK style bundle from `frontend/src/style.css`: `@import "tailwindcss";` then `@import "@morscherlab/mint-sdk/styles";`. Keep the SDK import unlayered so Tailwind preflight cannot outrank SDK component styles. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
 - For plugin-scoped API calls, prefer `useGeneratedPluginClient()` from `frontend/src/generated/mint-plugin.ts`; use raw `useApi()` for platform APIs outside the plugin contract.
+- With auth enabled, plugin routes need a Bearer credential; the platform does not read the session cookie there. Do not call them with a plain `<a href>` link or a `fetch` without a Bearer: the platform answers 401. Use the generated client, `downloadGeneratedPluginEndpoint()`, or `downloadPluginEndpoint()`.
+- Dropdown, menu, and picker panels share the `.mint-popover` class hooks (menu rows use `.mint-menu-item`). Style those instead of `.mint-action-menu__panel` or `.mint-searchable-select__panel`; the old classes remain as aliases until MINT 1.4.
 - `mint doctor` flags legacy `usePluginApi()`, private SDK subpath imports, direct frontend composable file subpaths, raw plugin API `fetch('/api/...')` calls, and the removed `AppSidebar` `variant` prop (in `.vue` files and in agent docs such as `CLAUDE.md` / `AGENTS.md`).
 
 ## Related

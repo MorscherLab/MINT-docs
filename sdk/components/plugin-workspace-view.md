@@ -16,7 +16,7 @@ See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/PluginWorkspaceView.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/PluginWorkspaceView.vue">Source</a>
 </div>
 
 <ComponentPlayground name="PluginWorkspaceView" />
@@ -46,14 +46,14 @@ import { PluginWorkspaceView } from "@morscherlab/mint-sdk/components"
 
 `sidebarVariant` is still declared by this workspace API for compatibility, but
 AppSidebar no longer has visual variants, so that option no longer changes its
-appearance. Use the workspace's sidebar slot with AppSidebar when you need to
+appearance; it is removed in MINT 1.4. Use the workspace's sidebar slot with AppSidebar when you need to
 control its new `density` prop directly. The generated table below preserves
 the SDK's declarations and source comments.
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/PluginWorkspaceView.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/PluginWorkspaceView.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -64,7 +64,6 @@ MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` showLogo ` | ` boolean ` | No | ` true ` | Show the default MINT logo when no icon/logo slot is provided. |
 | ` pageSelector ` | ` PageSelectorItemInput[] ` | No | ` undefined ` | Preferred route-level page selector entries. Pass [] to suppress integrated platform fallback. |
 | ` currentPageSelectorId ` | ` string ` | No | ` undefined ` | Active page selector id. Defaults to activeView. |
-| ` pluginSwitcher ` | ` PluginSwitcherInfo ` | No | ` undefined ` | Optional plugin switcher shown in the left navigation position. |
 | ` pillNav ` | ` PillNavItemInput[] ` | No | ` undefined ` | Preferred centered navigation for local modes inside the current route. |
 | ` currentPillId ` | ` string ` | No | ` undefined ` | Active centered pill id. Defaults to activeView. |
 | ` showThemeToggle ` | ` boolean ` | No | ` true ` | Show the theme toggle button. |
@@ -91,7 +90,7 @@ MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` sidebarTitle ` | ` string ` | No | ` undefined ` | Sidebar chrome title. |
 | ` sidebarSubtitle ` | ` string ` | No | ` undefined ` | Sidebar chrome subtitle. |
 | ` sidebarBadge ` | ` string \| number ` | No | ` undefined ` | Optional compact badge/count rendered in the sidebar header. |
-| ` sidebarVariant ` | ` PluginWorkspaceSidebarVariant ` | No | ` 'analysis' ` | @deprecated No-op. AppSidebar has one look now; the former analysis preset is the default. |
+| ` sidebarVariant ` | ` PluginWorkspaceSidebarVariant ` | No | ` 'analysis' ` | @deprecated No-op, removed in MINT 1.4. AppSidebar has one look now; the former analysis preset is the default. |
 | ` sidebarWidth ` | ` string ` | No | ` undefined ` | Sidebar CSS width. Defaults to AppSidebar's width. |
 | ` sidebarPosition ` | ` 'left' \| 'right' ` | No | ` 'left' ` | Sidebar position in AppLayout. |
 | ` responsiveSidebar ` | ` boolean ` | No | ` true ` | Convert the sidebar into an SDK-owned mobile overlay below the AppLayout breakpoint. |
@@ -129,23 +128,22 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L186) | ` 'card' \| 'default' ` |
-| [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L250) | See the linked SDK type definition. |
-| [` PluginSwitcherInfo `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L262) | See the linked SDK type definition. |
-| [` PillNavItemInput `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L235) | See the linked SDK type definition. |
-| [` TopBarSettingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L200) | See the linked SDK type definition. |
-| [` AccountMenuItem `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L270) | See the linked SDK type definition. |
-| [` SidebarToolSection `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L163) | See the linked SDK type definition. |
-| [` FormSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/form-builder.ts#L135) | See the linked SDK type definition. |
-| [` PluginWorkspaceSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts#L28) | ` 'default' \| 'analysis' ` |
-| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
-| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
-| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
-| [` ControlComponentBindingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L281) | See the linked SDK type definition. |
-| [` ControlComponentPropsMap `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L263) | See the linked SDK type definition. |
-| [` ControlComponentPropsByIdMap `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L267) | See the linked SDK type definition. |
-| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
+| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L196) | ` 'card' \| 'default' ` |
+| [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L264) | See the linked SDK type definition. |
+| [` PillNavItemInput `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L249) | See the linked SDK type definition. |
+| [` TopBarSettingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L210) | See the linked SDK type definition. |
+| [` AccountMenuItem `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L267) | See the linked SDK type definition. |
+| [` SidebarToolSection `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L173) | See the linked SDK type definition. |
+| [` FormSchema `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/form-builder.ts#L135) | See the linked SDK type definition. |
+| [` PluginWorkspaceSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts#L26) | ` 'default' \| 'analysis' ` |
+| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L133) | See the linked SDK type definition. |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L147) | See the linked SDK type definition. |
+| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L100) | See the linked SDK type definition. |
+| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L115) | See the linked SDK type definition. |
+| [` ControlComponentBindingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L241) | See the linked SDK type definition. |
+| [` ControlComponentPropsMap `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L223) | See the linked SDK type definition. |
+| [` ControlComponentPropsByIdMap `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L227) | See the linked SDK type definition. |
+| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

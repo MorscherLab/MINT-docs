@@ -10,9 +10,13 @@ description: "ReagentList is a lab widgets component exported by @morscherlab/mi
 
 ReagentList is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**. The SDK has no replacement.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ReagentList.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ReagentList.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ReagentList" />
@@ -26,7 +30,7 @@ import { ReagentList } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ReagentList.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ReagentList.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -46,8 +50,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` Reagent `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L203) | See the linked SDK type definition. |
-| [` ReagentColumn `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L193) | See the linked SDK type definition. |
+| [` Reagent `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L206) | See the linked SDK type definition. |
+| [` ReagentColumn `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L196) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

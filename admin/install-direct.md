@@ -18,7 +18,7 @@ Both result in identical platform behavior; choose based on your operations pref
 | | |
 |---|---|
 | **Operating system** | Linux server (x86_64 or arm64) — any modern distribution with glibc 2.28+ (Debian 11+, Ubuntu 20.04+, RHEL 9+, …) |
-| **Python** | 3.12 or newer — install via the distro package manager or [`uv python install`](https://docs.astral.sh/uv/concepts/python-versions/) |
+| **Python** | 3.14 or newer — install via the distro package manager or [`uv python install`](https://docs.astral.sh/uv/concepts/python-versions/). Plugin installs accept only wheels that install on this interpreter, so each compiled dependency of a plugin needs a `cp314` or `abi3` wheel |
 | **uv** | Required at runtime for plugin installs and isolated plugin environments; install it somewhere the `mint` service user can run |
 | **Database** | PostgreSQL 14+ (required) |
 | **Disk** | ~2 GB for MINT + room for plugin venvs and uploaded artifacts |
@@ -55,7 +55,7 @@ Install the locked dependencies. The bundle has no Git history, so pass the vers
 ```bash
 sudo -u mint env UV_CACHE_DIR=/var/lib/mint/uv-cache \
   SETUPTOOLS_SCM_PRETEND_VERSION=@MINT_VERSION@ \
-  uv sync --project /opt/mint --frozen --no-dev --python 3.12
+  uv sync --project /opt/mint --frozen --no-dev --python 3.14
 ```
 
 This creates `/opt/mint/.venv` with the platform and `mint-sdk[cli,server,local-db]`, which supplies the `mint` binary at `/opt/mint/.venv/bin/mint`. The platform runs as one long-lived process; see "Run as a systemd service" below.
@@ -142,7 +142,7 @@ Environment=PATH=/opt/mint/.venv/bin:/usr/local/bin:/usr/bin:/bin
 Environment=MINT_SERVER__DATA_PATH=/var/lib/mint
 Environment=UV_CACHE_DIR=/var/lib/mint/uv-cache
 ExecStart=/opt/mint/.venv/bin/mint daemon --platform-dir /opt/mint --host 127.0.0.1 --port 8001
-Restart=on-failure
+Restart=always
 RestartSec=5
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -158,6 +158,8 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now mint
 sudo systemctl status mint
 ```
+
+`Restart=always` makes systemd start MINT again after a restart that MINT requests itself, which exits the process with status 0. To allow [scheduled updates](/admin/updates#scheduled-updates), also add `Environment=MINT_RESTART_SUPERVISED=1` to the unit. Alternatively, `mint platform daemon install-service` writes a user-level unit with `Restart=always` and `Environment=MINT_DAEMON=1`, which also allows scheduled updates.
 
 ::: warning Bind to 127.0.0.1, not 0.0.0.0
 `mint daemon` serves plain HTTP and does not terminate TLS. Always bind to `127.0.0.1` on the host and put a reverse proxy in front. It trusts forwarded headers only from `127.0.0.1` and `::1`; change that with `--forwarded-allow-ips` only for known proxy addresses.
@@ -191,7 +193,7 @@ To upgrade by hand instead, repeat [Install the runtime bundle](#install-the-run
 | A plugin shows **Migration failed** | The plugin's migration raised; MINT keeps running without it. Read the error in **Admin -> Plugins -> Installed** and install a fixed plugin release. |
 | 502 from the reverse proxy | MINT failed to start or crashed. Check `journalctl -u mint -n 200` for the trace. |
 | Rate limit fires for every request | The proxy isn't forwarding `X-Forwarded-For`, or its address is missing from `server.trustedProxyCidrs`. |
-| Plugin install fails with `uv` not found | The plugin manager uses `uv` to install plugins into isolated venvs. Install it system-wide so the `mint` user can invoke it. |
+| Plugin install fails with `uv` not found | The plugin manager uses `uv` to lock and install plugins, including isolated venvs. Install it system-wide so the `mint` user can invoke it. |
 
 ## Next step
 

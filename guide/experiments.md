@@ -73,7 +73,7 @@ The experiment detail page is a single record view: design, analysis outputs, an
 | **Analysis artifacts** | Review outputs grouped by producing plugin. Empty experiments show analysis plugins that can run next and why unavailable plugins are blocked. |
 | **Metadata rail** | Check type, project, timeline, creator, data lineage, collaborators, tags, and destructive actions. |
 
-Artifacts are grouped by plugin and sorted by most recent update. MINT shows the artifact display name, artifact key, result keys, status, and available actions:
+Plugins appear under their display name. Artifacts are grouped by plugin and sorted by most recent update. MINT shows the artifact display name, artifact key, result keys, status, and available actions:
 
 | Action | Effect |
 |--------|--------|

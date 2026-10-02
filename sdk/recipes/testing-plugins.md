@@ -193,7 +193,8 @@ For Alembic migrations (`get_migration_spec()`), use `run_migrations`,
 [Backfill migrations](/sdk/recipes/backfill-migration#test-the-real-upgrade-path)
 has a complete upgrade test.
 
-For legacy integer migrations, run `MigrationRunner.run(...)` directly. The
+For legacy integer migrations (deprecated; removal in 1.4, see
+[Migrations](/sdk/api/migrations)), run `MigrationRunner.run(...)` directly. The
 `mint-sdk[local-db]` extra supplies `aiosqlite` and `greenlet` for
 `sqlite+aiosqlite://` tests:
 

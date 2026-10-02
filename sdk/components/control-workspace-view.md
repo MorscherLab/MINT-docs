@@ -16,7 +16,7 @@ See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ControlWorkspaceView.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ControlWorkspaceView.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ControlWorkspaceView" />
@@ -38,7 +38,7 @@ the SDK's declarations and source comments.
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ControlWorkspaceView.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ControlWorkspaceView.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -53,7 +53,7 @@ MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` subtitle ` | ` string ` | No | ` undefined ` | AppTopBar subtitle. |
 | ` topBarVariant ` | ` TopBarVariant ` | No | ` 'card' ` | AppTopBar visual variant. |
 | ` sidebarWidth ` | ` string ` | No | ` '320px' ` | AppSidebar/AppLayout sidebar width. |
-| ` sidebarVariant ` | ` ControlWorkspaceSidebarVariant ` | No | ` 'analysis' ` | AppSidebar visual preset. analysis matches the LEAF-style MINT analysis sidebar design language. |
+| ` sidebarVariant ` | ` ControlWorkspaceSidebarVariant ` | No | ` 'analysis' ` | @deprecated No-op, removed in MINT 1.4. AppSidebar has one look now; the former analysis preset is the default. |
 | ` responsiveSidebar ` | ` boolean ` | No | ` true ` | Convert the sidebar into an SDK-owned mobile overlay below the AppLayout breakpoint. |
 | ` sidebarPosition ` | ` 'left' \| 'right' ` | No | ` 'left' ` | Sidebar position in AppLayout. |
 | ` sidebarTitle ` | ` string ` | No | ` undefined ` | Optional AppSidebar chrome title for LEAF-style plugin workbenches. |
@@ -78,17 +78,17 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L173) | See the linked SDK type definition. |
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L187) | See the linked SDK type definition. |
-| [` UseControlWorkspaceReturn `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L359) | See the linked SDK type definition. |
-| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L140) | See the linked SDK type definition. |
-| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L155) | See the linked SDK type definition. |
-| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L186) | ` 'card' \| 'default' ` |
-| [` ControlWorkspaceSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ControlWorkspaceView.vue#L30) | See the linked SDK type definition. |
-| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
-| [` ControlComponentBindingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L281) | See the linked SDK type definition. |
-| [` ControlComponentPropsMap `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L263) | See the linked SDK type definition. |
-| [` ControlComponentPropsByIdMap `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L267) | See the linked SDK type definition. |
+| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L133) | See the linked SDK type definition. |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L147) | See the linked SDK type definition. |
+| [` UseControlWorkspaceReturn `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L320) | See the linked SDK type definition. |
+| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L100) | See the linked SDK type definition. |
+| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L115) | See the linked SDK type definition. |
+| [` TopBarVariant `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L196) | ` 'card' \| 'default' ` |
+| [` ControlWorkspaceSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ControlWorkspaceView.vue#L30) | See the linked SDK type definition. |
+| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
+| [` ControlComponentBindingsConfig `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L241) | See the linked SDK type definition. |
+| [` ControlComponentPropsMap `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L223) | See the linked SDK type definition. |
+| [` ControlComponentPropsByIdMap `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L227) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

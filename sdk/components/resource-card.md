@@ -10,13 +10,9 @@ description: "Card displaying a lab resource with availability status, specs, ta
 
 Card displaying a lab resource with availability status, specs, tags, and a book action.
 
-::: warning Deprecated
-Unused by the MINT platform and scheduled for removal in **MINT 1.3**. No platform replacement is planned.
-:::
-
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ResourceCard.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ResourceCard.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ResourceCard" />
@@ -30,7 +26,7 @@ import { ResourceCard } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ResourceCard.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ResourceCard.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -53,8 +49,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ResourceStatus `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L134) | ` 'available' \| 'in-use' \| 'maintenance' \| 'offline' ` |
-| [` ResourceSpec `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L136) | See the linked SDK type definition. |
+| [` ResourceStatus `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L141) | ` 'available' \| 'in-use' \| 'maintenance' \| 'offline' ` |
+| [` ResourceSpec `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L143) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

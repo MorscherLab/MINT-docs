@@ -9,10 +9,10 @@ one does not automatically change or migrate the others.
 | Version | Where it lives | Example | What it does |
 |---|---|---|---|
 | Plugin release | Git tag → wheel metadata → `PluginMetadata.version` and bundle manifest | `v0.2.0` | Identifies installed code and frontend assets |
-| Python SDK requirement | `[project].dependencies` | `mint-sdk>=@MINT_VERSION@,<1.3` | Declares supported SDK runtime versions |
+| Python SDK requirement | `[project].dependencies` | `mint-sdk>=@MINT_VERSION@,<1.4` | Declares supported SDK runtime versions |
 | Frontend SDK requirement | `frontend/package.json` | `^@MINT_VERSION@` | Declares the frontend dependency range |
 | Resolved SDK release | `uv.lock`, `frontend/bun.lock` | `@MINT_VERSION@` in both | Records the actual build dependencies |
-| Platform requirement | `[tool.mint].requires_mint` | `>=@MINT_VERSION@,<1.3` | Constrains `.mint` installation |
+| Platform requirement | `[tool.mint].requires_mint` | `>=@MINT_VERSION@,<1.4` | Constrains `.mint` installation |
 | Marketplace floor | Registry `min_platform_version` | `@MINT_VERSION@` | Informs catalog compatibility |
 | Design-data schema | `@mint_plugin(schema_version=...)` and stored `DesignData` | `"2.0"` | Labels the JSON design format |
 | Database revision | Alembic `revision` (or legacy `PluginMigration.version`) | `"p002"` (legacy: `2`) | Orders changes to plugin-owned SQL tables |
@@ -30,7 +30,7 @@ The `mint init` scaffold already configures `hatch-vcs`. Keep it:
 [project]
 name = "mint-plugin-lab-qc"
 dynamic = ["version"]
-dependencies = ["mint-sdk>=@MINT_VERSION@,<1.3"]
+dependencies = ["mint-sdk>=@MINT_VERSION@,<1.4"]
 
 [project.entry-points."mint.plugins"]
 lab-qc = "mint_plugin_lab_qc.plugin:LabQcPlugin"
@@ -46,7 +46,7 @@ source = "vcs"
 version-file = "src/mint_plugin_lab_qc/_version.py"
 
 [tool.mint]
-requires_mint = ">=@MINT_VERSION@,<1.3"
+requires_mint = ">=@MINT_VERSION@,<1.4"
 ```
 
 This is a fragment to merge into the scaffold, including its existing build
@@ -87,9 +87,9 @@ versions in result provenance as well as the plugin release.
 
 ## Declare compatibility deliberately
 
-For plugins tested on the 1.2 line, `>=@MINT_VERSION@,<1.3` is a conservative declaration.
-Use a wider range only when you support and verify it. The 1.2 scaffold may
-render the compatibility baseline `>=1.2.0b1,<1.3`; raise the floor to `@MINT_VERSION@`
+For plugins tested on the 1.3 line, `>=@MINT_VERSION@,<1.4` is a conservative declaration.
+Use a wider range only when you support and verify it. The 1.3 scaffold may
+render the compatibility baseline `>=1.3.0b1,<1.4`; raise the floor to `@MINT_VERSION@`
 when your support policy requires the stable release.
 
 The bundle installer checks `requires_mint` and the wheel's SDK requirement.
@@ -103,7 +103,7 @@ The two platform declarations differ in form and in when they are checked:
 
 | Declaration | Lives in | Form | Checked when |
 |---|---|---|---|
-| `[tool.mint].requires_mint` | `pyproject.toml`, copied into the bundle manifest | PEP 440 specifier, e.g. `">=@MINT_VERSION@,<1.3"` | Every `.mint` install (upload, GitHub, marketplace) |
+| `[tool.mint].requires_mint` | `pyproject.toml`, copied into the bundle manifest | PEP 440 specifier, e.g. `">=@MINT_VERSION@,<1.4"` | Every `.mint` install (upload, GitHub, marketplace) |
 | `min_platform_version` | Marketplace registry entry | Version floor, e.g. `"@MINT_VERSION@"` | Catalog compatibility and marketplace install |
 
 Use [the SDK updater](/sdk/operations/upgrading) to keep Python and frontend

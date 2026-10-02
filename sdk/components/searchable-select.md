@@ -51,12 +51,12 @@ String/number option arrays also work. Object options use `value`, `label`, and 
 
 Arrow keys move through enabled options, Home/End move to the first/last enabled option, Enter selects, and Escape closes and restores trigger focus. Selection emits `update:modelValue`. Use `disabled` for the entire control while its prerequisites are unavailable.
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SearchableSelect.vue)
+[Release source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SearchableSelect.vue)
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SearchableSelect.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SearchableSelect.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -67,6 +67,7 @@ MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` noResultsText ` | ` string ` | No | ` 'No matching options' ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
+| ` ariaLabelledby ` | ` string ` | No | ` undefined ` | Id of the visible label; the trigger is then named by the label and the selected value. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -74,7 +75,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L112) | See the linked SDK type definition. |
+| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L122) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

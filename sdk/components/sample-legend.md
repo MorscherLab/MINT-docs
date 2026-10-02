@@ -10,9 +10,13 @@ description: "SampleLegend is a lab widgets component exported by @morscherlab/m
 
 SampleLegend is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**. The SDK has no replacement.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SampleLegend.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SampleLegend.vue">Source</a>
 </div>
 
 <ComponentPlayground name="SampleLegend" />
@@ -26,7 +30,7 @@ import { SampleLegend } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SampleLegend.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SampleLegend.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -34,7 +38,7 @@ MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` samples ` | ` SampleType[] ` | Yes | ` () => [] ` | — |
 | ` showCounts ` | ` boolean ` | No | ` true ` | — |
 | ` editable ` | ` boolean ` | No | ` false ` | — |
-| ` colorPalette ` | ` string[] ` | No | ` () => [...SAMPLE_COLOR_SCALE] ` | — |
+| ` colorPalette ` | ` string[] ` | No | ` () => [...SAMPLE_GROUP_TOKENS] ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 | ` orientation ` | ` 'vertical' \| 'horizontal' ` | No | ` 'vertical' ` | — |
 
@@ -44,7 +48,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SampleType `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L128) | See the linked SDK type definition. |
+| [` SampleType `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L126) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

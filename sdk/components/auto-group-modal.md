@@ -10,9 +10,13 @@ description: "AutoGroupModal is a lab widgets component exported by @morscherlab
 
 AutoGroupModal is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**, together with `useAutoGroup()`. Use [SampleSelector](/sdk/components/sample-selector) for sample grouping; the SDK has no other replacement.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AutoGroupModal.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AutoGroupModal.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AutoGroupModal" />
@@ -25,7 +29,7 @@ import { AutoGroupModal } from "@morscherlab/mint-sdk/components"
 
 ## Usage Notes
 
-`AutoGroupModal` is the recommended UI for sample grouping from pasted names, CSV metadata, or experiment design data. It is driven by `useAutoGroup()` and now surfaces the parsed grouping as both flat groups and a nested preview tree.
+`AutoGroupModal` groups samples from pasted names, CSV metadata, or experiment design data. It is driven by `useAutoGroup()` and now surfaces the parsed grouping as both flat groups and a nested preview tree.
 
 Recent grouping behavior:
 
@@ -46,12 +50,12 @@ The smart grouping UI is also exported as composable pieces:
 | `SmartGroupFieldRecipe` | Auto grouping view only |
 | `SmartGroupManual` | Manual cohort builder only |
 
-Use `AutoGroupModal` when you want the existing sample auto-grouping integration. Use the `SmartGroup*` components when a plugin needs to own more of the modal shell, route the mode switch itself, or embed one grouping mode inside a larger workflow.
+Use the individual `SmartGroup*` components when a plugin needs to own more of the modal shell, route the mode switch itself, or embed one grouping mode inside a larger workflow.
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AutoGroupModal.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AutoGroupModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -68,8 +72,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SampleGroup `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L168) | See the linked SDK type definition. |
-| [` GroupingWorkflow `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AutoGroupModal.vue#L34) | See the linked SDK type definition. |
+| [` SampleGroup `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L171) | See the linked SDK type definition. |
+| [` GroupingWorkflow `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AutoGroupModal.vue#L34) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

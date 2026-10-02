@@ -12,7 +12,7 @@ The feed for each plugin contains:
 
 | Field | Purpose |
 |-------|---------|
-| `name` + `display_name` | Stable plugin identity and readable label |
+| `name` + `display_name` | Stable plugin ID and the readable label. After install, the platform shows the display name the plugin declares |
 | `source.github_repo` + `source.asset_pattern` | GitHub release source and `.mint` asset glob |
 | `latest_version` + `min_platform_version` | Advertised version and minimum platform version |
 | `plugin_type` | `static`, `analysis`, `experiment_design`, `full`, or `workflow` |

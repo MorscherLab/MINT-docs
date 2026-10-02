@@ -12,7 +12,7 @@ AppToastContainer is a feedback component exported by @morscherlab/mint-sdk for 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AppToastContainer.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AppToastContainer.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AppToastContainer" />
@@ -40,7 +40,7 @@ When a [AppTopBar](/sdk/components/app-top-bar) is mounted, it publishes
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AppToastContainer.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AppToastContainer.vue).
 
 This component declares no public props. Its behavior is controlled through SDK state and composables.
 

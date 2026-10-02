@@ -10,9 +10,13 @@ description: "Manual cohort builder for assigning samples when names cannot be p
 
 `SmartGroupManual` is the manual Smart Group mode for sample names that do not parse cleanly. Users search, filter, select, and assign samples into group, subgroup, and sub-subgroup levels.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**. Use [SampleSelector](/sdk/components/sample-selector) for sample grouping; the SDK has no other replacement.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SmartGroupManual.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SmartGroupManual.vue">Source</a>
 </div>
 
 <ComponentPlayground name="SmartGroupManual" />
@@ -39,7 +43,7 @@ Use this when automatic parsing is not reliable enough and the user should build
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SmartGroupManual.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SmartGroup.types.ts).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SmartGroupManual.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SmartGroup.types.ts).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -53,8 +57,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SmartGroupSeed `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SmartGroup.types.ts#L25) | See the linked SDK type definition. |
-| [` ManualPaletteEntry `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SmartGroup.types.ts#L17) | See the linked SDK type definition. |
+| [` SmartGroupSeed `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SmartGroup.types.ts#L25) | See the linked SDK type definition. |
+| [` ManualPaletteEntry `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SmartGroup.types.ts#L17) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

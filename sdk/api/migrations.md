@@ -1,6 +1,8 @@
 # Migrations reference — @MINT_VERSION@
 
-`mint_sdk.migrations` exports the shared Alembic runtime and the retained legacy integer framework. Source: [v@MINT_VERSION@ migrations package](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations).
+`mint_sdk.migrations` exports the shared Alembic runtime and the deprecated legacy integer framework, which will be removed in MINT 1.4. Source: [v@MINT_VERSION@ migrations package](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations).
+
+The sqlmodel release that the `local-db` extra requires (0.0.47 or later) maps a plain `datetime` model field to a timezone-aware column and rejects naive values on write. A plugin table with `datetime` fields needs aware datetimes. To keep an existing naive column, type the field as `NaiveDatetime` or use `Field(sa_type=DateTime(timezone=False))`. Run `mint db check` to compare the models with the database.
 
 ## `MigrationSpec` and `LegacyBaseline`
 
@@ -9,6 +11,16 @@
 class LegacyBaseline:
     revision: str
     validate: Callable[[Connection, str | None], bool]
+
+    @classmethod
+    def from_plugin_history(
+        cls,
+        revision: str,
+        *,
+        plugin_name: str,
+        last_version: int,
+        validate: Callable[[Connection, str | None], None] | None = None,
+    ) -> LegacyBaseline: ...
 
 
 @dataclass(frozen=True)
@@ -24,6 +36,8 @@ class MigrationSpec:
 | `package` | Importable, single-filesystem-location package containing standard Alembic revision modules |
 | `models` | Unique owned ORM model classes with `__table__`; used for scoped comparison, not automatic table creation |
 | `legacy` | Optional fixed baseline and synchronous validator for explicit adoption of an existing unversioned schema |
+
+`LegacyBaseline.from_plugin_history()` builds the baseline for a plugin moving off the legacy integer protocol. It adopts `revision` when the legacy history of `plugin_name` (the plugin's `metadata.name`) in `public.plugin_schema_migrations` on PostgreSQL or `_plugin_migrations` on SQLite holds exactly versions 1..`last_version`, all successful. No legacy history means a fresh install, which runs the baseline revision. An incomplete, failed or newer history raises `MigrationError`. The optional `validate` callable may raise for plugin-specific data checks; the runtime then compares the adopted schema with `MigrationSpec.models` before committing.
 | `managed_tables` | Additional owned table names used in scope filtering, particularly a shared `public` domain; not an ignore list or permission to skip DDL |
 
 Return the spec from `AnalysisPlugin.get_migration_spec()`. Returning a spec and a non-`None` `get_migrations_package()` together raises `ConfigurationException`. Keep the legacy hook at its default when using this protocol.
@@ -115,7 +129,7 @@ class MigrationStatus:
     migration_error: str | None = None
 ```
 
-String revisions belong in `schema_revision` and `target_revision`; do not parse them into legacy integer `schema_version`. Errors in runtime operations raise rather than returning a normal failure result. The platform catches startup errors and publishes failure status including `migration_error`.
+String revisions belong in `schema_revision` and `target_revision`; do not parse them into legacy integer `schema_version`. The admin plugin list's `schema_version` is deprecated, `null` for Alembic plugins and removed with the legacy protocol in MINT 1.4; read `schema_revision`. Errors in runtime operations raise rather than returning a normal failure result. The platform catches startup errors and publishes failure status including `migration_error`.
 
 ## Plugin database hooks
 
@@ -123,7 +137,7 @@ String revisions belong in `schema_revision` and `target_revision`; do not parse
 class AnalysisPlugin:
     def get_shared_models(self) -> list[type]: ...
     def get_migration_spec(self) -> MigrationSpec | None: ...
-    def get_migrations_package(self) -> str | None: ...
+    def get_migrations_package(self) -> str | None: ...  # deprecated, removed in MINT 1.4
     def validate_database_runtime(self, context: PlatformContext | None = None) -> None: ...
     async def ensure_standalone_database(
         self, storage_dir: Any | None = None, *, run_migrations: bool = True
@@ -180,7 +194,10 @@ Recover with compatible immutable revision files, a reviewed forward repair, or 
 
 ## Legacy integer migration API
 
-The following API remains supported for plugins returning `get_migrations_package()`. It is distinct from the Alembic contract above.
+The following API serves plugins returning `get_migrations_package()`. It is deprecated and will be removed in MINT 1.4; move to `MigrationSpec` with [`LegacyBaseline.from_plugin_history()`](#migrationspec-and-legacybaseline). It is distinct from the Alembic contract above.
+
+- Constructing a `MigrationRunner` emits a `DeprecationWarning` and logs a warning naming the plugin; `mint doctor` reports a warning for `get_migrations_package()`.
+- When a legacy migration fails at platform startup, the platform disables the plugin before `initialize()`, as for a failed Alembic upgrade.
 
 ### `PluginMigration`
 

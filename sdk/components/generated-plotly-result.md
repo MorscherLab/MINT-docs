@@ -16,7 +16,7 @@ This component renders a piece of the SDK's backend-driven **generated UI** syst
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/GeneratedPlotlyResult.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/GeneratedPlotlyResult.vue">Source</a>
 </div>
 
 <ComponentPlayground name="GeneratedPlotlyResult" />
@@ -36,7 +36,7 @@ import { GeneratedPlotlyResult } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/GeneratedPlotlyResult.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/GeneratedPlotlyResult.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

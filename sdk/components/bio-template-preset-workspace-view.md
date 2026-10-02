@@ -10,9 +10,13 @@ description: "BioTemplatePresetWorkspaceView is a workflow component exported by
 
 BioTemplatePresetWorkspaceView is a workflow component exported by @morscherlab/mint-sdk for plugin frontends.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**. The SDK has no replacement.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/BioTemplatePresetWorkspaceView.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BioTemplatePresetWorkspaceView.vue">Source</a>
 </div>
 
 <ComponentPlayground name="BioTemplatePresetWorkspaceView" />
@@ -33,7 +37,7 @@ The generated table below preserves the SDK's declarations and source comments.
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/BioTemplatePresetWorkspaceView.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BioTemplatePresetWorkspaceView.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -45,7 +49,7 @@ MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` values ` | ` BioTemplateControlValues ` | No | ` undefined ` | External control values for the internally generated preset workspace. Supports v-model:values. |
 | ` label ` | ` string ` | No | ` undefined ` | Label shown in the status banner. Defaults to the humanized preset id. |
 | ` sidebarWidth ` | ` string ` | No | ` '320px' ` | Sidebar CSS width. |
-| ` sidebarVariant ` | ` BioTemplatePresetSidebarVariant ` | No | ` 'analysis' ` | AppSidebar visual preset. analysis matches the LEAF-style MINT analysis sidebar design language. |
+| ` sidebarVariant ` | ` BioTemplatePresetSidebarVariant ` | No | ` 'analysis' ` | @deprecated No-op, removed in MINT 1.4. AppSidebar has one look now; the former analysis preset is the default. |
 | ` dense ` | ` boolean ` | No | ` true ` | Compact sidebar and preview layout. |
 | ` readonly ` | ` boolean ` | No | ` true ` | Render preview components in read-only mode. |
 | ` showStatus ` | ` boolean ` | No | ` true ` | Show save timestamp. |
@@ -60,11 +64,11 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` UseBioTemplatePresetWorkspaceReturn `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/useBioTemplatePresetWorkspace.ts#L61) | See the linked SDK type definition. |
-| [` TemplatePresetId `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/templates/types.ts#L25) | See the linked SDK type definition. |
-| [` UseBioTemplatePresetWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/useBioTemplatePresetWorkspace.ts#L54) | See the linked SDK type definition. |
-| [` BioTemplateControlValues `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/templates/builderPresetControls.ts#L25) | See the linked SDK type definition. |
-| [` BioTemplatePresetSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/BioTemplatePresetWorkspaceView.vue#L24) | See the linked SDK type definition. |
+| [` UseBioTemplatePresetWorkspaceReturn `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/useBioTemplatePresetWorkspace.ts#L61) | See the linked SDK type definition. |
+| [` TemplatePresetId `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/templates/types.ts#L25) | See the linked SDK type definition. |
+| [` UseBioTemplatePresetWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/useBioTemplatePresetWorkspace.ts#L54) | See the linked SDK type definition. |
+| [` BioTemplateControlValues `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/templates/builderPresetControls.ts#L25) | See the linked SDK type definition. |
+| [` BioTemplatePresetSidebarVariant `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BioTemplatePresetWorkspaceView.vue#L24) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

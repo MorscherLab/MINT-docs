@@ -284,7 +284,7 @@ const adminField = {
 }
 ```
 
-The old flat `permissions`, `anyPermissions`, `requiresAdmin`, and `visibleFor` fields are deprecated in 1.2; the nested policy wins if both forms are supplied. These rules control visibility, not server authorization. Settings endpoints must still require the corresponding backend permission.
+Access rules live in the nested `access` field. These rules control visibility, not server authorization. Settings endpoints must still require the corresponding backend permission.
 
 ## Conditional fields
 
@@ -363,6 +363,10 @@ const builder = useFormBuilder(schema, existingDesignData ?? {})
 Initial data overrides per-field defaults — that's intentional for editing flows. Read and write values through `builder.form.data`.
 
 ## Saving back to the experiment
+
+::: warning Deprecated
+`useExperimentSave()` is scheduled for removal in **MINT 1.4**. The SDK has no replacement.
+:::
 
 For experiment-design plugins, pair FormBuilder with `useExperimentSave`:
 

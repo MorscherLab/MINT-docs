@@ -11,7 +11,7 @@ The top action bar appears on platform pages and SDK plugin shells. The exact co
 | Element | What it does |
 |---------|--------------|
 | **MINT logo / platform name** | Returns to the home dashboard |
-| **Navigation / breadcrumb** | Moves between Home, Projects, Experiments, Admin, and record detail pages |
+| **Navigation / breadcrumb** | The pill navigation (**Home**, **Experiments** with **Experiments** and **Projects**, and **Instruments**) moves between platform pages. **Instruments** shows a red dot while an active instrument has an unacknowledged critical alert. Breadcrumbs lead back from record detail pages |
 | **Plugins control** | Opens installed plugin entry points that your account can access |
 | **Theme toggle** | Switches the active light/dark/system theme for the shell |
 | **Admin** | Opens the Admin workspace when your role exposes at least one admin section |
@@ -27,9 +27,12 @@ The landing page after logging in. The dashboard is built for quick triage:
 | **Notice board** | The pinned or newest active notice, with an earlier-notices modal when history exists |
 | **Experiments** | Recently updated experiments with status and code; a toggle shows only your own |
 | **Projects** | Recently updated projects with experiment counts and project status; a toggle shows only your own |
-| **Plugins** | Searchable grid/list of enabled plugins, with per-user pinning and entry-point links |
+| **Instruments** | Live status of active instruments, errors and offline first. Shown with `instruments.view` when at least one instrument is active. See [Instruments](/guide/instruments#instruments-on-home) |
+| **Plugins** | Searchable grid/list of enabled plugins by display name or plugin ID, with per-user pinning and entry-point links |
 
 Admins who can manage notices see a shortcut from the notice board to **Admin -> Platform -> Notices**.
+
+Plugins appear under the display name their authors declare, or under the plugin ID if there is none. The plugin page, the experiment page, and the settings list use the same name. The Home settings window opens on **Appearance**. Its **Plugins** tab, under **Platform** in the side rail, lists the installed plugins you can open.
 
 > [Screenshot: home dashboard with status strip, notice board, recent records, and plugin launcher labeled]
 
@@ -37,7 +40,7 @@ Admins who can manage notices see a shortcut from the notice board to **Admin ->
 
 | Page | What it does |
 |------|--------------|
-| `/login` | Password, passkey and (when enabled) SWITCH edu-ID sign-in |
+| `/login` | Password, passkey and (when enabled) SWITCH edu-ID sign-in. An account that waits for an admin shows **Waiting for approval** |
 | `/register` | Self-registration; sends you to `/login` when an admin has turned registration off |
 | `/setup` | First-run setup wizard (database, first admin account) shown until setup completes |
 
@@ -82,12 +85,13 @@ Open this from the account menu in the top action bar.
 | Section | Contains |
 |---------|----------|
 | **Profile** | First name, last name, display shortname, email, and read-only username |
-| **Password** | Current password, new password (at least 8 characters), confirmation, and the password-change action |
+| **Password** | Current password, new password (at least 8 characters, at most 72 bytes), confirmation, and the password-change action. Changing it keeps you signed in here and signs out your other sessions |
 | **Security** | Passkeys and SWITCH edu-ID linking, when those auth features are enabled |
+| **AI & API** | MCP URL for AI assistants, and your personal access tokens. See [AI Assistants and API Access](/guide/ai-and-api) |
 
-The account modal is for identity and sign-in settings; **Log out** sits at the bottom of its side rail. Shell appearance is controlled by the theme toggle in the top action bar.
+The account modal is for identity, sign-in, and access-token settings; **Log out** sits at the bottom of its side rail. Shell appearance is controlled by the theme toggle in the top action bar.
 
-> [Screenshot: Your account modal with Profile, Password, and Security sections]
+> [Screenshot: Your account modal with Profile, Password, Security, and AI & API sections]
 
 ## Admin workspace
 
@@ -97,11 +101,13 @@ Open **Admin** from the top action bar or go to `/admin`. Users only see section
 |-------|---------|----------|
 | **People** | **Users** | Account list, role assignment, disable / re-enable, and password reset |
 | **People** | **Roles** | Built-in role presets and custom-role editor |
-| **Plugins** | **Installed** | Installed plugins, runtime state, access control, update, and uninstall actions |
+| **Plugins** | **Installed** | Installed plugins (display name; the second line adds the plugin ID when it is different), runtime state, access control, update, and uninstall actions |
 | **Plugins** | **Registry** | Marketplace catalog, install/request install, refresh, compatibility, and update badges |
 | **Platform** | **Experiment Types** | Experiment type registration and platform-owned design metadata |
 | **Platform** | **Notices** | Publish, pin, archive, restore, and delete home-dashboard notices |
 | **Platform** | **Configuration** | Platform, auth, database, storage, access, marketplace, and observability settings |
+| **Platform** | **Access Tokens** | Every user's personal access tokens, with revoke |
+| **Platform** | **Service Tokens** | Tokens for instrument daemons that report to a plugin, with revoke |
 | **Platform** | **Server** | Runtime health, platform version, update status, and plugin process information |
 | **Platform** | **Terminal** | Optional container/process shell and persisted startup script; hidden unless enabled and permitted |
 | **Platform** | **Logs** | Structured platform logs and health diagnostics |

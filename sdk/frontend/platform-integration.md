@@ -7,7 +7,6 @@ This guide targets MINT **@MINT_VERSION@**. Start with the [standard frontend tu
 | Need | Public API | Important boundary |
 |------|------------|--------------------|
 | Embedded/standalone mode, platform user, theme, navigation | `usePlatformContext()` | Describes the host; it does not own login or the experiment picker |
-| Login actions and token lifecycle | `useAuth()` | Actions such as `initializeAuth()`, `login()`, `logout()` |
 | Reactive authentication and permission state | `useAuthStore()` | `isAuthenticated`, `needsAuth`, `userInfo`, and permission helpers |
 | Experiment selected by the workspace picker | `useExperimentStore()` | Shared selection for the plugin's Pinia instance |
 | Top-bar experiment selector/save/detach UX | `PluginWorkspaceView experiment-shell` or `useAppExperiment()` | Reads the shared experiment store |
@@ -44,30 +43,24 @@ Detection happens on mount using the injected `window.__MINT_PLATFORM__` context
 
 ## Authentication
 
-The SDK's API helpers use the auth store's bearer token. `useAuth()` returns methods; read reactive state from `useAuthStore()`:
+The SDK's API helpers use the auth store's bearer token. The platform owns sign-in, token refresh and passkeys; a plugin reads identity and permissions from `useAuthStore()` and never logs a user in itself (`useAuth` and `usePasskey` were removed in 1.3):
 
 ```ts
-import { onMounted } from 'vue'
-import { useAuth, useAuthStore } from '@morscherlab/mint-sdk'
+import { useAuthStore } from '@morscherlab/mint-sdk'
 
-const auth = useAuth()
 const authState = useAuthStore()
-
-// For a custom shell that owns authentication initialization.
-onMounted(async () => {
-  await auth.initializeAuth()
-})
-
-async function signIn(username: string, password: string): Promise<boolean> {
-  return auth.login(username, password)
-}
+const canEdit = authState.hasPermission('experiments.edit')
 ```
 
-Render `authState.needsAuth`, `authState.isLoading`, and `authState.error` in the surrounding login UI. Use the SDK's existing workspace/account controls where they cover the flow. Do not assume `usePlatformContext().user` automatically initializes an auth store or grants access. Hiding a button is only presentation; protect its endpoint on the backend too.
+Use `authState.needsAuth`, `authState.isLoading`, and `authState.error` to gate the page. Do not assume `usePlatformContext().user` automatically initializes an auth store or grants access. Hiding a button is only presentation; protect its endpoint on the backend too.
 
 ## Select, load, edit, and save an experiment
 
 This complete page is for an **experiment-design plugin** whose entry-point key is `my-design`. It uses the platform picker and saves a small design payload. Replace `my-design` with your plugin ID and ensure the platform permits that plugin to edit the selected experiment.
+
+::: warning Deprecated
+`useExperimentSave()` is scheduled for removal in **MINT 1.4**. The SDK has no replacement.
+:::
 
 ```vue
 <script setup lang="ts">
@@ -150,80 +143,21 @@ For standard top-bar UI, enable `experiment-shell` on `PluginWorkspaceView`; it 
 
 ## Browse server files
 
-MINT 1.2 adds `FileBrowserModal` and `useFileBrowser()` for configured **read-only server mounts**. The selection contains mount-relative paths; the picker does not upload or copy files. The platform needs configured mounts and the user needs `filesystem.browse`. With no mounts configured, the helper treats the absent routes as an empty mount list.
+`FilePicker` with `usePlatformFilePickerAdapter()` browses configured **read-only server mounts**. The selection contains mount-relative references; the picker does not upload or copy files. The platform needs configured mounts and the user needs `filesystem.browse`. See [Adapter-driven FilePicker](#adapter-driven-filepicker) below for the example. `useFileBrowser()` and the `FileSelection` / `ServerMount` types remain for custom server-file UIs.
 
-```vue
-<script setup lang="ts">
-import { ref } from 'vue'
-import {
-  BaseButton,
-  FileBrowserModal,
-  useFileBrowser,
-  type FileSelection,
-} from '@morscherlab/mint-sdk'
-
-const open = ref(false)
-const inputFiles = ref<FileSelection[]>([])
-const typeRules = ['.mzML', '.raw']
-const browser = useFileBrowser({ typeRules })
-const {
-  mounts, mountId, path, parent, entries, breadcrumbs, selected,
-  search, sort, totalCount, matchCount, truncated, isLoading, error,
-} = browser
-
-async function chooseFiles(): Promise<void> {
-  open.value = true
-  await browser.init()
-}
-
-function confirm(selection: FileSelection[]): void {
-  inputFiles.value = [...selection]
-  open.value = false
-}
-</script>
-
-<template>
-  <BaseButton @click="chooseFiles">Select server data</BaseButton>
-  <p>{{ inputFiles.length }} input paths selected</p>
-  <FileBrowserModal
-    v-model="open"
-    v-model:selected="selected"
-    v-model:search="search"
-    v-model:sort="sort"
-    :mounts="mounts"
-    :mount-id="mountId"
-    :path="path"
-    :parent="parent"
-    :entries="entries"
-    :breadcrumbs="breadcrumbs"
-    :type-rules="typeRules"
-    :total-count="totalCount"
-    :match-count="matchCount"
-    :truncated="truncated"
-    :loading="isLoading"
-    :error="error"
-    :show-local-picker="false"
-    @navigate="browser.navigate"
-    @select-folder="browser.selectCurrentFolder"
-    @refresh="browser.refresh"
-    @confirm="confirm"
-  />
-</template>
-```
-
-Send the selected `{ mount_id, path, ... }` records to a plugin endpoint only after defining that endpoint's input model. On the server, resolve paths through the platform filesystem service and validate access; never concatenate an unchecked browser path onto a server directory. `typeRules` marks matching entries for the UI; it is not backend file validation. `FileUploader` instead returns browser `File[]` for a local-file workflow.
+Send selected `{ mount_id, path }` references to a plugin endpoint only after defining that endpoint's input model. On the server, resolve paths through the platform filesystem service and validate access; never concatenate an unchecked browser path onto a server directory. `FileUploader` instead returns browser `File[]` for a local-file workflow.
 
 ### Listing cache and refresh
 
-The platform reuses a server-side `FileBrowser` while mount configuration is unchanged. Its default cache retains metadata for up to 300 seconds and 128 directories; each request still resolves the path and checks the directory signature before reuse. This is metadata caching, not a local copy of the files.
+The platform reuses a server-side `FileBrowser` while mount configuration is unchanged. Its default cache retains metadata for up to 300 seconds and 128 directories; each request still resolves the path and checks the directory signature before reuse. After a listing, the server reads up to 32 of the newest subfolders in the background so the next folder opens from the cache. This is metadata caching, not a local copy of the files.
 
-Keep `@refresh="browser.refresh"` connected. It sends `refresh=true` for the current location and invalidates cached listings for that mount, including descendants. Listing responses are capped at 2,000 entries by default, so display `truncated` and counts instead of claiming the visible rows are a complete directory inventory. `typeRules` classifies matching entries rather than hiding other files. The helper cancels superseded requests and starts at a reachable mount when the preferred mount is offline.
+The picker's refresh action (and `useFileBrowser().refresh()` in a custom UI) sends `refresh=true` for the current location and invalidates cached listings for that mount, including descendants. Listing responses are capped at 2,000 entries by default; a custom `useFileBrowser()` UI should display `truncated` and counts instead of claiming the visible rows are a complete directory inventory. Its `typeRules` classify matching entries rather than hiding other files. The helper cancels superseded requests and starts at a reachable mount when the preferred mount is offline.
 
 Cache size, TTL, and entry limits are Python `FileBrowser` settings; they are not `useFileBrowser()` options. See the [release filesystem implementation](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/filesystem.py) if you own a standalone file browser service.
 
 ### Adapter-driven FilePicker
 
-Use `FilePicker` for expandable folder trees, metadata preview, recursive search, and reviewing resolved file selections. It is a different component from the controlled `FileBrowserModal` above: its open binding is `v-model:open`, its result event is `select`, and it accepts a `PickerAdapter`.
+Use `FilePicker` for folder navigation, metadata preview, recursive search, and reviewing resolved file selections. Its open binding is `v-model:open`, its result event is `select`, and it accepts a `PickerAdapter`. The platform adapter lists the mounts as header sources next to Local files.
 
 ```vue
 <script setup lang="ts">
@@ -266,9 +200,11 @@ function select(selection: PickerSelection): void {
 
 The platform adapter uses opaque picker identities, not filesystem paths. Decode each selected server file with `decodePlatformPickerPath()` before submitting its mount-relative reference. For local selections, `selection.source === 'localFile'` instead yields browser `File[]` with optional `relativePaths`; the picker does not read or upload their bytes.
 
-`usePlatformFilePickerAdapter({ rootLocation: { mount_id, path } })` can start inside one directory and prevent navigating above it. For a plugin-owned file API, use `createFilePickerAdapter(transport, options)` with `listMounts(request?)` and `browse(location, request?)` transport methods that return `ServerMount[]` and `FileDirectoryListing`. Forward `request.signal` and `request.refresh` to your generated endpoint calls; the adapter already implements mount identity, navigation, and search. `useFilePicker` itself is internal, not the public extension point.
+`usePlatformFilePickerAdapter({ rootLocation: { mount_id, path } })` can start inside one directory and prevent navigating above it. For a plugin-owned file API, use `createFilePickerAdapter(transport, options)` with `listMounts(request?)` and `browse(location, request?)` transport methods that return `ServerMount[]` and `FileDirectoryListing`, and optionally `tree(location, request?)` and `search(location, query, recursive, request?)`. Forward `request.signal` and `request.refresh` to your generated endpoint calls; the adapter already implements mount identity, navigation, and search.
 
-The picker warms at most 20 immediate folders with two requests at a time and reuses in-flight reads during navigation. Closing, changing source, and refreshing invalidate pending/cached adapter state; reopening re-reads the current location. This bounded prefetch is not a full-tree index. Recursive adapter search stops at 500 folders or more than 10,000 matches; narrow the location/query when those limits are reached. Unlike the raw browser modal, the adapter rejects a truncated server listing so a partial inventory cannot be confirmed as a complete selection.
+The backend side of such an API is `mint_sdk.filesystem.file_browser_router(get_browser)`, the same routes the platform serves at `/api/filesystem`: `GET mounts`, `browse`, `tree` (up to three levels in one request) and `search` (server-side name search). Build the `FileBrowser` over the plugin's own directories; `allow_directory` refuses any directory a listing, tree, search or `resolve_picker_path()` would open (HTTP 403), and `hide_unmatched_files`, `files_at_root` and `allow_hidden` fix what the listing may show. `FileBrowser.resolve_picker_path(identity)` turns a selected picker path into the server path for a job. `useFilePicker` itself is internal, not the public extension point.
+
+The picker warms at most 20 immediate folders with two requests at a time and reuses in-flight reads during navigation. Closing, changing source, and refreshing invalidate pending/cached adapter state; reopening re-reads the current location. This bounded prefetch is not a full-tree index. With a `search` transport the server searches (5,000 folders, 1,000 matches, 10 seconds); without it the adapter walks folders itself and stops at 500 folders or 10,000 matches. Either way, a search that reaches a limit returns the matches found so far and the picker says so. Unlike a raw `useFileBrowser()` listing, the adapter rejects a truncated server listing so a partial inventory cannot be confirmed as a complete selection.
 
 `systemFilter` and `capabilities` guide visibility/selection in the UI. They never replace backend access checks, file-size validation, or path resolution.
 

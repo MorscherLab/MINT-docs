@@ -12,17 +12,42 @@ MINT follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The pla
 
 → [Full CHANGELOG](https://github.com/MorscherLab/MINT/blob/main/CHANGELOG.md) — every change, every version.
 
+## Notable changes in 1.3
+
+Admin and plugin-author actions for the 1.3 minor release. Update the platform and both SDK packages together.
+
+| Area | Change | Action |
+|---|---|---|
+| Python | The platform, the Docker image (`python:3.14-slim`) and `mint-sdk` require Python 3.14; plugin installs are wheel-only | Plugins need `requires-python >=3.14` and `cp314` wheels for compiled dependencies. See [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3#python-3-14-and-dependency-floors). |
+| Upgrade path | 1.3 no longer runs the integer (v001–v031) migrations and refuses to start on a database that 1.2.x (≥ 1.2.2) has not adopted into Alembic | Upgrade 1.1 → 1.2.x (≥ 1.2.2) → 1.3. Do not downgrade to ≤ 1.2.1; restore a backup instead. See [Updates](/admin/updates). |
+| Scheduled updates | The platform can stage platform and plugin updates daily and restart once | Run under a restart supervisor (`mint platform daemon` or `MINT_RESTART_SUPERVISED=1`; the Docker Compose file sets it). See [Updates](/admin/updates). |
+| Plugin dependencies | In-process plugin dependencies are hash-locked; plugins that no longer resolve after an upgrade are disabled with a reason | Check the admin plugin list after upgrading. See [Plugin management](/admin/plugins). |
+| Access tokens and MCP | Personal access tokens and an MCP endpoint at `/mcp` for AI tools | Set `server.externalUrl` correctly; `/mcp` accepts only its host. See [AI Assistants and API Access](/guide/ai-and-api). Plugins can publish MCP tools: [MCP tools](/sdk/recipes/mcp-tools). |
+| Instruments | A shared instrument directory with `instruments.view` / `instruments.edit` permissions | Review custom roles. See [Instruments](/guide/instruments). |
+| Sessions | Changing a password signs out every other session | None. |
+| Second factor | Sign-in asks for a passkey after the password or edu-ID step on HTTPS sites (`auth.requireSecondFactor`, default on) | Move password-based scripts to personal access tokens. See [Authentication](/admin/authentication#second-factor). |
+| `mint` CLI sign-in | `mint auth login` uses a device code; `--username` is removed | Scripts and CI use `MINT_TOKEN` or `mint auth login --token`. See [CLI reference](/sdk/api/cli-reference). |
+| Plugin requests | With auth enabled, every plugin request needs a Bearer credential (401 `auth.required` otherwise); plugins cannot declare public paths | Plugin frontends call through the SDK client; device integrations move to service tokens. See [Plugin routes need a credential](/sdk/operations/migrate-1.2-to-1.3#plugin-routes-need-a-credential). |
+| Instrument live status | Plugins report instrument state with service tokens; `/instruments` shows live status and alerts | Issue service tokens and grant instrument status in the plugin's access settings. See [Instrument status](/sdk/recipes/instrument-status) and [Instruments](/guide/instruments). |
+| Plugin display names | The platform shows a plugin's declared `display_name` instead of its ID | Optional: set `@mint_plugin(display_name=...)`. |
+| Python SDK | Package-root exports deprecated in 1.2 and `PluginDataRepository` are removed; the legacy migration protocol is deprecated (removal in 1.4) | Follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3). |
+| File picker | Server search, one-request folder trees and background prefetch; the picker sorts newest first. `mint_sdk.filesystem.file_browser_router` serves the same routes from a plugin | A plugin with its own file routes can replace them with `file_browser_router` and add `tree`/`search` to its `createFilePickerAdapter` transport; the mounts response is `{ mounts: [...] }`. See [Platform integration](/sdk/frontend/platform-integration#adapter-driven-filepicker). |
+| Frontend peers and charts | Peers require vue `^3.5.43`, pinia `^4.0.3`, vue-router `^5.3.1`, tailwindcss `^4.3.3`; charts run on Plotly 4 | See [Frontend changes](/sdk/operations/migrate-1.2-to-1.3#frontend-changes). |
+| Deprecations | `mint_sdk.lcms`, the biology data templates, SmartGroup sample grouping and `DoseDesignWorkspaceView` are removed in 1.4 | `mint doctor` warns on each use. See [Deprecated in 1.3](/sdk/operations/migrate-1.2-to-1.3#deprecated-in-1-3). |
+| Frontend SDK | `PlateMapEditor`, `RackEditor`, `FileBrowserModal`, `ColorSlider`, `AppPluginSwitcher`, `DropdownButton`, `InstrumentAlertLog`, `InstrumentStatusCard`, `LcmsSequenceTable` and several composables are removed; `PlateEditor` replaces the plate editors | Follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3); run `mint doctor`. |
+
 ## Notable changes in 1.2
 
 Plugin-author and admin actions per patch release. Guides elsewhere on this site describe current behavior only; the full notes are in the changelogs linked above.
 
-### 1.2.7 – 1.2.9
+### 1.2.7 – 1.2.10
 
 | Release | Change | Plugin author action |
 |---|---|---|
 | 1.2.7 | Frontend SDK bundles `axios` 1.20.0 (fixes four GHSA advisories); toasts start below a mounted `AppTopBar`; `mint doctor` no longer suggests the removed `AppSidebar variant="analysis"` | Update both SDK packages together. Replace any leftover `variant` with `AppSidebar :floating="false" collapsible` (add `width="20rem"` for the former analysis width). Admins: self-registration can be disabled with `auth.allowRegistration`, and passwords now need at least 8 characters. |
 | 1.2.8 | `mint deploy` waits until the restarted platform loads the version recorded in the bundle's `manifest.json` | Do not treat a deploy that times out as successful; the timeout message names the loaded and bundle versions. |
 | 1.2.9 | `GET /api/health` returns a per-process `boot_id`; `mint deploy` confirms the restart by it, treats `--timeout` as one budget, and reports failures as `Error: ...` or JSON | Accounts without `platform.configure` cannot restart: deploy reports the plugin as installed but not running. Use `--no-restart` and ask an administrator. See [What deploy confirms](/sdk/operations/deploying#what-deploy-confirms). |
+| 1.2.10 | A plugin can declare `analysis_result_writers` to replace another plugin's file artifact; a platform update to the next minor pairs plugins pinned to the current minor with a compatible release | Owners list writer plugin IDs; writers call `update_analysis_file_artifact(..., plugin_id=owner)`. Admins confirm the paired plugin list before the update downloads. |
 
 ### 1.2.2 – 1.2.6
 

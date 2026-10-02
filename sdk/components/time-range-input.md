@@ -10,13 +10,9 @@ description: "Paired start/end time pickers that validate range order and displa
 
 Paired start/end time pickers that validate range order and display computed duration.
 
-::: warning Deprecated
-Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Use [TimePicker](/sdk/components/time-picker) instead.
-:::
-
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/TimeRangeInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/TimeRangeInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="TimeRangeInput" />
@@ -27,10 +23,14 @@ Unused by the MINT platform and scheduled for removal in **MINT 1.3**. Use [Time
 import { TimeRangeInput } from "@morscherlab/mint-sdk/components"
 ```
 
+## Validation
+
+When end ≤ start, the fields show "End time must be after start time". The component emits `validity-change(valid)` on mount and whenever validity flips, and exposes `isValid` through a template ref so a form can block submit. With `showDuration`, the duration reads like `1 h 30 min` and shows "—" for an incomplete or inverted range. `disabledSlots` is forwarded to both pickers.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/TimeRangeInput.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/TimeRangeInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -44,6 +44,7 @@ MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` format ` | ` '12h' \| '24h' ` | No | ` '24h' ` | — |
 | ` showDuration ` | ` boolean ` | No | ` true ` | — |
 | ` blockedRanges ` | ` TimeRange[] ` | No | ` () => [] ` | — |
+| ` disabledSlots ` | ` TimeSlotDisabledFn ` | No | ` undefined ` | Marks slots unavailable in both pickers; a returned string is shown inline as the reason. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -51,7 +52,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TimeRange `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L62) | See the linked SDK type definition. |
+| [` TimeRange `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L69) | See the linked SDK type definition. |
+| [` TimeSlotDisabledFn `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L67) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

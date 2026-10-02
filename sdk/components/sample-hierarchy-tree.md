@@ -12,7 +12,7 @@ SampleHierarchyTree is a lab widgets component exported by @morscherlab/mint-sdk
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SampleHierarchyTree.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SampleHierarchyTree.vue">Source</a>
 </div>
 
 <ComponentPlayground name="SampleHierarchyTree" />
@@ -26,7 +26,7 @@ import { SampleHierarchyTree } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SampleHierarchyTree.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SampleHierarchyTree.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -39,6 +39,7 @@ MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 | ` loading ` | ` boolean ` | No | ` false ` | Replace the tree with a loading placeholder. |
 | ` error ` | ` string \| null ` | No | ` null ` | Error message. When set, the tree is replaced by an error state. null/undefined renders normally. |
+| ` selectedId ` | ` string \| null ` | No | ` undefined ` | Selected node id; bind it with v-model on selected-id. Binding it, even to null, turns on selection. The matching row is highlighted, rows take keyboard focus and Enter or Space selects. Left unbound, rows are not selectable. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -46,7 +47,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TreeNode `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L232) | See the linked SDK type definition. |
+| [` TreeNode `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L235) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

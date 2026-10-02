@@ -12,7 +12,7 @@ description: "ChartContainer is a data display component exported by @morscherla
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ChartContainer.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ChartContainer.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ChartContainer" />
@@ -45,7 +45,9 @@ import { ChartContainer } from '@morscherlab/mint-sdk'
 </style>
 ```
 
-The default `card` variant has a border and rounded corners. `frame` fills a parent with a definite height and uses compact header spacing; give your chart renderer an appropriate height too. This component does not resize or dispose an external chart library for you.
+The default `card` variant has a border and rounded corners. `frame` fills a parent with a definite height; give your chart renderer an appropriate height too. Both variants share one header: a one-line title and description above a hairline.
+
+Pass `legendItems` (`{ label, color, hidden? }[]`) to list series as clickable items in the header; a click emits `legend-toggle` with the item index, and your renderer applies the change. This component does not resize or dispose an external chart library for you.
 
 | Slot | Placement |
 |------|-----------|
@@ -62,7 +64,7 @@ When `loading` is true the normal body slot is not rendered. Initialize custom r
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ChartContainer.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ChartContainer.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -72,8 +74,15 @@ MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` empty ` | ` boolean ` | No | ` false ` | — |
 | ` emptyMessage ` | ` string ` | No | ` 'No data available' ` | — |
 | ` variant ` | ` 'card' \| 'frame' ` | No | ` 'card' ` | frame fills its parent and uses compact workbench chrome. |
+| ` legendItems ` | ` ChartLegendItem[] ` | No | ` undefined ` | Series shown as clickable items in the header; a click emits legend-toggle. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Related types
+
+| Type | Definition / accepted values |
+|---|---|
+| [` ChartLegendItem `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L334) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

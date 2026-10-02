@@ -12,7 +12,7 @@ FormulaInput is a forms component exported by @morscherlab/mint-sdk for plugin f
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/FormulaInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/FormulaInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="FormulaInput" />
@@ -23,10 +23,14 @@ FormulaInput is a forms component exported by @morscherlab/mint-sdk for plugin f
 import { FormulaInput } from "@morscherlab/mint-sdk/components"
 ```
 
+## Behavior
+
+While blurred, the field shows the rendered formula; while focused, the raw text. A fixed `MW · value · g/mol` segment shows the molecular weight. An unknown element or unparsable formula puts the field in the error state and names the symbol. All 118 elements, hydrates (`·` or `*`), and trailing charges (`SO4^2-`, `Fe2+`, `NH4+`) are accepted.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/FormulaInput.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/FormulaInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
