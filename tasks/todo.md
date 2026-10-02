@@ -19,11 +19,11 @@ sync only `ec60dd49..v1.3.0`.
 
 `build-docs.ts` and `update-component-props.ts` assert installed SDK == docs version.
 
-- [ ] `versions.ts`: `currentDocsVersion = '1.3.0'`; add `{ version: '1.2.9', ref: '796bbf2…' }` to `archivedDocs`.
-- [ ] `package.json` + `bun.lock`: `@morscherlab/mint-sdk ^1.3.0`.
-- [ ] `check-doc-versions.ts`: add a 1.2.9-archive baseline assert (e.g. a 1.3-only CLI command absent).
-- [ ] Regenerate component props: `bun scripts/update-component-props.ts ../MINT/packages/sdk-frontend` at `v1.3.0`.
-- [ ] `bun run build` (current + both archives) passes.
+- [x] `versions.ts`: `currentDocsVersion = '1.3.0'`; add `{ version: '1.2.9', ref: '796bbf2…' }` to `archivedDocs`.
+- [x] `package.json` + `bun.lock`: `@morscherlab/mint-sdk ^1.3.0`.
+- [x] `check-doc-versions.ts`: add a 1.2.9-archive baseline assert (e.g. a 1.3-only CLI command absent).
+- [x] Regenerate component props: `bun scripts/update-component-props.ts ../MINT/packages/sdk-frontend` at `v1.3.0`.
+- [x] `bun run build` (current + both archives) passes.
 
 ## Content (draft against 1.3-dev now)
 
@@ -124,5 +124,5 @@ Workflow, one agent per section (admin, guide, sdk-python, sdk-frontend), `model
 - `admin/users-roles` / `reference/troubleshooting`: self-registered accounts stay inactive until **Activate user**; add a "Waiting for approval" entry.
 - `admin/authentication` PAT table: "the proxy does not forward the token" is true for the proxy only; in-process plugins still receive a PAT (`api/dependencies/plugin_visibility.py` drops `Authorization` only for service tokens).
 - `sdk/frontend/platform-integration.md:15`, `composables.md` still point at the deprecated `useExperimentSave` (no SDK replacement exists).
-- Release commit: component action-bar Source links (`blob/v1.2.9`, `plate-editor` `blob/main`) and `plotly-chart` "Release source" line; generated InstrumentStateBadge props lack `never` / `inactive`.
 - `reference/glossary`: define "service token".
+- Release commit done 2026-10-02 on `docs/1.3.0-release` (npm 1.3.0 published): SDK ^1.3.0 with pinia ^4.0.3, vue-router ^5.3.1, tailwindcss ^4.3.3; `@simplewebauthn/browser` dropped; props regenerated from a v1.3.0 worktree; 1.2.9 archive.

@@ -35,7 +35,7 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/PlotlyChart.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/PlotlyChart.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -53,6 +53,7 @@ MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` height ` | ` string \| number ` | No | ` undefined ` | Plot canvas height. Numbers are interpreted as pixels. |
 | ` clickEvents ` | ` boolean ` | No | ` false ` | Forward Plotly point clicks through the plotly-click event. |
 | ` variant ` | ` 'card' \| 'frame' ` | No | ` 'card' ` | Shared chart container chrome. frame fills a workbench panel. |
+| ` headerLegend ` | ` boolean ` | No | ` true ` | With two or more legend traces, list them in the chart header (click toggles the trace) instead of Plotly's in-plot legend. Any layout.showlegend leaves the legend to Plotly (true shows its legend, false shows none). |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -121,4 +122,4 @@ The SDK uses `plotly.js-dist-min` ^4.1.1. The SDK `dist/` does not bundle Plotly
 
 Set `empty` yourself when an analysis has no data. Bind `loading` to request state and keep axis labels/units explicit. For another chart library or event bindings beyond this API, use [ChartContainer](/sdk/components/chart-container).
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)
+[Release source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)

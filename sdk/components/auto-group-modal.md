@@ -16,7 +16,7 @@ Scheduled for removal in **MINT 1.4**, together with `useAutoGroup()`. Use [Samp
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AutoGroupModal.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AutoGroupModal.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AutoGroupModal" />
@@ -55,7 +55,7 @@ Use the individual `SmartGroup*` components when a plugin needs to own more of t
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AutoGroupModal.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AutoGroupModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -72,8 +72,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SampleGroup `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/componentLabTypes.ts#L168) | See the linked SDK type definition. |
-| [` GroupingWorkflow `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/AutoGroupModal.vue#L34) | See the linked SDK type definition. |
+| [` SampleGroup `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L171) | See the linked SDK type definition. |
+| [` GroupingWorkflow `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AutoGroupModal.vue#L34) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

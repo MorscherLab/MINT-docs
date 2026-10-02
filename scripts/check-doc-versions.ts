@@ -31,5 +31,8 @@ const currentCli = readFileSync(join(output, 'sdk/api/cli-reference.html'), 'utf
 assert(currentCli.includes('mint db current'), 'Current docs must contain the released database CLI')
 const legacyCli = readFileSync(join(output, 'v1.2.1/sdk/api/cli-reference.html'), 'utf8')
 assert(!legacyCli.includes('mint db current'), 'Archived docs must preserve the 1.2.1 command surface')
+assert(currentCli.includes('mint instruments'), 'Current docs must contain the 1.3 instruments CLI')
+const archivedCli = readFileSync(join(output, 'v1.2.9/sdk/api/cli-reference.html'), 'utf8')
+assert(!archivedCli.includes('mint instruments'), 'Archived docs must preserve the 1.2.9 command surface')
 assert(!existsSync(join(output, 'v1.2.1/CNAME')), 'Only the root site owns CNAME')
 console.log(`Verified ${versions.length} version labels, switch links, isolated catalogs, assets and API baselines.`)

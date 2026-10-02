@@ -12,7 +12,7 @@ One-card page region from the MINT 1.1 card system: header strip, hairline-separ
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SectionCard.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SectionCard.vue">Source</a>
 </div>
 
 <ComponentPlayground name="SectionCard" />
@@ -37,7 +37,7 @@ import { SectionCard } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SectionCard.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SectionCard.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -55,8 +55,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SectionCardAccent `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L133) | See the linked SDK type definition. |
-| [` SectionCardDivider `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L142) | ` 'strong' \| 'light' ` |
+| [` SectionCardAccent `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L143) | See the linked SDK type definition. |
+| [` SectionCardDivider `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L152) | ` 'strong' \| 'light' ` |
 
 <!-- sdk-props:end -->
 

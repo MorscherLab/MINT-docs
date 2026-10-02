@@ -16,7 +16,7 @@ This component renders a piece of the SDK's backend-driven **generated UI** syst
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/GeneratedPluginView.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/GeneratedPluginView.vue">Source</a>
 </div>
 
 <ComponentPlayground name="GeneratedPluginView" />
@@ -36,7 +36,7 @@ import { GeneratedPluginView } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/GeneratedPluginView.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/GeneratedPluginView.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -50,7 +50,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` GeneratedAnalysisTransport `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/useGeneratedAnalysis.ts#L32) | See the linked SDK type definition. |
+| [` GeneratedAnalysisTransport `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/useGeneratedAnalysis.ts#L33) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

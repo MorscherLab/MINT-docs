@@ -12,7 +12,7 @@ Modal for browsing and selecting an analysis artifact of an experiment, with fil
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ArtifactSelectorModal" />
@@ -36,7 +36,7 @@ import { ArtifactSelectorModal } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -55,7 +55,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/components.ts#L32) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
+| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L36) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
 
 <!-- sdk-props:end -->
 

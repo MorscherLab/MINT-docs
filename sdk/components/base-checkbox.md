@@ -12,7 +12,7 @@ Single checkbox control for boolean plugin settings and form fields.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/BaseCheckbox.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BaseCheckbox.vue">Source</a>
 </div>
 
 <ComponentPlayground name="BaseCheckbox" />
@@ -26,11 +26,13 @@ import { BaseCheckbox } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/BaseCheckbox.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BaseCheckbox.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` modelValue ` | ` boolean ` | No | ` false ` | — |
+| ` indeterminate ` | ` boolean ` | No | ` false ` | Partially checked (e.g. select-all over a partial selection); sets aria-checked="mixed". |
+| ` ariaLabel ` | ` string ` | No | ` undefined ` | Accessible name for the native input when no visible label is rendered (e.g. table rows). |
 | ` label ` | ` string ` | No | ` undefined ` | — |
 | ` description ` | ` string ` | No | ` undefined ` | — |
 | ` icon ` | ` string \| string[] ` | No | ` undefined ` | — |

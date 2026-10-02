@@ -12,7 +12,7 @@ ProgressBar is a feedback component exported by @morscherlab/mint-sdk for plugin
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ProgressBar.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ProgressBar.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ProgressBar" />
@@ -28,19 +28,16 @@ import { ProgressBar } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/ProgressBar.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ProgressBar.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` value ` | ` number ` | No | ` 0 ` | — |
-| ` variant ` | ` 'rail' \| 'segmented' ` | No | ` 'rail' ` | — |
 | ` color ` | ` 'primary' \| 'success' \| 'warning' \| 'error' \| 'info' ` | No | ` 'primary' ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 | ` label ` | ` string ` | No | ` undefined ` | — |
 | ` showValue ` | ` boolean ` | No | ` false ` | — |
 | ` indeterminate ` | ` boolean ` | No | ` false ` | — |
-| ` steps ` | ` string[] ` | No | ` () => [] ` | — |
-| ` currentStep ` | ` number ` | No | ` 0 ` | — |
 | ` ariaLabel ` | ` string ` | No | ` undefined ` | — |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.

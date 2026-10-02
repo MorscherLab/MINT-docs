@@ -12,7 +12,7 @@ InstrumentStateBadge is a data display component exported by @morscherlab/mint-s
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/InstrumentStateBadge.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/InstrumentStateBadge.vue">Source</a>
 </div>
 
 <ComponentPlayground name="InstrumentStateBadge" />
@@ -43,11 +43,11 @@ The `state` prop takes an `InstrumentBadgeState`: the `InstrumentState` values p
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.2.9**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/InstrumentStateBadge.vue).
+MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/InstrumentStateBadge.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` state ` | ` InstrumentState \| string ` | Yes | — | — |
+| ` state ` | ` InstrumentBadgeState \| string ` | Yes | — | — |
 | ` label ` | ` string ` | No | ` undefined ` | — |
 | ` pulseWhenRunning ` | ` boolean ` | No | ` true ` | — |
 
@@ -57,7 +57,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` InstrumentState `](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/types/instrument.ts#L1) | ` 'idle' \| 'running' \| 'standby' \| 'connected' \| 'disconnected' \| 'error' ` |
+| [` InstrumentBadgeState `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/instrument.ts#L44) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 
