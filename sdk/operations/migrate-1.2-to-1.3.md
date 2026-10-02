@@ -45,18 +45,13 @@ A plugin that still declares `<1.3` therefore stops loading after the platform u
 
 ## Python 3.14 and dependency floors
 
-`mint-sdk` 1.3 requires Python 3.14. A plugin whose `requires-python` admits 3.12 or 3.13 keeps resolving to `mint-sdk` 1.2.x. `mint sdk update --version @MINT_VERSION@` raises `[project].requires-python` to `>=3.14` and refuses when the result would exclude 3.14 (for example `<3.14` or `==3.12.*`). `mint doctor` reports an error for a `mint-sdk>=1.3` plugin whose `requires-python` admits older Python.
+`mint-sdk` 1.3 requires Python 3.14. A plugin whose `requires-python` admits an older Python keeps resolving to `mint-sdk` 1.2.x. `mint sdk update --version @MINT_VERSION@` raises `requires-python` to `>=3.14`, and `mint doctor` reports a plugin that still admits an older Python.
 
-Also change:
+- Set ruff `target-version = "py314"`, ignore `UP037`, and install Python 3.14 in CI.
+- Platform plugin installs are wheel-only: every compiled dependency needs a `cp314` wheel.
+- Drop caps below the SDK's dependency floors, and follow the Starlette 1.x and sqlmodel changes.
 
-- Set ruff `target-version = "py314"` and ignore `UP037`. Unquoting a `TYPE_CHECKING`-only annotation breaks the SDK's handler introspection on 3.14.
-- Install Python 3.14 in CI.
-- Platform plugin installs are wheel-only against the running interpreter. Every compiled dependency needs a `cp314` wheel.
-- Drop caps below the SDK's floors (FastAPI 0.141.1, Starlette 1.7, pydantic 2.13.5, httpx 0.28.1, uvicorn 0.54, sqlmodel 0.0.47, SQLAlchemy 2.0.54). Better, drop the requirement and let `mint-sdk` own it.
-- Do not declare `uvicorn`. The platform installs `mint-sdk[server]` into each subprocess plugin venv, and `mint doctor` reports a declared `uvicorn`.
-- Code that uses Starlette directly: `on_startup`/`on_shutdown`, `on_event()`, `add_event_handler()`, `@app.route()`, `@app.websocket_route()`, `@app.exception_handler()` and `@app.middleware()` on a `Starlette` app are removed in Starlette 1.0. Use `lifespan`, `routes`, `exception_handlers` and `middleware`.
-- Plugin tables with `datetime` fields: sqlmodel 0.0.45 and later maps `datetime` to timezone-aware UTC columns and rejects naive values. Write aware datetimes, or keep the current columns with `NaiveDatetime` or `Field(sa_type=DateTime(timezone=False))`.
-- The `cli` and `dev` extras require `httpx2`, which Starlette's `TestClient` uses. `mint-sdk[cli,server]` in the dev group installs it.
+Details: [Python 3.14 and SDK-owned dependencies](/sdk/operations/upgrading#python-3-14-and-sdk-owned-dependencies).
 
 ## Removed Python exports
 
@@ -96,19 +91,13 @@ These names are removed from their modules too: the `mint_sdk.logging` module (`
 
 ## Plugin routes need a credential
 
-With authentication enabled, the platform requires a Bearer credential on every plugin request, through the proxy and on in-process routes alike: a session JWT, a personal access token or a service token. It answers before the plugin sees the request:
+With authentication enabled, every plugin request needs a Bearer credential (a session JWT, a personal access token or a service token), through the proxy and on in-process routes alike. Without one, the platform answers 401 `auth.required` before the plugin sees the request. The session cookie is not read, and a plugin cannot declare public paths.
 
-| Request | Response |
-|---|---|
-| No credential, or one that does not resolve | 401 `auth.required` |
-| Write with a read-only personal access token | 403 `auth.read_only_token` |
-| Platform cannot reach the database to check the credential | 503 `auth.unavailable` |
-
-The session cookie is not read, and a plugin cannot declare public paths. Dev mode is unchanged. Details: [Platform authentication gate](/sdk/recipes/route-permissions#platform-authentication-gate).
-
-- Call plugin routes from the frontend through the SDK client, which sends the Bearer. A raw `fetch` or a plain link to a plugin route gets 401.
+- Call plugin routes from the frontend through the SDK client, which sends the Bearer.
 - Give scripts a personal access token (`MINT_TOKEN`).
-- A plugin that authenticated daemons or devices with its own API key must switch to platform service tokens. See [Instrument status](/sdk/recipes/instrument-status).
+- Replace a plugin's own device or daemon API key with platform service tokens. See [Report instrument status](/sdk/recipes/instrument-status).
+
+Responses and `auth=False`: [Platform authentication gate](/sdk/recipes/route-permissions#platform-authentication-gate).
 
 ## `PluginDataRepository` is removed
 
@@ -232,13 +221,7 @@ pinia 2 and 3 and vue-router 4 are no longer accepted. Upgrade them in the plugi
 
 ### Plotly 4
 
-Charts run on Plotly 4 (`plotly.js-dist-min` `^4.1.1`). The SDK no longer bundles Plotly; it loads from the plugin's `node_modules` when a `PlotlyChart` first renders.
-
-- `PlotlyChart` sets `showSendToCloud: false`, because Plotly 4 shows the "Share chart" button again. Pass it yourself when you call `Plotly.newPlot` directly.
-- Import Plotly types from `plotly.js-dist-min`, not from `@types/plotly.js`.
-- `scattermapbox`, `choroplethmapbox`, `densitymapbox` and the mapbox subplot are removed, so plotly.py `px.*_mapbox` figures no longer render. MathJax v2, `showLink`, `sendData` and every `*src` attribute are removed.
-- Colors are parsed with culori. `rgb()` with 0–1 fractions and `hsv()` can render differently. SDK tokens are hex and are not affected.
-- Defaults change: overlaying axes use `tickmode: 'sync'`, `splom.axis.matches` is `true`, `geo.fitbounds` is `'locations'`, double-click takes 500 ms, and image downloads use the chart title as the file name.
+Charts run on Plotly 4 (`plotly.js-dist-min` `^4.1.1`). Import Plotly types from `plotly.js-dist-min`, pass `showSendToCloud: false` when you call `Plotly.newPlot` yourself, and replace mapbox traces. Details: [Plotly 4 builds and types](/sdk/components/plotly-chart#plotly-4-builds-and-types).
 
 ## Deprecated in 1.3
 
@@ -251,7 +234,7 @@ These APIs still ship in 1.3 and are removed in MINT 1.4. `mint doctor` reports 
 | `BioTemplate*` workspace views, `BioTemplateRenderer`, `useBioTemplate*`, `useTemplateCollection`, `useExperimentSave`, `ReagentList`, `ReagentEditor`, `ExperimentTimeline`, `SampleLegend`, `FitPanel` | None |
 | `SmartGroupModal`, `SmartGroupFieldRecipe`, `SmartGroupManual`, `GroupAssigner`, `useGroupAssignment`, `AutoGroupModal`, `useAutoGroup` | [`SampleSelector`](/sdk/components/sample-selector) for sample grouping |
 | `DoseDesignWorkspaceView` | `ControlWorkspaceView` with `defineDoseDesignControlModel()` |
-| `instrument` helpers and types | Move to the mld-ms plugins |
+| Frontend instrument helpers (`sequenceProgressPercent`, `sequenceSamplesRemaining`, `estimateSequenceRemainingSeconds`, `estimateSequenceFinishDate`, `formatSequenceRemaining`, `formatSequenceEta`) | Move to the mld-ms plugins; the Python `mint_sdk.instrument` module is not deprecated |
 | `usePluginClient` | `useGeneratedPluginClient()` |
 | Legacy migration protocol | `MigrationSpec`; see [Legacy migrations are deprecated](#legacy-migrations-are-deprecated) |
 
