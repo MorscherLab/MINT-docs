@@ -187,7 +187,7 @@ Use a full `FormSchema` when you need exact JSON schema-like control over every 
 | `concentration` | `ConcentrationInput` + `useConcentrationUnits` | Value + unit picker |
 | `unit` | `UnitInput` | Value + unit picker |
 | `file` | `FileUploader` | Single or multi-file |
-| `path` | SDK path field | Path input defined by the form schema |
+| `path` | `GeneratedPathInput` | File or folder upload for a job `Path` input; integrated plugins (SDK 1.3+) can also pick an existing file artifact |
 
 The canonical list is `FormFieldType` in `packages/sdk-frontend/src/types/form-builder.ts`. The internal registry is readable through `getFieldRegistryEntry(type)` from `@morscherlab/mint-sdk/composables`.
 

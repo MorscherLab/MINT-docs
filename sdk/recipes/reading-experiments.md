@@ -140,6 +140,27 @@ artifact = await self.load_analysis_artifact(
 
 `fields` projects top-level result keys. Lists of artifacts contain metadata, not every result payload. Read the selected result on demand. See [PlatformContext](/sdk/concepts/platform-context#cross-plugin-readers).
 
+## Use a file artifact as a job input
+
+*SDK 1.3 and later.* A `@job` that takes an ordinary `pathlib.Path` can run on a file another analysis already stored. In the integrated generated UI, with an experiment open, the `Path` field offers **Existing artifact** next to the file and folder upload modes:
+
+```python
+from pathlib import Path
+
+@job
+def reprocess(self, source: Path) -> dict[str, int]:
+    return {"bytes": source.stat().st_size}
+```
+
+The picker lists only artifacts the job can use: file artifacts (`mint.analysis_file.v1`) that are active, visible to the user, and owned by this plugin or a plugin in `analysis_result_readers`. It is served by the plugin's `GET {prefix}/jobs/artifacts?experiment_id=N`, which applies the same checks as staging. Selecting an artifact keeps only its experiment and artifact database IDs in the browser; nothing is downloaded. When the user presses Run, the plugin's `POST {prefix}/jobs/artifacts` route receives `experiment_id`, `artifact_id` and the job `session_id`, and checks again, for the requesting user:
+
+- the `experiments.view` permission and the experiment's visibility,
+- that the artifact is still active (not archived),
+- that its owner is this plugin or listed in `analysis_result_readers`,
+- that it is file-backed (`mint.analysis_file.v1`) and its object reference stays in the artifact's experiment/plugin scope.
+
+It then streams the object into the same owner/session-scoped, quota-bounded job staging as a browser upload, and the handler receives a writable copy as a normal `Path`. The staged copy remembers its source artifact, and each job submission that uses it repeats these checks: if the user's access was revoked in the meantime, the submission is refused and the copy is deleted. A missing, archived or unreadable artifact is reported as not found. Declare every producer plugin in `analysis_result_readers`, exactly as for [reading its output](#read-another-plugin-s-output).
+
 ## Data shape and source
 
 `Experiment` is a slots dataclass, not a live ORM row. Its `design_owner_plugin_id` identifies the existing design owner; `experiment_code` remains a REST detail field rather than an SDK dataclass field. Mutating a returned dataclass does not persist changes.
