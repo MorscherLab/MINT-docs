@@ -33,8 +33,8 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 
 | Permission | What it grants |
 |------------|----------------|
-| `instruments.view` | List and read the shared [instrument directory](/guide/instruments) (`GET /api/instruments`) |
-| `instruments.edit` | Create, edit and deactivate instruments |
+| `instruments.view` | List and read the shared [instrument directory](/guide/instruments) (`GET /api/instruments`, `GET /api/instruments/{id}`), including live status. Opens the `/instruments` and `/instruments/:id` pages and the `mint_list_instruments` MCP tool |
+| `instruments.edit` | Create, edit and deactivate instruments. Also needed to set a plugin's instrument status grant and, together with `users.manage`, to manage [service tokens](/admin/authentication#service-tokens) (`/api/admin/service-tokens`) |
 
 ### `plugins.*` (4)
 
@@ -81,7 +81,7 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 | Permission | What it grants |
 |------------|----------------|
 | `users.view` | List users |
-| `users.manage` | Create, update, activate, deactivate and delete users, reset passwords, assign roles, manage roles, and list and revoke every user's [personal access tokens](/admin/authentication#personal-access-tokens) |
+| `users.manage` | Create, update, activate, deactivate and delete users, reset passwords, assign roles, manage roles, reset a user's passkeys (`DELETE /api/admin/users/{id}/passkeys`, refused on your own account), and list and revoke every user's [personal access tokens](/admin/authentication#personal-access-tokens). With `instruments.edit` it also manages [service tokens](/admin/authentication#service-tokens) |
 
 ### `platform.*` (2)
 

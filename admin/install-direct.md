@@ -18,7 +18,7 @@ Both result in identical platform behavior; choose based on your operations pref
 | | |
 |---|---|
 | **Operating system** | Linux server (x86_64 or arm64) — any modern distribution with glibc 2.28+ (Debian 11+, Ubuntu 20.04+, RHEL 9+, …) |
-| **Python** | 3.12 or newer — install via the distro package manager or [`uv python install`](https://docs.astral.sh/uv/concepts/python-versions/) |
+| **Python** | 3.14 or newer — install via the distro package manager or [`uv python install`](https://docs.astral.sh/uv/concepts/python-versions/). Plugin installs accept only wheels that install on this interpreter, so each compiled dependency of a plugin needs a `cp314` or `abi3` wheel |
 | **uv** | Required at runtime for plugin installs and isolated plugin environments; install it somewhere the `mint` service user can run |
 | **Database** | PostgreSQL 14+ (required) |
 | **Disk** | ~2 GB for MINT + room for plugin venvs and uploaded artifacts |
@@ -55,7 +55,7 @@ Install the locked dependencies. The bundle has no Git history, so pass the vers
 ```bash
 sudo -u mint env UV_CACHE_DIR=/var/lib/mint/uv-cache \
   SETUPTOOLS_SCM_PRETEND_VERSION=@MINT_VERSION@ \
-  uv sync --project /opt/mint --frozen --no-dev --python 3.12
+  uv sync --project /opt/mint --frozen --no-dev --python 3.14
 ```
 
 This creates `/opt/mint/.venv` with the platform and `mint-sdk[cli,server,local-db]`, which supplies the `mint` binary at `/opt/mint/.venv/bin/mint`. The platform runs as one long-lived process; see "Run as a systemd service" below.

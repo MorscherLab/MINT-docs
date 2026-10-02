@@ -74,16 +74,11 @@ For UI, choose the plugin mode that matches the job:
 
 ## How do I update MINT?
 
-For a direct Linux platform install, upgrade the platform package inside the service venv and restart the service:
+Update the platform from the admin page or with the CLI. This works for the [direct install](/admin/install-direct) and for [Docker](/admin/install-docker). Click **Apply Bundle** (or **Update** when the release has no runtime bundle) on the release card in **Admin -> Plugins -> Installed**, or run `mint platform update check` and `mint platform update apply --yes`. Then restart MINT. See [Updates](/admin/updates).
 
-```bash
-sudo -u mint /opt/mint/venv/bin/pip install --upgrade mint
-sudo systemctl restart mint
-```
+The `uv tool upgrade mint-sdk` and `pipx upgrade mint-sdk` commands only update the `mint` CLI in an admin shell. They do not upgrade the running platform service.
 
-For Docker, bump the image tag or use the runtime-bundle update path described in [Updates](/admin/updates). The `uv tool upgrade mint-sdk` / `pipx upgrade mint-sdk` style commands only update an admin shell's `mint` CLI; they do not upgrade the running platform service.
-
-For self-hosted deployments, use **Admin -> Platform -> Server** and **Admin -> Plugins** to check available platform and plugin releases. Take a normal deployment/database backup before upgrading.
+To check available platform and plugin releases, open **Admin -> Plugins -> Installed**. Take a normal deployment/database backup before upgrading.
 
 ## Is MINT open source?
 

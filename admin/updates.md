@@ -1,6 +1,6 @@
 # Updates
 
-MINT's update story has three related checks: the **platform** runtime, the bundled **mint-sdk** package, and the **plugins** installed on top of it. Platform and SDK updates are checked from GitHub releases; marketplace plugin updates are checked from the configured registry.
+MINT's update story has two related checks: the **platform** runtime and the **plugins** installed on top of it. A platform update carries the matching `mint-sdk`, so there is no separate SDK update inside the platform. Platform updates are checked from GitHub releases; marketplace plugin updates are checked from the configured registry.
 
 > [Screenshot: Admin -> Plugins -> Installed showing the platform release card and plugin update badges]
 
@@ -49,19 +49,36 @@ rerun completed revisions. Plan a maintenance window and verify readiness and
 plugin status after restart. A rolling restart alone does not guarantee a
 zero-downtime schema upgrade.
 
-Platform updates, plugin installs, upgrades and uninstalls, plugin lock rollbacks and SDK updates share one lock and run one at a time.
+### Plugins that exclude the new platform version
+
+A plugin pins `mint-sdk` to one platform minor. When a platform update moves to the next minor, plugins pinned to the current minor exclude it. In this case, MINT does not block the update:
+
+1. When you apply the update, MINT finds the newest compatible release of each excluded plugin and lists the releases. It does not stage a plugin or download the platform bundle before you confirm.
+2. Review the list in the **Update to MINT `<version>`** dialog, then click **Update**.
+3. The listed plugin releases switch together with the platform at the next restart. MINT records each switch as `plugin.upgrade` in the audit log.
+4. A plugin with no compatible release is listed under **Plugins without a compatible release**. To continue, select **Disable these plugins until a compatible release is installed**. The plugin stays disabled until you install a compatible release.
+
+Installs from a Git checkout are not covered by this flow.
+
+Platform updates, plugin installs, upgrades and uninstalls, plugin lock rollbacks and plugin updates share one lock and run one at a time.
 
 ### Scheduled updates
 
 With `updates.autoApplyEnabled`, MINT checks for updates once a day at `autoApplyTime` (server-local time) and installs them without an administrator:
 
-1. It stages every available plugin update (when `autoApplyPlugins` is on), then the platform update (when `autoApplyPlatform` is on).
+1. It stages every available plugin update (when `autoApplyPlugins` is on), then the platform update (when `autoApplyPlatform` is on). A plugin release built for the platform version of the batch is staged against that version. When the new platform version excludes an installed plugin, the batch pairs that plugin with a compatible release, as a confirmed update from the admin page does.
 2. The batch is all-or-nothing. If one step fails, MINT discards the plugin updates it staged in this run and does not stage the platform.
 3. When everything staged, MINT requests one supervised restart, which activates the staged updates.
 
 A plugin update that an administrator already staged by hand is kept as is. If another plugin or platform operation is running at the scheduled time, the batch does not start and retries every minute. Every step is written to the [audit log](/admin/platform-settings#logs-and-audit-log) as `plugin.upgrade` or `platform.update` with the system actor.
 
-Plugins are staged against the running platform. A plugin release that needs the newer platform therefore fails the batch and holds the platform update back; apply the platform update by hand in that case.
+The batch fails, and does not disable any plugin, in these cases:
+
+- An excluded plugin has no release for the new platform version.
+- `autoApplyPlugins` is off, and the platform update needs plugin releases.
+- Pairing would replace a plugin update that an administrator staged.
+
+In each case, apply the platform update by hand from **Admin -> Plugins -> Installed**.
 
 ::: warning Scheduled updates need a restart supervisor
 The scheduled restart exits the MINT process and relies on a supervisor to start it again. MINT allows scheduled updates only when one of these is set:
@@ -111,6 +128,23 @@ MINT 1.3 no longer ships the 1.1 → 1.2 Docker bridge `scripts/prepare-docker-u
 
 ::: danger No downgrade to 1.2.1 or earlier
 Once a database has an Alembic revision (any database started by 1.2.2 or later), do not start MINT 1.2.1 or earlier on it. Those releases do not recognise Alembic and have no guard. To go back, restore a database backup taken before the upgrade.
+:::
+
+Before you upgrade to MINT 1.3:
+
+- **Python 3.14.** MINT 1.3 requires Python 3.14. The Docker image is `python:3.14-slim`. Plugin installs accept only wheels that install on the running interpreter, so each compiled dependency of an installed plugin needs a `cp314` or `abi3` wheel. See [Install directly](/admin/install-direct#requirements).
+- **Restart supervisor.** Scheduled updates need `mint platform daemon` or `MINT_RESTART_SUPERVISED=1`. See [Scheduled updates](#scheduled-updates).
+
+::: warning Plugin requests need a Bearer credential
+With authentication enabled, every plugin request needs an `Authorization: Bearer` credential: a session token, a [personal access token](/admin/authentication#personal-access-tokens) or a [service token](/admin/authentication#service-tokens). This applies to the plugin proxy and to in-process plugin routes.
+
+- A request without a credential, or with one that does not resolve, gets 401 `auth.required`.
+- When the database is unreachable, the request gets 503 `auth.unavailable`.
+- The session cookie is not read, and a plugin cannot declare a public path.
+- A plugin that checked its own ingest key (for example an instrument daemon key) must move to a service token.
+- Plugin frontends must call the API through the SDK client, which sends the Bearer credential.
+
+With authentication disabled, plugin routes stay open. See [Plugins](/admin/plugins#plugin-requests-and-credentials).
 :::
 
 After the first 1.3 start:
