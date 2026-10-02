@@ -67,11 +67,12 @@ const { racks, activeRackId, plateEditorListeners, canUndo, canRedo } = useRackE
 | `undo`, `redo` | — | Yes |
 | `well-click` | `rackId`, `wellId` | No |
 | `import` | `File` | No |
+| `import-text` | pasted text (unparsed) | No |
 | `export` | format string | No |
 | `group-add` | — | No |
 | `selection-change` | `wellIds[]` | No |
 
-Bind the events in the last five rows yourself, for example `@group-add="addGroup"`. A `v-on` object shadows an `@listener` of the same name; to add behavior to a handled intent, wrap the listener in your own object:
+Bind the events in the last six rows yourself, for example `@group-add="addGroup"`. A `v-on` object shadows an `@listener` of the same name; to add behavior to a handled intent, wrap the listener in your own object:
 
 ```ts
 const listeners = {
@@ -90,9 +91,9 @@ If you handle `assign` yourself, set `well.group = groupId` and keep `well.sampl
 Features are opt-in props: `formats`, `slots`, `reorder`, `wellDrag`, `groups`, `wellFields`, `sampleDrop`, `import` / `importAccept`, `export`, `clear`, `fillSeries`, `history`, `maxRacks` / `minRacks`, `readonly`, and `size` (default `xs`: compact square wells, names in the tooltip only).
 
 - **Groups rail and inspector.** At an editor width of 720px and wider, a right rail lists the groups (swatch, name, well count, and a "New group" row that emits `group-add`); without `groups` it lists the sample types. With one well selected, the rail holds the single-well inspector. Narrower, the rail collapses and the inspector opens as a popover. The `#well-editor` slot replaces the inspector in both places.
-- **Selection.** A plain click selects one well. Ctrl/Cmd-click or Shift-click toggles a well; a floating selection bar assigns groups.
+- **Selection.** A plain click selects one well. Ctrl/Cmd-click toggles a well. Shift-click (or Shift+Enter, Shift+Space) selects the rectangle from the anchor well to the clicked well. The anchor is the last well that got a plain click or a Ctrl/Cmd-click, or the start of a dragged rectangle. Ctrl/Cmd+Shift-click adds the rectangle to the current selection. Escape, an empty selection, or a switch to another plate drops the anchor. Without an anchor, Shift-click toggles a well like Ctrl/Cmd-click. A floating selection bar assigns groups.
 - **History.** `history` shows Undo / Redo buttons, which follow `canUndo` / `canRedo`. Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, and Ctrl/Cmd+Y work while focus is inside the editor; text fields keep their own undo.
-- **Import / Export.** `import` opens a file picker (filtered by `importAccept`) and emits the `File`. `export` takes a list of formats and emits `export` with the chosen one. Parsing and writing files is up to the plugin.
+- **Import / Export.** `import` shows an Import button. `importMode` sets what it offers: `'file'` (default) opens a file picker, filtered by `importAccept`, and emits the `File`; `'paste'` opens a Paste dialog and emits the confirmed text, unparsed, on `import-text`; `'both'` offers both in a menu. The Paste dialog opens empty each time and does not emit blank text. `export` takes a list of formats and emits `export` with the chosen one. With `import` and `export`, one "Import / Export" menu holds all the items. Parsing and writing files is up to the plugin.
 - **Clear.** `clear="confirm"` asks first; `clearConfirm` sets the dialog's `title`, `message`, `confirmLabel`, and `variant`. `clear="undo"` clears at once and relies on Undo. `false` hides the button.
 - **Fill Series.** `fillSeriesWhenFull="disable"` (default) disables the button on a full plate; `"emit"` keeps it enabled and still emits `fill-series`, so the plugin can show its own message.
 - **Read-only.** `readonly` removes the editing controls; `well-click` still fires.

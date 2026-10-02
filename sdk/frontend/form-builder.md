@@ -364,6 +364,10 @@ Initial data overrides per-field defaults — that's intentional for editing flo
 
 ## Saving back to the experiment
 
+::: warning Deprecated
+`useExperimentSave()` is scheduled for removal in **MINT 1.4**. The SDK has no replacement.
+:::
+
 For experiment-design plugins, pair FormBuilder with `useExperimentSave`:
 
 ```ts

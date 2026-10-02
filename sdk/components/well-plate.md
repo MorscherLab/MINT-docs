@@ -39,6 +39,10 @@ import { WellPlate } from "@morscherlab/mint-sdk/components"
 />
 ```
 
+## Selection
+
+A click selects one well. Ctrl/Cmd-click toggles a well. Shift-click (or Shift+Enter, Shift+Space on a focused well) selects the rectangle from the anchor well to the clicked well. The anchor is the last well that got a plain click or a Ctrl/Cmd-click, or the start of a dragged rectangle. Ctrl/Cmd+Shift-click adds the rectangle to the current selection. Escape or an empty selection drops the anchor. Without an anchor, Shift-click toggles a well like Ctrl/Cmd-click. Range selection applies in `multiple` and `rectangle` modes.
+
 ## Decorate wells without changing sample data
 
 `wellClass` and `wellStyle` let you mark a QC state or a focused well independently of sample type and heatmap values:

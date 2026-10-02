@@ -10,10 +10,6 @@ description: "SequenceProgressBar is a data display component exported by @morsc
 
 SequenceProgressBar is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
 
-::: warning Deprecated
-Scheduled for removal in **MINT 1.4**. Instrument UI moves to the mld-ms plugins; the SDK has no replacement.
-:::
-
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SequenceProgressBar.vue">Source</a>

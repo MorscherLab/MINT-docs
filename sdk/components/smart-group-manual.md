@@ -10,6 +10,10 @@ description: "Manual cohort builder for assigning samples when names cannot be p
 
 `SmartGroupManual` is the manual Smart Group mode for sample names that do not parse cleanly. Users search, filter, select, and assign samples into group, subgroup, and sub-subgroup levels.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**. Use [SampleSelector](/sdk/components/sample-selector) for sample grouping; the SDK has no other replacement.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/SmartGroupManual.vue">Source</a>

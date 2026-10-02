@@ -24,9 +24,9 @@ This page covers the public **@MINT_VERSION@** composables and helper factories 
 | `useTimeUtils` | Time math + slot generation | Schedule UIs |
 | `useScheduleDrag` | Drag-to-reschedule handlers | Calendar / timeline UIs |
 | `useProtocolTemplates` | Lab-protocol template engine | Step-by-step protocol UIs |
-| `useAutoGroup` | Auto-group samples by name prefix | Deprecated, removal in MINT 1.4; use `SmartGroupModal` |
+| `useAutoGroup` | Auto-group samples by name prefix | Deprecated, removal in MINT 1.4; use `SampleSelector` for sample grouping |
 | `createPluginClient` | Contract-aware plugin API client runtime | Generated `useGeneratedPluginClient()` wrappers |
-| `buildPluginEndpointUrl`, `resolvePluginBaseUrl` | URL helpers matching generated calls | Rendering links, diagnostics, downloads, and previews |
+| `buildPluginEndpointUrl`, `resolvePluginBaseUrl` | URL helpers matching generated calls | Diagnostics and URL previews; with auth enabled, a plain link to a plugin route gets a 401 |
 | `uploadPluginEndpoint`, `downloadPluginEndpoint` | Multipart and Blob helpers | Generated upload/download endpoint wrappers |
 | `usePluginEventStream` | Auth-aware SSE stream helper | Generated event-stream endpoints |
 | `usePluginSettings` | Plugin settings from platform context or standalone route | Generated `useGeneratedPluginSettings()` wrappers |
@@ -34,7 +34,7 @@ This page covers the public **@MINT_VERSION@** composables and helper factories 
 | `useCurrentExperiment` | Current platform experiment | Integrated plugin pages tied to an experiment |
 | `useExperimentSelector` | Picker UI + reactive selected experiment | Experiment dropdowns |
 | `useExperimentData` | Reactive exported experiment data payload | Live experiment view |
-| `useExperimentSave` | Save/load design data and compatibility analysis results | Forms that save back to an experiment |
+| `useExperimentSave` | Save/load design data and compatibility analysis results | Deprecated, removal in MINT 1.4; no SDK replacement |
 | `useAppExperiment` | App-level experiment provide/inject | Plugin pages that need the active experiment |
 | `useExperimentStore` | Shared Pinia selection | Workspace picker state and resolved experiment records |
 | `useFileBrowser` | Server mount listing and selection | Custom UIs for read-only server paths (`FilePicker` covers the standard case) |
@@ -44,6 +44,8 @@ This page covers the public **@MINT_VERSION@** composables and helper factories 
 | `useManualLayoutResize` | Pointer resize lifecycle and current drag state | Pair with `LayoutResizeHandle` for workbench panes |
 | `resizedLeadingPanelWidth`, `resizedTrailingPanelWidth`, `resizedVerticalSplitPercent` | Bounded dimension calculations | Apply pointer deltas to widths or vertical splits |
 :::
+
+For the deprecated and removed composables and their replacements, see [Deprecated composables](/sdk/api/frontend#deprecated-composables) and [Removed composables](/sdk/api/frontend#removed-composables).
 
 ## Deep dives
 
@@ -280,7 +282,7 @@ filters.search = 'TCA'
 
 The selected experiment is `selectedExperiment` (not `selected`); the search input is `filters.search`; explicit re-fetch is `fetch()` (not `refresh`). Its `select()` only changes this composable's local selection. For the standard modal, use `ExperimentSelectorModal` directly; it owns its list and commits records to `useExperimentStore()`.
 
-For plugins mounted on an experiment-specific view, use `useCurrentExperiment()` when you need the experiment payload or `useExperimentSave().currentExperimentId` when you only need the current id for persistence.
+For plugins mounted on an experiment-specific view, use `useCurrentExperiment()`. It gives the experiment payload, and `experimentId` when you only need the current id.
 
 ### `useExperimentData`
 
@@ -377,7 +379,7 @@ For lower-level layouts, `useControlSchema()` gives you `formSchema`, `settingsS
 | `useListSelection`, `useSelectionLimit` | Table, list, and plate selection state |
 | `useTextSearch`, `useSortedItems` | Client-side filtering and sorting |
 | `useExpansionSet` | Expand/collapse state for trees and grouped lists |
-| `useBioTemplateWorkspace` | Template-driven controls, preview, and component bindings |
+| `useBioTemplateWorkspace` | Template-driven controls, preview, and component bindings. Deprecated, removal in MINT 1.4; no SDK replacement |
 | `useSequenceUtils` | `findSequenceProblems(seq, 'dna' \| 'rna' \| 'protein')` returns `{ ambiguousBases, invalidCharacters }`: the characters `validateSequence` would strip, named instead of dropped |
 | `useFileBrowser` | Server mount browsing, refresh, search, sort, path selection, and error state |
 
@@ -434,7 +436,7 @@ The component lazily imports Plotly, updates with `Plotly.react`, tracks theme a
 
 `active` pauses render/resize work for hidden tabs; `height` accepts pixels or a CSS height. Pass `plotly` only when the plugin owns a compatible custom build. Set `clickEvents` to receive `plotly-click` with a `PlotMouseEvent`. Use `variant="frame"` in a bounded workbench panel and the `header`, `toolbar`, `subhead`, `legend`, and `footer` slots for surrounding UI. See [PlotlyChart](/sdk/components/plotly-chart) for the full example; use [ChartContainer](/sdk/components/chart-container) for another rendering library.
 
-For a chart you render with Plotly directly, `mintPlotlyTemplate(element?)` (from `@morscherlab/mint-sdk`) returns a Plotly `Template` resolved from the MINT tokens: the `--mint-sample-1…8` colorway, `--font-sans` body text, `--font-mono` ticks, `--border-light` grid, and a card-style hover label. Pass it as `layout: { template: mintPlotlyTemplate() }`; call it again after a theme change.
+For a chart you render with Plotly directly, `mintPlotlyTemplate(element?)` (from `@morscherlab/mint-sdk`) returns a Plotly `Template` resolved from the MINT tokens: the `--mint-sample-1…8` colorway, `--font-sans` body text, `--font-mono` ticks, `--border-light` grid, and a card-style hover label. Pass it as `layout: { template: mintPlotlyTemplate() }`; call it again after a theme change. Also pass `showSendToCloud: false` in the config; see [Plotly 4 builds and types](/sdk/components/plotly-chart#plotly-4-builds-and-types).
 
 ### Resizable workbench panes
 

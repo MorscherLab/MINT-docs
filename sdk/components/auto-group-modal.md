@@ -11,7 +11,7 @@ description: "AutoGroupModal is a lab widgets component exported by @morscherlab
 AutoGroupModal is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
 
 ::: warning Deprecated
-Scheduled for removal in **MINT 1.4**, together with `useAutoGroup()`. Use [SmartGroupModal](/sdk/components/smart-group-modal) instead.
+Scheduled for removal in **MINT 1.4**, together with `useAutoGroup()`. Use [SampleSelector](/sdk/components/sample-selector) for sample grouping; the SDK has no other replacement.
 :::
 
 <div class="mint-component-reference__actions">
@@ -50,7 +50,7 @@ The smart grouping UI is also exported as composable pieces:
 | `SmartGroupFieldRecipe` | Auto grouping view only |
 | `SmartGroupManual` | Manual cohort builder only |
 
-Prefer `SmartGroupModal` for new code. Use the individual `SmartGroup*` components when a plugin needs to own more of the modal shell, route the mode switch itself, or embed one grouping mode inside a larger workflow.
+Use the individual `SmartGroup*` components when a plugin needs to own more of the modal shell, route the mode switch itself, or embed one grouping mode inside a larger workflow.
 
 <!-- sdk-props:start -->
 ## Props

@@ -9,7 +9,7 @@
 | A Python calculation, parameter form, and standard result views | `generated` mode; no custom frontend build |
 | A custom results page with a small form | `standard` mode and its `PluginWorkspaceView` + `FormBuilder` scaffold |
 | A full page driven by shared controls, settings, and sidebar values | `defineControlModel()` + `ControlWorkspaceView` |
-| A built-in biological data template | `BioTemplatePresetWorkspaceView` or `BioTemplatePackWorkspaceView` |
+| A built-in biological data template | `BioTemplatePresetWorkspaceView` or `BioTemplatePackWorkspaceView`. Both are deprecated, removal in MINT 1.4, with no SDK replacement |
 | A custom top bar, sidebar, or navigation arrangement | `PluginWorkspaceView` slots; use `AppLayout` directly only when needed |
 
 Follow [Adding a frontend](/sdk/tutorials/adding-a-frontend) for the complete backend-to-Vue tutorial, then [Platform integration](/sdk/frontend/platform-integration) for login state, experiment selection, persistence, and server files.
@@ -49,7 +49,7 @@ If you scaffolded with `mint init --mode standard`, all of this is already done.
    ```bash
    bun add @morscherlab/mint-sdk@^@MINT_VERSION@
    ```
-   Peer dependencies: `vue` ^3.5, `pinia` ^2.1, ^3 or ^4, `tailwindcss` ^4.1, and optionally `vue-router` ^4.2 or ^5.
+   Peer dependencies: `vue` ^3.5.43, `pinia` ^4.0.3, `tailwindcss` ^4.3.3, and optionally `vue-router` ^5.3.1. pinia 2 and 3 and vue-router 4 do not satisfy these ranges.
 
 2. **Import design tokens** in your app entry:
    ```css

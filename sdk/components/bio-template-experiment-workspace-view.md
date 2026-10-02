@@ -10,6 +10,10 @@ description: "BioTemplateExperimentWorkspaceView is a workflow component exporte
 
 BioTemplateExperimentWorkspaceView is a workflow component exported by @morscherlab/mint-sdk for plugin frontends.
 
+::: warning Deprecated
+Scheduled for removal in **MINT 1.4**. The SDK has no replacement.
+:::
+
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/components/BioTemplateExperimentWorkspaceView.vue">Source</a>
