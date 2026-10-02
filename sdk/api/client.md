@@ -98,7 +98,7 @@ Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/M
 `client.instruments.list()` returns instruments as `list[dict]`. Each dict has a `live_status` key, which is `None` until a plugin reports a status. `client.instruments.get(instrument_id)` returns one instrument by ID. Both need the `instruments.view` permission. The CLI equivalent is [`mint instruments`](/sdk/api/cli-reference#mint-instruments).
 
 ::: warning Not exposed
-Earlier docs claimed `client.users` and `client.artifacts` — those don't exist. First-class artifact readers live at `client.experiments.artifacts`, and raw object operations at `client.objects`. There is no `MINTClient.from_env()` factory; use the env-aware constructor (option 3 above).
+Earlier docs claimed `client.users` and `client.artifacts` — those don't exist. First-class artifact readers live at `client.experiments.artifacts`, and raw object operations at `client.objects`. There is no `MINTClient.from_env()` factory; use the env-aware constructor (option 2 above).
 :::
 
 ## Experiments

@@ -9,8 +9,8 @@ The platform keeps only the latest snapshot for each instrument, in memory. It k
 ## Set up access
 
 1. Declare `PluginCapabilities.instrument_status_write=True` in the plugin.
-2. An administrator with `instruments.edit` and `instruments.view` opens the plugin's access settings and selects the instruments in the **Instrument status** block. The plugin can report only for these instruments.
-3. An administrator issues a service token (`mint_svc_...`) for the plugin under **Admin → Service Tokens**. See [Service tokens](/admin/authentication#service-tokens). The token can name only instruments in the plugin's grant.
+2. An administrator with `instruments.edit` opens the plugin's access settings and selects the instruments in the **Instrument status** block. The plugin can report only for these instruments.
+3. An administrator issues a service token (`mint_svc_...`) for the plugin under **Admin → Platform → Service Tokens**. See [Service tokens](/admin/authentication#service-tokens). The token can name only instruments in the plugin's grant.
 4. Configure the instrument daemon to send the token as a Bearer credential to your plugin route.
 
 ## Write the route
