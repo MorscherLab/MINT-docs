@@ -60,3 +60,69 @@ sync only `ec60dd49..v1.3.0`.
 - `reference/troubleshooting.md` uses `docker compose logs mint`; the Compose service is `app`.
 - `reference/faq.md` "How do I update MINT?" shows `pip install --upgrade mint`, matching neither install page.
 - Untracked `AGENTS.md` is stale (`MorscherLab/mld`, `/cli/`); regenerate from CLAUDE.md or delete.
+
+# Sync to v1.3.0 (plan 2026-10-02)
+
+Branch `docs/1.3-beta10-sync` off `docs/1.3` (2be7118). New source snapshot:
+MINT tag `v1.3.0` @ `552241f4` (5 commits after beta.10 `977ec0a9`). PRs #5 and #6 already
+cover device-code `mint auth login`, the forced second factor, the removal of
+`useAuth` / `usePasskey` / `useWellPlateEditor`, and `file_browser_router`.
+Verify every fact with `git show v1.3.0:<path>`. The changelog is a pointer,
+not a source: it contradicts itself (packages "Added" says `mint auth login`
+asks for a password; "Upgrading" says password sign-in is gone).
+
+## Wrong today (fix first)
+- [x] `sdk/operations/migrate-1.2-to-1.3.md:183-187`: peers now require vue ^3.5.43, pinia ^4.0.3, vue-router ^5.3.1, tailwindcss ^4.3.3; pinia 2/3 and vue-router 4 are refused.
+- [x] `sdk/components/sequence-progress-bar.md`, `instrument-state-badge.md`: drop Deprecated banners; badge adds `never` / `inactive`.
+
+## Administer
+- [x] Install pages + `admin/updates`: Python 3.14, `python:3.14-slim`, cp314 wheels for plugin dependencies.
+- [x] `admin/updates` + `admin/plugins`: Bearer-only plugin requests (401 `auth.required`, 503 `auth.unavailable`, no public paths); plugins with own ingest keys break. Scheduled batch pairs plugin releases for the new version; fails instead of disabling.
+- [x] `admin/authentication`: Service Tokens section (Admin → Service Tokens, one plugin + instrument subset, 90/365/never, audit events); admin passkey reset (`DELETE /api/admin/users/{id}/passkeys`).
+- [x] `admin/users-roles`: 72-byte password limit.
+- [x] `admin/plugins`: `.mint` without `manifest.json` rejected; `/api/updates/sdk` removed (platform update carries the SDK); `psycopg2-binary` gone (asyncpg only); offline `find-links` bundles need `uvicorn[standard]` wheels.
+- [x] `reference/troubleshooting`: startup phase log lines; plugin 401 after upgrade.
+
+## Use
+- [x] `guide/instruments`: pill nav, live-status list (chips, search, Show inactive, List/Board), `/instruments/:id` detail (run, ETA, alerts + Acknowledge, Archive/Restore), Home card. Labels from `frontend/src/views/`.
+- [x] Plugin display names in Home, plugin page, settings (`guide/ui-tour` or `guide/marketplace`).
+
+## Build (SDK, Python)
+- [x] `sdk/api/python`: `@mint_plugin(display_name=)`; `PluginCapabilities.instrument_status_write`, `serves_instrument_alerts`; `InstrumentRepository.report_status`, `InstrumentLiveStatus`; `mint_sdk.instrument_alerts`; `current_service_caller` / `resolve_service_caller`; `analysis_result_writers`; removed `mint_sdk.logging`, `register_plugin_exception_handlers`, LC-MS helpers; `mint_sdk.lcms` / `mint_sdk.templates` deprecation warnings.
+- [x] New recipe `sdk/recipes/instrument-status` (daemon → service token → `report_status`, alerts router). One home; python.md links to it.
+- [x] `sdk/recipes/route-permissions` or `platform-context`: every plugin route needs a Bearer; `auth=False` only for service-token routes.
+- [x] Generated UI: artifact `Path` inputs (`kind: 'artifact-path'`, `jobs/artifacts`).
+- [x] `sdk/api/cli-reference`: `mint instruments`; `mint doctor` warning vs error + `--strict`; `mint sdk update` raises `requires-python`, leaves AI instruction files unchanged; `mint init` floors; `MINT_PLATFORM_STARTUP_WAIT`.
+
+## Build (SDK, frontend)
+- [x] Plotly 4: `PlotlyChart` `showSendToCloud: false`, types from `plotly.js-dist-min`, drop `@types/plotly.js` and module shims; removed mapbox traces.
+- [x] `plate-editor` prose: `importMode` / `import-text`, Shift-range selection (also `well-plate`).
+- [x] Deprecated banners (removal 1.4, no SDK replacement): SmartGroupModal/FieldRecipe/Manual, GroupAssigner, AutoGroupModal, BioTemplate* views/renderer, ReagentList/Editor, ExperimentTimeline, SampleLegend, FitPanel, DoseDesignWorkspaceView (→ ControlWorkspaceView); composables page likewise.
+- [x] `PillNavItem.dot`, instrument types (`InstrumentLiveStatus`, …; `InstrumentAlertBody` removed).
+
+## Migration + changelog
+- [x] `migrate-1.2-to-1.3`: Python 3.14 + Starlette 1.0 removals + sqlmodel aware datetimes + httpx2; Bearer-only plugin routes; service tokens replace ingest keys; Plotly 4; new removals/deprecations above; the 5 new table rows.
+- [x] `changelog.md` Notable changes: Python 3.14, Bearer-only plugin auth, service tokens, Plotly 4, new deprecations.
+
+## Release sync notes (add)
+- Generated props still stale for PlateEditor `importMode`, InstrumentStateBadge states, PlotlyChart types. Regenerate at v1.3.0.
+
+## Execution
+Workflow, one agent per section (admin, guide, sdk-python, sdk-frontend), `model: "sonnet"` / effort medium, each writes its files and reports facts with source paths; then one `opus` adversarial verify agent per section against `977ec0a9`; then migration + changelog inline (depends on the rest). One commit per section; `bun run build` after each. PR into `docs/1.3`.
+
+## Decisions (grilling 2026-10-02)
+- 1.2.10 items: `docs/1.3` only; no patch on `main`.
+- Instrument status for plugin authors: new `sdk/recipes/instrument-status`.
+- Snapshot: tag `v1.3.0` (552241f4).
+- Content only. The release commit (versions.ts, archive, SDK pin, props) is a separate PR after npm `@morscherlab/mint-sdk` 1.3.0 (npm `latest` is 1.2.10 on 2026-10-02).
+- PR into `docs/1.3`. Workflow as planned. `tasks/todo.md` in its own final commit.
+
+## Result (2026-10-02)
+- Workflow `wf_829b54be-482`: 4 writers (sonnet) + 4 verifiers (opus); verifiers fixed 45 errors/gaps. Migration guide and changelog written inline. `bun run build` passes; every `#anchor` in changed files resolves in `.vitepress/dist`.
+
+## Follow-ups (not done)
+- `admin/users-roles` / `reference/troubleshooting`: self-registered accounts stay inactive until **Activate user**; add a "Waiting for approval" entry.
+- `admin/authentication` PAT table: "the proxy does not forward the token" is true for the proxy only; in-process plugins still receive a PAT (`api/dependencies/plugin_visibility.py` drops `Authorization` only for service tokens).
+- `sdk/frontend/platform-integration.md:15`, `composables.md` still point at the deprecated `useExperimentSave` (no SDK replacement exists).
+- Release commit: component action-bar Source links (`blob/v1.2.9`, `plate-editor` `blob/main`) and `plotly-chart` "Release source" line; generated InstrumentStateBadge props lack `never` / `inactive`.
+- `reference/glossary`: define "service token".
