@@ -2,6 +2,8 @@
 
 `mint_sdk.migrations` exports the shared Alembic runtime and the deprecated legacy integer framework, which will be removed in MINT 1.4. Source: [v@MINT_VERSION@ migrations package](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations).
 
+The sqlmodel release that the `local-db` extra requires (0.0.47 or later) maps a plain `datetime` model field to a timezone-aware column and rejects naive values on write. A plugin table with `datetime` fields needs aware datetimes. To keep an existing naive column, type the field as `NaiveDatetime` or use `Field(sa_type=DateTime(timezone=False))`. Run `mint db check` to compare the models with the database.
+
 ## `MigrationSpec` and `LegacyBaseline`
 
 ```python

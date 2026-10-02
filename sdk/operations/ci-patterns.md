@@ -51,7 +51,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Set up Python
-        run: uv python install 3.12
+        run: uv python install 3.14
 
       - name: Install dependencies
         run: uv sync
@@ -94,7 +94,7 @@ builds and publishes in a `build` job that depends on it:
     needs: [test]
     steps:
       # checkout (fetch-depth: 0), frontend detection, Bun, frontend
-      # install/type-check/test/build, uv, Python 3.12, uv sync
+      # install/type-check/test/build, uv, Python 3.14, uv sync
       - name: Verify generated frontend contract
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         run: uv run mint sdk generate --check
@@ -187,7 +187,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
 
       - name: Set up Python
-        run: uv python install 3.12
+        run: uv python install 3.14
 
       - name: Check for frontend
         id: frontend

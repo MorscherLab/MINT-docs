@@ -195,6 +195,7 @@ export default defineConfig({
             { text: 'Querying plugin data', link: '/sdk/recipes/querying-plugin-data' },
             { text: 'Route permissions', link: '/sdk/recipes/route-permissions' },
             { text: 'MCP tools', link: '/sdk/recipes/mcp-tools' },
+            { text: 'Instrument status', link: '/sdk/recipes/instrument-status' },
             { text: 'Error handling', link: '/sdk/recipes/error-handling' },
             { text: 'Logging & tracing', link: '/sdk/recipes/logging-tracing' },
             { text: 'Testing plugins', link: '/sdk/recipes/testing-plugins' },

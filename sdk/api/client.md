@@ -9,20 +9,22 @@ Source: [`mint_sdk/client/client.py`](https://github.com/MorscherLab/MINT/blob/v
 ```python
 from mint_sdk import MINTClient
 
-# 1. Explicit URL + token
-with MINTClient(base_url="https://mint.example.org", token="eyJ...") as client:
+# 1. Explicit URL + personal access token (the main path for scripts)
+with MINTClient(base_url="https://mint.example.org", token="mint_pat_...") as client:
     ...
 
-# 2. Username + password — auto-logs in during construction
-with MINTClient(base_url="https://mint.example.org",
-                 username="alice", password="…") as client:
-    me = client.whoami()
-
-# 3. Env-aware (no arguments) — reads MINT_URL and MINT_TOKEN, falling back
+# 2. Env-aware (no arguments) — reads MINT_URL and MINT_TOKEN, falling back
 #    to credentials stored by `mint auth login` at ~/.config/mint/credentials.json
 with MINTClient() as client:
     ...
+
+# 3. Username + password — only for platforms without a forced second factor
+with MINTClient(base_url="https://mint.example.org",
+                 username="alice", password="…") as client:
+    me = client.whoami()
 ```
+
+To get a personal access token, run `mint auth login` (the client then reads the stored token), or create one in **Profile → Access tokens**. A platform that enforces a second factor (`auth.requireSecondFactor`) refuses password sign-in, so use a token there.
 
 `MINTClient` is **synchronous** — uses plain `with`, not `async with`. The constructor signature:
 
@@ -51,7 +53,7 @@ When `timeout=None`, the client uses the shared platform transport policy: `MINT
 
 | Method | Returns | Purpose |
 |--------|---------|---------|
-| `client.login(username, password)` | `dict` | Authenticate; store JWT in the client |
+| `client.login(username, password)` | `dict` | Authenticate with a password; store the JWT in the client. Raises `MINTAPIError` (`code="auth.second_factor_required"`) on a platform that asks for a passkey |
 | `client.logout()` | `None` | Clear stored credentials |
 | `client.whoami()` | `dict` | Return current user info |
 | `client.health()` | `dict` | Platform health payload from `/health`; no authentication required |
@@ -74,6 +76,7 @@ On a platform that enforces a second factor (`auth.requireSecondFactor`), `login
 | `client.admin` | `AdminAPI` | Admin status, system snapshot, config, logs, restart; users, roles, plugin-role assignments |
 | `client.updates` | `UpdatesAPI` | Platform/plugin update checks, GitHub release installs |
 | `client.objects` | `ObjectsAPI` | Typed object upload, download, list, existence and deletion |
+| `client.instruments` | `InstrumentsAPI` | Read instruments with their latest live status |
 
 Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/client/resources).
 
@@ -81,13 +84,18 @@ Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/M
 
 | Namespace | Methods |
 |-----------|---------|
-| `client.auth` | `login(username, password)`, `logout()`, `verify()`, `refresh()`, `whoami()`, `config()` |
+| `client.auth` | `login(username, password)`, `login_with_token(token)`, `logout()` (returns whether the platform acknowledged it; a personal access token sent as Bearer is revoked), `verify()`, `refresh()`, `whoami()`, `config()`, `create_token(...)`, `list_tokens()`, `revoke_token(token_id)` |
+| `client.instruments` | `list(*, active_only=True)`, `get(instrument_id)` |
 | `client.projects` | `list(*, status=None, search=None, my_projects=False, skip=0, limit=100)`, `get(id)`, `create(...)`, `update(id, **fields)`, `delete(id)`, `experiments(id, *, skip=0, limit=100)`, `members(id)` |
 | `client.plugins` | `list()`, `install(source, *, force=False)`, `upload(path, *, force=False)`, `upgrade(package_name, *, force=False)`, `uninstall(package_name)`, `register_external(name, target, ...)`, `register_docker(name, image, ...)`, `get_config(plugin_name)`, `set_config(plugin_name, config, *, expected_revision)`, `update_config(plugin_name, config)`, `get_extra_index_urls()`, `set_extra_index_urls(urls)`, `snapshots()`, `snapshot(snapshot_id)` |
 | `client.admin` | `status()`, `system()`, `config()`, `restart()`, `logging_config()`, `logs(*, limit=100, offset=0, level=None, search=None, plugin=None)`; users: `list_users()`, `get_user(id)`, `create_user(*, username, password, ...)`, `update_user(id, **fields)`, `delete_user(id)`, `activate_user(id)`, `deactivate_user(id)`; roles: `list_roles()`, `list_permissions()`, `create_role(*, name, slug, permissions, ...)`, `update_role(id, **fields)`, `delete_role(id)`; plugin roles: `list_plugin_roles(plugin_id)`, `set_plugin_role(plugin_id, user_id, role)`, `remove_plugin_role(plugin_id, user_id)`, `list_user_plugin_roles(user_id)` |
 | `client.updates` | `check()`, `config()`, `sources()`, `update_plugin(package_name, *, force=False)`, `update_platform()`, `list_releases(github_url, *, asset_pattern="*.mint")`, `install_github(github_url, *, tag=None, asset_pattern="*.mint", force=False)` |
 
 `set_config()` sends the revision as `If-Match`; a stale revision fails with `ConflictError`. Read it from `get_config()` first.
+
+### Instruments
+
+`client.instruments.list()` returns instruments as `list[dict]`. Each dict has a `live_status` key, which is `None` until a plugin reports a status. `client.instruments.get(instrument_id)` returns one instrument by ID. Both need the `instruments.view` permission. The CLI equivalent is [`mint instruments`](/sdk/api/cli-reference#mint-instruments).
 
 ::: warning Not exposed
 Earlier docs claimed `client.users` and `client.artifacts` — those don't exist. First-class artifact readers live at `client.experiments.artifacts`, and raw object operations at `client.objects`. There is no `MINTClient.from_env()` factory; use the env-aware constructor (option 3 above).
@@ -202,9 +210,9 @@ Connection/timeout failures are wrapped as `MINTConnectionError`. Non-2xx respon
 
 ## Token refresh
 
-`MINTClient` wires a refresh callback at construction. When a request returns 401 with an expired token, the client attempts `auth.refresh()` once before re-raising. Long-running scripts get refresh for free; explicit triggers aren't needed.
+`MINTClient` wires a refresh callback at construction. When a request returns 401 with an expired session token, the client attempts `auth.refresh()` once before re-raising. A credential with the `mint_pat_` prefix is a personal access token. The client never refreshes it. Long-running scripts get refresh for free; explicit triggers aren't needed.
 
-For automation, use the deployment’s supported service-account credentials and handle authentication failures explicitly; a refresh attempt is not a guarantee that an expired or revoked session can continue.
+For automation, use a personal access token (`MINT_TOKEN`) and handle authentication failures explicitly. A refresh attempt does not guarantee that an expired or revoked session can continue.
 
 ## Pagination
 

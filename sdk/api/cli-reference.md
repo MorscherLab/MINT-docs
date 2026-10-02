@@ -12,7 +12,7 @@ mint --version
 mint --help
 ```
 
-Python 3.12+ is required. The `[cli]` extra supplies Typer; the bare runtime
+Python 3.14 or later is required. The `[cli]` extra supplies Typer; the bare runtime
 package does not guarantee a usable CLI. `mint init` creates a project dev
 group with `[cli,server]`; after `uv sync`, prefer `uv run mint ...` inside the
 project to use its selected SDK. The scaffold's runtime dependency stays plain
@@ -22,7 +22,7 @@ plugins also need `[local-db]`.
 | Requirement | Use it for |
 |---|---|
 | `mint-sdk` | Python SDK/runtime imports, such as `AnalysisPlugin` and `MINTClient` |
-| `mint-sdk[cli]` | The `mint` commands, including `mint init` scaffolding; adds Typer |
+| `mint-sdk[cli]` | The `mint` commands, including `mint init` scaffolding; adds Typer and `httpx2` |
 | `mint-sdk[cli,server]` | Plugin development with the CLI and Uvicorn; generated projects include this in their `dev` dependency group |
 
 
@@ -71,7 +71,7 @@ These talk to a running platform. Authenticate first with `mint auth login`. Eve
 mint status            # same as: mint platform status
 ```
 
-Prints the configured host, the stored username (or "Not logged in"), whether the platform is reachable, the loaded plugins with their versions, and whether the stored token is valid and when it expires.
+Prints the configured host (`MINT_URL`, or the stored default), the stored username (or "Not logged in"), whether the platform is reachable, the loaded plugins with their versions, whether the token is valid, and the credential in use: its type (session or access token), read-only state, expiry and source (`MINT_TOKEN` or the stored credential).
 
 ### `mint platform restart`
 
@@ -89,13 +89,23 @@ Tokens are stored per host in `~/.config/mint/credentials.json`, or `$XDG_CONFIG
 |---------|---------|
 | `mint auth login [--url URL] [--read-only]` | Sign in with a device code: prints a code to type at `<externalUrl>/device` in a signed-in browser, where you approve the request and pick the token lifetime; the CLI then stores the personal access token it is granted. `--read-only` asks for a read-only token. A host without a scheme gets `https://` |
 | `mint auth login --token [--url URL]` | Store an existing personal access token instead (prompted, or read from stdin) |
-| `mint auth logout [--url URL]` | Revoke the stored personal access token on the platform and discard it (default: the current host) |
-| `mint auth status` | Print the current host and user |
+| `mint auth logout [--url URL]` | Revoke the stored personal access token on the platform and discard it (default: the current host). If the platform cannot be reached, the command says so and still discards the local copy; revoke the token in Profile |
+| `mint auth status` | Print the host, user, role, the credential in use (type, read-only state, expiry, source) and whether the platform accepts it |
 | `mint auth token create <name> [--days 30\|90\|365] [--read-only] [--json]` | Issue a personal access token (default lifetime 90 days) and print it once, with a `claude mcp add` command for the platform's `/mcp` endpoint |
 | `mint auth token list [--json]` | List your personal access tokens by prefix, access, expiry and last use |
 | `mint auth token revoke <token-id>` | Revoke one of your tokens (ID from `token list`) |
 
+`mint auth token create` refuses to run under a personal access token, because a token cannot issue tokens. Run `mint auth login` again, or create the token in Profile. `--read-only` and `--token` do not combine. The browser opens only on a local terminal, not over SSH or without a display.
+
 A personal access token works as `MINT_TOKEN` for the CLI and `MINTClient`, and as the Bearer token for MCP clients. `--read-only` limits the token to reads. See [AI Assistants and API Access](/guide/ai-and-api).
+
+### `mint instruments`
+
+```bash
+mint instruments [NAME_OR_ID] [--all] [--json]     # also: mint platform instruments
+```
+
+Without an argument, lists instruments with their live status: state, sample, progress, ETA, unacknowledged alerts and time since the last report. An instrument without a report shows `(no report)`. With `NAME_OR_ID`, shows one instrument with its details and status. The name is matched first (case-insensitive, deactivated instruments included), then the ID. A name that matches more than one instrument is an error. `--all` includes deactivated instruments in the list. `--json` prints JSON. The command needs the `instruments.view` permission. Programmatic access: `MINTClient.instruments` ([REST client](/sdk/api/client#instruments)).
 
 ### `mint experiment`
 
@@ -235,7 +245,7 @@ mint init [DIRECTORY] [flags]
 
 Without `--yes`, missing fields are prompted interactively. With `--yes`, the AI-assistant file defaults to `claude`, which creates `CLAUDE.md`. If `mint doctor` says that file is missing current SDK guidance, run `mint doctor --fix` once to refresh it. `--ai-assistant none` skips assistant files, but the current `mint doctor` check still expects one of those files; run `mint doctor --fix` if you later want a passing doctor report.
 
-The standard scaffold includes a read-only `@mcp_tool` example (`double_value`) with a test; see [MCP tools](/sdk/recipes/mcp-tools). The scaffolded CI workflow builds the `.mint` bundle (`uv run mint build . --output-dir dist/`) on every push and pull request to `main`, after `mint doctor --strict` and the tests. Frontend templates pin pinia `^4`, vue-router `^5`, vitest `^5`, vue-tsc `^3` and jsdom `^30`. The `mint-sdk` range follows the running SDK's minor: a @MINT_VERSION@ CLI writes `>=1.3.0b1,<1.4`.
+The standard scaffold includes a read-only `@mcp_tool` example (`double_value`) with a test; see [MCP tools](/sdk/recipes/mcp-tools). The scaffolded CI workflow builds the `.mint` bundle (`uv run mint build . --output-dir dist/`) on every push and pull request to `main`, after `mint doctor --strict` and the tests. The scaffold sets `display_name` in `@mint_plugin` from the plugin name, `requires-python = ">=3.14"`, ruff `target-version = "py314"` (with `UP037` ignored), and Python 3.14 in the generated CI and release workflows. Frontend templates pin vue `^3.5.43`, pinia `^4.0.3`, vue-router `^5.3.1`, vite `^8.3.1`, tailwindcss `^4.3.3`, vitest `^5`, vue-tsc `^3` and jsdom `^30`. The `mint-sdk` range follows the running SDK's minor: a @MINT_VERSION@ CLI writes `>=1.3.0b1,<1.4`.
 
 The parser accepts `workflow`, although `init --help` still omits it from its type description. Generated mode accepts only `analysis`; use standard mode for the other types.
 
@@ -259,7 +269,7 @@ mint dev <subcommand>     # see logs, below
 | `--platform-dir` | Path to platform directory (otherwise auto-detected) |
 | `--prefix` | Override the routes prefix for the dev proxy |
 
-On startup `mint dev` lists the plugin's MCP tools under their published names and prints a `mint mcp call` command to try one.
+`mint dev` passes the plugin's `display_name` to the platform dev proxy, and refreshes it in an existing `config.dev.toml` entry. On startup `mint dev` lists the plugin's MCP tools under their published names and prints a `mint mcp call` command to try one.
 
 Stop with **Ctrl+C**.
 
@@ -320,6 +330,9 @@ mint doctor [PATH] [flags]
 - checks `@mcp_tool` / `@mcp_prompt` / `@mcp_resource` names, docstrings, signatures and schemas (the platform publishes none of a plugin's declarations while any is invalid);
 - warns when the plugin declares legacy `get_migrations_package()` migrations, which are removed in MINT 1.4;
 - reports removed frontend APIs with their replacements: `PlateMapEditor` / `RackEditor` (use `PlateEditor`), `FileBrowserModal` (use `FilePicker`), `AppPluginSwitcher` and the `pluginSwitcher` prop (use the `AppTopBar` plugin identity), `ColorSlider`, `DropdownButton`, `InstrumentAlertLog`, `InstrumentStatusCard`, `LcmsSequenceTable`, the removed composables, and `ProgressBar` `variant="segmented"` / `steps` / `current-step`;
+- reports an error when a plugin on `mint-sdk>=1.3` has a `requires-python` that admits Python older than 3.14 or excludes 3.14 (a `mint-sdk` dependency limited by a `python_version >= '3.14'` marker is exempt);
+- warns about a deprecated API that still ships (the `mint_sdk.lcms` and `mint_sdk.templates` imports, the `save_template` family of plugin methods, `DoseDesignWorkspaceView`, the `SmartGroup*` components and other deprecated exports), and reports a removed API as an error. `--strict` makes warnings fail the run;
+- does not report names removed before 1.2 (the `mld_sdk` names, `usePluginApi`, `PluginExperimentData` and similar). Upgrade such a plugin to 1.2 first;
 - accepts `mint-sdk` ranges for the 1.1, 1.2 and 1.3 lines.
 
 The deprecated-API check flags deprecated Python and frontend APIs in plugin sources, including the removed `AppSidebar` `variant` prop in `.vue` files and in agent docs such as `CLAUDE.md` and `AGENTS.md`; the fix hint is `AppSidebar :floating="false" collapsible` (plus `width="20rem"` for the former analysis width).
@@ -362,6 +375,8 @@ Add common plugin pieces to an existing project.
 | `mint add data-template [template] [--list] [--json] [--generate] [--page] [--path PATH]` | Add biology data-template helpers |
 | `mint add data-template-pack [pack] [--list] [--json] [--generate] [--page] [--path PATH]` | Add a curated data-template pack |
 | `mint add data-template-preset [preset] [--list] [--json] [--page] [--path PATH]` | Add a ready-to-save data-template preset |
+
+`mint add data-template`, `data-template-pack` and `data-template-preset` are deprecated and removed in 1.4. They print a deprecation warning to stderr on every run.
 
 There is no `mint add job` command. Use `mint init --mode generated` for the current job scaffold, or add `@job` methods by hand.
 
@@ -468,6 +483,7 @@ moves every `mint-sdk` requirement, dependency groups included, to
 `--scope minor` alone still fails on a lower minor cap.
 `--dry-run` previews changes, `--no-sync` skips installs/lock validation,
 and `--verify` chains Docker verification against the stable/beta channel.
+When the target is a 1.3 release, the command raises `[project].requires-python` to `>=3.14`. It only raises: upper bounds, exclusions, `~=` and `==` clauses, and a stricter floor stay. A missing value is added. The command refuses when the result would exclude 3.14, as with `<3.14` or `==3.12.*`. The command never rewrites an AI instructions file (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules`). It leaves the file unchanged and points to `mint doctor` and `mint doctor --fix`. It creates no missing file.
 See [upgrading the SDK](/sdk/operations/upgrading).
 
 ### `mint sdk generate`

@@ -10,7 +10,7 @@ By the end you will have:
 - Backend and frontend checks that can run in CI
 
 **Time:** 40-50 minutes
-**Prereqs:** Python 3.12+, `uv`, Bun, and the `mint` CLI from `mint-sdk[cli]` @MINT_VERSION@.
+**Prereqs:** Python 3.14+, `uv`, Bun, and the `mint` CLI from `mint-sdk[cli]` @MINT_VERSION@.
 
 ## 1. Scaffold in Standard Mode
 

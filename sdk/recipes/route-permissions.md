@@ -34,9 +34,26 @@ class PeakQcPlugin(AnalysisPlugin):
         return {"experiment_id": experiment.id}
 ```
 
-`requires_auth` is inherited by ordinary routes; a route can explicitly use `auth=True` or `auth=False`. `CurrentPluginActor` provides `user_id` (string), `username`, platform `role`, `permissions`, and `plugin_role`. Use `actor.has_permission("experiments.edit")` for a platform permission; use the separate plugin role for plugin-specific actions.
+`requires_auth` is inherited by ordinary routes; a route can explicitly use `auth=True` or `auth=False`. See [Platform authentication gate](#platform-authentication-gate) for what `auth=False` still means. `CurrentPluginActor` provides `user_id` (string), `username`, platform `role`, `permissions`, and `plugin_role`. Use `actor.has_permission("experiments.edit")` for a platform permission; use the separate plugin role for plugin-specific actions.
 
 `CurrentExperiment` checks `experiments.view`, visibility, and the effective experiment-type allowlist. It returns 403 when the actor lacks `experiments.view`, 404 for an inaccessible or missing experiment, and 503 without platform integration. Knowing an experiment ID or holding a plugin role does not bypass this check.
+
+## Platform authentication gate
+
+With platform authentication enabled, the platform requires a Bearer credential on every plugin request. A session JWT, a personal access token or a service token is accepted. The gate applies to proxied runtimes and to in-process plugin routes. It runs before the plugin sees the request. The session cookie is not read. A plugin cannot declare public paths.
+
+| Response | Cause |
+|----------|-------|
+| 401 `auth.required` | No Bearer credential, or one that does not resolve (invalid, expired or revoked token, inactive account, unresolved role) |
+| 403 `auth.read_only_token` | A read-only personal access token sends a write |
+| 403 `plugin.permission_denied` | The user does not have `plugins.use` |
+| 403 `plugin.not_visible` | The user's role cannot see the plugin |
+| 403 `plugin.service_token_scope` | The service token is bound to another plugin, the plugin no longer declares `instrument_status_write`, or no bound instrument is still in the plugin's grant |
+| 503 `auth.unavailable` | The platform cannot check the credential |
+
+Plugin frontends must call the plugin through the SDK client, which sends the Bearer credential. A raw `fetch` without a Bearer gets 401. Scripts use a personal access token.
+
+`auth=False` removes only the plugin's own user check. It does not remove the platform gate. Use it for routes where the plugin does its own authorization, for example routes that a service token calls. See [Report instrument status](/sdk/recipes/instrument-status). With platform authentication disabled, the gate lets every request through, but it still checks the scope of a service token. The dev proxy (`config.dev.toml`) does not apply the 401, 503, `plugins.use` and role checks.
 
 ## Experiment-scoped endpoint groups
 
@@ -87,7 +104,7 @@ class MyPlugin(AnalysisPlugin):
         return [(router, "")]
 ```
 
-The SDK host binds `CurrentPluginRuntime` for mounted plugin routers. Native routers inherit plugin authentication; use `PluginRouterMount(router, auth=False)` only for routes with a deliberate public or separate-token contract.
+The SDK host binds `CurrentPluginRuntime` for mounted plugin routers. Native routers inherit plugin authentication; use `PluginRouterMount(router, auth=False)` only for routes where the plugin authorizes the caller itself, such as a service-token contract.
 
 `context.require_plugin_role("owner", "admin")` remains supported and returns a `Depends` guard with a platform-admin bypass. It is suitable when a custom host guarantees the context is already initialized at router construction. The typed request dependency above also works when router construction happens earlier.
 

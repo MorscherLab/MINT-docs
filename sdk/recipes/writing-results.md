@@ -122,7 +122,22 @@ outcome = await self.update_analysis_file_artifact(
 
 The SDK reads the current object key and uses compare-and-swap when committing the replacement. Concurrent replacements conflict with 409. Pass `expected_object_key` when the user's edit is based on a previously read revision; a stale key is rejected before upload.
 
+To replace a file artifact that another plugin owns, pass `plugin_id="<owner>"`. The owner must be in both `analysis_result_writers` and `analysis_result_readers` of your plugin. The SDK stages the replacement in the owner's object scope.
+
 `filename` and `kind` are immutable. Omitted `note` preserves it, a string replaces it, and `None` clears it. `metadata` replaces the prior mapping. Old-object cleanup is recorded with the metadata transaction; `outcome.cleanup_pending=True` means the new artifact committed but cleanup remains pending, so do not retry the successful replacement as if it failed.
+
+## Use a file artifact as a job input
+
+A generated-UI `@job` with a `Path` input can take an existing file-backed analysis artifact. The input picker lists artifacts. On submit, the UI posts the experiment ID and artifact ID to `POST {prefix}/jobs/artifacts`. The SDK copies the file into the job's temporary staging. The handler still receives an ordinary `pathlib.Path`. In the frontend SDK, the selection is a `PluginJobArtifactPathInput` (`kind: 'artifact-path'`).
+
+`GET {prefix}/jobs/artifacts?experiment_id=N` lists the artifacts that staging accepts. An artifact is readable when all of these are true:
+
+- The caller has `experiments.view` and can see the experiment.
+- The artifact is active (not archived).
+- The artifact belongs to this plugin, or to a plugin in this plugin's `analysis_result_readers`.
+- The artifact is a file artifact (`mint.analysis_file.v1`).
+
+The SDK checks the same rules again on each job submission. If access changes in between (permission, visibility, archive, deletion or readers), the submission gets 404 and the staged copy is released. When nothing is readable, the picker shows "No file artifacts this plugin can read".
 
 ## Design data belongs to its design plugin
 
