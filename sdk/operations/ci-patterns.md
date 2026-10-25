@@ -138,7 +138,9 @@ wheel and frontend files are inside the bundle. The workflow does not run
 
 ## Submit to a registry on release
 
-Extend the release workflow to PR a registry update:
+`MorscherLab/mint-registry` does not need this job: a daily workflow there
+reads each plugin's newest stable release. Use it for a registry without such
+a sync. Extend the release workflow to PR a registry update:
 
 ```yaml
   submit-to-registry:

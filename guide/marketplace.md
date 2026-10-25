@@ -6,7 +6,7 @@ The marketplace is where you find plugins for MINT. Users with install rights in
 
 ## What's a marketplace registry
 
-A registry is a JSON feed of available plugins, hosted at `marketplace.registryUrl` (set in `config.json`). The default registry is `https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json`; private labs can host their own.
+A registry is a JSON feed of available plugins, hosted at `marketplace.registryUrl` (set in `config.json`). The default registry is `https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json`; private labs can host their own. The default registry is a private repository: the platform reads it with `updates.githubToken`, so that token must have read access to `MorscherLab/mint-registry` (a fine-grained token must list the repository). Without access, the catalog shows the cached copy, or no catalog on a new instance. A daily workflow in the registry raises each entry to the plugin's newest stable release.
 
 The feed for each plugin contains:
 

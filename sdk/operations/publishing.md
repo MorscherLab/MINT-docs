@@ -116,8 +116,10 @@ for both declarations.
    match the published release.
 4. Test discovery and installation from that registry on a disposable platform.
 
-For the Morscher Lab catalog, submit the entry to
+For the Morscher Lab catalog, submit a new entry once to
 [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry).
+A daily workflow there then sets `latest_version` and `min_platform_version`
+from your newest stable release, so later releases need no registry PR.
 
 ### Registry example
 
