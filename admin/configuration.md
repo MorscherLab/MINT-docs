@@ -235,7 +235,7 @@ edu-ID SSO stores linked users in the platform's required PostgreSQL database an
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `registryUrl` | `https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json` | Where to fetch the plugin catalog |
+| `registryUrl` | `https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json` | Where to fetch the plugin catalog. The default repository is private: `updates.githubToken` must have read access to it |
 | `cacheTtlMinutes` | `60` | Registry cache lifetime |
 | `autoUpdatePlugins` | `{}` | Per-plugin marketplace auto-update toggles |
 

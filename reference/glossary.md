@@ -89,8 +89,9 @@ The catalog of plugins available for install. Sourced from `marketplace.registry
 
 **Marketplace registry**
 A static JSON feed that points at GitHub release `.mint` assets. Hostable on
-any HTTPS endpoint. The default registry is `MorscherLab/mint-registry`; private
-deployments can point `marketplace.registryUrl` at an aggregate registry.
+any HTTPS endpoint. The default registry is `MorscherLab/mint-registry`, a private
+repository read with `updates.githubToken`; private deployments can point
+`marketplace.registryUrl` at an aggregate registry.
 
 **Member (system role)**
 The default role for new users: can create and edit projects and experiments and use plugins, but has no platform-admin rights. Write access comes from the role's permissions, not from project membership. Most lab users are Members.
