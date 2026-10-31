@@ -35,7 +35,7 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/PlotlyChart.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PlotlyChart.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -46,7 +46,7 @@ MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` description ` | ` string ` | No | ` undefined ` | — |
 | ` loading ` | ` boolean ` | No | ` false ` | — |
 | ` empty ` | ` boolean ` | No | ` false ` | — |
-| ` emptyMessage ` | ` string ` | No | ` 'No data available' ` | — |
+| ` emptyText ` | ` string ` | No | ` 'No data available' ` | — |
 | ` ariaLabel ` | ` string ` | No | ` 'Interactive Plotly chart' ` | — |
 | ` plotly ` | ` typeof PlotlyType ` | No | ` undefined ` | Use a custom Plotly build instead of the SDK's lazy-loaded default bundle. |
 | ` active ` | ` boolean ` | No | ` true ` | Pause rendering and resize work while a tab or panel is inactive. |
@@ -122,4 +122,4 @@ The SDK uses `plotly.js-dist-min` ^4.1.1. The SDK `dist/` does not bundle Plotly
 
 Set `empty` yourself when an analysis has no data. Bind `loading` to request state and keep axis labels/units explicit. For another chart library or event bindings beyond this API, use [ChartContainer](/sdk/components/chart-container).
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)
+[Release source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)

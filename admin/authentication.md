@@ -18,8 +18,8 @@ All methods can be enabled at the same time. Users sign in with a password or ed
 
 Accounts come from two places:
 
-- **Self-registration.** When `auth.allowRegistration` is `true` (the default), the login page shows **No account yet? Create one**, which opens `/register`. New accounts get the default role, Member.
-- **Admin creation.** An admin creates accounts with `mint admin user create <username> --role <slug>` (see [CLI](/admin/cli)).
+- **Self-registration.** When `auth.allowRegistration` is `true` (the default), the login page shows **No account yet? Create one**, which opens `/register`. New accounts get the default role, Member, and stay inactive until an administrator activates them.
+- **Admin creation.** An admin creates accounts with `mint platform admin user create <username> --role <slug>` (see [CLI](/admin/cli)).
 
 Anyone who can reach the login page can register while self-registration is on. To turn it off, switch off **Admin -> Platform -> Configuration -> Authentication -> Registration** (needs `platform.configure`), or set `auth.allowRegistration` to `false` in `config.json` (or `MINT_AUTH__ALLOW_REGISTRATION=false`), then restart. The `/register` page then sends visitors to `/login`, and the registration API returns 403.
 
@@ -36,14 +36,15 @@ Enter a username or email and the password on the login page, then click **Sign 
 | Lockout after failed logins | 5 attempts | `auth.failedLoginLimit` |
 | Lockout length | 15 minutes | `auth.loginLockoutMinutes` |
 
-A locked account gets "Too many failed login attempts. Try again later." until the lockout ends.
+A locked account gets "Too many failed login attempts. Try again later." until the lockout ends. A password change on `PUT /api/users/me` checks the current password under the same lockout: a wrong current password counts as a failed sign-in, is recorded as `auth.password_check_failure`, and a locked account gets 423 with `Retry-After`.
 
 Login cookies carry `Secure` when `server.externalUrl` starts with `https://`. If `externalUrl` is unset, MINT uses the scheme of the incoming request, so behind a TLS proxy set `externalUrl`.
 
 Changing a password, by the user or through an admin reset, revokes every session token issued for that account before the change. A user who changes their own password stays signed in in the current browser; every other session must sign in again. Personal access tokens are not affected; see [Personal access tokens](#personal-access-tokens). An open admin terminal re-checks its session every 15 seconds and closes with "access revoked" once the session is revoked; see [Admin terminal](/reference/permissions#admin-terminal).
 
 ::: warning Rotate the JWT secret carefully
-Rotating `auth.jwtSecretKey` invalidates every active session, signing every user out.:::
+Rotating `auth.jwtSecretKey` invalidates every active session, signing every user out.
+:::
 
 ## Sign in with a passkey
 
@@ -68,10 +69,11 @@ It is enforced only when authentication and passkeys are enabled, dev mode is of
 
 When enforced:
 
-- After the password or edu-ID step, an account with a passkey confirms with it. An account without one must enrol one before it can continue; there is no skip.
+- After the password or edu-ID step, an account with a passkey confirms with it. An account without one must enrol one before it can continue; there is no skip. Until then, the session token lasts 10 minutes and MINT sets no session cookie.
 - Sessions issued before the upgrade do the passkey step once, without retyping the password.
 - A password-only session is refused with 401 `auth.second_factor_required` on every route, including plugin routes, plugin frontends and the admin terminal.
-- A user cannot delete their last passkey.
+- A user cannot delete their last passkey, and "delete all passkeys" is refused (409).
+- The password and edu-ID sign-in answers carry a `second_factor` step (`verify` or `enrol`), and 401 `auth.second_factor_required` names the same step in `details.second_factor`.
 - Personal access tokens, service tokens and `/mcp` are unchanged. Scripts, CI and the Python `MINTClient` must use a personal access token: `MINTClient.login(username, password)` raises `auth.second_factor_required`. The `mint` CLI signs in with a device code approved in the browser; see [CLI](/admin/cli#authenticate).
 
 ## Recovery
@@ -127,12 +129,13 @@ For administrators:
 | Format | Starts with `mint_pat_`; the secret is shown once at creation. MINT stores only a digest |
 | Lifetime | 30, 90 or 365 days (default 90), capped by `auth.patMaxLifetimeDays` (default 365). Set the cap under **Admin -> Platform -> Configuration -> Authentication -> Access token lifetime** |
 | Scope | Acts with the owner's role. A read-only token is refused with 403 for any request other than a read (`GET`, `HEAD`, `OPTIONS`), and MCP write tools are hidden from it |
-| Accepted by | Every REST route as `Authorization: Bearer`, the plugin proxy, and `/mcp`. The plugin proxy does not forward the token to plugins |
+| Accepted by | Every REST route as `Authorization: Bearer`, the plugin proxy, and `/mcp`. The plugin proxy removes the token before it forwards a request, so a plugin in its own process never sees it. A plugin that runs in the platform process still receives the `Authorization` header of the request |
+| Limits | A personal access token cannot issue personal access tokens or change sign-in methods (passkey enrol or delete, password set): those routes answer 403 |
 | Ends | On revocation, on expiry, or when the account is deactivated. A password change does **not** revoke tokens |
 
-**Admin -> Platform -> Access Tokens** (needs `users.manage`) lists every user's unrevoked tokens and revokes any of them. The API equivalents are `GET /api/admin/tokens` and `DELETE /api/admin/tokens/{id}`. Creating and revoking tokens is recorded in the audit log as `api_token.create` and `api_token.revoke`.
+**Admin -> Platform -> Access tokens** (needs `users.manage`) lists every user's unrevoked tokens and revokes any of them. The API equivalents are `GET /api/admin/tokens` and `DELETE /api/admin/tokens/{id}`. Creating and revoking tokens is recorded in the audit log as `api_token.create` and `api_token.revoke`.
 
-> [Screenshot: Admin -> Platform -> Access Tokens listing tokens of several users with a Revoke action]
+> [Screenshot: Admin -> Platform -> Access tokens listing tokens of several users with a Revoke action]
 
 When an account is compromised, deactivate it: sessions and tokens of an inactive account are refused. Revoke its tokens before reactivating it.
 
@@ -140,12 +143,12 @@ When an account is compromised, deactivate it: sessions and tokens of an inactiv
 
 A service token is a credential for an instrument daemon that reports to a plugin. A daemon cannot use a person's session or personal access token for this job. Plugin authors: see [Instrument status](/sdk/recipes/instrument-status).
 
-Create a service token in **Admin -> Platform -> Service Tokens**. The section needs both `users.manage` and `instruments.edit`. Click **New token** and set:
+Create a service token in **Admin -> Platform -> Service tokens**. The section needs both `users.manage` and `instruments.edit`. Click **New token** and set:
 
 | Field | Meaning |
 |-------|---------|
 | **Name** | A label for the token |
-| **Plugin** | The one plugin the token belongs to. The list shows only plugins that declare `instrument_status_write` |
+| **Plugin** | The one plugin the token belongs to. The list shows only plugins that declare the `instrument_status` feature (wire flag `instrument_status_write`) |
 | **Instruments** | A subset of the instruments granted to that plugin. At least one |
 | **Expires** | 90 days, 365 days or Never (default) |
 
@@ -159,9 +162,15 @@ MINT shows the secret once. Copy it before you close the dialog.
 | Ends | On revocation or expiry. Click **Revoke**, then **Confirm**, in the token table |
 | Audit | `service_token.create` and `service_token.revoke` |
 
+An uninstall of the plugin revokes its tokens (`service_token.revoke`, system actor). A token that you issue after you reinstall the plugin stays valid. The 1.4 upgrade does not revoke the tokens of plugins that you uninstalled before; revoke them here.
+
 The API equivalents are `GET` and `POST /api/admin/service-tokens` and `DELETE /api/admin/service-tokens/{id}`. A personal access token cannot create a service token; sign in as a user.
 
 The **Instruments** list shows only the instruments granted to the selected plugin. Grant them in the **Instrument status** block of the plugin's access settings (**Admin -> Plugins -> Installed -> plugin actions -> Access control**). Setting that grant needs `instruments.edit`.
+
+## Device-code sign-in for the `mint` CLI
+
+`mint platform auth login` uses the OAuth device authorization grant (RFC 8628). The CLI asks `POST /oauth/device_authorization`, shows a short code and the address `<server.externalUrl>/device`, and polls `POST /oauth/token`. The user opens `/device` in a browser where they are signed in (a phone works), types the code, chooses the token lifetime (and read-only if wanted) and approves. The poll then returns a [personal access token](#personal-access-tokens). `/.well-known/oauth-authorization-server` publishes the endpoints. A code is valid for 10 minutes. Pending codes live in memory, so a restart cancels them. Password sign-in from the CLI does not exist. With the second factor on, the browser step needs a full session.
 
 ## Disabling authentication
 
@@ -169,13 +178,13 @@ The **Instruments** list shows only the instruments granted to the selected plug
 
 ## Rate limiting
 
-These paths are limited to **20 requests per 60 seconds per client IP**: `/api/auth` (including passkey routes), `/api/setup`, and `/api/users/register`. The public bootstrap reads `GET /api/auth/config` and `GET /api/setup/config/public` are exempt. Over the limit, MINT answers 429.
+These paths are limited to **20 requests per 60 seconds per client IP**: `/api/auth` (including passkey routes), `/api/setup`, `/api/users/register`, and `PUT /api/users/me`. `/mcp` has its own bucket of 240 requests per 60 seconds, and `/oauth` has one of 60. MINT does not rate-limit in dev mode. The public bootstrap reads `GET /api/auth/config` and `GET /api/setup/config/public` are exempt. Over the limit, MINT answers 429.
 
 MINT takes the client IP from `X-Forwarded-For` only when the request comes from a proxy in `server.trustedProxyCidrs` (default: loopback). An explicitly empty list trusts no proxy. See [Reverse proxy](/admin/proxy-and-setup#reverse-proxy).
 
 ## Audit log
 
-MINT records security-relevant events in the database, including `auth.login_success` and `auth.login_failure` for password and passkey logins, `user.register`, `api_token.create` and `api_token.revoke`, `service_token.create` and `service_token.revoke`, `passkey.admin_reset`, MCP write calls (`mcp.tool_call`), and project, experiment, and plugin changes. Read them through the API; there is no audit page in the UI yet. See [Audit log](/admin/platform-settings#logs-and-audit-log).
+MINT records security-relevant events in the database, including `auth.login_success` and `auth.login_failure` for password and passkey logins, `user.register`, `user.create`, `auth.password_check_failure`, `api_token.create` and `api_token.revoke`, `service_token.create` and `service_token.revoke`, `passkey.admin_reset`, MCP write calls (`mcp.tool_call`), and project, experiment, and plugin changes. Read them through the API; there is no audit page in the UI. See [Audit log](/admin/platform-settings#logs-and-audit-log).
 
 For tracing, MINT can export OpenTelemetry spans for FastAPI, SQLAlchemy, and logging when `observability.enabled` is `true`.
 

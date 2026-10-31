@@ -12,7 +12,7 @@ Label, hint, error, and accessibility wrapper for form controls.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/FormField.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FormField.vue">Source</a>
 </div>
 
 <ComponentPlayground name="FormField" />
@@ -20,7 +20,7 @@ Label, hint, error, and accessibility wrapper for form controls.
 ## Import
 
 ```ts
-import { FormField } from "@morscherlab/mint-sdk/components"
+import { FormField } from "@morscherlab/mint-sdk"
 ```
 
 ## Row layout in 1.2.1
@@ -38,7 +38,7 @@ controls stacked. Connect `html-for` to the actual input's `id`.
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/FormField.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FormField.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

@@ -12,7 +12,7 @@ SegmentedControl is a forms component exported by @morscherlab/mint-sdk for plug
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SegmentedControl.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SegmentedControl.vue">Source</a>
 </div>
 
 <ComponentPlayground name="SegmentedControl" />
@@ -20,7 +20,7 @@ SegmentedControl is a forms component exported by @morscherlab/mint-sdk for plug
 ## Import
 
 ```ts
-import { SegmentedControl } from "@morscherlab/mint-sdk/components"
+import { SegmentedControl } from "@morscherlab/mint-sdk"
 ```
 
 ## Sizing in 1.2.1
@@ -35,12 +35,12 @@ should fill its container. An option's `color` renders a small swatch before its
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/SegmentedControl.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SegmentedControl.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` modelValue ` | ` string \| number ` | Yes | — | — |
-| ` options ` | ` SegmentedOptionInput[] ` | Yes | — | — |
+| ` options ` | ` SelectOptionInput[] ` | Yes | — | — |
 | ` variant ` | ` SegmentedControlVariant ` | No | ` 'card' ` | — |
 | ` size ` | ` SegmentedControlSize ` | No | ` 'md' ` | — |
 | ` fullWidth ` | ` boolean ` | No | ` false ` | — |
@@ -53,9 +53,9 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SegmentedOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L331) | See the linked SDK type definition. |
-| [` SegmentedControlVariant `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L342) | ` 'simple' \| 'card' ` |
-| [` SegmentedControlSize `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L343) | ` 'sm' \| 'md' \| 'lg' ` |
+| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
+| [` SegmentedControlVariant `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L373) | ` 'simple' \| 'card' ` |
+| [` SegmentedControlSize `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L374) | ` 'sm' \| 'md' \| 'lg' ` |
 
 <!-- sdk-props:end -->
 

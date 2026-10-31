@@ -2,7 +2,7 @@
 
 The runtime exception family below inherits from `PluginException` and carries a machine-readable `code`, a human-readable `message`, and optional `details`.
 
-MINT 1.2 SDK hosts automatically translate `PluginException` subclasses into HTTP responses. `create_standalone_app()` registers the shared handlers, and integrated platform middleware uses the same envelope. A custom FastAPI host must register the SDK handlers or supply an equivalent mapping.
+SDK hosts automatically translate `PluginException` subclasses into HTTP responses. `mint_sdk.app.create_app()` registers the shared handlers (`mint_sdk.api_errors.register_api_error_handlers`), and integrated platform middleware uses the same envelope. A custom FastAPI host must register the SDK handlers or supply an equivalent mapping.
 
 | Exception | HTTP status |
 |-----------|-------------|
@@ -10,7 +10,9 @@ MINT 1.2 SDK hosts automatically translate `PluginException` subclasses into HTT
 | `PermissionException`, `UnsupportedExperimentTypeException` | 403 |
 | `NotFoundException` | 404 |
 | `ConflictException`, `DesignDataOwnershipConflictException` | 409 |
+| `VersionConflictException` | 412 |
 | `EventVetoException` | 422 |
+| `UnavailableException` | 503 |
 | `PlatformCompatibilityError` | 426 |
 | Other `PluginException` subclasses | 500 |
 
@@ -29,8 +31,10 @@ PluginException
 ├── RepositoryException
 │   ├── NotFoundException
 │   └── ConflictException
-│       └── DesignDataOwnershipConflictException
+│       ├── DesignDataOwnershipConflictException
+│       └── VersionConflictException
 ├── EventVetoException
+├── UnavailableException
 ├── PlatformCompatibilityError
 └── PluginLifecycleException
 ```
@@ -214,7 +218,7 @@ if existing:
 
 ## `PluginLifecycleException`
 
-Use during `initialize()`, `shutdown()`, or `check_health()` when the plugin hits an unrecoverable startup / lifecycle error.
+Use during `initialize()` or `shutdown()` when the plugin hits an unrecoverable startup / lifecycle error.
 
 ```python
 class PluginLifecycleException(PluginException):
@@ -228,31 +232,33 @@ class PluginLifecycleException(PluginException):
 ```
 
 ```python
-async def initialize(self, context=None):
+async def initialize(self) -> None:
     if not self._validate_config():
         raise PluginLifecycleException(
             "Plugin requires 'api_endpoint' in plugin settings",
             phase="initialize",
-            plugin_name=self.metadata.name,
+            plugin_name=self.name,
         )
 ```
 
 `code = "LIFECYCLE_ERROR"`.
 
-## MINT 1.2 ownership, type, and event errors
+## Ownership, type, version, availability and event errors
 
 | Exception | Constructor / meaning |
 |-----------|-----------------------|
 | `UnsupportedExperimentTypeException(experiment_type, allowed_experiment_types, message=None, details=None)` | `EXPERIMENT_TYPE_NOT_ALLOWED`; write targets a disallowed type |
 | `DesignDataOwnershipConflictException(*, experiment_id, current_owner_plugin_id, requested_owner_plugin_id)` | `DESIGN_DATA_OWNERSHIP_CONFLICT`; another plugin already owns this design |
+| `VersionConflictException(*, entity, entity_id, version, expected_version)` | `VERSION_CONFLICT`; a write named an `expected_version` that the entity no longer has. `version` is the current version: read again, merge and retry. Import it from `mint_sdk.exceptions` |
+| `UnavailableException(message, details=None)` | `UNAVAILABLE`; the call needs the platform or a host capability that is not present. A standalone plugin raises it for every platform-only call, such as `context.design.get()`. Exported from `mint_sdk` |
 | `EventVetoException(message=..., details=None)` | `EVENT_VETO`; reject a blocking before-save event |
 | `PlatformCompatibilityError(message, sdk_api_version=None, platform_api_version=None, details=None)` | Internal platform/SDK API mismatch; exception `code` is `PLATFORM_API_VERSION_MISMATCH`, HTTP envelope code is `plugin.api_version_mismatch`. Import it from `mint_sdk.exceptions`; it is not exported from `mint_sdk` |
 
-A veto in an observer event is a failed observer, not a rollback of an already committed experiment. A settings CAS conflict or artifact replacement conflict is a `ConflictException`; reload the authoritative state before creating a new edit.
+A veto in an observer event is a failed observer, not a rollback of an already committed experiment. A settings CAS conflict or artifact replacement conflict is a `ConflictException`, and a stale `expected_version` is a `VersionConflictException`; reload the authoritative state before creating a new edit.
 
 ## Migration-specific errors
 
-Migration exceptions (`mint_sdk.migrations.errors`) do not inherit from `PluginException`; see [Alembic errors and recovery](/sdk/api/migrations#alembic-errors-and-recovery) and [legacy exceptions](/sdk/api/migrations#legacy-exceptions).
+Migration exceptions (`mint_sdk.migrations.errors`) do not inherit from `PluginException`; see [Alembic errors and recovery](/sdk/api/migrations#alembic-errors-and-recovery).
 
 ## Serializing errors
 

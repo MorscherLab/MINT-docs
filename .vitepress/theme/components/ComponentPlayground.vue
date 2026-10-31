@@ -2,16 +2,9 @@
 import { computed, onMounted, ref } from 'vue'
 import '@morscherlab/mint-sdk/styles'
 import {
-  AdductText,
   AlertBox,
-  AppAvatarMenu,
   AppContainer,
-  AppLayout,
-  AppSidebar,
   AppToastContainer,
-  AppTopBar,
-  AuditTrail,
-  AutoGroupModal,
   Avatar,
   BaseButton,
   BaseCheckbox,
@@ -22,84 +15,70 @@ import {
   BaseSelect,
   BaseSlider,
   BaseTabs,
-  BaseTextarea,
-  BaseToggle,
   Breadcrumb,
   Calendar,
-  ChartContainer,
-  BioTemplateExperimentWorkspaceView,
-  BioTemplatePackWorkspaceView,
-  BioTemplatePresetWorkspaceView,
-  BioTemplateRenderer,
-  ChemicalFormula,
   CollapsibleCard,
-  ComponentBindingRenderer,
-  ConcentrationInput,
-  ControlWorkspaceView,
   ConfirmDialog,
   DataFrame,
   DatePicker,
-  DateTimePicker,
   Divider,
   EmptyState,
-  BatchProgressList,
-  DoseCalculator,
-  DoseDesignWorkspaceView,
-  ExperimentCodeBadge,
-  ExperimentDataViewer,
-  ExperimentPopover,
-  ExperimentSelectorModal,
-  ExperimentTimeline,
   FileUploader,
-  FitPanel,
   FormBuilder,
-  FormulaInput,
-  FormActions,
   FormField,
-  GroupAssigner,
-  IconButton,
-  InstrumentStateBadge,
   LoadingSpinner,
-  LayoutResizeHandle,
-  MoleculeInput,
-  MultiSelect,
   NumberInput,
   PluginIcon,
   PluginWorkspaceView,
   ProgressBar,
+  SegmentedControl,
+  SettingsModal,
+  Skeleton,
+  ThemeToggle,
+  Tooltip,
+  useToast,
+} from '@morscherlab/mint-sdk'
+import {
+  AdductText,
+  ChartContainer,
+  ChemicalFormula,
+  ConcentrationInput,
+  DoseCalculator,
+  FormulaInput,
+  InstrumentStateBadge,
+  MoleculeInput,
   ProtocolStepEditor,
-  ReagentEditor,
-  ReagentList,
   ResourceCard,
-  SampleLegend,
   SampleHierarchyTree,
   SampleSelector,
   ScheduleCalendar,
   ScientificNumber,
-  SegmentedControl,
-  SearchableSelect,
   SequenceInput,
   SequenceProgressBar,
-  SettingsModal,
-  SmartGroupFieldRecipe,
-  SmartGroupManual,
-  SmartGroupModal,
-  Skeleton,
-  StatusIndicator,
   StepWizard,
-  TagsInput,
-  ThemeToggle,
-  TimePicker,
   TimeRangeInput,
   WellPlate,
-  UnitInput,
-  Tooltip,
-} from '@morscherlab/mint-sdk/components'
-import { useApi, useToast, useManualLayoutResize, resizedLeadingPanelWidth } from '@morscherlab/mint-sdk/composables'
+} from '@morscherlab/mint-sdk/lab'
 import {
-  createLcmsBatchCollection,
-  createWellPlateScreenCollection,
-} from '@morscherlab/mint-sdk/templates'
+  AppLayout,
+  AppSidebar,
+  AppTopBar,
+  LayoutResizeHandle,
+  useManualLayoutResize,
+  resizedLeadingPanelWidth,
+} from '@morscherlab/mint-sdk/shell'
+import {
+  AuditTrail,
+  BatchProgressList,
+  ExperimentCodeBadge,
+  ExperimentPopover,
+  ExperimentSelectorModal,
+  TagsInput,
+} from '@morscherlab/mint-sdk/data'
+import {
+  ComponentBindingRenderer,
+  useApi,
+} from '@morscherlab/mint-sdk/runtime'
 
 const props = defineProps<{
   name: string
@@ -235,9 +214,9 @@ const radioOptions = [
 ]
 
 const tabs = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'results', label: 'Results', badge: 12 },
-  { id: 'settings', label: 'Settings' },
+  { value: 'overview', label: 'Overview' },
+  { value: 'results', label: 'Results', badge: 12 },
+  { value: 'settings', label: 'Settings' },
 ]
 
 const resultColumns = [
@@ -666,22 +645,6 @@ const bioTemplateValues = ref<Record<string, unknown>>({
   unit: 'nM',
 })
 
-const wellplateScreenTemplate = createWellPlateScreenCollection({
-  samples: ['Vehicle', 'Treatment'],
-  compounds: {
-    'MINT-2847': [0, 1, 10, 100],
-  },
-  unit: 'nM',
-})
-
-const lcmsBatchTemplate = createLcmsBatchCollection({
-  samples: ['Blank', 'Pooled QC', 'S001', 'S002'],
-  features: ['Glucose', 'Lactate', 'Citrate'],
-  instrument: 'Orbitrap LC-MS',
-  method: 'HILIC negative',
-  includeQc: true,
-})
-
 const bioTemplateStatus = {
   hasExperiment: true,
   currentExperimentId: 42,
@@ -976,11 +939,6 @@ const fallbackReason = computed(() => {
         </div>
       </template>
 
-      <template v-else-if="name === 'SearchableSelect'">
-        <SearchableSelect v-model="searchableValue" :options="selectOptions" search-placeholder="Search workflows" />
-        <p class="mint-live-caption">Selected: {{ searchableValue }}</p>
-      </template>
-
       <template v-else-if="name === 'LayoutResizeHandle'">
         <div ref="resizeContainer" class="mint-resize-demo" :style="{ gridTemplateColumns: `${panelWidth}px 8px minmax(0, 1fr)` }">
           <aside>Controls · {{ panelWidth }} px</aside>
@@ -1150,17 +1108,6 @@ const fallbackReason = computed(() => {
         </div>
       </template>
 
-      <template v-else-if="name === 'AppAvatarMenu'">
-        <div class="mint-menu-demo">
-          <AppAvatarMenu
-            user-name="MINT Operator"
-            user-email="operator@morscher.lab"
-            user-initial="MO"
-            :items="accountMenuItems"
-          />
-        </div>
-      </template>
-
       <template v-else-if="name === 'AppToastContainer'">
         <div class="mint-live-row">
           <BaseButton variant="primary" @click="toast.info('Export file is being generated...')">
@@ -1241,10 +1188,6 @@ const fallbackReason = computed(() => {
         </FormField>
       </template>
 
-      <template v-else-if="name === 'BaseTextarea'">
-        <BaseTextarea v-model="notesValue" :rows="4" resize="vertical" />
-      </template>
-
       <template v-else-if="name === 'BaseSelect'">
         <BaseSelect v-model="selectValue" :options="selectOptions" />
         <p class="mint-live-caption">Selected: {{ selectValue }}</p>
@@ -1252,10 +1195,6 @@ const fallbackReason = computed(() => {
 
       <template v-else-if="name === 'BaseCheckbox'">
         <BaseCheckbox v-model="checkboxValue" label="Include blanks" />
-      </template>
-
-      <template v-else-if="name === 'BaseToggle'">
-        <BaseToggle v-model="toggleValue" label="Show QC warnings" description="Use platform warning treatment for flagged rows." />
       </template>
 
       <template v-else-if="name === 'BaseRadioGroup'">
@@ -1282,17 +1221,6 @@ const fallbackReason = computed(() => {
         <SequenceInput v-model="sequenceValue" type="dna" :rows="4" :show-tools="true" :show-stats="true" />
       </template>
 
-      <template v-else-if="name === 'UnitInput'">
-        <UnitInput
-          v-model="unitValue"
-          v-model:unit="unitName"
-          :units="unitOptions"
-          :step="0.5"
-          :precision="2"
-          convert-on-unit-change
-        />
-      </template>
-
       <template v-else-if="name === 'ConcentrationInput'">
         <ConcentrationInput
           v-model="concentrationValue"
@@ -1306,20 +1234,12 @@ const fallbackReason = computed(() => {
       </template>
 
       <template v-else-if="name === 'BaseTabs'">
-        <BaseTabs v-model="activeTab" :tabs="tabs" />
+        <BaseTabs v-model="activeTab" :options="tabs" />
         <p class="mint-live-caption">Active tab: {{ activeTab }}</p>
       </template>
 
       <template v-else-if="name === 'DatePicker'">
         <DatePicker v-model="dateValue" placeholder="Select run date" clearable />
-      </template>
-
-      <template v-else-if="name === 'TimePicker'">
-        <TimePicker v-model="timeValue" min="08:00" max="18:00" :step="30" format="12h" clearable />
-      </template>
-
-      <template v-else-if="name === 'DateTimePicker'">
-        <DateTimePicker v-model="dateTimeValue" min="2026-05-29T08:00" max="2026-05-29T18:00" :time-step="30" time-format="12h" clearable />
       </template>
 
       <template v-else-if="name === 'DoseCalculator'">
@@ -1350,14 +1270,6 @@ const fallbackReason = computed(() => {
           <BasePill variant="success" dot>Completed</BasePill>
           <BasePill variant="warning">Needs review</BasePill>
           <BasePill variant="error">Failed</BasePill>
-        </div>
-      </template>
-
-      <template v-else-if="name === 'IconButton'">
-        <div class="mint-live-row">
-          <IconButton label="Add sample" variant="primary">+</IconButton>
-          <IconButton label="Refresh data" variant="secondary">R</IconButton>
-          <IconButton label="Deleting" variant="danger" loading>D</IconButton>
         </div>
       </template>
 
@@ -1426,10 +1338,6 @@ const fallbackReason = computed(() => {
         />
       </template>
 
-      <template v-else-if="name === 'SampleLegend'">
-        <SampleLegend v-model="sampleLegendValue" :samples="sampleLegendItems" orientation="horizontal" />
-      </template>
-
       <template v-else-if="name === 'SampleHierarchyTree'">
         <SampleHierarchyTree :nodes="sampleTreeNodes" :default-expanded-ids="['study-dose', 'exp-mint-042', 'plate-a']" />
       </template>
@@ -1445,47 +1353,6 @@ const fallbackReason = computed(() => {
           :samples="['Vehicle_A1', 'Vehicle_A2', 'Drug_A1', 'Drug_A2', 'Drug_B1', 'Drug_B2', 'QC_01', 'QC_02']"
           :enable-smart-group="false"
           :autoload-experiment-data="false"
-        />
-      </template>
-
-      <template v-else-if="name === 'AutoGroupModal' && !isClient">
-        <span class="mint-live-caption">Preview loads in the browser.</span>
-      </template>
-
-      <template v-else-if="name === 'AutoGroupModal'">
-        <div class="mint-experiment-selector-demo">
-          <BaseButton variant="primary" @click="autoGroupDemoOpen = true">Open smart grouping</BaseButton>
-          <AutoGroupModal
-            v-model="autoGroupDemoOpen"
-            :samples="['Vehicle_A1', 'Vehicle_A2', 'DrugLow_A1', 'DrugLow_A2', 'DrugHigh_B1', 'DrugHigh_B2', 'QC_01', 'QC_02']"
-            @apply="autoGroupDemoOpen = false"
-          />
-        </div>
-      </template>
-
-      <template v-else-if="name === 'SmartGroupModal'">
-        <SmartGroupModal
-          v-model:mode="smartGroupMode"
-          @apply="smartGroupMode = 'manual'"
-          @done="smartGroupMode = 'auto'"
-        />
-      </template>
-
-      <template v-else-if="name === 'SmartGroupFieldRecipe'">
-        <SmartGroupFieldRecipe @apply="smartGroupMode = 'manual'" @manual="smartGroupMode = 'manual'" />
-      </template>
-
-      <template v-else-if="name === 'SmartGroupManual'">
-        <SmartGroupManual @done="smartGroupMode = 'auto'" @auto="smartGroupMode = 'auto'" />
-      </template>
-
-      <template v-else-if="name === 'GroupAssigner'">
-        <GroupAssigner
-          :groups="groupAssignerGroups"
-          v-model:group1="assignedControlGroups"
-          v-model:group2="assignedTreatmentGroups"
-          label1="Control"
-          label2="Treatment"
         />
       </template>
 
@@ -1523,10 +1390,6 @@ const fallbackReason = computed(() => {
         </CollapsibleCard>
       </template>
 
-      <template v-else-if="name === 'ExperimentTimeline'">
-        <ExperimentTimeline :model-value="protocolSteps" expanded-step-id="step-2" color-by-type />
-      </template>
-
       <template v-else-if="name === 'ProtocolStepEditor' && !isClient">
         <span class="mint-live-caption">Preview loads in the browser.</span>
       </template>
@@ -1535,36 +1398,11 @@ const fallbackReason = computed(() => {
         <ProtocolStepEditor v-model="protocolStepValue" mode="edit" />
       </template>
 
-      <template v-else-if="name === 'ReagentList'">
-        <ReagentList v-model="reagentListValue" :columns="['name', 'lot', 'expiry', 'storage', 'stock']" />
-      </template>
-
-      <template v-else-if="name === 'ReagentEditor'">
-        <ReagentEditor v-model="reagentEditorValue" :plate-format="96" />
-      </template>
-
-      <template v-else-if="name === 'FormActions'">
-        <div class="mint-form-actions-demo">
-          <FormActions show-cancel submit-label="Save experiment" />
-          <Divider label="Wizard" />
-          <FormActions is-wizard :is-first="false" :is-last="false" />
-          <FormActions is-wizard :is-first="false" is-last loading submit-label="Publishing" />
-        </div>
-      </template>
-
       <template v-else-if="name === 'FormBuilder'">
         <div class="mint-form-builder-demo">
           <FormBuilder v-model="formBuilderValues" :schema="formBuilderSchema" size="sm" />
           <pre>{{ JSON.stringify(formBuilderValues, null, 2) }}</pre>
         </div>
-      </template>
-
-      <template v-else-if="name === 'MultiSelect'">
-        <MultiSelect v-model="multiValue" :options="[
-          { value: 'qc', label: 'QC sample' },
-          { value: 'treated', label: 'Treated' },
-          { value: 'control', label: 'Control' },
-        ]" />
       </template>
 
       <template v-else-if="name === 'TagsInput'">
@@ -1620,19 +1458,6 @@ const fallbackReason = computed(() => {
         />
       </template>
 
-      <template v-else-if="name === 'ExperimentDataViewer'">
-        <ExperimentDataViewer
-          title="Dose response output"
-          plugin-name="Dose response"
-          default-view="summary"
-          :summary-data="experimentSummaryData"
-          :tree-data="sampleTreeNodes"
-          :table-data="experimentTableRows"
-          :table-columns="experimentTableColumns"
-          :auto-fetch="false"
-        />
-      </template>
-
       <template v-else-if="name === 'ComponentBindingRenderer'">
         <div class="mint-component-binding-demo">
           <ComponentBindingRenderer
@@ -1641,98 +1466,6 @@ const fallbackReason = computed(() => {
             dense
             layout="stack"
           />
-        </div>
-      </template>
-
-      <template v-else-if="name === 'ControlWorkspaceView'">
-        <div class="mint-workspace-preview">
-          <ControlWorkspaceView
-            v-model="controlWorkspaceValues"
-            :controls="controlWorkspaceControls"
-            :control-options="controlWorkspaceOptions"
-            title="Analysis Workspace"
-            sidebar-title="Analysis Controls"
-            sidebar-subtitle="Current run"
-            :show-settings="false"
-            dense
-          />
-        </div>
-      </template>
-
-      <template v-else-if="name === 'DoseDesignWorkspaceView'">
-        <div class="mint-workspace-preview">
-          <DoseDesignWorkspaceView
-            v-model="doseDesignValues"
-            title="Dose Design Workspace"
-            sidebar-title="Dose Controls"
-            sidebar-subtitle="Plate setup"
-            :dose-design-options="doseDesignOptions"
-            :show-settings="false"
-            :well-plate-props="{
-              heatmap: { enabled: true, min: 0, max: 100, colorScale: 'viridis' },
-            }"
-          />
-        </div>
-      </template>
-
-      <template v-else-if="name === 'BioTemplateRenderer'">
-        <div class="mint-template-demo">
-          <BioTemplateRenderer :target="lcmsBatchTemplate" :include="['DataFrame', 'ExperimentTimeline', 'ScheduleCalendar']" dense />
-        </div>
-      </template>
-
-      <template v-else-if="name === 'BioTemplateExperimentWorkspaceView'">
-        <div class="mint-template-demo">
-          <BioTemplateExperimentWorkspaceView
-            :target="wellplateScreenTemplate"
-            kind="collection"
-            label="Wellplate Screen"
-            :status="bioTemplateStatus"
-            :actions="bioTemplateActions"
-            show-template-summary
-            dense
-            v-slot="{ target }"
-          >
-            <BioTemplateRenderer :target="target" :exclude="['SampleSelector']" dense />
-          </BioTemplateExperimentWorkspaceView>
-        </div>
-      </template>
-
-      <template v-else-if="name === 'BioTemplatePackWorkspaceView' && !isClient">
-        <span class="mint-live-caption">Preview loads in the browser.</span>
-      </template>
-
-      <template v-else-if="name === 'BioTemplatePackWorkspaceView'">
-        <div class="mint-template-demo">
-          <BioTemplatePackWorkspaceView
-            pack="cell-culture-screen"
-            :status="bioTemplateStatus"
-            :actions="bioTemplateActions"
-            show-template-summary
-            dense
-            v-slot="{ target }"
-          >
-            <BioTemplateRenderer :target="target" :exclude="['SampleSelector']" dense />
-          </BioTemplatePackWorkspaceView>
-        </div>
-      </template>
-
-      <template v-else-if="name === 'BioTemplatePresetWorkspaceView' && !isClient">
-        <span class="mint-live-caption">Preview loads in the browser.</span>
-      </template>
-
-      <template v-else-if="name === 'BioTemplatePresetWorkspaceView'">
-        <div class="mint-template-demo">
-          <BioTemplatePresetWorkspaceView
-            v-model="bioTemplateValues"
-            preset="wellplate-screen"
-            show-template-summary
-            show-component-summary
-            dense
-            v-slot="{ collection }"
-          >
-            <BioTemplateRenderer :target="collection" :exclude="['SampleSelector']" dense />
-          </BioTemplatePresetWorkspaceView>
         </div>
       </template>
 
@@ -1772,14 +1505,6 @@ const fallbackReason = computed(() => {
         />
       </template>
 
-      <template v-else-if="name === 'StatusIndicator'">
-        <div class="mint-live-row">
-          <StatusIndicator status="success" label="Validated" />
-          <StatusIndicator status="warning" label="Needs review" />
-          <StatusIndicator status="info" label="Queued" pulse />
-        </div>
-      </template>
-
       <template v-else-if="name === 'InstrumentStateBadge'">
         <div class="mint-live-row">
           <InstrumentStateBadge state="running" />
@@ -1810,22 +1535,6 @@ const fallbackReason = computed(() => {
 
       <template v-else-if="name === 'BatchProgressList'">
         <BatchProgressList :items="batchItems" title="Analysis batch" max-height="18rem" />
-      </template>
-
-      <template v-else-if="name === 'FitPanel'">
-        <FitPanel state="completed" :results="fitResults" run-label="Run curve fit">
-          <template #controls>
-            <FormField label="Model">
-              <BaseSelect :model-value="'four-pl'" :options="[
-                { value: 'four-pl', label: '4-parameter logistic' },
-                { value: 'linear', label: 'Linear' },
-              ]" />
-            </FormField>
-          </template>
-          <template #footer>
-            <p class="mint-live-caption">Results are rendered from a fixed fixture.</p>
-          </template>
-        </FitPanel>
       </template>
 
       <template v-else-if="name === 'ChemicalFormula'">

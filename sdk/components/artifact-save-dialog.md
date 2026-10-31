@@ -12,7 +12,7 @@ Save/update dialog for analysis artifacts; delegates the write to a plugin-suppl
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ArtifactSaveDialog.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ArtifactSaveDialog.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ArtifactSaveDialog" />
@@ -20,7 +20,7 @@ Save/update dialog for analysis artifacts; delegates the write to a plugin-suppl
 ## Import
 
 ```ts
-import { ArtifactSaveDialog } from "@morscherlab/mint-sdk/components"
+import { ArtifactSaveDialog } from "@morscherlab/mint-sdk/data"
 ```
 
 ## Basic Usage
@@ -40,16 +40,17 @@ import { ArtifactSaveDialog } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ArtifactSaveDialog.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ArtifactSaveDialog.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` modelValue ` | ` boolean ` | Yes | — | — |
+| ` open ` | ` boolean ` | Yes | — | — |
 | ` saveHandler ` | ` ArtifactSaveDialogHandler ` | Yes | — | Performs the backend write; the dialog never calls the platform itself. |
 | ` mode ` | ` 'json' \| 'file' \| 'both' ` | No | ` 'file' ` | Which artifact kinds the form offers. |
 | ` fileSource ` | ` ArtifactFileSource ` | No | ` 'upload' ` | Use handler when the plugin backend serializes the file content itself. |
 | ` result ` | ` Record<string, unknown> ` | No | ` undefined ` | JSON result payload supplied programmatically by the host. |
-| ` experimentId ` | ` number \| null ` | No | ` null ` | Experiment id override; defaults to platform injection or URL. |
+| ` experimentId ` | ` number \| null ` | No | ` null ` | Experiment id override; defaults to the current experiment (useExperimentStore). |
+| ` experiment ` | ` ExperimentSummary \| null ` | No | ` null ` | Experiment shown in the strip at the top. Defaults to the store's current experiment when it is the one being saved to; no strip when unknown. |
 | ` existingArtifact ` | ` AnalysisArtifactDetail \| null ` | No | ` null ` | Existing artifact detail; when set the dialog updates instead of creating. |
 | ` existingArtifactKeys ` | ` string[] ` | No | ` undefined ` | Known artifact keys, used to warn (json) or block (file) on collisions. |
 | ` title ` | ` string ` | No | ` undefined ` | — |
@@ -67,10 +68,11 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ArtifactSaveDialogHandler `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L176) | See the linked SDK type definition. |
-| [` ArtifactFileSource `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L61) | ` 'upload' \| 'handler' ` |
-| [` AnalysisArtifactDetail `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L30) | See the linked SDK type definition. |
-| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L36) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
+| [` ArtifactSaveDialogHandler `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L176) | See the linked SDK type definition. |
+| [` ArtifactFileSource `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L61) | ` 'upload' \| 'handler' ` |
+| [` ExperimentSummary `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L158) | See the linked SDK type definition. |
+| [` AnalysisArtifactDetail `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L30) | See the linked SDK type definition. |
+| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L39) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
 
 <!-- sdk-props:end -->
 

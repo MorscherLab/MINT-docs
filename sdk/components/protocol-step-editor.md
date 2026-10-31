@@ -12,7 +12,7 @@ ProtocolStepEditor is a lab widgets component exported by @morscherlab/mint-sdk 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ProtocolStepEditor.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ProtocolStepEditor.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ProtocolStepEditor" />
@@ -20,13 +20,13 @@ ProtocolStepEditor is a lab widgets component exported by @morscherlab/mint-sdk 
 ## Import
 
 ```ts
-import { ProtocolStepEditor } from "@morscherlab/mint-sdk/components"
+import { ProtocolStepEditor } from "@morscherlab/mint-sdk/lab"
 ```
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ProtocolStepEditor.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ProtocolStepEditor.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -44,8 +44,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ProtocolStep `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L154) | See the linked SDK type definition. |
-| [` StepTemplate `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/protocolTemplateCatalog.ts#L18) | See the linked SDK type definition. |
+| [` ProtocolStep `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L238) | See the linked SDK type definition. |
+| [` StepTemplate `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/composables/protocolTemplateCatalog.ts#L18) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

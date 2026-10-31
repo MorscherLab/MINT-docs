@@ -12,7 +12,7 @@ Themed select control with option objects, placeholder, and v-model support.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BaseSelect.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseSelect.vue">Source</a>
 </div>
 
 <ComponentPlayground name="BaseSelect" />
@@ -20,23 +20,29 @@ Themed select control with option objects, placeholder, and v-model support.
 ## Import
 
 ```ts
-import { BaseSelect } from "@morscherlab/mint-sdk/components"
+import { BaseSelect } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BaseSelect.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseSelect.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` modelValue ` | ` string \| number ` | No | ` undefined ` | — |
-| ` options ` | ` SelectOptionInput<string \| number>[] ` | Yes | — | — |
+| ` modelValue ` | ` (M extends true ? OptionPrimitive[] : OptionPrimitive) \| null ` | No | ` null ` | The selected value; an array with multiple. |
+| ` options ` | ` SelectOptionInput[] ` | Yes | — | — |
+| ` multiple ` | ` M ` | No | ` undefined ` | Bind an array and pick several options (chip field + checkbox listbox). |
+| ` searchable ` | ` boolean ` | No | ` false ` | Single selection in a listbox with a search field. Ignored with multiple. |
+| ` max ` | ` number ` | No | ` undefined ` | Most options a multiple select accepts. |
 | ` placeholder ` | ` string ` | No | ` undefined ` | — |
+| ` searchPlaceholder ` | ` string ` | No | ` undefined ` | Search field placeholder (searchable). |
+| ` noResultsText ` | ` string ` | No | ` undefined ` | Text shown when the search matches no option (searchable). |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
-| ` error ` | ` boolean ` | No | ` false ` | — |
+| ` invalid ` | ` boolean ` | No | ` false ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 | ` ariaDescribedby ` | ` string ` | No | ` undefined ` | — |
+| ` ariaLabelledby ` | ` string ` | No | ` undefined ` | Id of the visible label. searchable: the trigger is then named by the label and the selected value. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -44,7 +50,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L122) | See the linked SDK type definition. |
+| [` OptionPrimitive `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L98) | See the linked SDK type definition. |
+| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

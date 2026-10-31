@@ -12,7 +12,7 @@ Controlled multi-plate editor over [WellPlate](/sdk/components/well-plate): plat
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/PlateEditor.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PlateEditor.vue">Source</a>
 </div>
 
 <ComponentPlayground name="PlateEditor" />
@@ -20,7 +20,7 @@ Controlled multi-plate editor over [WellPlate](/sdk/components/well-plate): plat
 ## Import
 
 ```ts
-import { PlateEditor } from "@morscherlab/mint-sdk/components"
+import { PlateEditor } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Basic Usage
@@ -102,49 +102,20 @@ Features are opt-in props: `formats`, `slots`, `reorder`, `wellDrag`, `groups`, 
 
 Slots: `#well-editor`, `#tab-extra` (tab bar), `#toolbar-extra` (toolbar). Keyboard shortcuts listen on the component, never on the document.
 
-## Plate-map data
-
-A BioTemplate `plate-map` binding renders `PlateEditor` with the template's samples as `groups` and the format pinned to the plate format. To edit stored plate-map data by hand, convert it to racks:
-
-```ts
-import { racksFromPlateState, toPlateMapEditorState } from '@morscherlab/mint-sdk/templates'
-
-const racks = racksFromPlateState(toPlateMapEditorState(template))
-```
-
-`racksFromPlateState` assigns slots in order and moves each well's sample id from `sampleType` to `group`. Both helpers belong to the biology `templates` exports, which are scheduled to leave the core SDK in MINT 1.4.
-
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/PlateEditor.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PlateEditor.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
+| ` spec ` | ` PlateEditorSpec ` | No | ` () => ({}) ` | Structure built with definePlateEditor(). Optional: every option has a default. |
 | ` modelValue ` | ` Rack[] ` | Yes | — | The plates. Never mutated; changes arrive as emitted intents. |
-| ` activeRackId ` | ` string ` | No | ` undefined ` | — |
-| ` formats ` | ` WellPlateFormat[] ` | No | ` () => [54, 96] ` | Formats offered by the format control; one entry hides it. |
-| ` slots ` | ` boolean \| SlotPosition[] ` | No | ` false ` | R/G/B/Y slot buttons: true for all four, a list for a subset. |
-| ` reorder ` | ` boolean ` | No | ` true ` | Reorder plate tabs by drag or Alt+←/→. |
-| ` wellDrag ` | ` boolean ` | No | ` false ` | Show the Drag toggle that moves / swaps wells (well-move). |
-| ` groups ` | ` SampleType[] \| false ` | No | ` false ` | Groups for the selection bar; a well's group holds the group id and colors it. |
-| ` wellFields ` | ` WellEditField[] \| false ` | No | ` () => ['label', 'sampleType', 'injectionVolume', 'injectionCount', 'customMethod'] ` | Fields of the single-well inspector; false turns the inspector off. |
-| ` sampleDrop ` | ` boolean \| WellSampleDropParser ` | No | ` false ` | Accept dropped samples: true reads JSON payloads, a parser may return null to reject. |
-| ` import ` | ` boolean ` | No | ` false ` | Show an Import button: a chosen file emits import, pasted text import-text (see importMode). |
-| ` importMode ` | ` 'file' \| 'paste' \| 'both' ` | No | ` 'file' ` | What import offers: a file picker, a paste dialog whose text import-text emits unparsed, or both. |
-| ` importAccept ` | ` string ` | No | ` undefined ` | The file picker's accept filter for import, e.g. '.csv'. |
-| ` export ` | ` string[] \| false ` | No | ` false ` | Export formats offered in the Import / Export menu; each emits export. |
-| ` clear ` | ` 'confirm' \| 'undo' \| false ` | No | ` 'confirm' ` | Clear-plate button: ask first, clear with an Undo button, or hide it. |
-| ` clearConfirm ` | ` PlateEditorClearConfirm ` | No | ` undefined ` | Text and variant of the clear="confirm" dialog; unset fields keep the defaults. |
-| ` history ` | ` boolean ` | No | ` false ` | Show Undo / Redo (also shown when clear is 'undo'); they only emit intents. |
+| ` activeRack ` | ` string ` | No | ` undefined ` | Id of the active plate. Bind with v-model:active-rack; unbound, the tabs keep their own choice. |
 | ` canUndo ` | ` boolean ` | No | ` false ` | — |
 | ` canRedo ` | ` boolean ` | No | ` false ` | — |
-| ` fillSeries ` | ` boolean ` | No | ` false ` | Show the Fill Series button. |
-| ` fillSeriesWhenFull ` | ` 'disable' \| 'emit' ` | No | ` 'disable' ` | On a full plate: disable Fill Series, or keep it enabled and still emit fill-series (e.g. to show a toast). |
-| ` maxRacks ` | ` number ` | No | ` 10 ` | — |
-| ` minRacks ` | ` number ` | No | ` 1 ` | — |
 | ` readonly ` | ` boolean ` | No | ` false ` | No editing controls; well clicks still emit well-click. |
-| ` size ` | ` WellPlateSize ` | No | ` 'xs' ` | — |
+| ` hint ` | ` string ` | No | ` undefined ` | Footer text while nothing is selected; replaces the built-in selection hint. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -152,14 +123,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` Rack `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L108) | See the linked SDK type definition. |
-| [` WellPlateFormat `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L2) | See the linked SDK type definition. |
-| [` SlotPosition `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L38) | ` 'R' \| 'G' \| 'B' \| 'Y' ` |
-| [` SampleType `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L126) | See the linked SDK type definition. |
-| [` WellEditField `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L59) | ` 'label' \| 'sampleType' \| 'injectionVolume' \| 'injectionCount' \| 'customMethod' ` |
-| [` WellSampleDropParser `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L79) | See the linked SDK type definition. |
-| [` PlateEditorClearConfirm `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L118) | See the linked SDK type definition. |
-| [` WellPlateSize `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentLabTypes.ts#L5) | ` 'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl' \| 'fill' ` |
+| [` PlateEditorSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L184) | See the linked SDK type definition. |
+| [` Rack `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L110) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

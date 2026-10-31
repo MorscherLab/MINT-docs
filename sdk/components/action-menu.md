@@ -1,18 +1,18 @@
 ---
 aside: false
 title: ActionMenu
-description: "Compact overflow actions with an IconButton trigger and a viewport-safe teleported menu."
+description: "Compact overflow actions with an icon-only trigger and a viewport-safe teleported menu."
 ---
 
 <p class="mint-component-library__eyebrow">Feedback</p>
 
 # ActionMenu
 
-Compact overflow actions with an IconButton trigger and a viewport-safe teleported menu.
+Compact overflow actions with an icon-only trigger and a viewport-safe teleported menu.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ActionMenu.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ActionMenu.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ActionMenu" />
@@ -20,7 +20,7 @@ Compact overflow actions with an IconButton trigger and a viewport-safe teleport
 ## Import
 
 ```ts
-import { ActionMenu } from "@morscherlab/mint-sdk/components"
+import { ActionMenu } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage
@@ -49,7 +49,7 @@ The `#trigger` slot replaces the default icon trigger. Render one `<button>` and
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ActionMenu.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ActionMenu.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -63,7 +63,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ActionMenuItem `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L20) | See the linked SDK type definition. |
+| [` ActionMenuItem `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L23) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

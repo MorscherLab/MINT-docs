@@ -9,17 +9,17 @@ the released `v@MINT_VERSION@` source.
 
 | Your goal | Start here | What you will implement |
 |---|---|---|
-| Create different plugin types | [Type guide](/sdk/concepts/plugin-types), [type and workflow tutorial](/sdk/tutorials/plugin-types-workflow) | Analysis, design, workflow, static and full plugins; explicit write capabilities |
+| Create different plugin types | [Type guide](/sdk/concepts/plugin-types), [type and workflow tutorial](/sdk/tutorials/plugin-types-workflow) | Analysis, design, workflow, static and full plugins; `Metadata.writes` |
 | Create a Python-only analysis tool | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | Typed job inputs, generated UI, result output and tests |
-| Read/write platform data | [PlatformContext](/sdk/concepts/platform-context), [result recipe](/sdk/recipes/writing-results) | Visible experiments, design ownership, artifacts, files, settings and events |
+| Read/write platform data | [PlatformContext](/sdk/concepts/platform-context), [result recipe](/sdk/recipes/writing-results) | Visible experiments, design ownership, artifacts, files, settings, events and access levels |
 | Create your own SQL tables | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | SQLModel models, scoped sessions, CRUD and fresh/upgrade migration paths |
 | Version and upgrade a plugin | [Versioning](/sdk/operations/versioning), [upgrading the SDK](/sdk/operations/upgrading) | Git tags, SDK compatibility, design formats, SQL revisions and rollback planning |
 | Use the CLI through deployment | [CLI reference](/sdk/api/cli-reference), [deployment](/sdk/operations/deploying) | Scaffold, generate, diagnose, build, verify and install |
 | Build a custom frontend | [Frontend tutorial](/sdk/tutorials/adding-a-frontend), [platform integration](/sdk/frontend/platform-integration) | Vue 3, typed clients, experiment selection, authentication, forms, files and charts |
 
-### The 1.2 baseline
+### The baseline
 
-Use Python 3.12+ and install `mint-sdk[cli]` to scaffold plugins:
+Use Python 3.14+ and install `mint-sdk[cli]` to scaffold plugins:
 
 ```bash
 uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
@@ -30,7 +30,7 @@ dependencies. Run `uv sync` and use `uv run mint` inside that project. The
 plain `mint-sdk` dependency is for the runtime library; see [CLI setup](/sdk/api/cli-reference#install-and-choose-the-environment).
 
 Standard plugins also need Bun for the scaffolded Vue frontend. Platform
-integration needs a configured MINT server; MINT 1.2 requires PostgreSQL.
+integration needs a configured MINT server; MINT requires PostgreSQL.
 Standalone plugin SQLite is still available for local development.
 
 Three choices are independent: **UI mode** (`generated` or `standard`),
@@ -38,9 +38,8 @@ Three choices are independent: **UI mode** (`generated` or `standard`),
 external or Docker). In v@MINT_VERSION@, generated mode supports analysis plugins only;
 choose standard mode for design, workflow, static or full plugins.
 
-This track follows the released @MINT_VERSION@ API. Plugins can opt into
-[Alembic migrations](/sdk/concepts/migrations); `mint db` inspects development
-databases and authors revisions without applying them. See the [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md)
+This track follows the released @MINT_VERSION@ API. A plugin declares itself with a `Metadata` subclass and `@plugin`, and declares its tables with `Metadata.database` ([Alembic migrations](/sdk/concepts/migrations)); `mint db current` inspects development
+databases and `mint add migration` authors revisions without applying them. A plugin built for SDK 1.3 or earlier does not load on a 1.4 platform: see the [migration guide](/sdk/operations/migrate-1.3-to-1.4). Plugins declare `mint-sdk>=1.4.0,<2.0`; the plugin SDK contract has no breaking change within 1.x. See the [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md)
 and [platform changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md)
 for the release history.
 
@@ -51,7 +50,7 @@ you need today; both produce installable `.mint` bundles.
 
 | Mode | Use it when | What you write |
 |------|-------------|----------------|
-| `generated` | You need a standard parameter form, job runner, and result display | Python only: `@mint_plugin`, `@generated_ui`, `@job` |
+| `generated` | You need a standard parameter form, job runner, and result display | Python only: `Metadata` with `ui = "generated"`, `@plugin`, `@job` |
 | `standard` | You need custom interaction, custom layout, or rich Vue pages | Python `@endpoint` handlers plus a Vue 3 workspace using `@morscherlab/mint-sdk` |
 
 Default to `generated` for a first plugin. Move to `standard` when the user
@@ -61,10 +60,10 @@ experience cannot be described by typed job inputs and standard result views.
 
 | Step | Page | Outcome |
 |------|------|---------|
-| 1 | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | Scaffold `hello-mint` in `generated` mode, run a `@job`, test it with `PluginTestHarness`, and build a `.mint` bundle |
+| 1 | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | Scaffold `hello-mint` in `generated` mode, run a `@job`, test it with `Harness`, and build a `.mint` bundle |
 | 2 | [Adding a frontend](/sdk/tutorials/adding-a-frontend) | Scaffold `hello-standard` in `standard` mode, call `@endpoint` handlers through the generated client, and render an SDK form |
 | 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | Build an experiment-design plugin with SQLModel tables, CRUD routes, and migrations |
-| 4 | [Plugin roles](/sdk/tutorials/plugin-roles) | Add plugin-specific viewer/editor/admin roles and enforce them in backend routes |
+| 4 | [Access levels](/sdk/tutorials/access-levels) | Tag endpoints and pages with `use` / `configure` / `admin` access levels and enforce them in the backend |
 | 5 | [Types and workflow plugin](/sdk/tutorials/plugin-types-workflow) | Create a workflow that manages experiments without taking design ownership |
 | 6 | [Analyze an experiment](/sdk/tutorials/analyze-an-experiment) | Read a visible experiment's design, compute a summary, and save it as a named analysis artifact |
 
@@ -76,12 +75,13 @@ The tutorials are written so you can follow them in order without reading the fu
 |------|---------|
 | Scaffold | `mint init my-plugin --mode generated --yes` or `mint init my-plugin --mode standard --yes` |
 | Run locally | `mint dev` |
-| Inspect SDK APIs | `mint docs python AnalysisPlugin`, `mint docs frontend components`, `mint docs contract .` |
+| Inspect SDK APIs | `mint docs python`, `mint docs frontend components`, `mint docs contract` |
 | Regenerate frontend client | `mint sdk generate` |
 | Validate project | `mint doctor --strict` |
-| Package | `mint build .` |
-| Verify real install path | `mint verify .` |
-| Deploy to a test platform | `mint deploy . --to http://127.0.0.1:18020` |
+| Package | `mint build` |
+| Verify real install path | `mint verify` |
+| Deploy to a test platform | `mint deploy --to http://127.0.0.1:18020` |
+| Upgrade a 1.3 plugin | `mint doctor --fix`, then see the [migration guide](/sdk/operations/migrate-1.3-to-1.4) |
 
 
 
@@ -89,9 +89,9 @@ The tutorials are written so you can follow them in order without reading the fu
 
 | Concept | Read when |
 |---------|-----------|
-| [Plugin types](/sdk/concepts/plugin-types) | You need to choose `STATIC`, `ANALYSIS`, `EXPERIMENT_DESIGN`, `WORKFLOW`, or `FULL` |
+| [Plugin types](/sdk/concepts/plugin-types) | You need to choose `Metadata.writes` and a plugin type (static, analysis, design, workflow, or full) |
 | [Plugin lifecycle](/sdk/concepts/lifecycle) | You need to know what happens during install, initialize, upgrade, and uninstall |
-| [PlatformContext](/sdk/concepts/platform-context) | Your plugin needs experiments, users, project data, settings, or plugin-owned storage |
+| [PlatformContext](/sdk/concepts/platform-context) | Your plugin needs experiments, users, project data, settings, access levels, or plugin-owned storage |
 | [Migrations](/sdk/concepts/migrations) | Your plugin owns tables or needs production-safe schema changes |
 
 ## What to use after the first plugin works

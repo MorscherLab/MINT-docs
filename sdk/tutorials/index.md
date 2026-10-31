@@ -22,12 +22,12 @@ You do not need to read the whole SDK reference first. When a tutorial introduce
 
 | Step | Tutorial | Project | What you will have afterward |
 |------|----------|---------|------------------------------|
-| 1 | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | `hello-mint` | `generated` mode `ANALYSIS` plugin with `@generated_ui`, one typed `@job`, a job test, and a `.mint` bundle |
+| 1 | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | `hello-mint` | `generated` mode analysis plugin with `ui = "generated"`, one typed `@job`, a job test, and a `.mint` bundle |
 | 2 | [Adding a frontend](/sdk/tutorials/adding-a-frontend) | `hello-standard` | `standard` mode plugin with `@endpoint` handlers, a Vue 3 workspace, and the generated typed client |
-| 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | `panel-designer` | `EXPERIMENT_DESIGN` plugin with SQLModel tables, CRUD endpoints, local SQLite, and installed-mode migrations |
-| 4 | [Plugin roles](/sdk/tutorials/plugin-roles) | `panel-designer` | Plugin-specific `viewer` / `editor` / `admin` roles enforced by backend routes and reflected in the UI |
-| 5 | [Types and workflow plugin](/sdk/tutorials/plugin-types-workflow) | `batch-coordinator` | `WORKFLOW` plugin that manages experiments without taking design ownership |
-| 6 | [Analyze an experiment](/sdk/tutorials/analyze-an-experiment) | `panel-summary` | `ANALYSIS` plugin that reads an experiment's design and saves a named analysis artifact |
+| 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | `panel-designer` | Design plugin (`writes = {"experiments", "design"}`) with SQLModel tables, CRUD endpoints, local SQLite, and installed-mode migrations |
+| 4 | [Access levels](/sdk/tutorials/access-levels) | `panel-designer` | `use` / `configure` / `admin` access levels on endpoints and pages, enforced by the backend and reflected in the UI |
+| 5 | [Types and workflow plugin](/sdk/tutorials/plugin-types-workflow) | `batch-coordinator` | Workflow plugin (`writes = {"experiments"}`) that manages experiments without taking design ownership |
+| 6 | [Analyze an experiment](/sdk/tutorials/analyze-an-experiment) | `panel-summary` | Analysis plugin that reads an experiment's design and saves a named analysis artifact |
 
 The first two tutorials are intentionally separate projects. `generated` mode is the fastest first plugin; `standard` mode is the custom UI path. Tutorials 3 and 4 build a design plugin, which mirrors real MINT deployments: design plugins usually define experiment structure, while analysis plugins read experiments and attach results.
 

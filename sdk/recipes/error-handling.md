@@ -1,22 +1,22 @@
 # Error handling
 
-MINT 1.2 gives standalone and integrated SDK routes the same structured error envelope. Raise a typed SDK exception for a known application failure; use `HTTPException` for an explicit transport status. Unexpected exceptions remain 500 errors.
+Standalone and integrated SDK routes get the same structured error envelope. Raise a typed SDK exception for a known application failure; use `HTTPException` for an explicit transport status. Unexpected exceptions remain 500 errors.
 
 ## Validate and report business failures
 
 ```python
 from pydantic import BaseModel, Field
-from mint_sdk import AnalysisPlugin, CurrentExperiment, ValidationException, endpoint
+from mint_sdk import CurrentExperiment, Plugin, ValidationException, endpoint
 
 class CompareRequest(BaseModel):
     reference_sample: str = Field(min_length=1)
 
-class MyPlugin(AnalysisPlugin):
+class MyPlugin(Plugin):
     @endpoint.post("/experiments/{experiment_id}/compare")
     async def compare(
         self, body: CompareRequest, experiment: CurrentExperiment,
     ) -> dict[str, str]:
-        design = await self.load_design(experiment.id)
+        design = await self.design.get(experiment.id)
         names = {sample["name"] for sample in design.data.get("samples", [])} if design else set()
         if body.reference_sample not in names:
             raise ValidationException(
@@ -36,24 +36,25 @@ Pydantic rejects an empty field with 422 before the handler. The business-rule f
 | Forbidden action | `PermissionException` | 403 |
 | Missing resource | `NotFoundException` | 404 |
 | Duplicate or stale edit | `ConflictException` | 409 |
+| Design write over a newer experiment version (`expected_version`) | `VersionConflictException` (`mint_sdk.exceptions`) | 412 |
 | Blocking lifecycle veto | `EventVetoException` | 422 |
 | Plugin misconfiguration/storage failure | `ConfigurationException` / `RepositoryException` | 500 |
-| Platform integration unavailable | `HTTPException(503, "Platform integration required")` | 503 |
+| Platform integration unavailable (standalone) | `UnavailableException` | 503 |
 
-Ownership conflicts and unsupported experiment types already have SDK subclasses; allow the repository to report them. See [Exceptions](/sdk/api/exceptions) for constructors and the complete status mapping.
+Ownership conflicts and unsupported experiment types already have SDK subclasses; allow the platform to report them. A call to a platform-only namespace in standalone mode raises `UnavailableException` by itself. See [Exceptions](/sdk/api/exceptions) for constructors and the complete status mapping.
 
 ## Handle concurrent edits without losing data
 
-For settings replacement, retain `settings_revision` from the snapshot used to build the candidate. For file-artifact replacement, retain the object's key and supply `expected_object_key`. A 409 means the candidate is stale: fetch the new state and ask the UI to reconcile the change. Do not retry the same full replacement without its revision.
+For settings replacement, retain `settings_revision` from the snapshot used to build the candidate. For file-artifact replacement, retain the object's key and supply `expect=` to `artifacts.save`. For a design write, pass `expected_version=experiment.version` to `design.save`. A 409 or 412 means the candidate is stale: fetch the new state and ask the UI to reconcile the change. Do not retry the same full replacement without its revision.
 
-Use `patch_settings_transactionally()` for a shallow settings patch that the SDK can safely retry against the latest state. JSON artifact batches are atomic; a failure should not be converted into a partial-success response.
+Use `update_settings({...})` for a shallow settings patch that the SDK can safely retry against the latest state. JSON artifact batches are atomic; a failure should not be converted into a partial-success response.
 
 For plugin-owned SQL tables, enforce uniqueness with a database constraint. A preflight `SELECT` can improve feedback but cannot prevent concurrent inserts. Catch the specific integrity error, roll back, and translate only the known duplicate constraint into `ConflictException`.
 
 ## Preserve the traceback and keep secrets out of responses
 
 ```python
-from mint_sdk import RepositoryException
+from mint_sdk.exceptions import RepositoryException
 from sqlalchemy.exc import DatabaseError
 
 try:
@@ -110,15 +111,14 @@ Source: [v@MINT_VERSION@ job manager](https://github.com/MorscherLab/MINT/blob/v
 The wire envelope includes `code`, `message`, `status`, `request_id`, and `details`, with legacy `detail`/`error` fields retained. Show the actionable message, use `code` for branching, and include `request_id` in support reports. Do not parse English message text to distinguish a conflict from a permission failure.
 
 ```python
-from mint_sdk import MINTClient
-from mint_sdk.client import MINTAPIError, NotFoundError
+from mint_sdk.client import APIError, MINTClient, NotFoundError
 
 with MINTClient() as client:
     try:
         experiment = client.experiments.get(42)
     except NotFoundError:
         print("Experiment is unavailable")
-    except MINTAPIError as exc:
+    except APIError as exc:
         print(exc.message, exc.code, exc.request_id)
 ```
 

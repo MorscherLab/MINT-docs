@@ -12,7 +12,7 @@ FormulaInput is a forms component exported by @morscherlab/mint-sdk for plugin f
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/FormulaInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FormulaInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="FormulaInput" />
@@ -20,7 +20,7 @@ FormulaInput is a forms component exported by @morscherlab/mint-sdk for plugin f
 ## Import
 
 ```ts
-import { FormulaInput } from "@morscherlab/mint-sdk/components"
+import { FormulaInput } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Behavior
@@ -30,7 +30,7 @@ While blurred, the field shows the rendered formula; while focused, the raw text
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/FormulaInput.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FormulaInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -38,7 +38,7 @@ MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` showPreview ` | ` boolean ` | No | ` true ` | — |
 | ` showMW ` | ` boolean ` | No | ` true ` | — |
 | ` placeholder ` | ` string ` | No | ` 'e.g. Ca(OH)2' ` | — |
-| ` error ` | ` boolean ` | No | ` false ` | — |
+| ` invalid ` | ` boolean ` | No | ` false ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 

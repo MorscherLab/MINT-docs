@@ -1,6 +1,6 @@
 # Marketplace
 
-The marketplace is where you find plugins for MINT. Users with install rights install them directly; others file an install request for an admin.
+The marketplace is where admins find and install plugins for MINT. Other users ask an admin to install a plugin; MINT has no in-app install request.
 
 > [Screenshot: Admin -> Plugins -> Registry showing plugin cards, filters, Installed/Update badges, and cached registry status]
 
@@ -17,7 +17,6 @@ The feed for each plugin contains:
 | `latest_version` + `min_platform_version` | Advertised version and minimum platform version |
 | `plugin_type` | `static`, `analysis`, `experiment_design`, `full`, or `workflow` |
 | `capabilities` | Whether the plugin requires auth, database access, and/or a frontend |
-| `auto_update` | Registry preference for whether this plugin can participate in auto-update workflows |
 | `source.private` | Marks entries that should only appear when the deployment has a GitHub token configured |
 | Author + repo + license | Provenance |
 | Description, tags, icon URL | Marketplace UI |
@@ -32,15 +31,13 @@ cached. Click **Refresh** in the Registry section to force a fetch when you have
 
 ## Browsing
 
-Open **Admin -> Plugins -> Registry**. You need `plugins.view` plus either `plugins.configure` or `plugins.install` to see this section; the Member role qualifies, the Viewer role does not. Cards show name, type, latest version, tags, author, and a one-line summary.
+Open **Admin -> Plugins -> Registry**. You need `plugins.view` plus either `plugins.configure` or `plugins.install` to see this section. The Member role does not hold `plugins.configure` since MINT 1.4, so a Member sees the section only when an admin gave the role one of these permissions. Cards show name, type, latest version, tags, author, and a one-line summary.
 
-> [Screenshot: marketplace card with Install / Request install buttons]
+> [Screenshot: marketplace card with the Install button]
 
 | Filter | Notes |
 |--------|-------|
-| **Type** | All / Static / Analysis / Experiment Design / Workflow / Full |
-| **Installed** | Show already-installed plugins |
-| **Updates** | Show installed plugins with a newer registry version |
+| **Filter plugins** list | All / Static / Analysis / Experiment design / Workflow / Full, then **Installed** and **Updates**, each with a count |
 | **Search** | Free text search over the plugin list |
 
 Click a card to open the detail view. It shows the GitHub repository, optional
@@ -48,16 +45,11 @@ documentation link, license, type, and **Min Platform** requirement. If the
 registry requires a newer MINT version than the one currently running, the card
 is labeled **Incompatible** and direct install/update buttons are disabled.
 
-## Install vs request install
+## Install
 
-Install permissions decide whether a user installs directly or submits a request:
+Install, update, and uninstall buttons show to administrators. A user who is not an administrator sees no install buttons. This also applies to a user with `plugins.install`. The marketplace API accepts an install from a role with `plugins.install`. If you need a plugin, tell your admin its name. There is no install request form: MINT 1.4 removed the **Request Install** button and the review step.
 
-| Mode | Member action | Admin action |
-|------|---------------|--------------|
-| User has `plugins.install` | User clicks **Install** or **Update** | None |
-| User has `plugins.view` but not `plugins.install` | User clicks **Request Install** and enters a justification. The detail view then shows **Install request pending review**. | An admin approves (the install starts) or denies the request. Review is not in the web UI yet; see [Plugins → Install requests](/admin/plugins#install-requests). |
-
-Requests keep who asked, when, and why.
+An install is refused when the plugin's `mint-sdk` requirement excludes the SDK of the running platform. See [Plugins](/admin/plugins) for the install steps and the plugin lock.
 
 ## What happens during install
 
@@ -72,7 +64,7 @@ is required before the new code is active.
 
 If the update fails before activation, the platform reports the failing step. If the plugin's migration fails at startup, that plugin shows **Migration failed** and stays disabled.
 
-Automatic plugin updates are configured per plugin by an admin; see [Updates → Plugin updates](/admin/updates#plugin-updates).
+MINT has no per-plugin automatic update in the marketplace. Your admin can schedule updates for the platform and its plugins together; see [Updates](/admin/updates).
 
 ## Uninstall
 

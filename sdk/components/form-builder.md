@@ -12,7 +12,7 @@ Schema-driven form renderer for experiment-design and plugin settings UIs.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/FormBuilder.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FormBuilder.vue">Source</a>
 </div>
 
 <ComponentPlayground name="FormBuilder" />
@@ -20,7 +20,7 @@ Schema-driven form renderer for experiment-design and plugin settings UIs.
 ## Import
 
 ```ts
-import { FormBuilder } from "@morscherlab/mint-sdk/components"
+import { FormBuilder } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage
@@ -32,21 +32,16 @@ import { FormBuilder } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/FormBuilder.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FormBuilder.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` schema ` | ` FormSchema ` | No | ` undefined ` | Full form or wizard schema. Takes precedence when controls is also provided. |
-| ` model ` | ` ControlModel \| ControlModelBinding ` | No | ` undefined ` | Model returned by defineControlModel(), or a raw nested ControlModel for one-step form generation. |
-| ` controls ` | ` ControlSchema ` | No | ` undefined ` | Compact control schema used to generate a flat FormSchema. |
-| ` controlOptions ` | ` ControlWorkspaceOptions ` | No | ` () => ({}) ` | Options passed to compact control schema generation, including shared initialValues. |
+| ` spec ` | ` ControlModelBinding ` | No | ` undefined ` | Control model built with defineControlModel(). Optional: without it the form is empty. |
 | ` modelValue ` | ` Record<string, unknown> ` | No | ` undefined ` | — |
-| ` enhancements ` | ` FormEnhancements<Record<string, unknown>> ` | No | ` undefined ` | — |
 | ` loading ` | ` boolean ` | No | ` false ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` undefined ` | — |
 | ` readonly ` | ` boolean ` | No | ` false ` | — |
-| ` showActions ` | ` boolean ` | No | ` true ` | Show the default or slotted form actions. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -54,12 +49,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` FormSchema `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/form-builder.ts#L135) | See the linked SDK type definition. |
-| [` ControlModel `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L133) | See the linked SDK type definition. |
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L147) | See the linked SDK type definition. |
-| [` ControlSchema `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L100) | See the linked SDK type definition. |
-| [` ControlWorkspaceOptions `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L115) | See the linked SDK type definition. |
-| [` FormEnhancements `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/form-builder.ts#L166) | See the linked SDK type definition. |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L156) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

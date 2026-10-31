@@ -8,17 +8,16 @@ Write fast unit and integration tests for plugin code without spinning up a full
 
 ```python
 from mint_sdk.testing import (
-    RecordingContext,                # in-memory PlatformContext with working repositories
-    build_test_app,                  # plugin (class or instance) -> standalone FastAPI app
-    PluginTestHarness,               # run real @job handlers and wait for their results
-    CompletedPluginJob,              # result returned by PluginTestHarness.run()
-    PluginJobTestError,              # raised when a harness job fails or is cancelled
-    make_test_plugin,                # build a minimal AnalysisPlugin subclass inline
-    write_standalone_plugin_module,  # write a uvicorn-compatible module into tmp_path
+    Harness,            # run a plugin on its real app: HTTP client + jobs
+    RecordingContext,   # in-memory PlatformContext with working namespaces
+    job_context,        # a JobContext for calling a job handler directly
+    Run,                # result of Harness.run()
+    JobFailedException, # raised when a harness job fails or is cancelled
+    RecordingJobContext,# type of job_context()
 )
 ```
 
-These seven names are the complete public testing surface. Older docs referenced helpers like `InMemoryExperimentRepository`, `make_experiment`, `StandalonePlatformContext`, or `in_memory_runner` — none of those exist. The source of truth is `packages/sdk-python/src/mint_sdk/testing/__init__.py`.
+These six names are the complete public testing surface. The source of truth is `packages/sdk-python/src/mint_sdk/testing/__init__.py`. `PluginTestHarness`, `CompletedPluginJob`, `PluginJobTestError`, `make_test_plugin`, `build_test_app` and `write_standalone_plugin_module` are removed (`mint doctor --fix` renames the first three). `mint_sdk.testing.plugins` holds `make_test_plugin` and `build_test_app` for the SDK's own tests; plugin tests use `Harness`.
 
 ## Project layout
 
@@ -32,198 +31,106 @@ my_plugin/
 │   └── services/
 ├── tests/
 │   ├── conftest.py
-│   ├── test_repository.py
-│   └── test_routes.py
+│   ├── test_routes.py
+│   └── test_jobs.py
 └── pyproject.toml
 ```
 
-## Plugin-level fixture with `RecordingContext`
+## Plugin tests with `Harness` and `RecordingContext`
 
-`RecordingContext` is an in-memory `PlatformContext` whose `ExperimentRepository` actually writes/reads from a Python dict. It's enough to exercise the plugin's convenience methods (`save_design`, `load_design`, `save_analysis`, `load_analysis`).
+`Harness(plugin, *, settings=None, context=None, timeout=10.0)` starts the plugin on its real app (`mint_sdk.app.create_app`) in a `TestClient`. `harness.client` is that client. `settings=` overrides the plugin settings (kept in memory). `context=` is the platform context that the plugin sees; without it the plugin runs standalone.
 
-```python
-# tests/conftest.py
-import pytest
-from mint_sdk.testing import RecordingContext
-
-from my_plugin.plugin import MyPlugin
-
-
-@pytest.fixture
-async def plugin():
-    p = MyPlugin()
-    ctx = RecordingContext()
-    await p.initialize(ctx)
-    yield p
-    await p.shutdown()
-```
-
-Tests using this fixture:
-
-```python
-# tests/test_repository.py
-import pytest
-
-
-@pytest.mark.asyncio
-async def test_save_then_load_design(plugin):
-    await plugin.save_design(experiment_id=1, data={"params": {"k": 5}})
-    design = await plugin.load_design(experiment_id=1)
-    assert design is not None
-    assert design.data == {"params": {"k": 5}}
-
-
-@pytest.mark.asyncio
-async def test_load_nonexistent_returns_none(plugin):
-    design = await plugin.load_design(experiment_id=999)
-    assert design is None
-```
-
-## Route-level tests with `build_test_app`
-
-For end-to-end HTTP tests, wrap the plugin in a FastAPI app and drive it with `httpx.AsyncClient`:
+`RecordingContext` is an in-memory `PlatformContext` whose `experiments`, `design`, `artifacts`, `users`, `instruments` and `objects` namespaces really write and read. It applies the platform's access rules and design-data validation, and `Harness` applies the write set of the plugin's `Metadata.writes` to it.
 
 ```python
 # tests/test_routes.py
-import pytest
-from httpx import ASGITransport, AsyncClient
-from mint_sdk.testing import RecordingContext, build_test_app
+from mint_sdk import Actor
+from mint_sdk.testing import Harness, RecordingContext
 
 from my_plugin.plugin import MyPlugin
 
-
-@pytest.fixture
-async def app():
-    plugin = MyPlugin()
-    await plugin.initialize(RecordingContext())
-    yield build_test_app(plugin)
-    await plugin.shutdown()
+ACTOR = Actor(
+    user_id="1", username="ada", role="member",
+    permissions=frozenset({"experiments.view"}),
+)
 
 
-@pytest.fixture
-async def client(app):
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        yield ac
-
-
-@pytest.mark.asyncio
-async def test_health_endpoint(client):
-    response = await client.get("/api/my-plugin/health")
+def test_summary_route_reads_the_design():
+    context = RecordingContext(
+        actor=ACTOR,
+        experiments=[{"id": 1, "name": "Run 1", "experiment_type": "lcms", "status": "planned"}],
+    )
+    with Harness(MyPlugin, context=context) as harness:
+        response = harness.client.get("/api/my-plugin/experiments/1/summary")
     assert response.status_code == 200
 ```
 
-`build_test_app` wraps the SDK's `create_standalone_app()` (with CORS off), so routes, error handlers and runtime dependencies are mounted as in a standalone plugin process. It is not the platform's plugin loader. `ASGITransport` does not run the app lifespan, which is why the fixture initializes the plugin with `RecordingContext` itself.
+Pass `plugin_id`, `reads_from`, `writes_to`, `experiment_types`, `experiments`, `users`, `instruments`, `design=Design(...)` and `instrument_status_grant` to `RecordingContext` to set up the case. A wrong `plugin_id` raises `ValueError` when the harness binds it. `context.set_actor(...)` changes the actor between calls. `context.published` keeps each `(name, payload)` that `context.publish` delivered, `context.streamed` keeps each `(topic, name, payload)` that the platform would stream for a `"realtime"` plugin, and `context.instruments.reports` keeps each accepted status report.
 
-## Job tests with `PluginTestHarness`
+The harness does not simulate real auth. `RecordingContext.is_authenticated` is `False` without an actor, and there is no real JWT verification. Tests that verify auth dependencies override the FastAPI dependency directly, or give the context an `Actor` with the role and permissions to test. Test `access="configure"` and `access="admin"` routes with an `Actor` that has `plugins.configure` and with the role `admin`.
 
-`PluginTestHarness` starts the plugin in a standalone `TestClient`, opens a job
-session, submits a job by its ID, polls until it finishes and returns the
-result. `Path` inputs are uploaded through the plugin's staging endpoint first.
+## Job tests with `Harness.run`
+
+`Harness.run(job, payload=None, /, **inputs)` opens a job session, submits the job, polls until it finishes and returns a `Run`. `Path` inputs are uploaded through the plugin's staging endpoint first. `job` is the job id or the decorated method.
 
 ```python
-from mint_sdk import AnalysisPlugin, job, mint_plugin
-from mint_sdk.testing import PluginTestHarness
+from mint_sdk import Job, JobContext, Metadata, Plugin, job, plugin
+from mint_sdk.testing import Harness, JobFailedException
 
 
-@mint_plugin(analysis_type="qc", routes_prefix="/qc")
-class QcPlugin(AnalysisPlugin):
-    @job(cpu=1)
-    def double(self, value: int) -> int:
+class QcMeta(Metadata):
+    domain = "qc"
+    prefix = "/qc"
+
+
+class Double(Job):
+    cpu = 1
+
+
+@plugin(QcMeta)
+class QcPlugin(Plugin):
+    @job(Double)
+    def double(self, value: int, *, context: JobContext) -> int:
+        context.report(50, "Doubling")
         return value * 2
 
 
 def test_double_job_returns_twice_the_input():
-    with PluginTestHarness(QcPlugin(), timeout=10.0) as harness:
-        completed = harness.run("double", value=21)
-    assert completed.value == 42
+    with Harness(QcPlugin, timeout=10.0) as harness:
+        run = harness.run(QcPlugin.double, value=21)
+    assert run.value == 42
 ```
 
-The job ID defaults to the method name with `_` replaced by `-`
-(`read_file` → `"read-file"`), or the explicit `@job(job_id=...)`.
+The job ID defaults to the method name in kebab-case (`read_file` becomes `"read-file"`), or the `Job.id` of the spec. `run.value` is the JSON value (the text for text results, the typed wire payload for other results); `run.job` is the final job state. A failed or cancelled job raises `JobFailedException` with the job's error; a timeout raises `TimeoutError`. Give the inputs as a mapping, a pydantic model or keyword arguments, not both.
 
-`run(job_id, inputs=None, *, timeout=None, **keyword_inputs)` accepts a mapping,
-a Pydantic model or keyword inputs, but not both. `job.value` is the JSON value
-(or the text for text results); `job.result` is the full result payload and
-`job.state` the final job state. A failed or cancelled job raises
-`PluginJobTestError` with the job's error; a timeout raises `TimeoutError`.
-
-## Synthetic plugins with `make_test_plugin`
-
-When you want to test the platform's behavior with an arbitrary plugin (for plugin-loader, marketplace, or migration tests), build a minimal one inline:
+To call a handler directly, build its context with `job_context`:
 
 ```python
-from mint_sdk.testing import make_test_plugin
-from mint_sdk.models import PluginType
+from mint_sdk.testing import job_context
 
-
-def test_loader_handles_minimal_analysis_plugin():
-    PluginCls = make_test_plugin(
-        name="loader-test",
-        plugin_type=PluginType.ANALYSIS,
-        routes_prefix="/loader-test",
-    )
-    plugin = PluginCls()
-    # ... feed plugin into platform's loader and assert ...
+def test_handler_reports_progress():
+    context = job_context(settings={"threshold": 0.1})
+    plugin = QcPlugin()
+    plugin.double(21, context=context)
+    assert context.reports
 ```
 
-`make_test_plugin` returns a *class*; instantiate it before passing to anything that takes an `AnalysisPlugin` instance. Optional kwargs include `route_builder`, `before_save`, `after_save`, `status_change`, `health_status`, `health_message`.
+`job_context(*, settings=None, cancelled=False, actor=None)` keeps `reports` and `warnings`. `job_context(cancelled=True)` makes `context.check()` raise `asyncio.CancelledError`. A settings mapping is exposed as attributes of `context.settings`.
 
-## Subprocess-style tests with `write_standalone_plugin_module`
+## MCP declarations
 
-For tests that need a real Python module on disk (e.g., to test the platform's subprocess plugin manager):
-
-```python
-from pathlib import Path
-from mint_sdk.testing import write_standalone_plugin_module
-
-
-def test_subprocess_starts(tmp_path: Path):
-    pythonpath, factory_target = write_standalone_plugin_module(
-        tmp_path, module_name="my_test_plugin", routes_prefix="/my-test-plugin",
-    )
-    # Put `pythonpath` on PYTHONPATH, start `factory_target` with the
-    # subprocess manager, then assert it serves /api/my-test-plugin/health.
-```
+Run a tool, prompt or resource through the same code as the platform with `call_tool`, `render_prompt` and `read_resource` from `mint_sdk.mcp`. Pass `platform=RecordingContext(...)` so that `ctx.design` and `ctx.artifacts` act as the actor. See [MCP tools](/sdk/recipes/mcp-tools#test-a-tool).
 
 ## Testing migrations
 
-For Alembic migrations (`get_migration_spec()`), use `run_migrations`,
-`inspect_migrations` and `check_migrations` against temporary SQLite databases;
-[Backfill migrations](/sdk/recipes/backfill-migration#test-the-real-upgrade-path)
-has a complete upgrade test.
-
-For legacy integer migrations (deprecated; removal in 1.4, see
-[Migrations](/sdk/api/migrations)), run `MigrationRunner.run(...)` directly. The
-`mint-sdk[local-db]` extra supplies `aiosqlite` and `greenlet` for
-`sqlite+aiosqlite://` tests:
-
-```python
-import pytest
-from sqlalchemy.ext.asyncio import create_async_engine
-from mint_sdk.migrations import MigrationRunner
-
-from my_plugin.migrations.v001_initial import CreatePanelsTable
-from my_plugin.migrations.v002_add_tags import AddPanelTagsColumn
-
-
-@pytest.mark.asyncio
-async def test_migrations_apply_clean(tmp_path):
-    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'test.db'}")
-    runner = MigrationRunner(engine, plugin_name="my_plugin", dialect="sqlite")
-    result = await runner.run([CreatePanelsTable(), AddPanelTagsColumn()])
-    assert result.applied == [1, 2]
-    assert not result.errors
-```
-
-`MigrationResult.applied` is a list of integer `version`s; `stamped` and `errors` report the rest.
+For Alembic migrations (`Metadata.database`), use `run_migrations`, `inspect_migrations` and `check_migrations` against temporary SQLite databases; [Backfill migrations](/sdk/recipes/backfill-migration#test-the-real-upgrade-path) has a complete upgrade test. The `mint-sdk[local-db]` extra supplies `aiosqlite` and `greenlet` for `sqlite+aiosqlite://` tests. The legacy `MigrationRunner` is removed.
 
 ## Coverage targets
 
 Aim to cover:
 
 - Every route's happy path
-- Every route's error paths (validation, not found, permission)
+- Every route's error paths (validation, not found, permission, access level)
 - The plugin's `initialize` / `shutdown` cycle
 - Each migration applies cleanly to an empty database
 - Each migration applies cleanly when run on top of the previous
@@ -233,12 +140,12 @@ The platform doesn't require any specific coverage threshold — pick what your 
 ## Notes
 
 - `pytest-asyncio` is the conventional async test runner. Add it via `uv add --dev pytest-asyncio` and set `asyncio_mode = "auto"` in `pyproject.toml`.
-- `RecordingContext` is request-scoped per fixture; if you need state to persist across multiple route calls within one test, share the same context instance (move it out of the fixture or pass it explicitly).
-- The harness intentionally doesn't simulate real auth. `RecordingContext.is_authenticated` is `False` by default and becomes `True` when you pass `user={...}` or `actor=PluginActor(...)`, or call `set_actor()`; there is no real JWT verification. Tests that need to verify auth dependencies should override the FastAPI dependency directly.
+- `RecordingContext` keeps state in memory; share one instance across several route calls within one test.
+- Run `mint doctor --strict` in the test suite or CI to catch removed APIs.
 
 ## Related
 
 - [Tutorials → First analysis plugin](/sdk/tutorials/first-analysis-plugin) — basic test setup
 - [Recipes → Backfill migrations](/sdk/recipes/backfill-migration) — testing complex migrations
 - [Operations → CI patterns](/sdk/operations/ci-patterns) — running tests in CI
-- [API → Python SDK](/sdk/api/python#testing-harness) — what each helper exports
+- [API → Python SDK](/sdk/api/python#testing) — what each helper exports

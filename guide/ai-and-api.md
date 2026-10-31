@@ -6,7 +6,7 @@ A token can do exactly what your account can do, and no more. Treat it like a pa
 
 ## Open AI & API
 
-1. Open the account menu in the top action bar and choose **Your account**.
+1. Open the account menu in the top action bar and choose **Profile**. The **Your account** window opens.
 2. Select **AI & API** in the side rail.
 
 The section shows the MCP URL for this MINT server (for example `https://mint.example.org/mcp`) with a **Copy** button, and a table of your **Access tokens**.
@@ -48,7 +48,18 @@ A token cannot create or revoke tokens. Sign in to the web UI to manage them. Ch
 ## Use a token with the API or CLI
 
 - **REST API**: send the token as `Authorization: Bearer mint_pat_...`. It works on every platform route and on plugin routes. A read-only token is refused (403) on anything other than `GET`, `HEAD`, and `OPTIONS`.
-- **`mint` CLI and Python client**: run `mint auth login` and approve the code in your browser, or set the `MINT_TOKEN` environment variable. Add `--read-only` to `mint auth login` for a read-only token. See [mint CLI](/admin/cli) and the [CLI reference](/sdk/api/cli-reference) for token commands.
+- **`mint` CLI and Python client**: run `mint platform auth login` and approve the code in your browser (see below), or set the `MINT_TOKEN` environment variable. Add `--read-only` to `mint platform auth login` for a read-only token. The old top-level `mint auth` command no longer exists. See [mint CLI](/admin/cli) and the [CLI reference](/sdk/api/cli-reference) for token commands.
+
+## Sign in the mint CLI
+
+`mint platform auth login` shows an 8-letter code and asks for no password, so it also works with passkey and edu-ID accounts.
+
+1. Run `mint platform auth login --url <your MINT address>` in a terminal.
+2. Open the address that the terminal prints (the `/device` page of your MINT server). The terminal also tries to open it in your browser. Sign in if MINT asks.
+3. Type the code from the terminal. The code expires 10 minutes after the terminal shows it.
+4. Check that the page names your terminal, choose **Valid for** (up to your admin's token lifetime limit), and click **Approve**. Click **Deny** to refuse.
+
+Approve a code only when you typed it from your own terminal. Someone who sends you a code can use your account. The approval creates a personal access token for the CLI. It appears in **AI & API** and you can revoke it there. The `/device` page also works on a phone.
 
 ## What an AI assistant can do over MCP
 
@@ -56,7 +67,7 @@ Every tool runs as you and respects your role, project access, and plugin visibi
 
 | Group | Tools | Available to read-only tokens |
 |-------|-------|:---:|
-| **Read** | `mint_whoami`, `mint_search_experiments`, `mint_get_experiment`, `mint_list_plugins`, `mint_get_design`, `mint_list_artifacts`, `mint_get_artifact`, `mint_list_instruments` (needs `instruments.view`) | Yes |
+| **Read** | `mint_whoami`, `mint_search_experiments`, `mint_get_experiment`, `mint_list_plugins`, `mint_get_design`, `mint_list_artifacts`, `mint_get_artifact`, `mint_list_instruments` and `mint_get_instrument_history` (both need `instruments.view`) | Yes |
 | **Write** | `mint_create_experiment`, `mint_save_design`, `mint_save_artifact`, `mint_archive_artifact`, `mint_restore_artifact` | No |
 | **Jobs** | `mint_start_job`, `mint_get_job`, `mint_get_job_result`, `mint_cancel_job` | Status and results only |
 | **Plugin tools** | Tools, prompts, and resources that installed plugins publish, named `<plugin>_<name>` | Read tools only |
@@ -65,9 +76,17 @@ The assistant can also read `mint://` resources: an experiment with its design d
 
 Things to know:
 
+- **Confirmation questions.** Before a destructive call, MINT asks you in the AI client. If you decline or cancel, the call stops before it runs. MINT asks for these calls:
+  - `mint_save_design` without `expected_version`, when a design is already stored.
+  - `mint_save_artifact` with `replace=true`, over an artifact that an assistant saved.
+  - `mint_cancel_job`, for a queued or running job.
+  - A plugin tool that the plugin marks destructive. The question shows the tool title and the argument values, shortened.
+
+  A client that cannot ask questions runs the call without a question. Some clients say that they can ask, but they cannot show a dialog, for example in a headless run. These clients cancel the question, so the call fails. Answer the question with a client hook. In Claude Code, use an `Elicitation` hook. The question is not a permission check. A hook can answer it, and your role limits stay the same.
+- **Versions.** `mint_search_experiments`, `mint_get_experiment` and `mint_get_design` report a `version`. `mint_save_design` takes an optional `expected_version` and refuses a stale one, so an assistant does not overwrite a newer design.
 - **No delete tools.** An assistant cannot delete experiments, designs, or artifacts. It can archive an artifact, and you can restore it.
 - **Writes are audited.** Every write call appears in the audit log as `mcp.tool_call`, and artifacts saved over MCP record that they came from MCP and which token saved them.
-- **Saving results is create-only.** An assistant cannot overwrite an artifact a plugin created.
+- **Saving results is create-only.** An assistant cannot overwrite an artifact a plugin created. With `replace=true` it can replace only an artifact that an assistant saved before.
 - **Jobs.** `mint_list_plugins` lists each plugin's jobs and their inputs. A job input can be an experiment file, a file on a server mount, or an inline file of at most 4 MiB. One token can hold at most 64 unfinished job handles; finished, cancelled, and saved jobs do not count.
 - **Restarts.** Job handles do not survive a platform restart; they then report `lost`. Start the job again.
 
@@ -81,3 +100,4 @@ Plugin authors who want to publish their own tools: see [MCP tools for plugins](
 | Assistant gets 401 | The token expired, was revoked, or your account was disabled; create a new token |
 | Assistant cannot find a write tool | The token is read-only, or your role lacks the permission |
 | A tool says "This access token is read-only" | Create a full-access token for that task |
+| A destructive call is cancelled in a headless run | The client cannot show the confirmation question. Answer it with a client hook, or run the call in an interactive client |

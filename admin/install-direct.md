@@ -1,6 +1,6 @@
 # Install on Linux (direct)
 
-Install MINT directly on a Linux server from the platform runtime bundle attached to each [GitHub release](https://github.com/MorscherLab/MINT/releases). The bundle contains the FastAPI backend, the built Vue frontend, the Python SDK source, and a locked dependency list; `uv` installs it into a local environment and `mint daemon` runs it.
+Install MINT directly on a Linux server from the platform runtime bundle attached to each [GitHub release](https://github.com/MorscherLab/MINT/releases). The bundle contains the FastAPI backend, the built Vue frontend, the Python SDK source, and a locked dependency list; `uv` installs it into a local environment and `mint-platform serve` runs it.
 
 ::: tip Picking an install method
 MINT is supported on **Linux servers only**, via either this direct install or the [Docker install](/admin/install-docker). Pick:
@@ -58,16 +58,16 @@ sudo -u mint env UV_CACHE_DIR=/var/lib/mint/uv-cache \
   uv sync --project /opt/mint --frozen --no-dev --python 3.14
 ```
 
-This creates `/opt/mint/.venv` with the platform and `mint-sdk[cli,server,local-db]`, which supplies the `mint` binary at `/opt/mint/.venv/bin/mint`. The platform runs as one long-lived process; see "Run as a systemd service" below.
+This creates `/opt/mint/.venv` with the platform and `mint-sdk[cli,server,local-db]`, which supplies the `mint` binary at `/opt/mint/.venv/bin/mint` and the `mint-platform` binary at `/opt/mint/.venv/bin/mint-platform`. The platform runs as one long-lived process; see "Run as a systemd service" below.
 
 ::: tip Get the `mint` CLI on your shell PATH
-The `mint` CLI is convenient for admins running platform-data commands (`mint auth login`, `mint experiment list`). To make it globally available, install `mint-sdk[cli]` separately as a uv tool:
+The `mint` CLI is convenient for admins running platform-data commands (`mint platform auth login`, `mint platform experiment list`). To make it globally available, install `mint-sdk[cli]` separately as a uv tool:
 
 ```bash
 uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
 ```
 
-The `[cli]` extra supplies Typer for commands such as `mint init` and `mint auth`. This tool environment is separate from the platform environment. See [CLI installation](/admin/cli#install) for the runtime/CLI/server distinction.
+The `[cli]` extra supplies Typer for commands such as `mint init` and `mint platform auth`. This tool environment is separate from the platform environment. See [CLI installation](/admin/cli#install) for the runtime/CLI/server distinction.
 :::
 
 ## Configure
@@ -109,7 +109,7 @@ Generate a JWT secret with `openssl rand -base64 32` and never commit it. MINT r
 |---------|---------|----------------|
 | `server.externalUrl` | empty | Public URL. With `https://`, login cookies carry `Secure` even though the proxy talks plain HTTP to MINT. |
 | `server.rpId` | empty | Passkey relying-party ID. Empty derives it from the request host. |
-| `auth.allowRegistration` | `true` | When `true`, anyone who can reach the login page can create an account with the default role (Member). Set `false` to create accounts only with `mint admin user create`. |
+| `auth.allowRegistration` | `true` | When `true`, anyone who can reach the login page can create an account with the default role (Member). Set `false` to create accounts only with `mint platform admin user create`. |
 | `auth.failedLoginLimit` / `auth.loginLockoutMinutes` | `5` / `15` | Failed password logins before a temporary lockout, and its length. |
 
 Configuration priority is: environment variables (`MINT_` prefix) > `.env` > `config.json` > defaults. See [CLI configuration](/admin/configuration) for the full schema.
@@ -120,7 +120,7 @@ Schema migrations run automatically on platform startup. The first time the plat
 
 1. Connects to the configured database
 2. Applies any pending platform migrations
-3. For each plugin discovered via entry points, runs the plugin's pending migrations under a PostgreSQL advisory lock
+3. For each plugin discovered via entry points, runs the plugin's pending Alembic revisions (declared with `Metadata.database`) under a PostgreSQL advisory lock
 
 A platform migration failure logs the error and exits the process non-zero. A plugin migration failure does not stop MINT: that plugin stays disabled and the error shows in **Admin -> Plugins -> Installed**. Watch the systemd journal (`journalctl -u mint -f`) on first start to confirm a clean migration run.
 
@@ -141,7 +141,7 @@ WorkingDirectory=/opt/mint
 Environment=PATH=/opt/mint/.venv/bin:/usr/local/bin:/usr/bin:/bin
 Environment=MINT_SERVER__DATA_PATH=/var/lib/mint
 Environment=UV_CACHE_DIR=/var/lib/mint/uv-cache
-ExecStart=/opt/mint/.venv/bin/mint daemon --platform-dir /opt/mint --host 127.0.0.1 --port 8001
+ExecStart=/opt/mint/.venv/bin/mint-platform serve --platform-dir /opt/mint --host 127.0.0.1 --port 8001
 Restart=always
 RestartSec=5
 NoNewPrivileges=true
@@ -159,14 +159,14 @@ sudo systemctl enable --now mint
 sudo systemctl status mint
 ```
 
-`Restart=always` makes systemd start MINT again after a restart that MINT requests itself, which exits the process with status 0. To allow [scheduled updates](/admin/updates#scheduled-updates), also add `Environment=MINT_RESTART_SUPERVISED=1` to the unit. Alternatively, `mint platform daemon install-service` writes a user-level unit with `Restart=always` and `Environment=MINT_DAEMON=1`, which also allows scheduled updates.
+`Restart=always` makes systemd start MINT again after a restart that MINT requests itself, which exits the process with status 0. To allow [scheduled updates](/admin/updates#scheduled-updates), also add `Environment=MINT_RESTART_SUPERVISED=1` to the unit. Alternatively, `mint-platform daemon install-service` writes a user-level unit with `Restart=always` and `Environment=MINT_DAEMON=1`, which also allows scheduled updates.
 
 ::: warning Bind to 127.0.0.1, not 0.0.0.0
-`mint daemon` serves plain HTTP and does not terminate TLS. Always bind to `127.0.0.1` on the host and put a reverse proxy in front. It trusts forwarded headers only from `127.0.0.1` and `::1`; change that with `--forwarded-allow-ips` only for known proxy addresses.
+`mint-platform serve` serves plain HTTP and does not terminate TLS. Always bind to `127.0.0.1` on the host and put a reverse proxy in front. It trusts forwarded headers only from `127.0.0.1` and `::1`; change that with `--forwarded-allow-ips` only for known proxy addresses.
 :::
 
 ::: warning Run one process
-MINT keeps rate limits, the post-setup restart handoff, and several caches in process memory. Run a single process per deployment; startup fails if it detects multiple workers.
+MINT keeps rate limits, the post-setup restart handoff, and several caches in process memory. Run a single process per deployment. Startup fails when `WEB_CONCURRENCY`, `UVICORN_WORKERS` or `GUNICORN_WORKERS` is above 1, or when a `--workers` option above 1 is set. `MINT_ALLOW_MULTI_WORKER=1` overrides the check.
 :::
 
 ## Reverse proxy and first-run setup
@@ -188,9 +188,9 @@ To upgrade by hand instead, repeat [Install the runtime bundle](#install-the-run
 | Problem | Fix |
 |---------|-----|
 | `command not found: mint` (admin shell) | Install the CLI as a uv tool: `uv tool install 'mint-sdk[cli]==@MINT_VERSION@'`, then `uv tool update-shell`. |
-| Service can't find `mint` | The systemd unit must point at the environment's binary, `/opt/mint/.venv/bin/mint`, not a global one. |
-| Port 8001 already in use | Change `--port` in the systemd unit, or `lsof -i :8001` to find the conflicting process. |
-| A plugin shows **Migration failed** | The plugin's migration raised; MINT keeps running without it. Read the error in **Admin -> Plugins -> Installed** and install a fixed plugin release. |
+| Service can't find `mint-platform` | The systemd unit must point at the environment's binary, `/opt/mint/.venv/bin/mint-platform`, not a global one. |
+| Port 8001 already in use | Change `--port` in the systemd unit (`mint-platform serve` sets `MINT_LISTEN_PORT` to that port), or `lsof -i :8001` to find the conflicting process. |
+| A plugin shows **Migration failed** | The plugin's migration raised, or the plugin still defines the removed `get_migrations_package()`; MINT keeps running without it. Read the error in **Admin -> Plugins -> Installed** and install a fixed plugin release. |
 | 502 from the reverse proxy | MINT failed to start or crashed. Check `journalctl -u mint -n 200` for the trace. |
 | Rate limit fires for every request | The proxy isn't forwarding `X-Forwarded-For`, or its address is missing from `server.trustedProxyCidrs`. |
 | Plugin install fails with `uv` not found | The plugin manager uses `uv` to lock and install plugins, including isolated venvs. Install it system-wide so the `mint` user can invoke it. |

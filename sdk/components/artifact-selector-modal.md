@@ -12,7 +12,7 @@ Modal for browsing and selecting an analysis artifact of an experiment, with fil
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ArtifactSelectorModal" />
@@ -20,7 +20,7 @@ Modal for browsing and selecting an analysis artifact of an experiment, with fil
 ## Import
 
 ```ts
-import { ArtifactSelectorModal } from "@morscherlab/mint-sdk/components"
+import { ArtifactSelectorModal } from "@morscherlab/mint-sdk/data"
 ```
 
 ## Basic Usage
@@ -36,12 +36,12 @@ import { ArtifactSelectorModal } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` modelValue ` | ` boolean ` | Yes | — | — |
-| ` experimentId ` | ` number \| null ` | No | ` null ` | Experiment id override; defaults to platform injection or URL. |
+| ` open ` | ` boolean ` | Yes | — | — |
+| ` experimentId ` | ` number \| null ` | No | ` null ` | Experiment id override; defaults to the current experiment (useExperimentStore). |
 | ` pluginId ` | ` string \| null ` | No | ` null ` | Scope to a single owning plugin; omit to show all plugins. |
 | ` currentArtifactId ` | ` number \| null ` | No | ` null ` | Highlights the currently used artifact. |
 | ` includeArchived ` | ` boolean ` | No | ` false ` | Start with archived artifacts visible. |
@@ -55,7 +55,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L36) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
+| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L39) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
 
 <!-- sdk-props:end -->
 

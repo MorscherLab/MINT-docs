@@ -21,7 +21,6 @@ const groups: Record<ComponentCategory, string[]> = {
     'AppContainer',
     'AppTopBar',
     'AppSidebar',
-    'AppAvatarMenu',
     'PluginIcon',
     'Breadcrumb',
     'Divider',
@@ -29,25 +28,18 @@ const groups: Record<ComponentCategory, string[]> = {
     'ResourceCard',
     'CollapsibleCard',
     'SectionCard',
-    'MobileSupportGate',
   ],
   Forms: [
     'BaseButton',
     'BaseInput',
-    'BaseTextarea',
     'BaseSelect',
-    'SearchableSelect',
     'BaseCheckbox',
-    'BaseToggle',
     'BaseRadioGroup',
     'BaseSlider',
     'BaseTabs',
     'SegmentedControl',
-    'MultiSelect',
     'FormField',
     'DatePicker',
-    'TimePicker',
-    'DateTimePicker',
     'TimeRangeInput',
     'Calendar',
     'TagsInput',
@@ -56,20 +48,17 @@ const groups: Record<ComponentCategory, string[]> = {
     'FilePicker',
     'FormulaInput',
     'SequenceInput',
-    'UnitInput',
     'ConcentrationInput',
     'SecretInput',
   ],
   Feedback: [
     'AlertBox',
     'AppToastContainer',
-    'IconButton',
     'ActionMenu',
     'ThemeToggle',
     'RuntimeUpdateNotice',
     'Skeleton',
     'LoadingSpinner',
-    'StatusIndicator',
     'ProgressBar',
     'Avatar',
     'EmptyState',
@@ -88,41 +77,23 @@ const groups: Record<ComponentCategory, string[]> = {
     'SequenceProgressBar',
     'AuditTrail',
     'BatchProgressList',
-    'ExperimentDataViewer',
     'ExperimentCodeBadge',
     'InstrumentStateBadge',
     'BasePill',
   ],
   'Lab widgets': [
-    'FitPanel',
     'WellPlate',
     'PlateEditor',
-    'SampleLegend',
-    'ExperimentTimeline',
     'SampleSelector',
-    'AutoGroupModal',
-    'GroupAssigner',
-    'SmartGroupModal',
-    'SmartGroupFieldRecipe',
-    'SmartGroupManual',
     'MoleculeInput',
     'DoseCalculator',
-    'ReagentEditor',
-    'ReagentList',
     'SampleHierarchyTree',
     'ProtocolStepEditor',
   ],
   Workflow: [
     'ComponentBindingRenderer',
-    'ControlWorkspaceView',
-    'DoseDesignWorkspaceView',
-    'BioTemplateRenderer',
-    'BioTemplateExperimentWorkspaceView',
-    'BioTemplatePackWorkspaceView',
-    'BioTemplatePresetWorkspaceView',
     'StepWizard',
     'FormBuilder',
-    'FormActions',
     'ScheduleCalendar',
     'ExperimentSelectorModal',
     'ExperimentPopover',
@@ -148,10 +119,8 @@ const descriptions: Record<string, string> = {
   BaseModal: 'Standard modal dialog with controlled visibility and footer slots.',
   BasePill: 'Compact status label for tables, metadata, and small state indicators.',
   BaseSelect: 'Themed select control with option objects, placeholder, and v-model support.',
-  BaseTextarea: 'Multi-line input for notes, descriptions, and longer user-entered text.',
   ChemicalFormula: 'Formula renderer with scientific typography and element-aware formatting.',
   AdductText: 'Mass-spectrometry adduct notation with compact display and semantic tones.',
-  SearchableSelect: 'Searchable option picker with keyboard navigation and custom option/footer slots.',
   LayoutResizeHandle: 'Accessible splitter with keyboard resizing and pointer-resize events.',
   ConfirmDialog: 'Pre-built confirm-or-cancel dialog for destructive or high-friction actions.',
   DataFrame: 'Searchable, sortable, selectable, resizable table for dense experiment and analysis results.',
@@ -159,27 +128,21 @@ const descriptions: Record<string, string> = {
   PlotlyChart: 'Render native Plotly traces with MINT themes, loading states, resizing and exports.',
   FileUploader: 'Drag-and-drop file picker with accept, size, multiple, and error handling.',
   FilePicker: 'Adapter-driven local and server file navigation with selection and search.',
-  FormBuilder: 'Schema-driven form renderer for experiment-design and plugin settings UIs.',
+  FormBuilder: 'Control-model form renderer for experiment-design and plugin settings UIs.',
   FormField: 'Label, hint, error, and accessibility wrapper for form controls.',
-  SmartGroupFieldRecipe: 'Auto grouping view that turns parsed sample-name fields into group recipes.',
-  SmartGroupManual: 'Manual cohort builder for assigning samples when names cannot be parsed automatically.',
-  SmartGroupModal: 'Two-mode smart grouping shell combining auto field recipes and manual cohort assignment.',
   PluginWorkspaceView: 'Default plugin shell with navigation, sidebar, and optional experiment integration.',
-  ControlWorkspaceView: 'Complete page generated from a shared control model, including forms and settings.',
   StepWizard: 'Multi-step workflow container with progress, validation, and navigation slots.',
   Tooltip: 'Hover/focus tooltip with smart positioning for compact explanations.',
   PlateEditor: 'Controlled multi-plate editor over WellPlate: plate tabs, format and slot, group assignment, and a single-well inspector.',
   WellPlate: 'Interactive 96- and 384-well plate map with heatmaps, selection, and editing hooks.',
   TimeRangeInput: 'Paired start/end time pickers that validate range order and display computed duration.',
   ResourceCard: 'Card displaying a lab resource with availability status, specs, tags, and a book action.',
-  FitPanel: 'Control panel for running a curve-fit job with progress bar, results table, and error display.',
   ScheduleCalendar: 'Drag-and-drop week/day calendar for scheduling lab events in configurable time slots.',
-  ActionMenu: 'Compact overflow actions with an IconButton trigger and a viewport-safe teleported menu.',
+  ActionMenu: 'Compact overflow actions with an icon-only trigger and a viewport-safe teleported menu.',
   ArtifactSaveDialog: 'Save/update dialog for analysis artifacts; delegates the write to a plugin-supplied handler.',
   ArtifactSelectorModal: 'Modal for browsing and selecting an analysis artifact of an experiment, with filters and keyboard navigation.',
   SecretInput: 'Edits one plugin secret setting: shows set / not set / provided-by-environment state and submits a replacement, keep, or clear.',
   SectionCard: 'One-card page region from the MINT 1.1 card system: header strip, hairline-separated content, no card-in-card.',
-  MobileSupportGate: 'Gates a workspace behind a minimum viewport width, showing a desktop-required message on narrow screens.',
   RuntimeUpdateNotice: 'Fixed-position notice offering a reload when a newer plugin or platform build is ready.',
   JobsStatusTray: 'Floating, source-driven job status tray for plugin and platform workflows.',
   GeneratedPathInput: 'File/folder path picker for backend-declared job inputs in generated plugin UIs.',
@@ -189,7 +152,7 @@ const descriptions: Record<string, string> = {
 }
 
 const examples: Record<string, string> = {
-  AlertBox: `<AlertBox type="warning" title="Review required">
+  AlertBox: `<AlertBox tone="warning" title="Review required">
   Three samples need QC approval before publishing.
 </AlertBox>`,
   BaseButton: `<BaseButton variant="primary" :loading="saving" @click="save">
@@ -200,7 +163,7 @@ const examples: Record<string, string> = {
     <BaseInput v-model="name" :aria-describedby="describedBy" />
   </template>
 </FormField>`,
-  BaseModal: `<BaseModal v-model="showModal" title="Edit panel">
+  BaseModal: `<BaseModal v-model:open="showModal" title="Edit panel">
   <p>Modal body content.</p>
   <template #footer>
     <BaseButton variant="ghost" @click="showModal = false">Cancel</BaseButton>
@@ -209,35 +172,22 @@ const examples: Record<string, string> = {
 </BaseModal>`,
   ChemicalFormula: `<ChemicalFormula formula="C6H12O6" />`,
   ConfirmDialog: `<ConfirmDialog
-  v-model="confirmingDelete"
+  v-model:open="confirmingDelete"
   title="Delete panel?"
   message="This cannot be undone."
-  variant="danger"
+  tone="error"
   confirm-label="Delete"
   @confirm="confirmDelete"
 />`,
-  DataFrame: `<DataFrame
-  :columns="columns"
-  :data="rows"
-  row-key="id"
-  searchable
-  sortable
-  resizable
-  sticky-header
-/>`,
+  DataFrame: `<DataFrame :spec="table" :data="rows" v-model:selected="selectedIds" />`,
   FileUploader: `<FileUploader
   accept=".csv,.xlsx"
   :max-size="100 * 1024 * 1024"
   multiple
   @upload="uploadFiles"
 />`,
-  FormBuilder: `<FormBuilder :schema="designSchema" v-model="designData" />`,
-  PluginWorkspaceView: `<PluginWorkspaceView
-  title="My plugin"
-  subtitle="Dashboard"
-  :page-selector="pluginPageSelectorItems"
-  current-page-selector-id="dashboard"
->
+  FormBuilder: `<FormBuilder :spec="designModel" v-model="designData" />`,
+  PluginWorkspaceView: `<PluginWorkspaceView :spec="workspace" v-model:pill="tab">
   <AppContainer scrollable>
     <router-view />
   </AppContainer>
@@ -263,9 +213,6 @@ const related: Record<string, ComponentDoc['related']> = {
   FormBuilder: [{ text: 'FormBuilder deep dive', link: '/sdk/frontend/form-builder' }],
   WellPlate: [{ text: 'WellPlate playground', link: '/sdk/components/well-plate' }],
   DataFrame: [{ text: 'Design plugin with tables', link: '/sdk/tutorials/design-plugin-with-tables' }],
-  SmartGroupModal: [{ text: 'AutoGroupModal', link: '/sdk/components/auto-group-modal' }],
-  SmartGroupFieldRecipe: [{ text: 'SmartGroupModal', link: '/sdk/components/smart-group-modal' }],
-  SmartGroupManual: [{ text: 'SmartGroupModal', link: '/sdk/components/smart-group-modal' }],
   PluginWorkspaceView: [
     { text: 'Adding a frontend', link: '/sdk/tutorials/adding-a-frontend' },
     { text: 'AppLayout', link: '/sdk/components/app-layout' },
@@ -288,7 +235,6 @@ const related: Record<string, ComponentDoc['related']> = {
     { text: 'AppTopBar', link: '/sdk/components/app-top-bar' },
   ],
   AppContainer: [{ text: 'AppLayout', link: '/sdk/components/app-layout' }],
-  AutoGroupModal: [{ text: 'SmartGroupModal', link: '/sdk/components/smart-group-modal' }],
 }
 
 export function componentSlug(name: string): string {

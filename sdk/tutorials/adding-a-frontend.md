@@ -65,22 +65,16 @@ cd ..
 uv run pytest -q
 ```
 
-Build the initial frontend before this scaffold checkpoint: the standard scaffold may contain an empty `frontend/dist` placeholder, which the runtime rejects until it contains a build. For backend-only route tests, disable frontend discovery as shown below.
+The scaffold tests use `Harness`, which runs the backend app without a built frontend. Build the frontend (`bun run build`) before you run the plugin with `mint dev` against its bundled assets or build the bundle.
 
 ## 2. Inspect the Backend
 
 Open `src/mint_plugin_hello_standard/plugin.py`:
 
 ```python
+from mint_sdk import Metadata, Page, Plugin, endpoint, plugin
+from mint_sdk.mcp import Tool, ToolContext, tool
 from pydantic import BaseModel, Field
-
-from mint_sdk import (
-    AnalysisPlugin,
-    PluginNavItem,
-    PluginType,
-    endpoint,
-    mint_plugin,
-)
 
 
 class AnalyzeRequest(BaseModel):
@@ -92,59 +86,80 @@ class AnalyzeResponse(BaseModel):
     doubled: float
 
 
-@mint_plugin(
-    analysis_type="custom",
-    routes_prefix="/hello-standard",
-    plugin_type=PluginType.ANALYSIS,
-    icon="M4 19h16M7 16V8m5 8V4m5 12v-6",
-    nav_items=[
-        PluginNavItem(
-            path="/",
-            label="Workspace",
+class DoubleValue(Tool):
+    title = "Double a value"
+    effect = "read"
+
+
+class HelloStandard(Metadata):
+    domain = "custom"
+    title = "Hello Standard"
+    icon = "M4 19h16M7 16V8m5 8V4m5 12v-6"
+    pages = [
+        Page(
+            "Workspace",
             id="workspace",
             icon="M4 4h16v16H4zM8 8h8v8H8z",
             description="Custom UI analysis plugin",
         ),
-    ],
-)
-class HelloStandardPlugin(AnalysisPlugin):
-    @endpoint.get("/health", tags=["analysis"])
-    async def health(self) -> dict[str, str]:
-        return {"status": "healthy", "plugin": self.metadata.name}
+    ]
 
+
+@plugin(HelloStandard)
+class HelloStandardPlugin(Plugin):
     @endpoint.post("/analyze", response_model=AnalyzeResponse, tags=["analysis"])
     async def analyze(self, request: AnalyzeRequest) -> AnalyzeResponse:
         return AnalyzeResponse(
             input=request.value,
             doubled=request.value * 2,
         )
+
+    # Published on the platform's /mcp endpoint as "hello_standard_double_value".
+    @tool(DoubleValue)
+    async def double_value(self, ctx: ToolContext, args: AnalyzeRequest) -> AnalyzeResponse:
+        """Double one value. AI clients read this docstring as the tool description."""
+        return AnalyzeResponse(input=args.value, doubled=args.value * 2)
 ```
 
-`@endpoint` is the normal path for plugin HTTP APIs. Use native `get_routers()` only when you need a FastAPI feature that `@endpoint` does not cover, such as dynamic router factories or non-standard route classes.
+`@endpoint` is the normal path for plugin HTTP APIs. Use native `routers()` only when you need a FastAPI feature that `@endpoint` does not cover, such as dynamic router factories or non-standard route classes. The SDK serves the plugin health route (`/__mint/health`) itself; add `@health` only to report a real status. The `@tool` method publishes the calculation to AI assistants (see [MCP tools](/sdk/recipes/mcp-tools)); delete it when you do not need it.
 
 ## 3. Inspect the Backend Test
 
-The scaffold tests the real SDK runtime app. The generated test builds the app with the frontend mounted, so it fails while `frontend/dist` is still the empty placeholder. Add the `monkeypatch` line and the status assertion shown here so backend tests do not depend on a frontend build:
+The scaffold tests the real SDK runtime app through `Harness`, so the backend tests do not depend on a frontend build:
 
 ```python
-from fastapi.testclient import TestClient
-from mint_sdk.runtime import create_plugin_app
-from pytest import MonkeyPatch
+import asyncio
+
+from mint_sdk import Actor
+from mint_sdk.mcp import call_tool
+from mint_sdk.testing import Harness
 
 from mint_plugin_hello_standard.plugin import HelloStandardPlugin
 
 
 def test_plugin_metadata_uses_scaffolded_name() -> None:
-    assert HelloStandardPlugin().metadata.name == "hello-standard"
+    assert HelloStandardPlugin().name == "hello-standard"
 
 
-def test_analyze_route_returns_a_real_result(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(HelloStandardPlugin, "get_frontend_dir", lambda self: None)
-    with TestClient(create_plugin_app()) as client:
-        response = client.post("/api/hello-standard/analyze", json={"value": 2.5})
+def test_analyze_route_returns_a_real_result() -> None:
+    with Harness(HelloStandardPlugin) as harness:
+        response = harness.client.post("/api/hello-standard/analyze", json={"value": 2.5})
 
-    assert response.status_code == 200
     assert response.json() == {"input": 2.5, "doubled": 5.0}
+
+
+def test_mcp_tool_returns_a_real_result() -> None:
+    result = asyncio.run(
+        call_tool(
+            HelloStandardPlugin(),
+            "double_value",
+            {"value": 2.5},
+            actor=Actor.standalone(),
+            platform=None,
+        )
+    )
+
+    assert result == {"input": 2.5, "doubled": 5.0}
 ```
 
 Run it after every backend route change:
@@ -160,15 +175,17 @@ uv run pytest -q
 ```ts
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { MINTSdk } from '@morscherlab/mint-sdk'
+import { MINTSdk, providePluginIdentity } from '@morscherlab/mint-sdk'
 
 import App from './App.vue'
+import { contract } from './generated/mint-plugin'
 import './style.css'
 
 const app = createApp(App)
 
 app.use(MINTSdk)
 app.use(createPinia())
+providePluginIdentity(contract)
 app.mount('#app')
 ```
 
@@ -176,19 +193,20 @@ app.mount('#app')
 
 ```vue
 <script setup lang="ts">
-import { AppContainer, PluginWorkspaceView } from '@morscherlab/mint-sdk'
+import { AppContainer, PluginWorkspaceView, definePluginWorkspaceView } from '@morscherlab/mint-sdk'
 
 import WorkspaceView from './views/WorkspaceView.vue'
+
+const workspace = definePluginWorkspaceView({
+  title: 'Hello Standard',
+  subtitle: 'Starter workspace',
+  topBar: { settings: false },
+  sidebar: false,
+})
 </script>
 
 <template>
-  <PluginWorkspaceView
-    title="Hello Standard"
-    subtitle="Starter workspace"
-    :show-sidebar="false"
-    :show-settings="false"
-    :show-standalone-label="false"
-  >
+  <PluginWorkspaceView :spec="workspace">
     <AppContainer scrollable>
       <WorkspaceView />
     </AppContainer>
@@ -196,9 +214,9 @@ import WorkspaceView from './views/WorkspaceView.vue'
 </template>
 ```
 
-`PluginWorkspaceView` already uses [AppLayout](/sdk/components/app-layout) internally and supplies the standard topbar and optional sidebar. Do not wrap it in another `AppLayout`. The imported `WorkspaceView` is the local page you edit; `AppContainer` gives that page spacing and scrolling.
+`PluginWorkspaceView` takes one `:spec` built with `definePluginWorkspaceView` and already uses [AppLayout](/sdk/components/app-layout) internally and supplies the standard topbar and optional sidebar. Do not wrap it in another `AppLayout`. The imported `WorkspaceView` is the local page you edit; `AppContainer` gives that page spacing and scrolling.
 
-Keep this shell for custom plugin screens and add `experiment-shell` when you need the SDK's experiment selector/save/detach flow. Use [ControlWorkspaceView](/sdk/components/control-workspace-view) **instead** when a control model should generate the entire form/settings/sidebar page; it also includes its own `AppLayout`. For the selection guide and each component's props, see [AppLayout or a workspace?](/sdk/frontend/#applayout-or-a-workspace).
+Keep this shell for custom plugin screens. Put the controls of a form/settings/sidebar page in `spec.sidebar.controls` of the same `PluginWorkspaceView`. For the selection guide and each component's props, see [AppLayout or a workspace?](/sdk/frontend/#applayout-or-a-workspace).
 
 The CSS entry imports Tailwind and the SDK tokens:
 
@@ -216,7 +234,7 @@ mint sdk generate
 mint sdk generate --check
 ```
 
-The starter `WorkspaceView.vue` calls the backend through `useGeneratedPluginClient()`:
+The starter `WorkspaceView.vue` calls the backend through `useClient()`:
 
 ```vue
 <script setup lang="ts">
@@ -225,17 +243,18 @@ import {
   AlertBox,
   FormBuilder,
   defineControlModel,
-  useRequestSyncState,
+  useRequest,
 } from '@morscherlab/mint-sdk'
 
 import {
-  useGeneratedPluginClient,
+  useClient,
   type AnalyzeResponse,
 } from '../generated/mint-plugin'
 
-const client = useGeneratedPluginClient()
-const request = useRequestSyncState('Analysis failed')
+const client = useClient()
+const request = useRequest('Analysis failed')
 const analysisModel = defineControlModel({
+  actions: { submitLabel: 'Run' },
   controls: {
     value: {
       type: 'number',
@@ -248,7 +267,7 @@ const analysisModel = defineControlModel({
 })
 const values = ref<Record<string, unknown>>({ value: 1 })
 const result = ref<AnalyzeResponse | null>(null)
-const loading = computed(() => request.loading.value)
+const loading = computed(() => request.isLoading.value)
 const error = computed(() => request.error.value)
 
 async function runAnalysis(formValues: Record<string, unknown>): Promise<void> {
@@ -260,7 +279,7 @@ async function runAnalysis(formValues: Record<string, unknown>): Promise<void> {
       result.value = response
       return response
     },
-    { success: 'run' },
+    { kind: 'run' },
   ).catch(() => undefined)
 }
 </script>
@@ -268,22 +287,24 @@ async function runAnalysis(formValues: Record<string, unknown>): Promise<void> {
 <template>
   <FormBuilder
     v-model="values"
-    :model="analysisModel"
+    :spec="analysisModel"
     :loading="loading"
     @submit="runAnalysis"
   />
-  <AlertBox v-if="error" type="error">{{ error }}</AlertBox>
-  <AlertBox v-else-if="result" type="success" title="Analysis result">
+  <AlertBox v-if="error" tone="error">{{ error }}</AlertBox>
+  <AlertBox v-else-if="result" tone="success" title="Analysis result">
     {{ result.input }} × 2 = {{ result.doubled }}
   </AlertBox>
 </template>
 ```
 
-For this endpoint, the generated call is direct because `/analyze` has only a JSON body. If an endpoint has path or query parameters, run `mint docs contract .` and follow the call shape printed there.
+`useClient()` returns one typed method per endpoint, named after its `operation_id`. An `@endpoint` without `operation_id` gets the method name in lowerCamel case (`get_layout` becomes `getLayout`). The same file exports `useSettings()`, `useJobs(name, options)`, `upload`, `download`, `endpointUrl`, `useStream`, `contract`, `contractHash` and `apiPrefix`.
+
+For this endpoint, the generated call is direct because `/analyze` has only a JSON body. If an endpoint has path or query parameters, run `mint docs contract` and follow the call shape printed there.
 
 The complete request path is: `FormBuilder @submit` → typed `client.analyze(body)` → Vite `/api` proxy → `/api/hello-standard/analyze` → Pydantic request validation → `AnalyzeResponse` → reactive result alert. Authentication and URL selection stay in the SDK client.
 
-`useRequestSyncState.run()` records loading/error state and rethrows; the example catches that rejection after the visible error has been populated. For status-specific handling and a request ID, use `MintApiError` as shown in [Composables](/sdk/frontend/composables#typed-http-errors-in-1-2).
+`useRequest().run()` records loading/error state and rethrows; the example catches that rejection after the visible error has been populated. For status-specific handling and a request ID, use `MintApiError` as shown in [Composables](/sdk/frontend/composables).
 
 Do not edit `frontend/src/generated/*` by hand. Regenerate after backend route, schema, settings, or navigation changes.
 
@@ -311,7 +332,7 @@ Regenerate from the plugin root:
 
 ```bash
 mint sdk generate
-mint docs contract .
+mint docs contract
 mint sdk generate --check
 ```
 
@@ -320,14 +341,13 @@ The workspace can now call `await client.scale({ values: [1, 2, 3], factor: 2 })
 Add one route check to `tests/test_plugin.py`:
 
 ```python
-def test_scale_route_validates_and_calculates(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(HelloStandardPlugin, "get_frontend_dir", lambda self: None)
-    with TestClient(create_plugin_app()) as client:
-        result = client.post(
+def test_scale_route_validates_and_calculates() -> None:
+    with Harness(HelloStandardPlugin) as harness:
+        result = harness.client.post(
             "/api/hello-standard/scale",
             json={"values": [1, 2, 3], "factor": 2},
         )
-        invalid = client.post(
+        invalid = harness.client.post(
             "/api/hello-standard/scale",
             json={"values": [], "factor": 2},
         )
@@ -376,7 +396,7 @@ Then build the plugin:
 ```bash
 mint doctor --strict
 uv run pytest -q
-mint build .
+mint build
 ```
 
 `pyproject.toml` already contains the wheel include rule:
@@ -386,14 +406,14 @@ mint build .
 "frontend/dist" = "mint_plugin_hello_standard/frontend"
 ```
 
-That is why `mint build .` can place the built workspace inside the `.mint` bundle.
+That is why `mint build` can place the built workspace inside the `.mint` bundle.
 
 ## 8. Verify and deploy
 
 Check the real install path in a disposable platform container (requires Docker):
 
 ```bash
-mint verify .
+mint verify
 ```
 
 `mint verify` builds the bundle, boots the MINT platform image, installs the bundle through the normal upload path, restarts, and waits until the plugin loads.
@@ -401,8 +421,8 @@ mint verify .
 Then deploy to a test platform you administer:
 
 ```bash
-mint auth login --url https://mint-test.example.org
-mint deploy . --to https://mint-test.example.org
+mint platform auth login --url https://mint-test.example.org
+mint deploy --to https://mint-test.example.org
 ```
 
 `mint deploy` builds the same bundle, uploads it, restarts the platform, and confirms the restart by the new server `boot_id`. The restart requires the `platform.configure` permission; `--timeout` (default 180 s) covers the restart and the plugin load together. Use a test platform, not production.

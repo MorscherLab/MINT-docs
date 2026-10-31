@@ -41,7 +41,7 @@ plugin root:
 ```bash
 uv sync
 uv run mint doctor --strict
-uv run mint build . --output-dir dist
+uv run mint build --output-dir dist
 ```
 
 If the project has a generated frontend client, also run
@@ -79,14 +79,14 @@ Administrators can download the `.mint` asset and upload it through the
 platform's plugin administration UI or CLI:
 
 ```bash
-mint auth login --url https://mint.example.org
-mint plugin upload ./my-plugin-0.2.0.mint
+mint platform auth login --url https://mint.example.org
+mint platform plugin upload ./my-plugin-0.2.0.mint
 ```
 
 For a GitHub-hosted release, the platform can fetch the matching asset:
 
 ```bash
-mint plugin github install your-org/my-plugin --tag v0.2.0 --asset-pattern '*.mint'
+mint platform plugin github install your-org/my-plugin --tag v0.2.0 --asset-pattern '*.mint'
 ```
 
 Installation requires the matching platform permissions and may require a

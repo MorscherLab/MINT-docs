@@ -71,7 +71,7 @@ The frontend's `dist/` is *not* a separate top-level directory in the bundle —
     "name": "my-plugin",
     "version": "1.0.0",
     "description": "Drug-response panel design",
-    "requires_mint": ">=@MINT_VERSION@,<1.4",
+    "requires_mint": ">=@MINT_VERSION@,<2.0",
     "has_frontend": true,
     "frontend_revision": "sha256:…"
   },
@@ -127,11 +127,11 @@ unzip -l dist/my-plugin-1.0.0.mint
 unzip -p dist/my-plugin-1.0.0.mint manifest.json
 ```
 
-`mint info` and `mint doctor` inspect a plugin project directory, not a `.mint` bundle. Run them before packaging:
+`mint info` and `mint doctor` inspect a plugin project directory, not a `.mint` bundle. Run them before packaging (use `mint -C DIR` for another directory):
 
 ```bash
-uv run mint info .
-uv run mint doctor .
+uv run mint info
+uv run mint doctor
 ```
 
 To validate an install end-to-end, use `mint verify --bundle`; see [Deploying and verifying](/sdk/operations/deploying).
@@ -155,7 +155,7 @@ For very large plugins, consider:
 
 - `mint build` is self-contained enough for CI, but it still needs the local toolchain (`uv`, Python, and bun/npm for frontends) and network access unless dependencies are already cached.
 - Bundles are versioned by their internal manifest, not by filename. Renaming a `.mint` doesn't change what's installed.
-- Don't ship secrets in bundles. They're public artifacts. Use platform plugin settings declared with `@mint_plugin(config=...)` and applied through `@on_config_change()` for runtime credentials.
+- Don't ship secrets in bundles. They're public artifacts. Use platform plugin settings declared with `Metadata.settings` and applied through `@on("settings")` for runtime credentials (mark a credential field as a secret).
 
 ## Related
 

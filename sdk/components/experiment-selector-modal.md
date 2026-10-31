@@ -12,7 +12,7 @@ ExperimentSelectorModal is a workflow component exported by @morscherlab/mint-sd
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ExperimentSelectorModal.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ExperimentSelectorModal.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ExperimentSelectorModal" />
@@ -20,24 +20,22 @@ ExperimentSelectorModal is a workflow component exported by @morscherlab/mint-sd
 ## Import
 
 ```ts
-import { ExperimentSelectorModal } from "@morscherlab/mint-sdk/components"
+import { ExperimentSelectorModal } from "@morscherlab/mint-sdk/data"
 ```
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ExperimentSelectorModal.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ExperimentSelectorModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` modelValue ` | ` boolean ` | Yes | — | — |
+| ` open ` | ` boolean ` | Yes | — | — |
 | ` experimentType ` | ` string ` | No | ` undefined ` | — |
 | ` allowedExperimentTypes ` | ` string[] \| null ` | No | ` undefined ` | — |
 | ` currentExperimentId ` | ` number \| null ` | No | ` null ` | — |
 | ` title ` | ` string ` | No | ` 'Select Experiment' ` | — |
-| ` size ` | ` ModalSize ` | No | ` 'full' ` | — |
-| ` groupByProject ` | ` boolean ` | No | ` false ` | — |
-| ` showFilters ` | ` boolean ` | No | ` false ` | — |
+| ` size ` | ` ModalSize ` | No | ` 'lg' ` | — |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -45,7 +43,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L36) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
+| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L39) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
 
 <!-- sdk-props:end -->
 

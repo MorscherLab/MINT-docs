@@ -3,7 +3,7 @@
 MINT reads configuration from four sources, in increasing order of precedence:
 
 1. **Built-in defaults** — used when no other source overrides them.
-2. **`config.json`** — `MINT_CONFIG_PATH` wins when set; otherwise, when `MINT_SERVER__DATA_PATH` is set, MINT uses `<MINT_SERVER__DATA_PATH>/config.json` if that file exists or if `./config.json` does not; otherwise it uses `./config.json`. The legacy `MLD_CONFIG_PATH` is also honored and logs a one-time warning naming `MINT_CONFIG_PATH`.
+2. **`config.json`** — `MINT_CONFIG_PATH` wins when set; otherwise, when `MINT_SERVER__DATA_PATH` is set, MINT uses `<MINT_SERVER__DATA_PATH>/config.json` if that file exists or if `./config.json` does not; otherwise it uses `./config.json`.
 3. **`.env`** — `dotenv`-style key/value pairs in the working directory.
 4. **Environment variables** — keys prefixed `MINT_`, with nested fields joined by `__` (e.g., `MINT_DATABASE__HOST=postgres`).
 
@@ -22,6 +22,7 @@ For most installations, editing `config.json` is the only configuration step. Us
   "devMode": false,
   "setupCompleted": false,
   "adminTerminalEnabled": false,
+  "realtimeEnabled": false,
   "server": { "...": "..." },
   "database": { "...": "..." },
   "storage": { "...": "..." },
@@ -34,6 +35,8 @@ For most installations, editing `config.json` is the only configuration step. Us
   "logging": { "...": "..." },
   "errorReporting": { "...": "..." },
   "audit": { "...": "..." },
+  "instruments": { "...": "..." },
+  "jobs": { "...": "..." },
   "observability": { "...": "..." },
   "access": { "...": "..." },
   "filesystem": { "...": "..." },
@@ -76,6 +79,8 @@ Dev mode is for local development and evaluation only. Never enable it on a host
 | `externalUrl` | `""` | Public platform URL, used for frontend/plugin context, to decide whether auth cookies are `Secure`, and as the only non-local host `/mcp` accepts. Plugin `platformOrigin` and the OAuth URLs use only its origin (scheme, host and non-default port); a path in the value is ignored |
 | `trustedProxyCidrs` | `["127.0.0.1/32", "::1/128"]` | Proxy source networks trusted for `X-Forwarded-For` / `X-Forwarded-Host` / `X-Forwarded-Proto`. An explicit `[]` trusts no proxy |
 | `healthReadyToken` | `""` | Bearer token that lets a monitor read `GET /api/health/ready` without a user login; empty means only users with `platform.view_logs` can read it |
+
+The port that MINT binds is not a `config.json` key. `mint-platform serve`, `dev`, `daemon` and `python -m api.main` set `MINT_LISTEN_PORT` (default `8001`) to the port they bind, and MINT passes it to plugin processes so they find the platform. A bare `uvicorn --port` launch must set it. The platform must run as one worker; see [Install directly](/admin/install-direct#run-as-a-systemd-service).
 
 The `apiMountPath` key was removed; the API is always mounted at `/api`. An old `config.json` that still has it starts with a one-time warning.
 
@@ -159,7 +164,7 @@ See [Security settings](#security-settings) for how these behave.
 - **Self-registration.** With `auth.allowRegistration: false`, `POST /api/users/register` returns 403 and the `/register` page sends visitors to `/login`. Switch it under **Admin -> Platform -> Configuration -> Authentication -> Registration**, in `config.json`, or with `MINT_AUTH__ALLOW_REGISTRATION=false`.
 - **Passwords.** Every password (registration, self-service change, admin create, update and reset) must be at least 8 characters and at most 72 bytes when UTF-8 encoded. Other lengths are rejected with 422.
 - **Account lockout.** After `auth.failedLoginLimit` failed password logins, the account is locked for `auth.loginLockoutMinutes`.
-- **Rate limit.** `/api/auth`, `/api/passkey`, `/api/setup` and `/api/users/register` allow 20 requests per 60 seconds per client IP, then return 429.
+- **Rate limit.** `/api/auth` (passkey routes included), `/api/setup`, `/api/users/register` and `PUT /api/users/me` allow 20 requests per 60 seconds per client IP, then return 429. `/mcp` has its own bucket of 240 per 60 seconds, and `/oauth` one of 60.
 - **Secure cookies.** The `mint_access_token` and `passkey_session` cookies carry `Secure` when `server.externalUrl` starts with `https://`, or, if it is unset, when the request arrived over HTTPS. If `externalUrl` is `https://` but users open MINT over plain HTTP, the browser drops the cookie and login fails.
 - **Trusted proxies.** The client IP (rate limit, audit log), the passkey relying-party host, and the `platformOrigin` injected into plugin frontends come from `X-Forwarded-For` / `X-Forwarded-Host` / `X-Forwarded-Proto` only when the direct peer is in `server.trustedProxyCidrs`. An explicit empty list trusts no proxy. Add your reverse proxy's address when it is not on the same host.
 - **MCP host check.** `/mcp` accepts only requests whose `Host` is `localhost`, `127.0.0.1`, `[::1]` or the host (with port, if any) of `server.externalUrl`; any other host gets 421. Set `externalUrl` to the address AI clients use, make the reverse proxy pass the original `Host` header, and restart MINT after changing `externalUrl`.
@@ -228,8 +233,10 @@ edu-ID SSO stores linked users in the platform's required PostgreSQL database an
 | Key | Default | Description |
 |-----|---------|-------------|
 | `loadFromEntryPoints` | `true` | Discover plugins via the `mint.plugins` entry-point group |
-| `extraIndexUrls` | `[]` | Additional Python package indexes for plugin installs |
+| `extraIndexUrls` | `[]` | Additional Python package indexes for plugin installs. Changing them needs `plugins.install` |
 | `settings` | `{}` | Centralized per-plugin settings resolved for decorator-declared config and exposed through the plugin settings store |
+
+MINT does not read a `plugins.plugins` list (config-declared plugins) or a `marketplace.autoUpdatePlugins` key. It drops them when it loads `config.json`, and it logs a warning when they are not empty. Install each plugin as a package with a `mint.plugins` entry point. For automatic plugin updates, use the [scheduled updates](/admin/updates#scheduled-updates).
 
 ## `marketplace`
 
@@ -237,7 +244,6 @@ edu-ID SSO stores linked users in the platform's required PostgreSQL database an
 |-----|---------|-------------|
 | `registryUrl` | `https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json` | Where to fetch the plugin catalog |
 | `cacheTtlMinutes` | `60` | Registry cache lifetime |
-| `autoUpdatePlugins` | `{}` | Per-plugin marketplace auto-update toggles |
 
 ## `updates`
 
@@ -269,8 +275,9 @@ retry state, and recipient policy.
 | `notifications.email` | `enabled`, `host`, `port`, `tlsMode`, `fromAddress`, `fromName`, `username`, `password` |
 | `notifications.teams` | `enabled`, `webhookUrl` |
 | `notifications.slack` | `enabled`, `webhookUrl` |
+| `notifications.apns` | `enabled`, `transport` (`relay` or `direct`), `topic` (default `org.morscherlab.mint`), `relayUrl`, `relayKey`, `teamId`, `keyId`, `privateKey` |
 
-Only enable an integration when its required host/webhook fields are set.
+Only enable an integration when its required host/webhook fields are set. For `apns`, the `relay` transport needs `relayUrl` (HTTPS; a URL with no path gets `/v1/push`) and `relayKey`, and the `direct` transport needs `teamId`, `keyId` and the `.p8` key as `privateKey`. MINT stores the keys encrypted, and the admin API shows only whether they are set. Set them in **Admin -> Platform -> Configuration -> Notifications -> Apple Push**; see [Push notifications](/admin/platform-settings#push-notifications).
 
 ## `audit`
 
@@ -279,6 +286,55 @@ Only enable an integration when its required host/webhook fields are set.
 | `retentionDays` | `0` | Days to keep audit events (`0`–`36500`). `0` keeps every event |
 
 With `retentionDays` above 0, a daily job deletes older audit events and records each purge as an `audit.purge` event. Edit it under **Admin -> Platform -> Configuration -> Audit log**, or set `MINT_AUDIT__RETENTION_DAYS`.
+
+## `instruments`
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `historyRetentionDays` | `0` | Days to keep rows of the instrument status history (`0`–`36500`). `0` keeps every row |
+
+With `historyRetentionDays` above 0, a daily job deletes older rows and records each purge as an `instrument_history.purge` event. Edit it under **Admin -> Platform -> Configuration -> Instruments**, or set `MINT_INSTRUMENTS__HISTORY_RETENTION_DAYS`.
+
+## `jobs`
+
+Limits of the job manager that runs plugin jobs. They apply to in-process, subprocess and Docker plugins. An unset key keeps the SDK default.
+
+| Key | Env var | SDK default |
+|-----|---------|-------------|
+| `cpuSlots` | `MINT_JOB_CPU_SLOTS` | CPU count minus 1 (at least 1) |
+| `maxConcurrentPerUser` | `MINT_JOB_MAX_CONCURRENT_PER_USER` | `2` |
+| `maxQueuedJobs` | `MINT_JOB_MAX_QUEUED` | `256` |
+| `maxQueuedJobsPerUser` | `MINT_JOB_MAX_QUEUED_PER_USER` | `64` |
+| `maxSessions` | `MINT_JOB_MAX_SESSIONS` | `512` |
+| `maxSessionsPerUser` | `MINT_JOB_MAX_SESSIONS_PER_USER` | `64` |
+| `maxRetainedJobs` | `MINT_JOB_MAX_RETAINED` | `1000` |
+| `maxRetainedJobsPerUser` | `MINT_JOB_MAX_RETAINED_PER_USER` | `100` |
+| `maxInputBytes` | `MINT_JOB_MAX_INPUT_BYTES` | 8 MiB |
+| `maxTempBytesTotal` | `MINT_JOB_MAX_TEMP_BYTES_TOTAL` | 10 GiB |
+| `maxTempBytesPerUser` | `MINT_JOB_MAX_TEMP_BYTES_PER_USER` | 2 GiB |
+| `maxResultBytes` | `MINT_JOB_MAX_RESULT_BYTES` | 64 MiB |
+| `maxManagedResultBytes` | `MINT_JOB_MAX_MANAGED_RESULT_BYTES` | 1 GiB |
+| `maxResultBytesTotal` | `MINT_JOB_MAX_RESULT_BYTES_TOTAL` | 10 GiB |
+| `maxResultBytesPerUser` | `MINT_JOB_MAX_RESULT_BYTES_PER_USER` | 2 GiB |
+| `resultTtlHours` | `MINT_JOB_RESULT_TTL_HOURS` | `24` (at most `168`) |
+
+Every value must be above 0. The nested name `MINT_JOBS__CPU_SLOTS` (and so on) wins over the `MINT_JOB_*` name. MINT passes the resolved values to each subprocess and Docker plugin process as `MINT_JOB_*` variables. A value in the `runtime.env` of a Docker runtime wins for that container. `mint-platform serve --cpu-slots N --max-concurrent-per-user N` sets both names, and a flag wins over the environment and `.env`. The size of one object upload is separate: `MINT_MAX_OBJECT_UPLOAD_MB` (default 10240).
+
+## `realtimeEnabled`
+
+```json
+{ "realtimeEnabled": false }
+```
+
+Set `MINT_REALTIME_ENABLED=true` or this key to turn on the realtime event stream. It is off by default. When it is off, `GET /api/events`, `POST /api/presence/activity` and `POST /api/internal/events` do not exist, and the public `features` report `realtime: false`.
+
+When it is on, signed-in browsers keep one `text/event-stream` connection to `GET /api/events` (a Bearer credential or the session cookie). The experiment and project views refetch when someone else saves, and the experiment page shows who else is viewing. Plugins with the `realtime` feature can publish their own events. Details:
+
+- One stream subscribes to at most 50 topics (400 `realtime.too_many_topics`). A topic that the user cannot read is dropped without an error.
+- Every 20 seconds the stream checks the account and the topics again. A deactivated account, a revoked token or a topic that the user lost ends the stream, and the client reconnects with the topics it can still read.
+- Each stream has a queue of 256 events. A full queue becomes one `resync` event, and the client refetches.
+- An open stream counts as a viewer for 90 seconds after its last ping.
+- The streams and the presence state live in the process memory. This is one more reason to run one worker. `mint-platform serve` stops uvicorn with a 5 second graceful shutdown, because an open stream never ends by itself.
 
 ## `observability`
 
@@ -323,12 +379,9 @@ When empty, production CORS allows no cross-origin browser calls. In dev mode, M
 
 ## Environment variable mapping
 
-Nested keys use `__` (double underscore) as the separator, and `MINT_` as the prefix. Names are case-insensitive. How a multi-word key is written depends on the section:
+Nested keys use `__` (double underscore) as the separator, and `MINT_` as the prefix. Names are case-insensitive. In every section, a key binds in snake_case or in camelCase without separators: `MINT_DATABASE__DATABASE_NAME` and `MINT_DATABASE__DATABASENAME` both set `database.databaseName`. Examples: `MINT_SERVER__DATA_PATH`, `MINT_AUTH__ALLOW_REGISTRATION`, `MINT_UPDATES__PLATFORM_REPO`, `MINT_SSO__EDUID__CLIENT_ID`. The `errorReporting` section's prefix is `MINT_ERROR_REPORTING__`, for example `MINT_ERROR_REPORTING__MIN_LEVEL`. Storage keys accept both forms too. Single-word keys work the same everywhere: `MINT_DATABASE__HOST`, `MINT_SSO__EDUID__ENABLED`.
 
-- In `server`, `auth`, `filesystem`, `notifications.*`, `audit` and at top level, use snake_case: `MINT_SERVER__DATA_PATH`, `MINT_AUTH__ALLOW_REGISTRATION`, `MINT_AUDIT__RETENTION_DAYS`. These variables override the matching camelCase key in `config.json`.
-- In every other section (`database`, `sso.eduid`, `marketplace`, `updates`, `access`, `observability`, `logging`, `errorReporting`, `plugins`), write the camelCase key without separators: `MINT_DATABASE__DATABASENAME`, `MINT_UPDATES__AUTOCHECKENABLED`.
-- The `errorReporting` section's prefix is `MINT_ERROR_REPORTING__`, for example `MINT_ERROR_REPORTING__MINLEVEL`.
-- Single-word keys work the same everywhere: `MINT_DATABASE__HOST`, `MINT_SSO__EDUID__ENABLED`.
+An environment variable or a `.env` entry outranks `config.json` also for the aliased keys (for example `MINT_DB_PASSWORD` over `DB_PASSWORD`, `MINT_DEV_MODE` over `devMode`).
 
 | Config key | Env var |
 |------------|---------|
@@ -340,6 +393,10 @@ Nested keys use `__` (double underscore) as the separator, and `MINT_` as the pr
 | `auth.requireSecondFactor` | `MINT_AUTH__REQUIRE_SECOND_FACTOR` |
 | `auth.patMaxLifetimeDays` | `MINT_AUTH__PAT_MAX_LIFETIME_DAYS` |
 | `audit.retentionDays` | `MINT_AUDIT__RETENTION_DAYS` |
+| `instruments.historyRetentionDays` | `MINT_INSTRUMENTS__HISTORY_RETENTION_DAYS` |
+| `jobs.cpuSlots` | `MINT_JOBS__CPU_SLOTS` (or `MINT_JOB_CPU_SLOTS`) |
+| `realtimeEnabled` | `MINT_REALTIME_ENABLED` |
+| (not a config key) | `MINT_LISTEN_PORT`: the port that `mint-platform` binds |
 | `database.databaseName` | `MINT_DATABASE__DATABASENAME` |
 | `sso.eduid.enabled` | `MINT_SSO__EDUID__ENABLED` |
 | `sso.eduid.clientId` | `MINT_SSO__EDUID__CLIENTID` |
@@ -351,13 +408,9 @@ Nested keys use `__` (double underscore) as the separator, and `MINT_` as the pr
 | `adminTerminalEnabled` | `MINT_ADMIN_TERMINAL_ENABLED` |
 | `DB_USERNAME` / `DB_PASSWORD` | `MINT_DB_USERNAME` / `MINT_DB_PASSWORD` |
 
-::: warning Snake_case names that are ignored
-In the sections of the second bullet, snake_case forms such as `MINT_DATABASE__DATABASE_NAME`, `MINT_SSO__EDUID__CLIENT_ID`, `MINT_MARKETPLACE__REGISTRY_URL` or `MINT_UPDATES__PLATFORM_REPO` are silently ignored in MINT @MINT_VERSION@. The setting keeps its `config.json` or default value, and no error is logged. Storage keys are the exception: `MINT_STORAGE__S3__...` and `MINT_STORAGE__SWIFT__...` accept both forms.
-:::
-
 Booleans accept `true`/`false`/`1`/`0`. JSON values can be embedded literally.
 
-The remaining legacy `MLD_` aliases (`MLD_CONFIG_PATH` and the `MLD_` GitHub-token names) log a one-time warning naming their `MINT_` replacement. The `MLD_` JWT-secret aliases stay supported without a warning, because dropping one would sign every user out.
+MINT reads no `MLD_` names except the `MLD_` JWT-secret aliases, which stay supported because dropping one would sign every user out. Use the `MINT_` names, for example `MINT_CONFIG_PATH`, `MINT_UPDATES__GITHUB_TOKEN` and, for Docker Compose, `MINT_PORT` and `MINT_VERSION`.
 
 ## Storage path layout
 
@@ -370,7 +423,7 @@ The configured `server.dataPath` (default `./data`) holds platform runtime state
 | `marketplace/` | Marketplace registry cache |
 | `plugins/uploads/` | Uploaded `.mint` bundles and extracted install payloads |
 | `plugins/manifest.json` | Restore manifest for dynamically installed plugin bundles |
-| `plugins/locks/` | In-process [plugin dependency lock](/admin/plugins#plugin-dependency-lock): `requirements.in`, `plugins.lock`, `state.json` and `history/` |
+| `plugins/locks/` | In-process [plugin dependency lock](/admin/plugins#plugin-dependency-lock): `requirements.in`, `plugins.lock`, `state.json` and `history/`. `state.json` is the install record that startup restores from |
 | `plugins/<plugin>/venv/` | Isolated plugin virtual environments when subprocess isolation is used |
 | `plugins/<plugin>/config.json` | Legacy per-plugin settings fallback |
 | `logs/mint.log` | Log file when `logging.fileEnabled` is true (default `logging.filePath`) |
@@ -382,4 +435,4 @@ Removing `marketplace/` is safe; it regenerates on demand. Removing `plugins/loc
 ## Next
 
 → [Install on Linux (direct)](/admin/install-direct) — start the platform with a given config
-→ [Platform commands](/admin/cli) — `mint experiment`, `mint project`, …
+→ [Platform commands](/admin/cli) — `mint platform experiment`, `mint platform project`, …

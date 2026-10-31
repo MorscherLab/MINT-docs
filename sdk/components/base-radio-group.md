@@ -12,7 +12,7 @@ BaseRadioGroup is a forms component exported by @morscherlab/mint-sdk for plugin
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BaseRadioGroup.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseRadioGroup.vue">Source</a>
 </div>
 
 <ComponentPlayground name="BaseRadioGroup" />
@@ -20,18 +20,18 @@ BaseRadioGroup is a forms component exported by @morscherlab/mint-sdk for plugin
 ## Import
 
 ```ts
-import { BaseRadioGroup } from "@morscherlab/mint-sdk/components"
+import { BaseRadioGroup } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BaseRadioGroup.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseRadioGroup.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` modelValue ` | ` string \| number ` | No | ` undefined ` | — |
-| ` options ` | ` RadioOptionInput[] ` | Yes | — | — |
+| ` options ` | ` SelectOptionInput[] ` | Yes | — | — |
 | ` name ` | ` string ` | Yes | — | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` direction ` | ` 'horizontal' \| 'vertical' ` | No | ` 'vertical' ` | — |
@@ -44,7 +44,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` RadioOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L132) | See the linked SDK type definition. |
+| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

@@ -12,7 +12,7 @@ NumberInput is a forms component exported by @morscherlab/mint-sdk for plugin fr
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/NumberInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/NumberInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="NumberInput" />
@@ -20,7 +20,7 @@ NumberInput is a forms component exported by @morscherlab/mint-sdk for plugin fr
 ## Import
 
 ```ts
-import { NumberInput } from "@morscherlab/mint-sdk/components"
+import { NumberInput } from "@morscherlab/mint-sdk"
 ```
 
 ## Interaction in 1.2.1
@@ -57,21 +57,30 @@ Arrow Up/Down adjust by `step`; Page Up/Down adjust by ten steps. Home/End jump 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/NumberInput.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/NumberInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` modelValue ` | ` number ` | No | ` undefined ` | — |
+| ` modelValue ` | ` number \| null ` | No | ` null ` | — |
 | ` min ` | ` number ` | No | ` undefined ` | — |
 | ` max ` | ` number ` | No | ` undefined ` | — |
 | ` step ` | ` number ` | No | ` 1 ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
-| ` error ` | ` boolean ` | No | ` false ` | — |
+| ` invalid ` | ` boolean ` | No | ` false ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 | ` placeholder ` | ` string ` | No | ` undefined ` | — |
-| ` unit ` | ` string ` | No | ` undefined ` | — |
+| ` unit ` | ` string ` | No | ` undefined ` | Unit label; with units, the selected unit value (v-model:unit). |
+| ` units ` | ` UnitOption[] ` | No | ` undefined ` | Selectable units; renders the unit segment instead of the steppers. |
+| ` precision ` | ` number ` | No | ` undefined ` | Decimal places kept when convertOnUnitChange converts the value. |
+| ` convertOnUnitChange ` | ` boolean ` | No | ` false ` | Convert the value by the unit factors when the unit changes (needs units with factor). |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Related types
+
+| Type | Definition / accepted values |
+|---|---|
+| [` UnitOption `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L7) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

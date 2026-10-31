@@ -7,7 +7,7 @@ MINT's update story has two related checks: the **platform** runtime and the **p
 Keep the platform, Python SDK and frontend SDK on matching releases; plugins retain their own
 package versions and are distributed as `.mint` bundles. Read the
 [release notes](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md), the
-[notable changes](/changelog#notable-changes-in-1-3) and the [SDK upgrade guide](/sdk/operations/upgrading) before updating.
+[notable changes](/changelog) and the [SDK upgrade guide](/sdk/operations/upgrading) before updating.
 
 ## Platform updates
 
@@ -51,7 +51,7 @@ zero-downtime schema upgrade.
 
 ### Plugins that exclude the new platform version
 
-A plugin pins `mint-sdk` to one platform minor. When a platform update moves to the next minor, plugins pinned to the current minor exclude it. In this case, MINT does not block the update:
+A plugin pins `mint-sdk` to a range. A plugin built for SDK 1.4 or later declares `mint-sdk>=1.4.0,<2.0`, so a minor platform update within 1.x does not exclude it. A plugin that pins one minor (every 1.3 release, and some 1.4.0 releases with `<1.5`) excludes the next minor platform. In this case, MINT does not block the update:
 
 1. When you apply the update, MINT finds the newest compatible release of each excluded plugin and lists the releases. It does not stage a plugin or download the platform bundle before you confirm.
 2. Review the list in the **Update to MINT `<version>`** dialog, then click **Update**.
@@ -83,10 +83,10 @@ In each case, apply the platform update by hand from **Admin -> Plugins -> Insta
 ::: warning Scheduled updates need a restart supervisor
 The scheduled restart exits the MINT process and relies on a supervisor to start it again. MINT allows scheduled updates only when one of these is set:
 
-- `MINT_DAEMON=1`, which `mint platform daemon start` and `mint platform daemon install-service` set;
+- `MINT_DAEMON=1`, which `mint-platform daemon start` and `mint-platform daemon install-service` set;
 - `MINT_RESTART_SUPERVISED=1`, which the [Docker Compose file](/admin/install-docker#build-and-start) sets.
 
-Without either, the **Scheduled updates** toggle is disabled with the hint "Requires mint platform daemon or MINT_RESTART_SUPERVISED=1." `GET /api/updates/config` reports the result as `restartSupported`. For a systemd unit that runs `mint daemon` directly, see [Install directly → Run as a systemd service](/admin/install-direct#run-as-a-systemd-service).
+Without either, the **Scheduled updates** toggle is disabled with the hint "Requires mint-platform daemon or MINT_RESTART_SUPERVISED=1." `GET /api/updates/config` reports the result as `restartSupported`. For a systemd unit that runs `mint-platform serve` directly, see [Install directly → Run as a systemd service](/admin/install-direct#run-as-a-systemd-service).
 :::
 
 `updates.autoApplyEnabled` is separate from the Docker entrypoint's `MINT_UPDATES__AUTO_APPLY_ON_STARTUP` below, which applies a platform bundle only when a container is created.
@@ -133,7 +133,7 @@ Once a database has an Alembic revision (any database started by 1.2.2 or later)
 Before you upgrade to MINT 1.3:
 
 - **Python 3.14.** MINT 1.3 requires Python 3.14. The Docker image is `python:3.14-slim`. Plugin installs accept only wheels that install on the running interpreter, so each compiled dependency of an installed plugin needs a `cp314` or `abi3` wheel. See [Install directly](/admin/install-direct#requirements).
-- **Restart supervisor.** Scheduled updates need `mint platform daemon` or `MINT_RESTART_SUPERVISED=1`. See [Scheduled updates](#scheduled-updates).
+- **Restart supervisor.** Scheduled updates need `mint-platform daemon` or `MINT_RESTART_SUPERVISED=1`. See [Scheduled updates](#scheduled-updates).
 
 ::: warning Plugin requests need a Bearer credential
 With authentication enabled, every plugin request needs an `Authorization: Bearer` credential: a session token, a [personal access token](/admin/authentication#personal-access-tokens) or a [service token](/admin/authentication#service-tokens). This applies to the plugin proxy and to in-process plugin routes.
@@ -152,23 +152,32 @@ After the first 1.3 start:
 - Check **Admin -> Plugins -> Installed** for plugins disabled by the dependency lock. See [Plugin dependency lock](/admin/plugins#plugin-dependency-lock).
 - Every existing role receives `instruments.view`; the Admin role also receives `instruments.edit`. Review custom roles. See [Permissions](/reference/permissions#instruments-2).
 
+## Upgrading from MINT 1.3
+
+Back up the database before you upgrade. Database revisions run at startup and cannot be undone.
+
+1. **Plugin releases.** MINT 1.4 requires `mint-sdk>=1.4.0b1`. At the first 1.4 start, the platform disables each plugin built for SDK 1.3 and shows the reason in **Admin -> Plugins -> Installed**. An in-process plugin is uninstalled from the platform environment; a subprocess plugin keeps no virtual environment. Plugin data, design data, artifacts and plugin tables stay. The log shows one ERROR line for each disabled plugin. This is expected. Install the 1.4 release of each plugin from the marketplace or as a `.mint` upload; installing a disabled in-process plugin enables it again. An update from the admin page of a 1.3 platform pairs each GitHub-release plugin with its release for the new version.
+2. **Docker.** A 1.3 container cannot update itself, because the runtime bundle protocol is 3. Pull the 1.4 image or rebuild. See [Install with Docker](/admin/install-docker#upgrades).
+3. **Local daemon.** Stop a 1.3 daemon with `mint platform daemon stop` before the upgrade. The 1.4 `mint-platform daemon status|stop` cannot find a 1.3 supervisor. Stop such a process with the `supervisor_pid` in `.mint/daemon/state.json`. After the upgrade, run `mint-platform daemon start`, or run `mint-platform daemon install-service` again when a systemd user service runs MINT. The old unit starts a module that 1.4 removed.
+4. **Plugin roles.** The upgrade drops the `user_plugin_roles` table and removes `plugins.configure` from the Member role. Before the upgrade, give each former plugin administrator, and each Member who must keep plugin configuration, a custom role with `plugins.configure`. See [Plugin access levels](/admin/users-roles#plugin-access-levels).
+5. **Source routes.** The routes that change where plugin code comes from need `plugins.install` now: update sources and private package indexes. A Member gets 403. See [Plugins](/admin/plugins#update-settings).
+6. **Job limits.** The `jobs` limits now apply to subprocess and Docker plugins too. Check them. See [Configuration](/admin/configuration#jobs).
+7. **Marketplace.** The auto-updater and the install requests are removed. A pending request stays in the `plugin_install_requests` table, but no screen shows it. Read it with SQL before the upgrade if you need it.
+8. **Config-declared plugins.** The platform does not load `plugins.plugins` from `config.json` any more. A legacy list is dropped with a warning. Install each plugin as a package.
+9. **Plugin lock.** In-process plugins restore from `data/plugins/locks/state.json` alone. A plugin that is in `manifest.json` but not in `state.json` is not installed at startup. Install it again.
+10. **Environment names.** `MLD_PORT` and `MLD_VERSION` (Compose), `MLD_CONFIG_PATH` and the `MLD_` GitHub-token names no longer work. Use the `MINT_` names. The `MLD_` JWT-secret aliases stay.
+11. **Removed routes.** Scripts must not call `/api/users/{id}/role|activate|deactivate`, `DELETE /api/users/{id}`, `PUT /api/users/{id}/reset-password`, `/api/admin/plugins*`, `/api/admin/plugin-roles*`, `/api/marketplace/requests*`, `/api/marketplace/auto-update*`, or the per-section `PATCH /api/admin/config/<section>` routes. Use the `/api/admin/users` routes and `PATCH /api/admin/config` with the section as a key.
+12. **Scripts and CI.** The `mint` commands that call a platform exist only under `mint platform`. See [mint CLI](/admin/cli).
+
+For the full list, including the changes for plugin authors, see the [migration guide](/sdk/operations/migrate-1.3-to-1.4).
+
 ## Plugin updates
 
 Plugin updates are surfaced in **Admin -> Plugins -> Installed** and **Admin -> Plugins -> Registry**, with an **Update** action when the registry advertises a newer compatible version.
 
 > [Screenshot: installed plugin row with Update ready badge]
 
-Automatic plugin updates are set per plugin in `config.json`; there is no toggle in the web UI:
-
-```json
-{
-  "marketplace": {
-    "autoUpdatePlugins": { "my-plugin": true }
-  }
-}
-```
-
-A user with `plugins.configure` can also set it with `PUT /api/marketplace/auto-update/{plugin_name}`. When at least one plugin is listed at startup, MINT checks every `marketplace.cacheTtlMinutes` (default 60) and installs newer compatible versions of the enabled plugins. A restart is still needed before new code runs. To install plugin updates and restart automatically, use [Scheduled updates](#scheduled-updates) instead.
+The [scheduled update batch](#scheduled-updates) is the only automatic plugin updater. It updates every plugin that has an update source (marketplace installs register one), and there is no per-plugin opt-in. To update plugins automatically, set `updates.autoApplyEnabled` and `updates.autoApplyPlugins`. `updates.autoApplyPlatform` defaults to `true`; set it to `false` for plugin updates only. The batch needs a [restart supervisor](#scheduled-updates).
 
 The marketplace compatibility check compares registry metadata and package/bundle constraints against the running platform version. If a plugin requires a newer MINT platform, install/update actions are disabled until the platform itself is upgraded. Registry data can fall back to the local cache when the remote catalog is temporarily unavailable.
 
@@ -201,5 +210,5 @@ With `errorReporting.enabled`, MINT opens a GitHub issue in `errorReporting.gith
 
 ## Next
 
-→ [Marketplace](/guide/marketplace) — install and request plugins
+→ [Marketplace](/guide/marketplace) — install plugins
 → [Plugin development → Operations](/sdk/operations/) — building, versioning, publishing

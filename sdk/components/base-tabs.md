@@ -12,7 +12,7 @@ BaseTabs is a forms component exported by @morscherlab/mint-sdk for plugin front
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BaseTabs.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseTabs.vue">Source</a>
 </div>
 
 <ComponentPlayground name="BaseTabs" />
@@ -20,7 +20,7 @@ BaseTabs is a forms component exported by @morscherlab/mint-sdk for plugin front
 ## Import
 
 ```ts
-import { BaseTabs } from "@morscherlab/mint-sdk/components"
+import { BaseTabs } from "@morscherlab/mint-sdk"
 ```
 
 ## Changes in 1.2.1
@@ -30,18 +30,18 @@ is removed, including `variant="pills"`. Use [SegmentedControl](/sdk/components/
 with `variant="card"` for a pill-style choice control.
 
 ```vue
-<BaseTabs v-model="activeTab" :tabs="tabs" />
+<BaseTabs v-model="activeTab" :options="tabs" />
 ```
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/BaseTabs.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseTabs.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` modelValue ` | ` string ` | Yes | — | — |
-| ` tabs ` | ` TabItemInput[] ` | Yes | — | — |
+| ` modelValue ` | ` OptionPrimitive ` | Yes | — | — |
+| ` options ` | ` SelectOptionInput[] ` | Yes | — | Tabs; icon takes SVG path data, badge a count shown after the label. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -49,7 +49,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TabItemInput `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L106) | See the linked SDK type definition. |
+| [` OptionPrimitive `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L98) | See the linked SDK type definition. |
+| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 
