@@ -10,7 +10,7 @@ This repo contains the **user-facing manual** and the **Plugin Development** doc
 
 ## Commands
 
-Bun-managed (see `bunfig.toml` — `linker = "hoisted"` is required for VitePress).
+Bun-managed (see `bunfig.toml` — `linker = "hoisted"` is required for VitePress). VitePress is pinned to an exact 2.0 alpha; move one alpha at a time and check the build and the pages.
 
 ```bash
 bun install
@@ -34,7 +34,7 @@ Plus `index.md` (home), `team.md` (Vue components from `vitepress/theme`), and `
 
 `.vitepress/config.ts` is the single source of truth for nav bar, sidebar groups, search, and the GitHub edit-link pattern. **Adding a page requires two edits**: create the `.md` file, then register it in the matching `sidebar` group in `config.ts` — otherwise it won't appear in navigation.
 
-`.vitepress/theme/` only adds `custom.css` on top of the default theme (MINT brand color overrides — indigo primary + orange CTA). The brand palette there is intentionally kept in sync with `packages/sdk-frontend/src/styles/variables.css` in the MINT platform repo — change both together if you change either. `.vitepress/public/` ships static assets straight to the site root — notably `CNAME` (custom domain) and `mint-icon.svg` (the platform's `frontend/public/icon.svg` with rounded corners). The Vite config sets `publicDir` explicitly so the CNAME survives builds run from any cwd.
+`.vitepress/theme/` only adds `custom.css` on top of the default theme (the MINT v2 palette mapped onto the `--vp-c-*` variables: one teal accent, slate neutrals, no gradient or glow). The brand palette there is intentionally kept in sync with `packages/sdk-frontend/src/styles/variables.css` in the MINT platform repo — change both together if you change either. `.vitepress/public/` ships static assets straight to the site root — notably `CNAME` (custom domain) and `mint-icon.svg` (the platform's `frontend/public/icon.svg` with rounded corners). The Vite config sets `publicDir` explicitly so the CNAME survives builds run from any cwd.
 
 Edit links in the footer point to `MorscherLab/MINT-docs` on GitHub. The dev server uses `lastUpdated` git timestamps, which is why CI checks out with `fetch-depth: 0`.
 

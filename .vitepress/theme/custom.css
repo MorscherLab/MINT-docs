@@ -7,26 +7,96 @@
   font-display: swap;
 }
 
-/* MINT brand palette — keep in sync with packages/sdk-frontend/src/styles/variables.css in the mld repo.
-   Primary indigo (UI surfaces, links) + orange CTA gradient (hero accents). */
+/* MINT v2 palette: one teal accent and slate neutrals. Values mirror
+   packages/sdk-frontend/src/styles/variables.css in MorscherLab/MINT; change both together.
+   Text accents use --color-primary-hover in light mode, because #0D9488 on white is 3.74:1. */
 :root {
-  --vp-font-family-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-  --vp-c-brand-1: #4F46E5;       /* indigo-600 */
-  --vp-c-brand-2: #4338CA;       /* indigo-700 */
-  --vp-c-brand-3: #3730A3;       /* indigo-800 */
-  --vp-c-brand-soft: rgba(79, 70, 229, 0.14);
+  --vp-font-family-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(120deg, #4F46E5 30%, #F97316 70%);
-  --vp-home-hero-image-background-image: linear-gradient(-45deg, #4F46E5 50%, #F97316 50%);
-  --vp-home-hero-image-filter: blur(44px);
+  --vp-c-brand-1: #0F766E;       /* --color-primary-hover: links and text accents (5.5:1) */
+  --vp-c-brand-2: #115E59;       /* --color-primary-pressed */
+  --vp-c-brand-3: #0D9488;       /* --color-primary */
+  --vp-c-brand-soft: rgba(13, 148, 136, 0.10);
+
+  --vp-c-bg: #F8FAFC;            /* --bg-primary: the SDK styles paint body with it */
+  --vp-c-bg-alt: #F1F5F9;        /* --bg-tertiary: sidebar, code blocks */
+  --vp-c-bg-elv: #FFFFFF;        /* --bg-card */
+  --vp-c-bg-soft: #F1F5F9;       /* --bg-tertiary */
+
+  --vp-c-text-1: #0F172A;        /* --text-primary */
+  --vp-c-text-2: #475569;        /* --text-secondary-strong */
+  --vp-c-text-3: #64748B;        /* --text-secondary */
+
+  --vp-c-border: #CBD5E1;        /* --border-strong */
+  --vp-c-divider: #E2E8F0;       /* --border-color */
+  --vp-c-gutter: #E2E8F0;
+
+  --vp-c-gray-1: #CBD5E1;
+  --vp-c-gray-2: #E2E8F0;
+  --vp-c-gray-3: #F1F5F9;
+  --vp-c-gray-soft: rgba(100, 116, 139, 0.12);
+
+  --vp-c-green-1: #059669;       /* --mint-success */
+  --vp-c-green-soft: rgba(16, 185, 129, 0.10);
+  --vp-c-yellow-1: #B45309;      /* --mint-warning-text */
+  --vp-c-yellow-soft: rgba(245, 158, 11, 0.10);
+  --vp-c-red-1: #DC2626;         /* --mint-error */
+  --vp-c-red-soft: rgba(239, 68, 68, 0.10);
+
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: #FFFFFF;          /* --text-on-accent */
+  --vp-button-brand-bg: #0D9488;            /* --color-primary */
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-hover-text: #FFFFFF;
+  --vp-button-brand-hover-bg: #0F766E;
+  --vp-button-brand-active-border: transparent;
+  --vp-button-brand-active-text: #FFFFFF;
+  --vp-button-brand-active-bg: #115E59;
+
+  /* Flat chrome: a solid hero name, no glow behind the hero image. */
+  --vp-home-hero-name-color: var(--vp-c-brand-1);
+  --vp-home-hero-name-background: none;
+  --vp-home-hero-image-background-image: none;
+  --vp-home-hero-image-filter: none;
 }
 
 .dark {
-  --vp-c-brand-1: #818CF8;       /* indigo-400 */
-  --vp-c-brand-2: #6366F1;       /* indigo-500 */
-  --vp-c-brand-3: #4F46E5;       /* indigo-600 */
-  --vp-c-brand-soft: rgba(129, 140, 248, 0.16);
+  --vp-c-brand-1: #2DD4BF;       /* --color-primary */
+  --vp-c-brand-2: #5EEAD4;       /* --color-primary-hover */
+  --vp-c-brand-3: #2DD4BF;
+  --vp-c-brand-soft: rgba(45, 212, 191, 0.12);
+
+  --vp-c-bg: #0B1120;            /* --bg-primary */
+  --vp-c-bg-alt: #111827;        /* --bg-secondary */
+  --vp-c-bg-elv: #111827;        /* --bg-card */
+  --vp-c-bg-soft: #1E293B;       /* --bg-tertiary */
+
+  --vp-c-text-1: #F1F5F9;
+  --vp-c-text-2: #CBD5E1;
+  --vp-c-text-3: #94A3B8;
+
+  --vp-c-border: #334155;
+  --vp-c-divider: #1F2937;
+  --vp-c-gutter: #0B1120;
+
+  --vp-c-gray-1: #334155;
+  --vp-c-gray-2: #1E293B;
+  --vp-c-gray-3: #172033;
+  --vp-c-gray-soft: rgba(148, 163, 184, 0.14);
+
+  --vp-c-green-1: #34D399;
+  --vp-c-green-soft: rgba(16, 185, 129, 0.15);
+  --vp-c-yellow-1: #FCD34D;
+  --vp-c-yellow-soft: rgba(245, 158, 11, 0.15);
+  --vp-c-red-1: #F87171;
+  --vp-c-red-soft: rgba(239, 68, 68, 0.15);
+
+  --vp-button-brand-text: #0B1120;          /* --text-on-accent */
+  --vp-button-brand-bg: #2DD4BF;
+  --vp-button-brand-hover-text: #0B1120;
+  --vp-button-brand-hover-bg: #5EEAD4;
+  --vp-button-brand-active-text: #0B1120;
+  --vp-button-brand-active-bg: #99F6E4;
 }
 
 .VPHero .name {
@@ -64,10 +134,7 @@
   padding: 1.25rem;
   border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(79, 70, 229, 0.08), transparent 40%),
-    linear-gradient(315deg, rgba(249, 115, 22, 0.09), transparent 36%),
-    var(--vp-c-bg-soft);
+  background: var(--vp-c-bg-alt);
 }
 
 .mint-showcase-actions {
@@ -88,7 +155,7 @@
   color: var(--vp-c-text-1);
   font-weight: 600;
   text-decoration: none !important;
-  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+  transition: border-color 120ms, background-color 120ms, color 120ms;
 }
 
 .mint-showcase-button:hover {
@@ -97,14 +164,15 @@
 }
 
 .mint-showcase-button.mint-showcase-button--primary {
-  border-color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-1);
-  color: white;
+  border-color: var(--vp-button-brand-bg);
+  background: var(--vp-button-brand-bg);
+  color: var(--vp-button-brand-text);
 }
 
 .mint-showcase-button.mint-showcase-button--primary:hover {
-  background: var(--vp-c-brand-2);
-  color: white;
+  border-color: var(--vp-button-brand-hover-bg);
+  background: var(--vp-button-brand-hover-bg);
+  color: var(--vp-button-brand-hover-text);
 }
 
 .mint-showcase-toolbar {
@@ -245,12 +313,8 @@
   padding: 1rem;
   border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--vp-c-bg-alt);
   overflow-x: auto;
-}
-
-.dark .mint-component-playground__surface {
-  background: #0f172a;
 }
 
 .mint-component-playground__surface > .mint-well-plate {
@@ -357,11 +421,7 @@
   display: grid;
   gap: 1rem;
   padding: 1rem;
-  background: #f8fafc;
-}
-
-.dark .mint-live-surface {
-  background: #0f172a;
+  background: var(--vp-c-bg-alt);
 }
 
 .mint-live-surface--table {
@@ -541,7 +601,7 @@
   flex: 1;
   min-width: 3.5rem;
   border-radius: 6px 6px 0 0;
-  background: linear-gradient(180deg, #38bdf8, #2563eb);
+  background: var(--vp-c-brand-3);
 }
 
 .mint-chart-demo__bar span {
@@ -610,9 +670,9 @@
 .mint-showcase-note {
   margin: 1.5rem 0;
   padding: 0.9rem 1rem;
-  border-left: 4px solid #10b981;
+  border-left: 4px solid var(--vp-c-brand-3);
   border-radius: 0 8px 8px 0;
-  background: rgba(16, 185, 129, 0.1);
+  background: var(--vp-c-brand-soft);
 }
 
 @media (min-width: 960px) {

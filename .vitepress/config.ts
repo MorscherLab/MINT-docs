@@ -13,7 +13,7 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/mint-icon.svg' }],
-    ['meta', { name: 'theme-color', content: '#4F46E5' }],
+    ['meta', { name: 'theme-color', content: '#0D9488' }],
   ],
 
   markdown: {
