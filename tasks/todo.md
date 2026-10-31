@@ -126,3 +126,31 @@ Workflow, one agent per section (admin, guide, sdk-python, sdk-frontend), `model
 - `sdk/frontend/platform-integration.md:15`, `composables.md` still point at the deprecated `useExperimentSave` (no SDK replacement exists).
 - `reference/glossary`: define "service token".
 - Release commit done 2026-10-02 on `docs/1.3.0-release` (npm 1.3.0 published): SDK ^1.3.0 with pinia ^4.0.3, vue-router ^5.3.1, tailwindcss ^4.3.3; `@simplewebauthn/browser` dropped; props regenerated from a v1.3.0 worktree; 1.2.9 archive.
+
+# Sync to v1.4.3 (2026-10-31)
+
+Branch `docs/1.4.3-sync`. Source snapshot: MINT tag `v1.4.3` (`daf18a53`); docs last synced at v1.3.0.
+Sources: `CHANGELOG.md` 1.3.1–1.4.3, `packages/CHANGELOG.md` (its `[Unreleased]` body is the shipped SDK 1.4 notes; it has no 1.4.x header), `decisions/`, the code.
+
+## What ran
+- Workflow: one writer and one adversarial verifier per section (admin+reference, guide+index, sdk Python, sdk frontend). The verifiers fixed 116 errors against v1.4.3 code.
+- Final stage, inline: new `sdk/operations/migrate-1.3-to-1.4` (sidebar entry next to 1.2→1.3), `changelog.md` "Notable changes in 1.4", release commit.
+- Release commit: `currentDocsVersion = '1.4.3'`; archive `1.3.0` at `4ef01239a12ed29793808e35a11397609d83582b`; `@morscherlab/mint-sdk ^1.4.3`; `tailwindcss` dropped (no longer an SDK peer); props regenerated (78 components, 606 props).
+- `bun run build` passes (current + 3 archives, 4 version labels). 0 bad `#anchors` in 153 changed pages.
+
+## Decisions
+- Removed components: 29 pages deleted with their catalog and sidebar entries (1.3 convention, no stubs). The 1.3.0 archive keeps them; `migrate-1.2-to-1.3` links the archived `SearchableSelect` page.
+- `update-component-props.ts` reads the root and the `lab`/`shell`/`data`/`runtime` entries (as the SDK's `extract-docs.ts`). Obsolete regression asserts (SmartGroup*, SampleLegend, FormBuilder 11, DataFrame 24, AppSidebar density) were replaced with asserts on the 1.4 `:spec` props.
+- `check-doc-versions.ts`: current CLI must contain `mint platform instruments` and `deprecated-apis`; the 1.3.0 archive must not contain `deprecated-apis`.
+- `ComponentPlayground.vue`: imports moved to the 1.4 entry points; demos of removed components and the `/templates` helpers deleted. Surviving demos keep their 1.3 props (minimal fix only).
+- Catalog examples updated to 1.4 props (`tone`, `v-model:open`, `:spec`).
+
+## Follow-ups (not done)
+- `ComponentPlayground.vue`: rewrite the surviving demos for the 1.4 `:spec` APIs (PluginWorkspaceView, DataFrame, FormBuilder, PlateEditor, WellPlate, AppTopBar, AppSidebar, SettingsModal). Not checked in a browser.
+- New component pages: `PresenceAvatars`, `InstrumentStatusPanels`, `VersionConflictDialog`, `StaleFormBanner`.
+- Component page prose (`sdk/components/`) was not reviewed against 1.4 beyond the removed-name mentions.
+- Platform conflict: `deprecatedRootExports.ts` JSDoc says "Removed in MINT 1.5"; `decisions/2026-10-30-sdk-range-next-major.md` says deprecations stay until 2.0. The migration page avoids a date.
+- iOS push registration exists only on the unmerged mint-ios `feature/apns-push` branch; recheck `guide/notifications` when it ships.
+- STE: about 117 long sentences remain in sdk/ (isolation, packaging, lifecycle, first-analysis-plugin, upgrading).
+- Unverified in code: two `admin/updates` 1.3-upgrade claims (subprocess venv, reinstall enables a disabled plugin); `mint verify --image ghcr.io/morscherlab/mint:<version>` tag form; the Docker spawn path for `MINT_JOBS__*`.
+- Instrument alert `ack_fn` has no public way to resolve the caller (SDK follow-up).
