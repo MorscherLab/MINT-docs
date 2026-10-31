@@ -175,7 +175,7 @@ Remove `get_migrations_package()` in the same change. `plugin_name` is the plugi
 | `FileBrowserModal` | [`FilePicker`](/sdk/components/file-picker) with `usePlatformFilePickerAdapter()` |
 | `AppPluginSwitcher`, `PluginSwitcherPlugin`, `PluginSwitcherInfo` | [`AppTopBar`](/sdk/components/app-top-bar) static plugin identity (`PluginInfo`) |
 | `ColorSlider` | [`BaseSlider`](/sdk/components/base-slider) with `colorStops`, `thresholds`, `showLabels`, `minLabel`, `maxLabel` |
-| `DropdownButton` | [`BaseSelect`](/sdk/components/base-select) / [`SearchableSelect`](/sdk/components/searchable-select) for values, [`ActionMenu`](/sdk/components/action-menu) for actions |
+| `DropdownButton` | [`BaseSelect`](/sdk/components/base-select) / [`SearchableSelect`](https://mint-docs.morscherlab.org/v1.3.0/sdk/components/searchable-select) for values, [`ActionMenu`](/sdk/components/action-menu) for actions |
 | `InstrumentAlertLog`, `InstrumentStatusCard`, `LcmsSequenceTable` | None |
 | `ProgressBar` `variant="segmented"`, `steps`, `currentStep`, `ProgressVariant` | [`StepWizard`](/sdk/components/step-wizard) for steps; [`ProgressBar`](/sdk/components/progress-bar) `value` / `indeterminate` for percentages |
 | `useAsync`, `useOptimisticMutation` | `useRequestSyncState()` |

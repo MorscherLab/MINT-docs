@@ -12,6 +12,31 @@ MINT follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The pla
 
 → [Full CHANGELOG](https://github.com/MorscherLab/MINT/blob/main/CHANGELOG.md) — every change, every version.
 
+## Notable changes in 1.4
+
+Admin and plugin-author actions for the 1.4 minor release (1.4.0 to 1.4.3). Update the platform and both SDK packages together.
+
+| Area | Change | Action |
+|---|---|---|
+| Plugin SDK | SDK 1.4 replaces the 1.3 author API: a `Metadata` subclass with `@plugin(Meta)`, context namespaces (`context.design`, `context.artifacts`, `context.experiments`, ...), spec classes for jobs and MCP tools. The removed names have no aliases | Run `mint doctor --fix` in each plugin project. Follow [Migrate from 1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4). |
+| Plugin compatibility | The platform requires `mint-sdk>=1.4.0b1`. At the first 1.4 start, it disables each plugin built for SDK 1.3 | Make and install a 1.4 release of each plugin. Admin → Plugins shows the reason for each disabled plugin. See [Updates](/admin/updates). |
+| SDK range (1.4.1) | A plugin declares `mint-sdk>=1.4.0,<2.0`. The SDK has no breaking change within 1.x | `mint init`, `mint doctor --fix` and `mint sdk update --version` write `<2.0`. See [Update both SDK packages](/sdk/operations/migrate-1.3-to-1.4#update-both-sdk-packages). |
+| Plugin roles | Plugin roles are removed. Endpoints, jobs, MCP tools and pages declare the access level `use`, `configure` or `admin`. The Member role loses `plugins.configure` | Before the upgrade, give each former plugin administrator a role with `plugins.configure`. See [Plugin roles become access levels](/sdk/operations/migrate-1.3-to-1.4#plugin-roles-become-access-levels). |
+| Legacy migrations | The platform no longer runs `get_migrations_package()` / `PluginMigration`. It disables a plugin that still defines them | Declare `Metadata.database` and adopt the history with `LegacyBaseline.from_plugin_history()`. See [Legacy migrations are removed](/sdk/operations/migrate-1.3-to-1.4#legacy-migrations-are-removed). |
+| Frontend SDK | Deprecated and merged components are removed (`SearchableSelect`, `IconButton`, `ControlWorkspaceView`, SmartGroup grouping and others). Lab, shell, data and runtime parts import from subpaths | `mint doctor` reports each use. See [Frontend changes](/sdk/operations/migrate-1.3-to-1.4#frontend-changes). |
+| `mint` CLI | The top-level `mint auth`, `mint plugin`, `mint update`, `mint status` and the other server aliases are removed | Use `mint platform ...`. The platform daemon is `mint-platform daemon`. See [CLI](/admin/cli). |
+| Docker | The image starts with `mint-platform serve`. A 1.3 container cannot update itself to 1.4 | Back up the database, pin the image to `ghcr.io/morscherlab/mint:1.4`, then `docker compose pull && docker compose up -d`. See [Docker install](/admin/install-docker). |
+| Local daemon | The 1.4 `mint-platform daemon` does not find a supervisor that 1.3 started | Stop the 1.3 daemon before the upgrade. Run `mint-platform daemon install-service` again for a systemd unit. See [Updates](/admin/updates). |
+| Marketplace | Install requests and the marketplace auto-updater are removed. Only an administrator installs from the UI | Use the scheduled updates (`updates.autoApply*`). See [Plugin management](/admin/plugins). |
+| Environment | The `MLD_` aliases are removed, except the JWT-secret ones | Use the `MINT_` names. See [Configuration](/admin/configuration). |
+| Push notifications | The MINT iOS app can receive push notifications through the `apns` channel | Configure Apple Push in Admin → Platform → Configuration. See [Notifications and iOS push](/guide/notifications). |
+| Instruments | The platform keeps an instrument status history, with retention and CSV export | Optional: set `instruments.historyRetentionDays`. See [Instruments](/guide/instruments). |
+| Concurrent edits | Experiments and projects have a `version`. An edit form with unsaved changes shows a banner when another user saved first | None. `If-Match` stays optional for API clients. |
+| MCP | Destructive tool calls ask for a confirmation. Plugin tools declare `effect` | Plugin authors: see [MCP tools](/sdk/recipes/mcp-tools). |
+| Realtime events | An event stream with presence and plugin events (`realtimeEnabled`, default off) | Optional. See [Configuration](/admin/configuration). |
+| Onboarding | Tours and a "Getting started" checklist. 1.4.3 adds a close button to the checklist chip | None. |
+| PWA and push relay (1.4.2) | An installed PWA does not scroll or zoom the page frame. A relay URL without a path gets `/v1/push` | None. |
+
 ## Notable changes in 1.3
 
 Admin and plugin-author actions for the 1.3 minor release. Update the platform and both SDK packages together.
