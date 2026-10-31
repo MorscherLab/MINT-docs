@@ -1,10 +1,10 @@
 # Theming
 
-The SDK ships with light/dark theme support, table-density settings, and palette tokens out of the box. Plugin frontends adopt the active look automatically when they use the SDK style bundle and design tokens. This page covers what theming options exist, how to override them, and the accessibility guarantees you inherit.
+The SDK ships with light/dark theme support, five accent palettes, density settings, and design tokens out of the box. Plugin frontends adopt the active look automatically when they use the SDK style bundle and design tokens. This page covers what theming options exist, how to override them, and the accessibility guarantees you inherit.
 
 ## Light, dark, system
 
-The platform exposes a theme switcher in the top action bar — Light / Dark / System. Plugins:
+The settings modal of the top bar holds the theme choice: Light, Dark, or System. Plugins:
 
 - **Inherit automatically** when they use the current scaffold's `<PluginWorkspaceView>` / `<AppContainer>` wrapper, or another SDK shell such as `<AppLayout>`, together with design tokens
 - **Should not maintain a separate theme switcher** — the platform owns it
@@ -21,19 +21,19 @@ setTheme('dark')
 toggleTheme()
 ```
 
-`setTheme()` and `toggleTheme()` accept only `'light'` and `'dark'`. The stored theme defaults to `'system'`; set `useSettingsStore().theme = 'system'` to return to the OS preference.
+`setTheme()` accepts only `'light'` and `'dark'`. `toggleTheme()` switches between the two. The stored theme defaults to `'system'`; set `useSettingsStore().theme = 'system'` to return to the OS preference.
 
 The SDK settings store toggles the `dark` class on `<html>` from the stored theme (for `'system'`, from `prefers-color-scheme` and its changes). `variables.css` defines light defaults on `:root` and dark overrides on `html.dark`:
 
 ```css
 :root {
   --bg-primary: #F8FAFC;
-  --text-primary: #1E293B;
+  --text-primary: #0F172A;
 }
 
 html.dark {
-  --bg-primary: #0F172A;
-  --text-primary: #F8FAFC;
+  --bg-primary: #0B1120;
+  --text-primary: #F1F5F9;
 }
 ```
 
@@ -52,24 +52,29 @@ Custom CSS in your plugin can do the same — scope dark-specific overrides unde
 
 ## Density
 
-The SDK settings store tracks `tableDensity` (`compact`, `normal`, `comfortable`; default `normal`) for table-heavy views and mirrors it on `<html data-density="...">` for CSS. `tableDensityToSize()` maps it to the `sm` / `md` / `lg` size used by SDK tables. Prefer SDK table/list components such as `DataFrame`, `ExperimentDataViewer`, and generated workspace shells when density should follow the user's preference. For custom tables, read the settings store or expose a local density prop instead of hardcoding row height globally.
+The SDK settings store tracks `tableDensity` (`compact`, `normal`, `comfortable`; default `normal`; the settings label is "Density") and mirrors it on `<html data-density="...">`. Controls are compact by default. `comfortable` changes the CSS tokens: `--form-height-sm/md/lg` go from 28/32/40 px to 32/36/48 px, and `--mint-gutter` goes from 8 px to 12 px. `compact` and `normal` use the same default token values. `tableDensityToSize()` maps the density to the `sm` / `md` / `lg` size used by SDK tables. Prefer SDK table/list components such as `DataFrame` and generated workspace shells when density should follow the user's preference. For custom controls, use `var(--form-height-md)` and `var(--mint-gutter)` instead of hardcoded sizes.
 
-## Palette overrides
+## Palettes
 
-Users can choose a color palette in the SDK settings store (`colorPalette`: `default`, `colorblind`, `viridis`, or `pastel`). A non-default palette writes hue-shifted values for `--color-primary`, `--color-primary-hover`, `--color-primary-soft`, `--color-cta`, and `--color-cta-hover` onto `<html>` (`PALETTE_CSS_VARIABLES`, `paletteCssVariables()`); `default` writes nothing.
+Users can choose an accent palette in the settings (`colorPalette`: `default`, `colorblind`, `purple`, `ocean`, or `forest`; shown as Teal, Colour-blind safe, Purple, Ocean, and Forest). The settings store writes `html[data-palette]`. `styles/variables.css` gives each palette its light and dark values for `--color-primary`, `--color-primary-hover`, `--color-primary-pressed`, `--color-primary-soft`, and `--color-primary-border`. Each palette is one accent in both themes: white text on the light fill, and `--text-on-accent` (dark) on the dark fill. The colour-blind palette also sets the Okabe-Ito status colours (`--mint-success`, `--mint-error`, `--mint-warning`), so success and error differ for every colour-vision type.
+
+A saved `viridis` becomes `purple`, and a saved `pastel` or an unknown value becomes `default`. The settings store has no palette hue helpers. Read a palette colour from its CSS token, for example under `[data-palette="ocean"]`.
+
+## Brand overrides
 
 A deployment can re-skin the platform by overriding brand variables in its own stylesheet:
 
 ```css
 /* In a custom deployment's style.css */
 :root {
-  --color-primary: #16A34A;        /* override default indigo with green */
+  --color-primary: #16A34A;        /* override the default teal with green */
   --color-primary-hover: #15803D;
-  --color-primary-soft: rgba(22, 163, 74, 0.12);
+  --color-primary-pressed: #166534;
+  --color-primary-soft: rgba(22, 163, 74, 0.10);
 }
 ```
 
-Plugin frontends adopt the override automatically — that's the payoff of using tokens. **Don't hardcode brand hex codes**; you'll break the override path. See [Design tokens → Don'ts](/sdk/frontend/design-tokens#don-ts).
+Plugin frontends get the override automatically, because they use tokens. **Do not hardcode brand hex codes**: a hex code does not change with the override. See [Design tokens → Don'ts](/sdk/frontend/design-tokens#don-ts).
 
 ## Accessibility
 
@@ -77,25 +82,34 @@ The SDK targets **WCAG AA** out of the box:
 
 | Concern | What the SDK does |
 |---------|-------------------|
-| Text contrast | 4.5:1 minimum for body text, 3:1 for large text and UI controls — verified against light and dark token combinations |
+| Text contrast | 4.5:1 minimum for body text, 3:1 for large text and UI controls — verified against light and dark token combinations. One accepted exception: white on the light accent `#0D9488` is 3.74:1 |
 | Focus indicators | Every interactive component shows a visible focus ring using `--focus-ring` and `--focus-ring-offset` |
 | Disabled states | Pair opacity reduction with a visual cue (cursor change, badge) — opacity alone fails WCAG |
-| Colorblind safety | Semantic colors don't rely on hue alone; they include icons or text labels |
+| Colorblind safety | Semantic colors do not rely on hue alone; they include icons or text labels |
 
 When you build custom components, follow the same patterns:
 
 ```vue
-<button
-  :disabled="loading"
-  class="bg-mint-primary text-white rounded-mint px-4 py-2
-         focus:outline-none focus:ring-2 focus:ring-mint-primary focus:ring-offset-2
-         disabled:opacity-50 disabled:cursor-not-allowed">
-  <span v-if="loading" class="i-mdi-loading animate-spin"></span>
+<button :disabled="loading" class="my-button">
+  <LoadingSpinner v-if="loading" tone="inherit" />
   {{ label }}
 </button>
+
+<style scoped>
+.my-button {
+  background: var(--color-primary);
+  color: var(--text-on-accent);
+  border-radius: var(--radius);
+  padding: 0.375rem 1rem;
+  transition: background-color var(--mint-transition);
+}
+.my-button:hover:not(:disabled) { background: var(--color-primary-hover); }
+.my-button:focus-visible { outline: none; box-shadow: var(--focus-ring-offset); }
+.my-button:disabled { opacity: var(--mint-disabled-opacity); cursor: not-allowed; }
+</style>
 ```
 
-`focus-visible:` is the modern replacement for `focus:` — focus rings appear only for keyboard users, not for click-induced focus.
+`:focus-visible` shows the focus ring only for keyboard users, not for click-induced focus. The `--focus-ring*` tokens are `box-shadow` values: use them with `box-shadow`, never with `outline`. Prefer the SDK `BaseButton` where it fits.
 
 ## Reduced motion
 
@@ -156,7 +170,7 @@ This breaks the user's preference within that scope — use sparingly and docume
 
 ## Notes
 
-- The dark mode default is **slate-blue**, not pure black. `--bg-primary` is `#0F172A`. True OLED black is reachable by overriding the variable but isn't the default.
+- The dark mode default is **slate-blue**, not pure black. `--bg-primary` is `#0B1120`. To get true OLED black, override the variable.
 - The SDK's variables file is opinionated about which tokens exist. Adding a new family in your plugin is fine; renaming an existing one is not.
 - The platform's deployment can override `:root` to enforce a corporate identity. Plugin frontends inherit transparently.
 
@@ -165,3 +179,4 @@ This breaks the user's preference within that scope — use sparingly and docume
 - [Design tokens](/sdk/frontend/design-tokens) — full token catalog
 - [Component Library](/sdk/components/) — every component honors theming
 - [Composables → useTheme](/sdk/frontend/composables#other-notable-composables-one-line-each) — programmatic access
+- [Design tokens](/sdk/frontend/design-tokens#layers) — z-index layers for dropdowns, trays, and toasts
