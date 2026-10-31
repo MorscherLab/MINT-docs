@@ -12,7 +12,7 @@ export default defineConfig({
   srcExclude: ['README.md', 'CLAUDE.md', 'AGENTS.md', 'docs/**', 'tasks/**', 'node_modules/**'],
 
   head: [
-    ['link', { rel: 'icon', href: '/mint-icon.png' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/mint-icon.svg' }],
     ['meta', { name: 'theme-color', content: '#4F46E5' }],
   ],
 
@@ -41,7 +41,7 @@ export default defineConfig({
   },
 
   themeConfig: {
-    logo: '/mint-icon.png',
+    logo: '/mint-icon.svg',
     siteTitle: 'MINT',
 
     nav: [

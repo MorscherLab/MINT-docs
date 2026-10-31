@@ -6,7 +6,7 @@ hero:
   text: Mass-spec INtegrated Toolkit
   tagline: Plan experiments, group them into projects, and run analysis plugins for LC-MS, drug-response prediction, chemical drawing, and more, all in one lab web app.
   image:
-    src: /mint-icon.png
+    src: /mint-icon.svg
     alt: MINT
   actions:
     - theme: brand
