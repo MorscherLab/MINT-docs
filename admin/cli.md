@@ -25,35 +25,38 @@ If the command isn't found, the install location isn't on your `PATH`. With `uv 
 ## Authenticate
 
 ```bash
-mint auth login --url https://mint.morscherlab.org
+mint platform auth login --url https://mint.morscherlab.org
 ```
 
 Prompts for the platform URL if none is stored, then prints a short code and the platform's `/device` address (`<externalUrl>/device`), and opens it when run in a terminal. Open that page in a browser where you are signed in, type the code, choose the token lifetime and approve. The CLI then stores the personal access token it is granted in `~/.config/mint/credentials.json` (or `$XDG_CONFIG_HOME/mint/credentials.json`). Subsequent commands use it automatically. Add `--read-only` for a read-only token, or pass `--token` to paste an existing personal access token instead. Password login (`--username`) was removed in 1.3.
 
 | Subcommand | Purpose |
 |------------|---------|
-| `mint auth login` | Sign in with a device code and store a personal access token for the given platform URL |
-| `mint auth logout` | Revoke the stored token on the platform and discard it |
-| `mint auth status` | Print the active platform URL, user, expiration |
-| `mint auth token create\|list\|revoke` | Manage your personal access tokens for scripts and AI assistants |
+| `mint platform auth login` | Sign in with a device code and store a personal access token for the given platform URL |
+| `mint platform auth logout` | Revoke the stored token on the platform and discard it |
+| `mint platform auth status` | Print the active platform URL, user, expiration |
+| `mint platform auth hosts` | List the hosts with a stored credential; `*` marks the default |
+| `mint platform auth use <host>` | Make a stored host the default for every command |
+| `mint platform auth name <host> <name>` | Give a stored host a short name, for `--url` and `use` |
+| `mint platform auth token create\|list\|revoke` | Manage your personal access tokens for scripts and AI assistants |
 
-The credential file tracks one default host plus per-host tokens. To switch instances, run `mint auth login --url <other-url>`. For unattended scripts, create a personal access token with `mint auth token create` and pass it as `MINT_TOKEN`; see [AI Assistants and API Access](/guide/ai-and-api) and the [CLI reference](/sdk/api/cli-reference#mint-auth).
+The credential file tracks one default host plus per-host tokens. To add an instance, run `mint platform auth login --url <other-url>` (`--name prod` gives it a short name). To switch the default, run `mint platform auth use <name>`. For unattended scripts, create a personal access token with `mint platform auth token create` and pass it as `MINT_TOKEN`; see [AI Assistants and API Access](/guide/ai-and-api) and the [CLI reference](/sdk/api/cli-reference#mint-platform-auth).
 
 ## Experiments
 
 ```bash
-mint experiment list                              # all visible experiments
-mint experiment list --project-id 12             # filter by project ID
-mint experiment list --status ongoing             # filter by status
-mint experiment list --search "TCA" --mine        # search my experiments
-mint experiment get 42                            # show a single experiment
-mint experiment create "Run 17" \
+mint platform experiment list                              # all visible experiments
+mint platform experiment list --project-id 12             # filter by project ID
+mint platform experiment list --status ongoing             # filter by status
+mint platform experiment list --search "TCA" --mine        # search my experiments
+mint platform experiment get 42                            # show a single experiment
+mint platform experiment create "Run 17" \
   --type lcms_sequence \
   --project-id 12 \
   --notes "TCA flux batch"                        # create
-mint experiment update 42 --status completed      # status flip
-mint experiment data 42 --view summary            # design-data summary
-mint experiment results 42 --plugin dose-response # one plugin result
+mint platform experiment update 42 --status completed      # status flip
+mint platform experiment data 42 --view summary            # design-data summary
+mint platform experiment results 42 --plugin dose-response # one plugin result
 ```
 
 Other subcommands read design data (`data`), results (`results`), list types (`types`), show the next experiment code for a type (`next-seq`) and delete (`delete`).
@@ -61,29 +64,29 @@ Other subcommands read design data (`data`), results (`results`), list types (`t
 ## Projects
 
 ```bash
-mint project list                                 # all visible projects
-mint project create "TCA flux" \
+mint platform project list                                 # all visible projects
+mint platform project create "TCA flux" \
   --description "..."                             # create
-mint project update 12 --status archived          # archive
-mint project experiments 12                       # list project experiments
-mint project members 12                           # list project members
+mint platform project update 12 --status archived          # archive
+mint platform project experiments 12                       # list project experiments
+mint platform project members 12                           # list project members
 ```
 
 Project status values are `active`, `archived`, and `completed`.
 
 ## Plugins
 
-Published plugins are `.mint` bundles. Install them with `mint plugin upload`
-or `mint plugin github install`. Full subcommands and flags: [CLI reference](/sdk/api/cli-reference#mint-plugin).
+Published plugins are `.mint` bundles. Install them with `mint platform plugin upload`
+or `mint platform plugin github install`. Full subcommands and flags: [CLI reference](/sdk/api/cli-reference#mint-platform-plugin).
 
 Plugin commands are for administrators and other users with matching server-side plugin permissions.
 
 ```bash
-mint plugin list
-mint plugin upload ./dist/my-plugin-1.0.0.mint
-mint plugin github install MorscherLab/my-plugin --tag v1.0.0
-mint plugin config get my-plugin
-mint plugin config update my-plugin --file settings.json
+mint platform plugin list
+mint platform plugin upload ./dist/my-plugin-1.0.0.mint
+mint platform plugin github install MorscherLab/my-plugin --tag v1.0.0
+mint platform plugin config get my-plugin
+mint platform plugin config update my-plugin --file settings.json
 ```
 
 These commands do not install plugins into your local shell environment. They call the running MINT server, and the server performs dependency checks, bundle extraction, settings writes, and restart-required reporting.
@@ -91,7 +94,7 @@ These commands do not install plugins into your local shell environment. They ca
 ## Status
 
 ```bash
-mint status
+mint platform status
 ```
 
 Prints a one-screen health overview:
@@ -105,24 +108,26 @@ For deeper operational status, use **Admin -> Platform -> Server** in the browse
 
 ## Admin
 
-`mint admin user`, `mint admin role` and `mint admin plugin-role` manage users, RBAC roles and per-plugin roles. They require the matching server-side permissions. Use `--help` on each subcommand for the exact flags before scripting changes.
+`mint platform admin user` and `mint platform admin role` manage users and RBAC roles. They require the matching server-side permissions. Use `--help` on each subcommand for the exact flags before scripting changes. `mint platform admin feedback` lists the [feedback](/admin/platform-settings#audit-log-and-feedback) that users send from the account menu.
+
+There are no plugin roles. Plugins use [access levels](/admin/users-roles#plugin-access-levels) instead.
 
 ## Debug
 
-`mint debug summary | health | system | config | logs | updates` are read-only diagnostics for support and ops checks.
+`mint platform debug summary | health | system | config | logs | updates` are read-only diagnostics for support and ops checks.
 
 ## Restart and run the platform
 
-`mint platform restart` asks the configured platform to restart (requires `platform.configure`). All platform commands are also available under `mint platform …`, for example `mint platform admin user list`. `mint daemon` and `mint platform daemon start|stop|restart|status|logs` run the platform without Docker; see the [CLI reference](/sdk/api/cli-reference#mint-daemon-and-mint-platform-daemon).
+`mint platform restart` asks the configured platform to restart (requires `platform.configure`). The `mint` command does not start the platform. The `mint-platform` command of the platform checkout does: `mint-platform serve` runs it in the foreground, and `mint-platform daemon start|stop|restart|status|logs|install-service|uninstall-service` runs it in the background. `mint daemon` runs one plugin, not the platform. See [Install directly](/admin/install-direct) and the [CLI reference](/sdk/api/cli-reference).
 
 ## Updates
 
 ```bash
-mint update check
-mint update apply --yes
+mint platform update check
+mint platform update apply --yes
 ```
 
-`mint update check` reports platform and plugin update sources. `mint update apply` applies the latest platform update and requires `platform.configure`.
+`mint platform update check` reports platform and plugin update sources. `mint platform update apply` applies the latest platform update and requires `platform.configure`.
 
 ## Scripting tips
 
@@ -130,18 +135,18 @@ Combine commands with `--json` and `jq`:
 
 ```bash
 # Find every ongoing experiment in the active project, mark completed
-mint experiment list --project-id 12 --status ongoing --json \
+mint platform experiment list --project-id 12 --status ongoing --json \
   | jq -r '.[].id' \
-  | xargs -n1 -I{} mint experiment update {} --status completed
+  | xargs -n1 -I{} mint platform experiment update {} --status completed
 ```
 
-The token stored by `mint auth login` is a personal access token: it lasts the lifetime chosen at approval (30, 90 or 365 days, capped by `auth.patMaxLifetimeDays`). For unattended scripts, pass a dedicated token as `MINT_TOKEN` rather than relying on the stored one.
+The token stored by `mint platform auth login` is a personal access token: it lasts the lifetime chosen at approval (30, 90 or 365 days, capped by `auth.patMaxLifetimeDays`). For unattended scripts, pass a dedicated token as `MINT_TOKEN` rather than relying on the stored one.
 
 ## What `mint` is not
 
-- **Not a generic platform launcher.** `mint serve` doesn't exist. Direct installs usually run the ASGI factory with `uvicorn api.main:create_app --factory`; runtime/source deployments can use `mint daemon` when they need the job/session host worker.
-- **Not a local `pip install <plugin>` replacement.** `mint plugin install` asks the running platform server to install a package or server-visible source, and `mint plugin upload` sends a `.mint` bundle to that server. For day-to-day use, admins usually use the Marketplace or Admin UI.
-- **Not the production daemon by default.** `mint dev` is for plugin hot reload, while `mint daemon` is the foreground runtime command used by Linux deployments.
+- **Not the platform launcher.** The platform starts with `mint-platform serve` (foreground), `mint-platform daemon start` (background) or `mint-platform dev` (hot reload). Running `uvicorn` directly needs `MINT_LISTEN_PORT` set to the bound port.
+- **Not a local `pip install <plugin>` replacement.** `mint platform plugin install` asks the running platform server to install a package or server-visible source, and `mint platform plugin upload` sends a `.mint` bundle to that server. For day-to-day use, admins usually use the Marketplace or Admin UI.
+- **Not a platform command set at the top level.** Since MINT 1.4, the commands that call a running platform (`auth`, `experiment`, `project`, `plugin`, `update`, `status`, and so on) exist only under `mint platform`. The old top-level forms no longer work. Change scripts and CI steps.
 
 ## Next
 

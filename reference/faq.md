@@ -18,7 +18,7 @@ MLD (Morscher Laboratory Database) was the platform's original name. It was rena
 
 - Packages are `mint-sdk` (PyPI) and `@morscherlab/mint-sdk` (npm). The `mld-sdk` packages are frozen and receive no releases.
 - Plugins are discovered only through the `mint.plugins` entry-point group. A plugin that still declares `mld.plugins` is not loaded, and no error is shown.
-- Settings use the `MINT_` environment prefix. General `MLD_*` variables are ignored; only a few legacy aliases remain. `MLD_CONFIG_PATH` and the `MLD_*` GitHub-token names log a one-time warning naming their `MINT_` replacement; the `MLD_*` JWT-secret names are still accepted without a warning.
+- Settings use the `MINT_` environment prefix. General `MLD_*` variables are ignored. Since MINT 1.4 only the `MLD_*` JWT-secret aliases remain, because dropping one would sign every user out. `MLD_CONFIG_PATH`, the `MLD_*` GitHub-token names and the Docker Compose names `MLD_PORT` and `MLD_VERSION` no longer work; use `MINT_CONFIG_PATH`, `MINT_UPDATES__GITHUB_TOKEN`, `MINT_PORT` and `MINT_VERSION`.
 - The CLI is `mint`.
 
 Rebuild old plugins against `mint-sdk` and rename any `MLD_*` variables in your deployment. Background: [rebrand decision](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-04-30-mld-to-mint-rebrand.md).
@@ -45,16 +45,24 @@ PostgreSQL is the only supported MINT platform database. The SDK's local-db extr
 
 ## How big a deployment can MINT handle?
 
-MINT runs as a single server process. Rate limits, presence, in-flight plugin operations and update caches live in that process, so the platform refuses to start with more than one worker (the `MINT_ALLOW_MULTI_WORKER=1` override accepts the resulting misbehavior). Scale by giving the host more CPU and memory; heavy analyses run in separate job worker processes.
+MINT runs as a single server process. Rate limits, presence, the realtime event streams, in-flight plugin operations and update caches live in that process, so the platform refuses to start with more than one worker (the `MINT_ALLOW_MULTI_WORKER=1` override accepts the resulting misbehavior). Scale by giving the host more CPU and memory; heavy analyses run in separate job worker processes.
 
 ## How do I back up MINT?
 
-Two layers:
+Two layers (plus the configuration file):
 
 1. **Database** — standard `pg_dump` / `pg_dumpall` for PostgreSQL.
 2. **Filesystem** — `server.dataPath` for plugin registry state, uploaded `.mint` bundles, the plugin dependency lock, object storage, and plugin-owned files.
 
 The plugin lock history under `<server.dataPath>/plugins/locks/history/` holds rollback points for plugin package changes, but it isn't a backup substitute — it's a local rollback aid.
+
+## Which plugin permissions exist?
+
+MINT has no plugin roles. A plugin tags its endpoints, jobs, tools and pages with an access level: `use`, `configure` or `admin`. `use` needs `plugins.use` and **Plugin access** to the plugin, `configure` also needs `plugins.configure`, and `admin` needs the `admin` role. See [Plugin access levels](/admin/users-roles#plugin-access-levels).
+
+## Does MINT support push notifications?
+
+Yes, to the MINT iOS app, through Apple Push. An administrator sets up the relay or a direct `.p8` key under **Admin -> Platform -> Configuration -> Notifications**. See [Push notifications](/admin/platform-settings#push-notifications).
 
 ## Does MINT support SSO?
 
@@ -74,7 +82,7 @@ For UI, choose the plugin mode that matches the job:
 
 ## How do I update MINT?
 
-Update the platform from the admin page or with the CLI. This works for the [direct install](/admin/install-direct) and for [Docker](/admin/install-docker). Click **Apply Bundle** (or **Update** when the release has no runtime bundle) on the release card in **Admin -> Plugins -> Installed**, or run `mint platform update check` and `mint platform update apply --yes`. Then restart MINT. See [Updates](/admin/updates).
+Update the platform from the admin page or with the CLI. This works for the [direct install](/admin/install-direct) and for [Docker](/admin/install-docker). Click **Apply Bundle** (or **Update** when the release has no runtime bundle) on the release card in **Admin -> Plugins -> Installed**, or run `mint platform update check` and `mint platform update apply --yes`. Then restart MINT. See [Updates](/admin/updates). A minor update can need new plugin releases: the platform pairs them for you when you confirm the update. For the step from MINT 1.3 to 1.4, read [Upgrading from MINT 1.3](/admin/updates#upgrading-from-mint-1-3) first.
 
 The `uv tool upgrade mint-sdk` and `pipx upgrade mint-sdk` commands only update the `mint` CLI in an admin shell. They do not upgrade the running platform service.
 

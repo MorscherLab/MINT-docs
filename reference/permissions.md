@@ -18,7 +18,7 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 | `projects.create` | Create new projects |
 | `projects.edit` | Edit project metadata, change settings |
 | `projects.delete` | Delete a project |
-| `projects.manage_members` | Add / remove members and change project roles |
+| `projects.manage_members` | Add and remove members. To change the project role of a member, remove the member and add them again with the new role |
 
 ### `experiments.*` (4)
 
@@ -42,8 +42,8 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 |------------|----------------|
 | `plugins.view` | See installed plugins and their metadata |
 | `plugins.use` | Invoke plugin routes (run analyses, fill design forms, etc.) |
-| `plugins.configure` | Change plugin settings, manage per-plugin user roles |
-| `plugins.install` | Install / uninstall / upgrade plugins and roll back the [plugin dependency lock](/admin/plugins#plugin-dependency-lock) (gates the marketplace approval action) |
+| `plugins.configure` | Change plugin settings, call plugin endpoints, jobs and MCP tools with `access="configure"`, and read the plugin lock history. Replaces the former plugin-administrator role |
+| `plugins.install` | Install / uninstall / upgrade plugins, register external and Docker runtimes, roll back the [plugin dependency lock](/admin/plugins#plugin-dependency-lock), and change where plugin code comes from (private package indexes, update sources, the Prereleases toggle) |
 
 ### `jobs.*` (2)
 
@@ -87,7 +87,7 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 
 | Permission | What it grants |
 |------------|----------------|
-| `platform.configure` | Modify admin settings (SMTP, marketplace registry, observability, auth, audit retention), edit update settings and scheduled updates, apply platform updates, and use **Admin -> Platform -> Terminal** when enabled. Turning authentication off or dev mode on additionally requires the `admin` role |
+| `platform.configure` | Modify admin settings (SMTP, push, marketplace registry, observability, auth, audit and instrument history retention), edit update settings and scheduled updates, apply platform updates, and use **Admin -> Platform -> Terminal** when enabled. Turning authentication off or dev mode on additionally requires the `admin` role |
 | `platform.view_logs` | View structured logs and read the `GET /api/health/ready` readiness report |
 
 ## System roles → permissions
@@ -95,7 +95,7 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 The platform ships three system roles. Their permission sets are seeded by the platform database baseline:
 
 - **Admin** — every permission (all 25)
-- **Member** — all `projects.*` and `experiments.*` permissions, plus `instruments.view`, `plugins.view`, `plugins.use`, `plugins.configure`, `users.view`, `platform.view_logs` and `filesystem.browse`
+- **Member** (without `plugins.configure` since MINT 1.4) — all `projects.*` and `experiments.*` permissions, plus `instruments.view`, `plugins.view`, `plugins.use`, `users.view`, `platform.view_logs` and `filesystem.browse`
 - **Viewer** — `projects.view`, `experiments.view`, `instruments.view`, `plugins.view`, `users.view` and `plugins.use`
 
 Tabular form:
@@ -115,7 +115,7 @@ Tabular form:
 | `instruments.edit` | ✓ | | |
 | `plugins.view` | ✓ | ✓ | ✓ |
 | `plugins.use` | ✓ | ✓ | ✓ |
-| `plugins.configure` | ✓ | ✓ | |
+| `plugins.configure` | ✓ | | |
 | `plugins.install` | ✓ | | |
 | `jobs.read_all` | ✓ | | |
 | `jobs.manage_all` | ✓ | | |
@@ -132,7 +132,7 @@ Tabular form:
 
 Admins can build custom roles by composing any subset of the 25 permissions above.
 
-On upgrade to MINT @MINT_VERSION@, every existing role, custom roles included, receives `instruments.view`, and the `admin` role also receives `instruments.edit`. Roles created afterwards get neither automatically. Custom roles appear alongside the built-in three when assigning a user's system role. A role also has a project scope and a plugin access list (`all` or selected plugins).
+On upgrade to MINT 1.3, every existing role, custom roles included, received `instruments.view`, and the `admin` role also received `instruments.edit`. Roles created afterwards get neither automatically. On upgrade to MINT 1.4, the Member role lost `plugins.configure`; other roles keep their grants. Custom roles appear alongside the built-in three when assigning a user's system role. A role also has a project scope and a plugin access list (`all` or selected plugins; any other stored value grants no plugin). The slug of a role matches `^[a-z0-9][a-z0-9_-]*$`; only the exact slug `admin` is an administrator.
 
 ### Limits on `users.manage`
 
@@ -143,14 +143,14 @@ A non-admin with `users.manage` cannot:
 - create a user in a default role that outranks its own;
 - update, activate, deactivate, delete or reset the password of a user whose role outranks its own.
 
-These checks apply to both the `/api/admin` and legacy `/api/users` routes. The legacy `PUT /api/users/{id}/role`, `PUT /api/users/{id}/activate` and `PUT /api/users/{id}/deactivate` are deprecated: responses carry a `Deprecation` header and a `Link` to the successor, `PATCH /api/admin/users/{id}` or `POST /api/admin/users/{id}/activate|deactivate`.
+These checks apply to the `/api/admin` user routes. MINT 1.4 removed the legacy `/api/users/{id}` write routes (`PUT .../role`, `.../activate`, `.../deactivate`, `.../reset-password`, `DELETE`). Use `PATCH /api/admin/users/{id}`, `POST /api/admin/users/{id}/activate|deactivate`, `PUT /api/admin/users/{id}/reset-password` and `DELETE /api/admin/users/{id}`. Nobody can act on their own account through these routes (400), and nobody can delete, deactivate or demote the last active administrator (409).
 
 Common custom-role recipes:
 
 | Role | Permissions |
 |------|-------------|
 | **Read-only auditor** | All `*.view` permissions only |
-| **Plugin operator** | `plugins.view`, `plugins.use`, `plugins.configure` (no install) |
+| **Plugin operator** | `plugins.view`, `plugins.use`, `plugins.configure` (no install). A non-administrator needs `plugins.configure` for the `configure` access level |
 | **Plugin admin** | The Plugin operator set plus `plugins.install` |
 | **Project lead** | All `projects.*` plus all `experiments.*` |
 
@@ -179,9 +179,17 @@ Collaborators stored on an experiment grant a third tier of access for that expe
 
 Collaborator entries survive even if the user is later removed from the project — useful for cross-team work where a colleague needs to see one experiment without joining the whole project.
 
-## Plugin-internal roles
+## Plugin access levels
 
-Plugins can register their own role enum via `UserPluginRole`. These are scoped to the plugin: they don't grant any platform permissions and don't appear in this matrix. A plugin's role affects only what that plugin's own UI lets the user do. Set them under **Admin -> Plugins -> Installed -> Access control**. See [Plugin Development → Tutorials → Plugin roles](/sdk/tutorials/plugin-roles) for how plugins use them.
+There are no plugin roles. A plugin tags each endpoint, job, MCP tool and nav page with `access="use" | "configure" | "admin"`. The platform maps the level to the caller:
+
+| Level | Passes when the caller has |
+|-------|---------------------------|
+| `use` | `plugins.use` and the plugin is visible to the role (**Plugin access**) |
+| `configure` | `use`, plus `plugins.configure` |
+| `admin` | The `admin` role (every level passes) |
+
+An unknown level counts as `admin`. See [Users & Roles → Plugin access levels](/admin/users-roles#plugin-access-levels). For plugin authors, see [Plugin Development](/sdk/).
 
 ## Admin terminal
 
