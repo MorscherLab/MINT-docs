@@ -184,6 +184,8 @@ export default defineConfig({
             { text: 'PlatformContext', link: '/sdk/concepts/platform-context' },
             { text: 'Data model', link: '/sdk/concepts/data-model' },
             { text: 'Migrations', link: '/sdk/concepts/migrations' },
+            { text: 'Plugin communication (1.5 beta)', link: '/sdk/concepts/plugin-communication' },
+            { text: 'Database & revisions (1.5 beta)', link: '/sdk/concepts/database-and-revisions' },
           ],
         },
         {
