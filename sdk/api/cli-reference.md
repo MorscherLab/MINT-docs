@@ -269,7 +269,7 @@ mint dev <subcommand>     # see logs, below
 | `--platform-dir` | Path to platform directory (otherwise auto-detected) |
 | `--prefix` | Override the routes prefix for the dev proxy |
 
-`mint dev` passes the plugin's `display_name` to the platform dev proxy, and refreshes it in an existing `config.dev.toml` entry. On startup `mint dev` lists the plugin's MCP tools under their published names and prints a `mint mcp call` command to try one.
+With `--platform`, `mint dev` imports the plugin and writes its runtime manifest into the `config.dev.toml` entry: the display name, the declared and emitted events, the exports and `reads_from`/`writes`. The platform in devMode then sends bus events to the plugin and reads its exports. When the import fails, `mint dev` prints a warning and writes only the metadata it reads from the source. On startup `mint dev` lists the plugin's MCP tools under their published names and prints a `mint mcp call` command to try one.
 
 Stop with **Ctrl+C**.
 
