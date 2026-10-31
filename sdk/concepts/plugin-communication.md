@@ -71,9 +71,11 @@ class RunLog(Metadata):
 class RunLogPlugin(Plugin):
     @on("method-book.method.saved")
     async def method_saved(self, event: PluginEvent[MethodSaved]) -> None:
-        if event.id <= self.last_event_id:
-            return  # a repeated or older delivery
+        key = event.payload.method_id
+        if event.id <= self.last_event_ids.get(key, 0):
+            return  # a repeated or older event of this method
         ...
+        self.last_event_ids[key] = event.id
 ```
 
 | `PluginEvent` field | Meaning |
@@ -81,7 +83,7 @@ class RunLogPlugin(Plugin):
 | `id` | Number of the event. It increases with each published event. |
 | `name`, `source` | Event name and publishing plugin |
 | `experiment_id` | Experiment of the event, or `None` |
-| `actor` | User who published the event, or `None` |
+| `actor` | User who published the event, or `None` when the handler runs in the scope of your plugin |
 | `attempt` | Number of deliveries of this event to your plugin, from 1 |
 | `payload` | Payload, validated into your model |
 
@@ -90,10 +92,10 @@ class RunLogPlugin(Plugin):
 - The platform writes the event in the transaction of the write. It delivers the event after the commit.
 - Delivery is at least once. Your handler can receive the same event more than once.
 - Delivery has no fixed order.
-- Dedupe on `event.id`. Store the last event number in the plugin database.
+- Dedupe on `event.id` for each record. Store the last event number of each key in the plugin database. Do not keep one number for all events: a failed event that the platform retries after a later event would then be dropped.
 - The platform retries a failed delivery with a delay. After five attempts the delivery is dead.
-- An administrator sees recent and dead deliveries in **Admin > Plugins > Event deliveries**. The administrator can retry a dead delivery.
-- The platform delivers the events after a platform restart or a subscriber outage.
+- A user with the `plugins.configure` permission sees recent and dead deliveries in **Admin > Plugins > Event deliveries**. That user can retry a dead delivery.
+- The events stay in the database through a platform restart. While a subscriber process starts, its deliveries wait. The platform skips a delivery to a disabled or uninstalled plugin.
 
 ### Identity
 
