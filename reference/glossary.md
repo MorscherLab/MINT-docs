@@ -103,7 +103,7 @@ An Alembic revision under `api/db_revisions/` that the platform applies on start
 A schema change for a plugin's own tables. A plugin opts into the shared Alembic runtime with `Metadata.database = MigrationSpec(...)` from `mint_sdk.migrations`; the platform runs revisions under a migration lock, and a failed migration keeps the plugin disabled. The older `PluginMigration` runner was removed in MINT 1.4; a plugin that still uses it stays disabled.
 
 **MINT**
-Mass-spec INtegrated Toolkit. The current name for the platform formerly called MLD. Rebrand landed alongside `v1.0.0`.
+Mass-spec Infrastructure for Next-generation Toolkits. The current name for the platform formerly called MLD. Rebrand landed alongside `v1.0.0`.
 
 **MLD**
 The historical name of the platform — Morscher Laboratory Database. Now retired in favor of MINT.

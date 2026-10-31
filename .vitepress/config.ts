@@ -4,7 +4,7 @@ import { currentDocsVersion, versionNav } from './versions'
 
 export default defineConfig({
   title: 'MINT',
-  description: 'Mass-spec INtegrated Toolkit — user manual for the MINT lab platform (formerly MLD)',
+  description: 'Mass-spec Infrastructure for Next-generation Toolkits — user manual for the MINT lab platform (formerly MLD)',
   lang: 'en-US',
 
   cleanUrls: true,

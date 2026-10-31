@@ -1,6 +1,6 @@
 # MINT Docs
 
-The user-facing documentation site for [MINT](https://github.com/MorscherLab/MINT) — Mass-spec INtegrated Toolkit (formerly MLD). Built with [VitePress](https://vitepress.dev/), deployed to **mint-docs.morscherlab.org** via GitHub Pages.
+The user-facing documentation site for [MINT](https://github.com/MorscherLab/MINT) — Mass-spec Infrastructure for Next-generation Toolkits (formerly MLD). Built with [VitePress](https://vitepress.dev/), deployed to **mint-docs.morscherlab.org** via GitHub Pages.
 
 This repository contains the user manual and the Plugin Development documentation track: install guides, workflow walkthroughs, UI tour, FAQ, glossary, user-level CLI usage, SDK concepts, tutorials, recipes, frontend SDK guidance, operations, and API reference. The platform repository remains the implementation source of truth.
 

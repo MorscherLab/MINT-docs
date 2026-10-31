@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: MINT
-  text: Mass-spec INtegrated Toolkit
+  text: Mass-spec Infrastructure for Next-generation Toolkits
   tagline: Plan experiments, group them into projects, and run analysis plugins for LC-MS, drug-response prediction, chemical drawing, and more, all in one lab web app.
   image:
     src: /mint-icon.svg

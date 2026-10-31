@@ -14,7 +14,7 @@ It's especially well-suited to wet-lab teams that want a single browser-based ho
 
 ## Coming from MLD?
 
-MLD (Morscher Laboratory Database) was the platform's original name. It was renamed **MINT** — Mass-spec INtegrated Toolkit — with `v1.0.0`, and the rename is complete:
+MLD (Morscher Laboratory Database) was the platform's original name. It was renamed **MINT** — Mass-spec Infrastructure for Next-generation Toolkits — with `v1.0.0`, and the rename is complete:
 
 - Packages are `mint-sdk` (PyPI) and `@morscherlab/mint-sdk` (npm). The `mld-sdk` packages are frozen and receive no releases.
 - Plugins are discovered only through the `mint.plugins` entry-point group. A plugin that still declares `mld.plugins` is not loaded, and no error is shown.

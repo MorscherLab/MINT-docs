@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-User-facing documentation site for [MINT](https://github.com/MorscherLab/MINT) — Mass-spec INtegrated Toolkit (formerly MLD). Built with VitePress, deployed to **mint-docs.morscherlab.org** via GitHub Pages on every push to `main`.
+User-facing documentation site for [MINT](https://github.com/MorscherLab/MINT) — Mass-spec Infrastructure for Next-generation Toolkits (formerly MLD). Built with VitePress, deployed to **mint-docs.morscherlab.org** via GitHub Pages on every push to `main`.
 
 This repo contains the **user-facing manual** and the **Plugin Development** documentation track: install, workflow walkthroughs, UI tour, FAQ, glossary, admin-level `mint` CLI usage (`/admin/cli`), SDK concepts, tutorials, recipes, frontend component/composable guidance, operations, and API reference. The platform repository is still the source of truth for implementation, so verify SDK signatures and schema details against `../MINT-platform/MINT` before changing reference pages.
 
