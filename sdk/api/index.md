@@ -8,7 +8,7 @@ This section is intentionally **not** the front door for plugin development. Sta
 
 | Area | Page |
 |------|------|
-| Python SDK exports | [Python SDK](/sdk/api/python) |
+| Python SDK exports (declaration, context, jobs, MCP, testing) | [Python SDK](/sdk/api/python) |
 | Frontend SDK exports | [Frontend SDK](/sdk/api/frontend) |
 | Migration framework | [Migrations](/sdk/api/migrations) |
 | Typed REST client | [REST client](/sdk/api/client) |
@@ -21,7 +21,7 @@ The SDK source is the canonical reference:
 
 - [`MINT/packages/sdk-python/src/mint_sdk/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk) — every Python module
 - [`MINT/packages/sdk-frontend/src/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src) — every component, composable, and type
-- [`MINT/packages/sdk-python/src/mint_sdk/__init__.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/__init__.py) — the canonical Python export list
+- [`MINT/packages/sdk-python/src/mint_sdk/__init__.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/__init__.py) — the canonical Python export list (the L1 and L2 author names; import every other name from its module)
 - [`MINT/packages/sdk-frontend/src/composables/index.ts`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/index.ts) — the canonical frontend composable list
 
 When this manual disagrees with the source, the source wins. Open a docs issue if you spot a divergence.

@@ -85,17 +85,18 @@ OpenTelemetry tracing is wired by the platform's `observability/tracing.py`. Whe
 For custom spans inside your plugin:
 
 ```python
+from mint_sdk import Plugin
 from opentelemetry import trace
 
 tracer = trace.get_tracer(__name__)
 
-class MyPlugin(AnalysisPlugin):
+class MyPlugin(Plugin):
     async def run_analysis(self, experiment_id: int):
         with tracer.start_as_current_span(
             "my_plugin.run_analysis",
             attributes={
                 "experiment_id": experiment_id,
-                "plugin": self.metadata.name,
+                "plugin": self.name,
             },
         ) as span:
             result = await self._compute(experiment_id)

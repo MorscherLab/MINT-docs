@@ -13,13 +13,13 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 
 | Recipe | When |
 |--------|------|
-| [Writing results](/sdk/recipes/writing-results) | Save named `AnalysisArtifact` outputs, preserve visible run history, and publish file-backed artifacts |
+| [Writing results](/sdk/recipes/writing-results) | Save named `Artifact` outputs, preserve visible run history, and publish file-backed artifacts |
 
 ## Permissions and identity
 
 | Recipe | When |
 |--------|------|
-| [Route permissions](/sdk/recipes/route-permissions) | Typed actors, SDK permission guards and experiment visibility |
+| [Route permissions](/sdk/recipes/route-permissions) | Typed actors, `access` levels and experiment visibility |
 
 ## AI assistants
 
@@ -39,7 +39,7 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 |--------|------|
 | [Error handling](/sdk/recipes/error-handling) | Typed SDK errors, HTTP envelopes and request IDs |
 | [Logging & tracing](/sdk/recipes/logging-tracing) | Stdlib `logging` in the platform formatter; request IDs and spans |
-| [Testing plugins](/sdk/recipes/testing-plugins) | `RecordingContext`, route tests, `PluginTestHarness` job tests, migrations |
+| [Testing plugins](/sdk/recipes/testing-plugins) | `RecordingContext`, `Harness` route and job tests, migrations |
 
 ## Schema evolution
 

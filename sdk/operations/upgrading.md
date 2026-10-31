@@ -1,6 +1,6 @@
 # Upgrading the SDK
 
-Platform, Python SDK and frontend SDK releases share one `v*` release tag; your plugin keeps its own version. Read the [platform changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md) and [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md), or the [notable changes](/changelog#notable-changes-in-1-3), before changing dependencies. Moving a plugin from 1.2? Also follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3). A plugin still on 1.1 moves through [Migrate from 1.1 to 1.2](/sdk/operations/migrate-1.1-to-1.2) first.
+Platform, Python SDK and frontend SDK releases share one `v*` release tag; your plugin keeps its own version. Read the [platform changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md) and [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md), or the [notable changes](/changelog), before changing dependencies. Moving a plugin from 1.3? Follow [Migrate from 1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4). Moving a plugin from 1.2? Follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3) first. A plugin still on 1.1 moves through [Migrate from 1.1 to 1.2](/sdk/operations/migrate-1.1-to-1.2) first.
 
 ## Prepare the project and target platform
 
@@ -10,8 +10,8 @@ The platform requires PostgreSQL; local SQLite is still supported for
 standalone plugin development. Platform upgrades and plugin SDK upgrades are
 separate operations.
 
-Use a 1.3 CLI to perform the upgrade, even if the project's environment still
-contains SDK 1.2:
+Use a 1.4 CLI to perform the upgrade, even if the project's environment still
+contains an older SDK:
 
 ```bash
 uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
@@ -24,22 +24,22 @@ synchronization, so they run the SDK selected by that project's environment.
 
 Check compatibility declarations. The platform refuses a plugin whose
 `mint-sdk` requirement excludes the platform's SDK, so a project constrained to
-`<1.3` must have that ceiling raised before it can run on 1.3. For a plugin that
-now requires the released 1.3 APIs, use:
+`<1.4` must have that ceiling raised before it can run on 1.4. For a plugin that
+now requires the released 1.4 APIs, use:
 
 ```toml
 [project]
-dependencies = ["mint-sdk>=@MINT_VERSION@,<1.4"]
+dependencies = ["mint-sdk>=@MINT_VERSION@,<2.0"]
 
 [dependency-groups]
 dev = [
-  "mint-sdk[cli,server]>=@MINT_VERSION@,<1.4",
+  "mint-sdk[cli,server]>=@MINT_VERSION@,<2.0",
   "pytest>=9.1.1",
   "pytest-asyncio>=1.4.0",
 ]
 
 [tool.mint]
-requires_mint = ">=@MINT_VERSION@,<1.4"
+requires_mint = ">=@MINT_VERSION@,<2.0"
 ```
 
 Merge these entries into the scaffold; keep your plugin's scientific and other
@@ -64,14 +64,14 @@ The SDK owns the versions of FastAPI, Starlette, Pydantic, HTTPX and the other s
 ## Select one SDK release
 
 ```bash
-mint sdk update . --version @MINT_VERSION@ --dry-run
-mint sdk update . --version @MINT_VERSION@
+mint sdk update --version @MINT_VERSION@ --dry-run
+mint sdk update --version @MINT_VERSION@
 ```
 
 The updater selects a common release available on PyPI and npm when both SDKs
 are declared. It synchronizes Python and frontend lockfiles to that release,
 normalizes supported legacy Python pins, and removes redundant SDK-owned framework
-dependencies. When the target is a 1.3 release, it raises `requires-python` to
+dependencies. When the target is a 1.3 or later release, it raises `requires-python` to
 `>=3.14`. It only raises the value: upper bounds, exclusions, `~=`/`==` clauses
 and a stricter floor stay, and it refuses a result that excludes 3.14 (for
 example `<3.14` or `==3.12.*`). It does not rewrite AI instruction files
@@ -84,8 +84,8 @@ raise it yourself when your code begins using a new API. The updater rejects a
 target excluded by Python upper bounds/exclusions or `[tool.mint].requires_mint`,
 with one exception: an explicit `--version` on a newer supported minor moves every
 `mint-sdk` requirement (dependencies, optional dependencies and dependency groups)
-to `>=VERSION,<next-minor` and widens a `requires_mint` that excludes it to the
-same range.
+to `>=VERSION,<next-ceiling` and widens a `requires_mint` that excludes it to the
+same range. The ceiling is the next major (`<2.0`) from a 1.4 or later target, and the next minor before that. `mint sdk update` and `mint doctor --fix` also remove the packages that `mint-sdk` supplies: a `typer`, `uvicorn` or `httpx2` in a dev group becomes `mint-sdk[cli,server]` in that group, with the range of the project's `mint-sdk`.
 
 | Command option | Use |
 |---|---|
@@ -106,10 +106,10 @@ the dependency files it snapshotted; restoring installed environments
 is best effort. Re-sync before continuing after a failure.
 
 The updater selects the newest candidate first, then checks bounds; it does
-not search backward for the newest allowed version. A plugin declaring `<1.4`
-can therefore fail with `--scope minor` once 1.4 exists. Use patch updates for
-a fixed 1.3 support line, or move to the next minor with `--version` on an
-upgrade branch.
+not search backward for the newest allowed version. A plugin declaring `<1.5`
+can therefore fail with `--scope minor` once 1.5 exists. Use patch updates for
+a fixed support line, or move to the next minor with `--version` on an
+upgrade branch. A plugin that declares `<2.0` follows 1.x releases without a range change.
 
 ## Regenerate, test and install
 
@@ -134,8 +134,8 @@ bun run build
 Then build and exercise the real installation path:
 
 ```bash
-uv run mint build .
-uv run mint verify . --bundle dist/my-plugin-0.2.0.mint
+uv run mint build
+uv run mint verify --bundle dist/my-plugin-0.2.0.mint
 ```
 
 Replace the bundle filename with the artifact actually produced. Docker must be

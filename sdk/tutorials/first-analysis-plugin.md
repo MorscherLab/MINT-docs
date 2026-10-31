@@ -6,11 +6,11 @@ By the end you will have:
 
 - A real `mint init --mode generated` project
 - One typed `@job`
-- A job test that uses the SDK runtime through `PluginTestHarness`
+- A job test that uses the SDK runtime through `Harness`
 - A `.mint` bundle ready to install
 
 **Time:** 20-30 minutes
-**Prereqs:** Python 3.14+, `uv`, and the MINT v1.3 SDK. Install the CLI with `uv tool install "mint-sdk[cli]==@MINT_VERSION@"`; the generated project has its own environment.
+**Prereqs:** Python 3.14+, `uv`, and the MINT SDK 1.4. Install the CLI with `uv tool install "mint-sdk[cli]==@MINT_VERSION@"`; the generated project has its own environment.
 
 ::: info Current CLI shape
 MINT v@MINT_VERSION@ does not have `mint add job`. Start a job-based plugin with `mint init --mode generated`, or add `@job` methods directly to an existing plugin class.
@@ -75,26 +75,19 @@ Both should pass before you change anything.
 Open `src/mint_plugin_hello_mint/plugin.py`. The important parts look like this:
 
 ```python
-from mint_sdk import (
-    AnalysisPlugin,
-    PluginCapabilities,
-    PluginType,
-    generated_ui,
-    job,
-    mint_plugin,
-)
+from mint_sdk import Metadata, Plugin, job, plugin
 
 
-@mint_plugin(
-    analysis_type="custom",
-    routes_prefix="/hello-mint",
-    plugin_type=PluginType.ANALYSIS,
-    capabilities=PluginCapabilities(),
-    icon="M4 19h16M7 16V8m5 8V4m5 12v-6",
-)
-@generated_ui()
-class HelloMintPlugin(AnalysisPlugin):
-    @job(cpu=1)
+class HelloMint(Metadata):
+    domain = "custom"
+    title = "Hello MINT"
+    icon = "M4 19h16M7 16V8m5 8V4m5 12v-6"
+    ui = "generated"
+
+
+@plugin(HelloMint)
+class HelloMintPlugin(Plugin):
+    @job()
     def analyze(self, value: float = 1.0) -> dict[str, float]:
         return {
             "input": value,
@@ -102,36 +95,36 @@ class HelloMintPlugin(AnalysisPlugin):
         }
 ```
 
-Three decorators do the work:
+Three declarations do the work:
 
-| Decorator | What it declares |
-|-----------|------------------|
-| `@mint_plugin(...)` | Plugin metadata, route prefix, type, capabilities, icon, navigation, and optional settings model |
-| `@generated_ui()` | The plugin uses the SDK-managed form/result workspace |
-| `@job(...)` | A typed calculation the runtime can submit, track, cancel, and render |
+| Declaration | What it declares |
+|-------------|------------------|
+| `Metadata` subclass | Plugin title, icon, pages, write set, settings model and `ui = "generated"` |
+| `@plugin(HelloMint)` | Joins the class to its `Metadata` |
+| `@job()` | A typed calculation the runtime can submit, track, cancel, and render. `@job(Spec)` takes a `Job` subclass with options such as `cpu` or `access` |
 
-The package name and dependency constraints live in `pyproject.toml`. The scaffold uses `dynamic = ["version"]` with `hatch-vcs`; Git tags supply the package version, with `0.1.0` as the fallback before a tag exists. Do not duplicate package identity inside the class. See [packaging](/sdk/operations/packaging) for bundle and release versioning.
+The package name and dependency constraints live in `pyproject.toml`. The scaffold uses `dynamic = ["version"]` with `hatch-vcs`; Git tags supply the package version, with `0.1.0` as the fallback before a tag exists. The plugin name is the key of the `mint.plugins` entry point; do not duplicate package identity inside the class. The route prefix defaults to `/hello-mint`. See [packaging](/sdk/operations/packaging) for bundle and release versioning.
 
-`PluginCapabilities()` uses the `ANALYSIS` default write policy: it can write its own analysis results when integrated, but cannot create experiments or change design data. The sample calculation uses no platform repository and saves no experiment artifact. Add `requires_auth=True` and the required platform capabilities when connecting real data; a generated form alone does not authorize access to experiments.
+`Metadata.writes` defaults to `{"artifacts"}`: the plugin can write its own analysis results when integrated, but cannot create experiments or change design data. The sample calculation uses no platform data and saves no experiment artifact. A generated form alone does not authorize access to experiments; platform authentication is on by default (`auth = True`).
 
 ## 3. Run the Job Test
 
 Open `tests/test_plugin.py`:
 
 ```python
-from mint_sdk.testing import PluginTestHarness
+from mint_sdk.testing import Harness
 
 from mint_plugin_hello_mint.plugin import HelloMintPlugin
 
 
 def test_generated_manifest_exposes_job() -> None:
-    with PluginTestHarness(HelloMintPlugin) as harness:
-        completed = harness.run("analyze", value=2.5)
+    with Harness(HelloMintPlugin) as harness:
+        run = harness.run(HelloMintPlugin.analyze, value=2.5)
 
-    assert completed.value == {"input": 2.5, "doubled": 5.0}
+    assert run.value == {"input": 2.5, "doubled": 5.0}
 ```
 
-`PluginTestHarness` starts the real standalone plugin app, submits the job through the SDK job API, waits for completion, and loads the standardized result payload. This catches more integration drift than calling `HelloMintPlugin().analyze()` directly.
+`Harness` starts the real standalone plugin app, submits the job through the SDK job API, waits for completion, and returns a `Run` with the result value. This catches more integration drift than calling `HelloMintPlugin().analyze()` directly.
 
 Run it:
 
@@ -148,17 +141,21 @@ from typing import Annotated
 
 from pydantic import Field
 
+from mint_sdk import Job
+
 Intensity = Annotated[float, Field(ge=0, allow_inf_nan=False)]
+
+
+class Normalize(Job):
+    title = "Normalize intensities"
+    description = "Divide every value by the largest submitted intensity."
+    cpu = 1
 ```
 
 Then replace the method inside `HelloMintPlugin`:
 
 ```python
-@job(
-    title="Normalize intensities",
-    description="Divide every value by the largest submitted intensity.",
-    cpu=1,
-)
+@job(Normalize)
 def analyze(
     self,
     values: Annotated[list[Intensity], Field(min_length=1)],
@@ -178,7 +175,7 @@ Update `tests/test_plugin.py`:
 
 ```python
 import pytest
-from mint_sdk.testing import PluginTestHarness
+from mint_sdk.testing import Harness
 
 from mint_plugin_hello_mint.plugin import HelloMintPlugin
 
@@ -195,10 +192,10 @@ from mint_plugin_hello_mint.plugin import HelloMintPlugin
     ],
 )
 def test_normalization(values: list[float], expected: dict[str, object]) -> None:
-    with PluginTestHarness(HelloMintPlugin) as harness:
-        completed = harness.run("analyze", values=values)
+    with Harness(HelloMintPlugin) as harness:
+        run = harness.run(HelloMintPlugin.analyze, values=values)
 
-    assert completed.value == expected
+    assert run.value == expected
 ```
 
 Checkpoint:
@@ -226,7 +223,7 @@ By default the plugin backend serves:
 http://127.0.0.1:8003/api/hello-mint
 ```
 
-Because the plugin uses `@generated_ui()`, the same process also serves the generated workspace below the plugin route prefix:
+Because the `Metadata` sets `ui = "generated"`, the same process also serves the generated workspace below the plugin route prefix:
 
 ```text
 http://127.0.0.1:8003/hello-mint
@@ -243,7 +240,7 @@ Run the release checks you should expect in CI:
 ```bash
 mint doctor --strict
 uv run pytest -q
-mint build .
+mint build
 ```
 
 The bundle lands in:
@@ -259,7 +256,7 @@ A `.mint` bundle contains the plugin wheel, manifest, and any bundled frontend a
 Check the real install path in a disposable platform container (requires Docker):
 
 ```bash
-mint verify .
+mint verify
 ```
 
 `mint verify` builds the bundle, boots the MINT platform image, installs the bundle through the normal upload path, restarts, and waits until the plugin loads.
@@ -267,8 +264,8 @@ mint verify .
 Then deploy to a test platform you administer:
 
 ```bash
-mint auth login --url https://mint-test.example.org
-mint deploy . --to https://mint-test.example.org
+mint platform auth login --url https://mint-test.example.org
+mint deploy --to https://mint-test.example.org
 ```
 
 `mint deploy` builds the same bundle, uploads it, restarts the platform, and confirms the restart by the new server `boot_id`. The restart requires the `platform.configure` permission; `--timeout` (default 180 s) covers the restart and the plugin load together. Use a test platform, not production.
@@ -277,10 +274,10 @@ mint deploy . --to https://mint-test.example.org
 
 You now have a generated-mode analysis plugin that:
 
-- Declares metadata with `@mint_plugin`
+- Declares metadata with `Metadata` and `@plugin`
 - Exposes one typed `@job`
 - Lets the SDK provide the standard form/result UI
-- Tests the real job runtime with `PluginTestHarness`
+- Tests the real job runtime with `Harness`
 - Builds into an installable `.mint` bundle
 
 ## Next

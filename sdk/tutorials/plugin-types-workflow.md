@@ -1,8 +1,8 @@
 # Tutorial — Create a Workflow Plugin
 
-Build **batch-coordinator**, a `WORKFLOW` plugin that lists visible experiments and creates experiment records for downstream design and analysis plugins. It deliberately declares no design-data or result writes.
+Build **batch-coordinator**, a workflow plugin (`writes = {"experiments"}`) that lists visible experiments and creates experiment records for downstream design and analysis plugins. It deliberately declares no design-data or result writes.
 
-This tutorial targets **MINT v@MINT_VERSION@**. A workflow is a plugin category and access policy; it does not automatically schedule jobs or invoke other plugins.
+This tutorial targets **MINT v@MINT_VERSION@**. A workflow is a plugin category and write policy; it does not automatically schedule jobs or invoke other plugins.
 
 ## 1. Scaffold a standard plugin
 
@@ -16,27 +16,26 @@ mint init batch-coordinator \
 cd batch-coordinator
 ```
 
-The project contains a FastAPI backend, Vue workspace, generated client, tests, and build workflows. `--type workflow` is supported in v1.2 even though the CLI's help description omits it. Generated mode accepts only `analysis`.
+The project contains a FastAPI backend, Vue workspace, generated client, tests, and build workflows. `--type workflow` is supported even though the CLI's help description omits it. Generated mode accepts only `analysis`.
 
-Inspect the scaffold's decorator: it already declares `experiment_crud=True`, `design_data_write=False`, and `analysis_result_write=False`. Add authentication and an experiment integration declaration when replacing the example endpoint below.
+Inspect the scaffold's `Metadata`: it already sets `writes = {"experiments"}`, which gives experiment CRUD and no design-data or result writes. `auth` defaults to `True`.
 
 ## 2. Add platform-backed endpoints
 
 Replace `src/mint_plugin_batch_coordinator/plugin.py`:
 
 ```python
-from fastapi import HTTPException
 from pydantic import BaseModel, Field
 
 from mint_sdk import (
-    AnalysisPlugin,
-    CurrentPluginActor,
-    PluginCapabilities,
-    PluginType,
+    CurrentActor,
+    Metadata,
+    Plugin,
+    PermissionException,
+    UnavailableException,
     endpoint,
-    mint_plugin,
+    plugin,
 )
-from mint_sdk.app import require_context
 
 
 class CreateExperimentRequest(BaseModel):
@@ -52,33 +51,29 @@ class ExperimentSummary(BaseModel):
     status: str
 
 
-class ExperimentPage(BaseModel):
+class ExperimentList(BaseModel):
     items: list[ExperimentSummary]
-    total: int
 
 
-@mint_plugin(
-    analysis_type="workflow",
-    routes_prefix="/batch-coordinator",
-    plugin_type=PluginType.WORKFLOW,
-    capabilities=PluginCapabilities(
-        requires_auth=True,
-        requires_experiments=True,
-        experiment_crud=True,
-        design_data_write=False,
-        analysis_result_write=False,
-    ),
-)
-class BatchCoordinatorPlugin(AnalysisPlugin):
-    @endpoint.get("/experiments", response_model=ExperimentPage)
-    async def list_experiments(self, actor: CurrentPluginActor) -> ExperimentPage:
-        context = require_context(self.context)
+class BatchCoordinatorMeta(Metadata):
+    domain = "workflow"
+    title = "Batch Coordinator"
+    writes = {"experiments"}
+
+
+@plugin(BatchCoordinatorMeta)
+class BatchCoordinatorPlugin(Plugin):
+    def _require_platform(self) -> None:
+        if self.is_standalone:
+            raise UnavailableException("Experiments need the MINT platform")
+
+    @endpoint.get("/experiments", response_model=ExperimentList)
+    async def list_experiments(self, actor: CurrentActor) -> ExperimentList:
+        self._require_platform()
         if not actor.has_permission("experiments.view"):
-            raise HTTPException(403, "Requires experiments.view permission")
-        experiments, total = await context.get_experiment_repository().list_all(
-            limit=50,
-        )
-        return ExperimentPage(
+            raise PermissionException("Requires experiments.view permission")
+        experiments = await self.context.experiments.list(limit=50)
+        return ExperimentList(
             items=[
                 ExperimentSummary(
                     id=item.id,
@@ -88,25 +83,20 @@ class BatchCoordinatorPlugin(AnalysisPlugin):
                 )
                 for item in experiments
             ],
-            total=total,
         )
 
     @endpoint.post("/experiments", response_model=ExperimentSummary)
     async def create_experiment(
         self,
         body: CreateExperimentRequest,
-        actor: CurrentPluginActor,
+        actor: CurrentActor,
     ) -> ExperimentSummary:
-        context = require_context(self.context)
+        self._require_platform()
         if not actor.has_permission("experiments.create"):
-            raise HTTPException(403, "Requires experiments.create permission")
-        name = body.name.strip()
-        if not name:
-            raise HTTPException(422, "Experiment name must not be blank")
-        experiment = await context.get_experiment_repository().create(
-            name=name,
-            experiment_type=body.experiment_type,
-            created_by=int(actor.user_id),
+            raise PermissionException("Requires experiments.create permission")
+        experiment = await self.context.experiments.create(
+            body.name.strip(),
+            body.experiment_type,
             notes=body.notes,
         )
         return ExperimentSummary(
@@ -117,11 +107,11 @@ class BatchCoordinatorPlugin(AnalysisPlugin):
         )
 ```
 
-`CurrentPluginActor` supplies platform-authenticated identity. The request cannot choose its `created_by` value. The route checks `experiments.create`; the scoped repository also checks this plugin's write policy and the platform-owned experiment-type allowlist. Use an experiment type configured for your MINT installation.
+`CurrentActor` supplies platform-authenticated identity. The platform makes the calling user the creator, and the request cannot choose it. The route checks `experiments.create`; the scoped namespace also checks this plugin's write policy and the platform-owned experiment-type allowlist. Use an experiment type configured for your MINT installation.
 
-The list requires `experiments.view` and returns at most 50 visible experiments plus the total. Add explicit pagination parameters if this workspace must browse larger collections.
+The list requires `experiments.view` and returns at most 50 visible experiments (newest first). Add filters (`status`, `type`, `project`, `search`) if this workspace must browse larger collections.
 
-The routes do not call `save_design()` or `save_analysis_artifacts()`: the design plugin owns scientific inputs, and the analysis plugin owns outputs. Even if an accidental call is added later, this plugin's explicit write policy denies it.
+The routes do not call `design.save()` or `artifacts.save_all()`: the design plugin owns scientific inputs, and the analysis plugin owns outputs. Even if an accidental call is added later, this plugin's write set denies it.
 
 ## 3. Verify standalone behavior
 
@@ -130,27 +120,22 @@ The routes do not call `save_design()` or `save_analysis_artifacts()`: the desig
 Replace the scaffolded backend tests with:
 
 ```python
-from fastapi.testclient import TestClient
-from mint_sdk.models import resolve_plugin_access_policy
-from mint_sdk.app import create_standalone_app
-from pytest import MonkeyPatch
+from mint_sdk.testing import Harness
 
 from mint_plugin_batch_coordinator.plugin import BatchCoordinatorPlugin
 
 
-def test_workflow_policy_and_standalone_boundary(monkeypatch: MonkeyPatch) -> None:
+def test_workflow_policy_and_standalone_boundary() -> None:
     plugin = BatchCoordinatorPlugin()
-    metadata = plugin.metadata
-    policy = resolve_plugin_access_policy(metadata.plugin_type, metadata.capabilities)
-    assert policy.experiment_crud
-    assert not policy.design_data_write
-    assert not policy.analysis_result_write
+    assert plugin.metadata.plugin_type == "workflow"
+    capabilities = plugin.metadata.capabilities
+    assert capabilities.experiment_crud
+    assert not capabilities.design_data_write
+    assert not capabilities.analysis_result_write
 
-    # This backend test does not require a built frontend/dist/index.html.
-    monkeypatch.setattr(plugin, "get_frontend_dir", lambda: None)
-    with TestClient(create_standalone_app(plugin, environ={})) as client:
-        listed = client.get("/api/batch-coordinator/experiments")
-        created = client.post(
+    with Harness(BatchCoordinatorPlugin) as harness:
+        listed = harness.client.get("/api/batch-coordinator/experiments")
+        created = harness.client.post(
             "/api/batch-coordinator/experiments",
             json={"name": "QC batch", "experiment_type": "custom"},
         )
@@ -171,13 +156,12 @@ The generated contract changes when the routes change. Replace `frontend/src/vie
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import {
-  useGeneratedPluginClient,
+  useClient,
   type ExperimentSummary,
 } from '../generated/mint-plugin'
 
-const client = useGeneratedPluginClient()
+const client = useClient()
 const experiments = ref<ExperimentSummary[]>([])
-const total = ref(0)
 const name = ref('')
 const experimentType = ref('')
 const busy = ref(false)
@@ -186,7 +170,6 @@ const error = ref('')
 async function refresh(): Promise<void> {
   const page = await client.listExperiments()
   experiments.value = page.items
-  total.value = page.total
 }
 
 async function load(): Promise<void> {
@@ -237,7 +220,7 @@ onMounted(load)
       </fieldset>
     </form>
     <button type="button" :disabled="busy" @click="load">Refresh</button>
-    <p aria-live="polite">{{ experiments.length }} of {{ total }} visible experiments</p>
+    <p aria-live="polite">{{ experiments.length }} visible experiments</p>
     <ul>
       <li v-for="experiment in experiments" :key="experiment.id">
         {{ experiment.name }} — {{ experiment.experiment_type }} — {{ experiment.status }}
@@ -247,7 +230,7 @@ onMounted(load)
 </template>
 ```
 
-The generated v1.2 methods here are `listExperiments()` and `createExperiment(body)`. The client supplies the configured route prefix and authentication integration. The frontend displays HTTP errors, including the standalone 503; the backend remains responsible for permission checks.
+The generated methods here are `listExperiments()` and `createExperiment(body)`. The client supplies the configured route prefix and authentication integration. The frontend displays HTTP errors, including the standalone 503; the backend remains responsible for permission checks.
 
 Replace the scaffold's `WorkspaceView.test.ts` with a check of the actual request contract:
 
@@ -261,13 +244,13 @@ const client = vi.hoisted(() => ({
   createExperiment: vi.fn(),
 }))
 vi.mock('../generated/mint-plugin', () => ({
-  useGeneratedPluginClient: () => client,
+  useClient: () => client,
 }))
 
 it('creates an experiment and refreshes the visible list', async () => {
   const experiment = { id: 7, name: 'QC batch', experiment_type: 'custom', status: 'planned' }
-  client.listExperiments.mockResolvedValueOnce({ items: [], total: 0 })
-  client.listExperiments.mockResolvedValueOnce({ items: [experiment], total: 1 })
+  client.listExperiments.mockResolvedValueOnce({ items: [] })
+  client.listExperiments.mockResolvedValueOnce({ items: [experiment] })
   client.createExperiment.mockResolvedValue(experiment)
   const wrapper = mount(WorkspaceView)
   await flushPromises()
@@ -280,7 +263,7 @@ it('creates an experiment and refreshes the visible list', async () => {
   expect(client.createExperiment).toHaveBeenCalledWith({
     name: 'QC batch', experiment_type: 'custom',
   })
-  expect(wrapper.text()).toContain('1 of 1 visible experiments')
+  expect(wrapper.text()).toContain('1 visible experiments')
   expect(wrapper.get('li').text()).toContain('QC batch')
 })
 ```
@@ -297,15 +280,15 @@ bun run type-check
 bun run test
 cd ..
 mint sdk generate --check
-mint build .
+mint build
 ```
 
 Check that the bundle installs and loads, then deploy it to a test platform you administer:
 
 ```bash
-mint verify .
-mint auth login --url https://mint-test.example.org
-mint deploy . --to https://mint-test.example.org
+mint verify
+mint platform auth login --url https://mint-test.example.org
+mint deploy --to https://mint-test.example.org
 ```
 
 `mint verify` boots the MINT platform image in Docker, installs the bundle through the normal upload path, restarts, and waits until the plugin loads. `mint deploy` uploads the same bundle, restarts the platform (requires `platform.configure`), and confirms the restart by the new server `boot_id`; `--timeout` (default 180 s) covers restart and load together.
@@ -315,28 +298,28 @@ On the test platform, configure the plugin's allowed experiment types. Then veri
 | Action | Expected result |
 |---|---|
 | List while signed in | Only experiments visible to the current actor and compatible with this plugin |
-| Create with `experiments.create` permission | New experiment owned by the authenticated actor |
+| Create with `experiments.create` permission | New experiment created by the authenticated actor |
 | Create without `experiments.create` | HTTP 403 |
 | Submit an experiment type outside the plugin allowlist | Rejected by platform scope |
 | Write this plugin's design data or analysis result | Rejected by explicit write policy |
 | Load an experiment created by another plugin | Existing design ownership and results remain unchanged |
 
-The local test verifies policy resolution and the standalone boundary. It does not replace installed-platform authorization tests. `mint dev --platform` registers a dev proxy; it does not turn the local process into an installed plugin with all platform services.
+The local test verifies the declared write set and the standalone boundary. It does not replace installed-platform authorization tests. `mint dev --platform` registers a dev proxy; it does not turn the local process into an installed plugin with all platform services.
 
 ## 5. Extend the workflow deliberately
 
-For existing experiments, the repository exposes:
+For existing experiments, the namespace exposes:
 
 ```python
-experiment = await repository.get_by_id(experiment_id)
-updated = await repository.update(experiment_id, notes="Awaiting acquisition")
-deleted = await repository.delete(experiment_id)
+experiment = await self.context.experiments.get(experiment_id)
+updated = await self.context.experiments.update(experiment_id, notes="Awaiting acquisition")
+deleted = await self.context.experiments.delete(experiment_id)
 ```
 
 Put these calls behind authenticated routes with the relevant `experiments.edit` or `experiments.delete` permission and your workflow's ownership rules. Handle `None` / `False` as missing or inaccessible resources. Keep mutations scoped to an experiment the user selected; do not expose unrestricted table access.
 
-Use `@job` for your plugin's own queued calculations, [lifecycle events](/sdk/concepts/lifecycle) for reacting to platform changes, and [plugin tables](/sdk/tutorials/design-plugin-with-tables) for orchestration records that need durable state. Adding tables is independent of granting design ownership.
+Use `@job` for your plugin's own queued calculations, [events](/sdk/concepts/lifecycle) such as `@on("experiment.status_changed")` for reacting to platform changes, and [plugin tables](/sdk/tutorials/design-plugin-with-tables) for orchestration records that need durable state. Adding tables is independent of granting design ownership.
 
-Use [analysis artifacts](/sdk/concepts/platform-context) to read downstream outputs. Declare exact producer plugin IDs in `analysis_result_readers` when reading another plugin's payload. Merely listing a plugin in `dependencies` controls load order; it does not grant result access or execute that plugin.
+Use [analysis artifacts](/sdk/concepts/platform-context) to read downstream outputs. Declare exact producer plugin IDs in `reads_from` when reading another plugin's payload. Merely listing a plugin in `depends_on` controls load order; it does not grant result access or execute that plugin.
 
-Source: [v1.2 workflow scaffolding](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/init_command.py), [repository protocol](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/repositories.py), and [platform permissions](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/permissions.py).
+Source: [workflow scaffolding](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/init_command.py), [repository protocol](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/repositories.py), and [platform permissions](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/permissions.py).

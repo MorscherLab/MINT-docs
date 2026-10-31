@@ -80,7 +80,7 @@ The scaffold git-ignores `uv.lock` and `frontend/bun.lock`. After you
 [commit lockfiles](/sdk/operations/versioning#commit-lockfiles), change the
 install steps to `uv sync --locked` and `bun install --frozen-lockfile`.
 
-Optional addition: a build step (`uv run mint build . --output-dir _ci_build`)
+Optional addition: a build step (`uv run mint build --output-dir _ci_build`)
 checks packaging on every PR. It runs `pytest` again before packaging.
 
 ## Publish on tag
@@ -100,7 +100,7 @@ builds and publishes in a `build` job that depends on it:
         run: uv run mint sdk generate --check
 
       - name: Build .mint bundle
-        run: uv run mint build . --output-dir dist/
+        run: uv run mint build --output-dir dist/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

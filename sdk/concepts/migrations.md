@@ -1,38 +1,34 @@
 # Plugin tables and migrations
 
-Plugins version their tables with the shared **Alembic runtime** by returning `MigrationSpec` from `get_migration_spec()`. The legacy `get_migrations_package()` protocol with integer `PluginMigration` revisions still runs in MINT @MINT_VERSION@ but is deprecated and will be removed in MINT 1.4. The two declarations are mutually exclusive; adopting Alembic is an explicit database transition, not a rename of the old hook.
+Plugins version their tables with the shared **Alembic runtime**. A plugin sets `Metadata.database` to a `MigrationSpec`. The legacy `get_migrations_package()` protocol with integer `PluginMigration` revisions is removed in MINT 1.4. A plugin that still defines `get_migrations_package()` does not load: the platform keeps it disabled and shows the reason as its `migration_error`. Moving a deployed plugin to Alembic is an explicit database transition (see [Adopting existing tables](#adopting-existing-tables)).
 
 Use plugin-owned tables for structured drafts, run metadata, or records that need relational queries. Use [platform data repositories](/sdk/concepts/data-model) and object storage when data should participate in the experiment workflow. Neither migration protocol supplies row-level user authorization for custom tables.
 
-## Choose the database contract
+## Declare the database
 
 | Declaration | Behavior |
 |---|---|
-| `get_migration_spec() -> MigrationSpec` | Packaged Alembic string revisions own table creation and schema evolution |
-| `get_migrations_package() -> str` | Deprecated legacy framework with integer revisions and legacy baseline stamping; removed in MINT 1.4 |
-| `get_shared_models()` only | Creates missing model tables; does not evolve existing columns |
-| `requires_shared_database=True` | Declares that the installed plugin requires the in-process PostgreSQL schema |
-| `get_plugin_db_session()` | Async session for the plugin's integrated schema or prepared standalone SQLite database |
+| `Metadata.database = MigrationSpec(...)` | Packaged Alembic string revisions own table creation and schema evolution. The wire capability `requires_shared_database` follows from it |
+| `context.db()` | Async session for the plugin's integrated schema or prepared standalone SQLite database |
 
-The model hook can coexist with either protocol. With Alembic, `MigrationSpec.models` is the authoritative model set for migration comparison; keep any `get_shared_models()` override consistent with it. `PluginDatabaseSpec` and `get_models()` are not the released API.
+`MigrationSpec.models` is the authoritative model set for migration comparison. `get_migration_spec()`, `get_shared_models()`, `PluginDatabaseSpec` and `get_models()` are not part of the 1.4 API.
 
 ```python
-from mint_sdk import AnalysisPlugin, PluginCapabilities, mint_plugin
-from mint_sdk.migrations import MigrationSpec
+from mint_sdk import Metadata, MigrationSpec, Plugin, plugin
 from my_plugin.models import Panel
 
 
-@mint_plugin(
-    analysis_type="drug-response",
-    routes_prefix="/my-plugin",
-    capabilities=PluginCapabilities(requires_shared_database=True),
-)
-class MyPlugin(AnalysisPlugin):
-    def get_shared_models(self) -> list[type]:
-        return [Panel]
+class MyPluginMeta(Metadata):
+    domain = "drug-response"
+    prefix = "/my-plugin"
+    database = MigrationSpec(package="my_plugin.migrations", models=(Panel,))
 
-    def get_migration_spec(self) -> MigrationSpec:
-        return MigrationSpec(package="my_plugin.migrations", models=(Panel,))
+
+@plugin(MyPluginMeta)
+class MyPlugin(Plugin):
+    async def list_panels(self):
+        async with self.context.db() as session:
+            ...
 ```
 
 Do not include platform ORM models in this model set. MINT scopes PostgreSQL tables to the plugin identity (`panel-designer` becomes `panel_designer`). Keep models schema-neutral and use SDK repositories for platform data.
@@ -43,7 +39,7 @@ Do not include platform ORM models in this model set. MINT scopes PostgreSQL tab
 |---|---|
 | Standalone app / `mint dev` | SQLite under `~/.mint/plugins/<plugin>/data.db` by default; SDK startup prepares the database before serving traffic |
 | Installed in-process plugin | PostgreSQL plugin schema; normal entry-point loading applies migrations before `initialize()` |
-| Installed isolated subprocess | `RemotePlatformContext` has no shared SQL-session bridge; `requires_shared_database=True` is rejected |
+| Installed isolated subprocess | `RemotePlatformContext` has no shared SQL-session bridge; `context.db()` raises `UnavailableException` and a plugin with `Metadata.database` is rejected |
 | `mint dev --platform` | A proxy to the standalone runtime, not a PostgreSQL plugin installation |
 
 Explicit module/class loading and a development proxy are not replacements for testing the installed entry-point lifecycle. Test SQLite and a disposable PostgreSQL installation when supporting both.
@@ -82,56 +78,39 @@ For SQLite-compatible column changes use Alembic `op.batch_alter_table(..., sche
 
 For Alembic opt-in plugins, **revisions create the tables on both fresh SQLite and fresh PostgreSQL installs**. MINT does not first run model `create_all()` or stamp the baseline because the current model happens to match. Missing tables are not silently repaired by the normal plugin session path for this protocol. Identity/history tables, checksums, locking and timeouts are described in the [API reference](/sdk/api/migrations#identity-history-and-locking).
 
-Runtime startup comparison rejects missing model tables/columns and incompatible column types. It deliberately tolerates other declarative differences at startup; `mint db check` performs the fuller Alembic comparison, including defaults, nullability, and other supported schema differences. Neither is a proof of correct historical data or every backend-specific object. Verify data transformations and constraints in tests.
+Runtime startup comparison rejects missing model tables/columns and incompatible column types. It deliberately tolerates other declarative differences at startup; `mint doctor --only db` performs the fuller Alembic comparison, including defaults, nullability, and other supported schema differences. Neither is a proof of correct historical data or every backend-specific object. Verify data transformations and constraints in tests.
 
-The platform disables a plugin when migration startup fails, before `initialize()` or route mounting; this applies to legacy integer migrations as well as Alembic. Standalone sessions also refuse access before migration readiness. Inspect `migration_error` and fix the migration/database problem; do not erase history to make startup pass.
+The platform disables a plugin when migration startup fails, before `initialize()` or route mounting. Standalone sessions also refuse access before migration readiness. Inspect `migration_error` and fix the migration/database problem; do not erase history to make startup pass.
 
-## Author and inspect with `mint db`
+## Author and inspect
 
 These commands operate on an **explicit development database**:
 
 ```bash
-mint db current --path . --database-url sqlite:////absolute/path/to/dev.db
-mint db check --path . --database-url sqlite:////absolute/path/to/dev.db
-mint db revision "add panel notes" --path . --database-url sqlite:////absolute/path/to/dev.db
+mint db current --database-url sqlite:////absolute/path/to/dev.db
+mint doctor --only db --database-url sqlite:////absolute/path/to/dev.db
+mint add migration "add panel notes" --autogenerate --database-url sqlite:////absolute/path/to/dev.db
 ```
 
-`current` validates and prints revision/history state without creating migration infrastructure. `check` fails on model differences and requires the database to be at the packaged head. `revision` compares models against that database and writes a draft into the source migration package; if the comparison is empty, it creates **no file**. It does not write into an installed package. SQLite paths must already exist; the CLI rejects a missing file or `:memory:` URL.
+`mint db current` validates and prints revision and history state without creating migration infrastructure. `mint doctor --only db` fails on model differences and needs the database at the packaged head. `mint add migration --autogenerate` compares the models against that database and writes a draft into the source migration package; if the comparison is empty, it creates **no file**. It does not write into an installed package. SQLite paths must already exist; the CLI rejects a missing file or `:memory:` URL. These commands replace `mint db check` and `mint db revision`.
 
-There is no `mint db upgrade`, `stamp`, or `downgrade` command. Application startup applies migrations. Use the [runtime API](/sdk/api/migrations) for isolated upgrade tests. Hand-author the first baseline as in [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), create a blank revision with `mint add migration "<name>"`, or generate a reviewed draft; don't confuse a generated draft with an applied change.
+There is no `mint db upgrade`, `stamp` or `downgrade` command. Application startup applies migrations. Use the [runtime API](/sdk/api/migrations) for isolated upgrade tests. Hand-author the first baseline as in [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), create a blank revision with `mint add migration "<name>"`, or generate a reviewed draft. Do not confuse a generated draft with an applied change.
 
-`mint add migration <name>` follows the plugin's declared protocol. When the plugin defines `get_migration_spec()`, it writes a blank Alembic revision into the source migration package (no database needed). With `--autogenerate --database-url <url>`, it writes a draft from model differences, like `mint db revision`. A plugin with no migration hook gets a `get_migration_spec()` method, an Alembic `db_revisions` package and a first revision. A plugin that owns tables through `get_shared_models()` without a migration hook is refused: generate an autogenerated baseline against an empty development database and adopt deployed tables as described below. A plugin that declares `get_migrations_package()` keeps getting legacy `v*.py` modules; the command never switches an existing integer package to Alembic.
+`mint add migration <name>` writes a blank Alembic revision into the source migration package (no database needed). A plugin with no `Metadata.database` first gets `database = MigrationSpec(package="<package>.db_revisions")`, an empty `db_revisions` package and a first revision.
 
 ## Adopting existing tables
 
 The Alembic runtime refuses an unversioned domain containing business tables unless `MigrationSpec.legacy` supplies a validated baseline. The presence of matching table names or a legacy integer tracking row is not enough.
 
-For a plugin that used the legacy integer protocol, declare `LegacyBaseline.from_plugin_history("<fixed-baseline>", plugin_name=..., last_version=N)`: it adopts the baseline only when the legacy history holds exactly v1..N, all successful, runs the baseline on a fresh install, and refuses an incomplete or failed history. The baseline revision must create the schema that vN produced. For any other unversioned schema, declare `LegacyBaseline(revision="<fixed-baseline>", validate=validator)`. The validator is a synchronous function receiving the active SQLAlchemy connection and schema; it must return true only when the existing deployment satisfies **that exact baseline**. Inspect required columns, types, constraints, data invariants, and the relevant old migration history for your plugin. Do not use `lambda ...: True` or compare only against evolving current model metadata.
+For a plugin that used the legacy integer protocol, declare `LegacyBaseline.from_plugin_history("<fixed-baseline>", last_version=N)` (the plugin name is the name of the plugin that declares the spec): it adopts the baseline only when the legacy history holds exactly v1..N, all successful, runs the baseline on a fresh install, and refuses an incomplete or failed history. The baseline revision must create the schema that vN produced. For any other unversioned schema, declare `LegacyBaseline(revision="<fixed-baseline>", validate=validator)`. The validator is a synchronous function receiving the active SQLAlchemy connection and schema; it must return true only when the existing deployment satisfies **that exact baseline**. Inspect required columns, types, constraints, data invariants, and the relevant old migration history for your plugin. Do not use `lambda ...: True` or compare only against evolving current model metadata.
 
 When validation succeeds, MINT stamps the fixed packaged baseline and records its ancestors as `adopted`, then executes later revisions. When validation fails and business tables exist, startup stops. Seed/backfill effects skipped by adoption must already be true or supplied by a later revision. Keep the validator available for older supported deployments until all relevant installations have transitioned.
 
 Test adoption from a copy of every supported legacy schema, rejection of a mismatched schema, fresh installation, and rerunning at head. Back up data and test recovery before deploying the transition. Plugin authors must implement their domain-specific adoption; the platform's own legacy migration bridge is not an automatic bridge for every plugin.
 
-## Existing plugins with integer migrations
+## Plugins with integer migrations
 
-The legacy declaration is deprecated and will be removed in MINT 1.4. Building its runner emits a `DeprecationWarning` and a logged warning, and `mint doctor` warns. Move to `MigrationSpec` with `LegacyBaseline.from_plugin_history()` as described in [Adopting existing tables](#adopting-existing-tables) and [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3#legacy-migrations-are-deprecated). Until then the declaration looks like this:
-
-```python
-class MyPlugin(AnalysisPlugin):
-    def get_shared_models(self) -> list[type]:
-        return [Panel]
-
-    def get_migrations_package(self) -> str:
-        return "my_plugin.migrations"
-```
-
-Its modules contain `PluginMigration` subclasses with integer `version`, string `name`, and async `upgrade(self, op: MigrationOps)`.
-
-Models and the legacy migration hook remain complementary. Standalone creates missing model tables first and may stamp all supplied integers when there is no history and the current tables/columns conform. Installed PostgreSQL normally executes initial revisions; an existing model-conforming schema without history may be stamped. Stamping does not run migration bodies or prove seed/backfill data exists.
-
-Legacy `MigrationOps` is distinct from Alembic `op`: it has async helper methods, `qualified_table()` for raw SQL, and `alter_column(table, column, type_)` with no `nullable=` option. Legacy SQLite rename/type/drop-column operations use a limited table-recreation path. See the [legacy API reference](/sdk/api/migrations#legacy-integer-migration-api) before maintaining these revisions.
-
-Integer `depends_on` is not used to resolve a graph. Keep unique increasing numbers and complete immutable history. Do not transfer the modern fail-closed startup guarantee to every legacy/model-only status error: inspect platform status and session conformance failures explicitly.
+The legacy integer protocol is removed in 1.4. Before you upgrade a plugin, move it to `Metadata.database` and adopt its history with `LegacyBaseline.from_plugin_history()` as described in [Adopting existing tables](#adopting-existing-tables). `mint doctor` fails a plugin that still defines `get_migrations_package()`. The legacy history tables (`public.plugin_schema_migrations` on PostgreSQL, `_plugin_migrations` on SQLite) stay in place and are read only by the adoption baseline.
 
 ## Versioning and recovery
 
@@ -140,9 +119,8 @@ Keep these values separate:
 | Version | Purpose |
 |---|---|
 | Built package version | Plugin release, derived from Git by the scaffold's `hatch-vcs` configuration |
-| `schema_version` / design schema version | Persisted experiment design payload format |
-| `schema_revision` + `target_revision` | Alembic current and packaged string revisions; `schema_version` status is `None` |
-| Legacy integer `schema_version` | Old `PluginMigration` revision counter; deprecated in the admin plugin list |
+| `Design.version` | Persisted experiment design payload format |
+| `schema_revision` + `target_revision` | Alembic current and packaged string revisions. The integer `schema_version` of the legacy counter is removed |
 
 Update models and append a revision when changing SQL. Increment the plugin release through its normal Git/version workflow. A package rollback is not a database downgrade; restore a tested backup or ship a forward repair compatible with the stored schema. The runtime does not automatically execute `downgrade()`.
 

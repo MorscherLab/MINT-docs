@@ -16,7 +16,7 @@ The bridge validates the input model, writes it to `input.json`, runs the script
 
 ```bash
 uv run mint add r-analysis dose_response --generate
-uv run mint doctor --r
+uv run mint doctor --only r
 ```
 
 `mint add r-analysis NAME` writes:
@@ -30,7 +30,7 @@ uv run mint doctor --r
 | `src/<module>/r_scripts/mint_bridge.R` | Helpers: `mint_read_input()`, `mint_parameter()`, `mint_write_output()`, `mint_experiment_id()`, `mint_artifact_dir()` |
 | `r-requirements.txt` | `jsonlite` |
 
-Other options: `--script PATH` uses an existing script, `--generate` regenerates the frontend contract, and `--page` adds a starter Vue page. `mint doctor --r` checks that `Rscript` is found, that `jsonlite` is declared (in `renv.lock` or `r-requirements.txt`), and that scripts can find `mint_bridge.R`.
+Other options: `--script PATH` uses an existing script, `--generate` regenerates the frontend contract, and `--page` adds a starter Vue page. `mint doctor --only r` checks that `Rscript` is found, that `jsonlite` is declared (in `renv.lock` or `r-requirements.txt`), and that scripts can find `mint_bridge.R`.
 
 ## Define the bridge
 
@@ -39,7 +39,7 @@ Other options: `--script PATH` uses an existing script, `--generate` regenerates
 from pathlib import Path
 
 from pydantic import BaseModel
-from mint_sdk import RAnalysisBridge, RScriptSpec
+from mint_sdk.r import RAnalysisBridge, RScriptSpec
 
 
 class DoseResponseInput(BaseModel):
@@ -96,22 +96,22 @@ The script receives the input and output paths as `argv[1]` and `argv[2]`, also 
 ## Call it from a route or job
 
 ```python
-from mint_sdk import AnalysisPlugin, CurrentExperiment, endpoint
+from mint_sdk import CurrentExperiment, Plugin, endpoint
 
 from my_plugin.services.dose_response_r import DoseResponseFit, DoseResponseInput, bridge
 
 
-class MyPlugin(AnalysisPlugin):
+class MyPlugin(Plugin):
     @endpoint.post("/experiments/{experiment_id}/dose-response")
     async def fit_dose_response(
         self, body: DoseResponseInput, experiment: CurrentExperiment,
     ) -> DoseResponseFit:
         fit = await bridge.run(payload=body, experiment_id=experiment.id)
-        await self.save_analysis_artifact(
+        await self.artifacts.save(
             experiment.id,
             {"fit": fit.model_dump(), "elapsed_s": bridge.last_run.elapsed_seconds},
-            artifact_key="dose-response",
-            display_name="Dose-response fit",
+            "dose-response",
+            name="Dose-response fit",
         )
         return fit
 ```

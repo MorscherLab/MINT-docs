@@ -1,6 +1,6 @@
 # Backfill migrations
 
-Add a new column and populate historical rows without overwriting values users already supplied. This recipe extends the Alembic-based `panels` table from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), using MINT @MINT_VERSION@. An integer-migration plugin uses the deprecated [legacy API](/sdk/api/migrations#legacy-integer-migration-api) until it [adopts its existing tables](/sdk/concepts/migrations#adopting-existing-tables) under the Alembic protocol.
+Add a new column and populate historical rows without overwriting values users already supplied. This recipe extends the Alembic-based `panels` table from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), using MINT @MINT_VERSION@. The legacy integer migration protocol is removed in 1.4: a plugin that still uses it must [adopt its existing tables](/sdk/concepts/migrations#adopting-existing-tables) under the Alembic protocol first.
 
 ## Add a nullable value first
 
@@ -37,7 +37,7 @@ def downgrade(*, schema: str | None) -> None:
     raise NotImplementedError("Use a reviewed forward migration or restore a backup")
 ```
 
-The database revision prevents the DDL from being applied again after successful completion. The update's NULL predicate preserves already-supplied values when the data step is reused in a maintenance operation. Do not assume Alembic `op.add_column()` itself is idempotent like the legacy `MigrationOps.add_column()` helper.
+The database revision prevents the DDL from being applied again after successful completion. The update's NULL predicate preserves already-supplied values when the data step is reused in a maintenance operation. Do not assume Alembic `op.add_column()` itself is idempotent.
 
 A Python default does not update existing rows. `server_default` affects database inserts; it is distinct from an explicit historical-data update. Here a newly created panel has no note, while an upgraded historical row records its origin. Both fresh SQLite and PostgreSQL installations execute the packaged baseline and this revision under the Alembic protocol.
 
@@ -59,7 +59,7 @@ op.get_bind().execute(
 )
 ```
 
-This uses Alembic's synchronous connection. Legacy migrations instead receive async `MigrationOps` and must qualify raw table names with `op.qualified_table(...)`; do not mix the two signatures.
+This uses Alembic's synchronous connection.
 
 ## Large tables and transaction boundaries
 
@@ -71,9 +71,9 @@ For a large live table, stage the work across deployments:
 2. Run an authorized, restartable background/maintenance backfill with a short normal plugin session per batch, updating only rows still needing work.
 3. Verify the historical data, then enforce the desired constraint in a later release.
 
-The maintenance job is separate from startup migrations; there is no `mint db backfill` or `mint db upgrade` command. `mint db current/check/revision` inspect and author against explicit development databases.
+The maintenance job is separate from startup migrations; there is no `mint db backfill` or `mint db upgrade` command. `mint db current`, `mint doctor --only db` and `mint add migration --autogenerate` inspect and author against explicit development databases.
 
-Alembic `alter_column(..., nullable=False)` is available, unlike the legacy helper. Use `op.batch_alter_table(..., schema=schema)` for SQLite table changes that require rebuilding, and test uniqueness, foreign keys, indexes, and data preservation on both backends. Schema changes can acquire locks; adding a column or constraint is not necessarily lock-free.
+Alembic `alter_column(..., nullable=False)` is available. Use `op.batch_alter_table(..., schema=schema)` for SQLite table changes that require rebuilding, and test uniqueness, foreign keys, indexes, and data preservation on both backends. Schema changes can acquire locks; adding a column or constraint is not necessarily lock-free.
 
 ## Test the real upgrade path
 
