@@ -12,7 +12,9 @@ const version = JSON.parse(readFileSync(`${sdkRoot}/package.json`, 'utf8')).vers
 const installed = JSON.parse(readFileSync(`${docsRoot}/node_modules/@morscherlab/mint-sdk/package.json`, 'utf8')).version
 assert.equal(version, installed, 'Source and installed SDK versions must match')
 const { parseComponentExports } = await import(`${sdkRoot}/scripts/extract-docs-components.ts`)
-const exports = parseComponentExports(`${sdkRoot}/src/components/index.ts`)
+// The package root and the lab, shell, data and runtime entries export components, as in the SDK's extract-docs.ts.
+const exports = ['components/index', 'lab', 'shell', 'data', 'runtime']
+  .flatMap(entry => parseComponentExports(`${sdkRoot}/src/${entry}.ts`))
 interface Prop {
   name: string
   type: string
@@ -108,22 +110,21 @@ for (const component of componentDocs) {
 
 const get = (name: string): any[] => (results[name] as any).props
 assert.equal(Object.keys(results).length, componentDocs.length)
-assert.equal(get('BaseButton').length, 6)
-assert.equal(get('DataFrame').length, 24)
-assert.equal(get('DataFrame').find(p => p.name === 'maxHeight').type, 'string | number')
-assert.equal(get('DataFrame').find(p => p.name === 'rowKey').type, 'string | ((row: Record<string, unknown>) => string | number)')
-assert.match(get('DataFrame').find(p => p.name === 'size').description, /tableDensity/)
-assert.equal(get('FormBuilder').length, 11)
-assert.equal(get('SmartGroupFieldRecipe').length, 16)
-assert(get('SmartGroupManual').length > 0)
-assert.equal(get('SmartGroupModal').length, 3)
-assert.equal(get('SmartGroupModal').find(p => p.name === 'mode').default, "'auto'")
+assert.equal(get('BaseButton').length, 8)
+assert.equal(get('DataFrame').length, 9)
+assert.equal(get('DataFrame').find(p => p.name === 'spec').type, 'DataFrameSpec')
+assert.equal(get('DataFrame').find(p => p.name === 'data').required, true)
+assert(!get('DataFrame').some(p => p.name === 'columns'))
+assert(get('FormBuilder').some(p => p.name === 'spec'))
+assert(!get('FormBuilder').some(p => p.name === 'schema'))
+assert(get('PlateEditor').some(p => p.name === 'spec'))
+assert(!get('PlateEditor').some(p => p.name === 'history'))
+assert(get('PlotlyChart').length > 0)
 assert(Object.values(results).some((entry: any) => entry.props.some((prop: any) => prop.defaultKind === 'implicit-boolean')))
 assert.equal(get('AppToastContainer').length, 0)
-assert.equal(get('SampleLegend').find(p => p.name === 'samples').required, true)
-assert.equal(get('SampleLegend').find(p => p.name === 'samples').default, '() => []')
+assert.equal(get('SampleSelector').find(p => p.name === 'enableSmartGroup').default, 'true')
 assert(!get('AppSidebar').some(p => p.name === 'variant'))
-assert.equal(get('AppSidebar').find(p => p.name === 'density').type, "'compact' | 'comfortable'")
+assert.equal(get('AppSidebar').find(p => p.name === 'spec').type, 'PluginWorkspaceSidebarSpec')
 assert(!get('BaseTabs').some(p => p.name === 'variant'))
 assert.equal(get('BasePill').find(p => p.name === 'dot').default, 'false')
 assert.equal(get('FormField').find(p => p.name === 'layout').default, "'stacked'")

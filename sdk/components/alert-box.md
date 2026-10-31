@@ -12,7 +12,7 @@ Inline status, warning, error, and success messages for plugin screens.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AlertBox.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/AlertBox.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AlertBox" />
@@ -34,11 +34,11 @@ import { AlertBox } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AlertBox.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/AlertBox.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` type ` | ` AlertType ` | No | ` 'info' ` | — |
+| ` tone ` | ` Tone ` | No | ` 'info' ` | — |
 | ` title ` | ` string ` | No | ` undefined ` | — |
 | ` dismissible ` | ` boolean ` | No | ` false ` | — |
 | ` actionLabel ` | ` string ` | No | ` undefined ` | — |
@@ -49,7 +49,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` AlertType `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L64) | ` 'success' \| 'error' \| 'warning' \| 'info' ` |
+| [` Tone `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L4) | ` 'neutral' \| 'primary' \| 'cta' \| 'success' \| 'warning' \| 'error' \| 'info' ` |
 
 <!-- sdk-props:end -->
 

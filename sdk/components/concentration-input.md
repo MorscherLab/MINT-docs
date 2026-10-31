@@ -12,7 +12,7 @@ ConcentrationInput is a forms component exported by @morscherlab/mint-sdk for pl
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ConcentrationInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ConcentrationInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ConcentrationInput" />
@@ -26,7 +26,7 @@ import { ConcentrationInput } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ConcentrationInput.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ConcentrationInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -37,7 +37,7 @@ MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` min ` | ` number ` | No | ` undefined ` | — |
 | ` max ` | ` number ` | No | ` undefined ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
-| ` error ` | ` boolean ` | No | ` false ` | — |
+| ` invalid ` | ` boolean ` | No | ` false ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 | ` placeholder ` | ` string ` | No | ` 'Enter value' ` | — |
 
@@ -47,8 +47,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ConcentrationValue `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/useConcentrationUnits.ts#L9) | See the linked SDK type definition. |
-| [` ConcentrationUnit `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/useConcentrationUnits.ts#L7) | See the linked SDK type definition. |
+| [` ConcentrationValue `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/composables/useConcentrationUnits.ts#L9) | See the linked SDK type definition. |
+| [` ConcentrationUnit `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/composables/useConcentrationUnits.ts#L7) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

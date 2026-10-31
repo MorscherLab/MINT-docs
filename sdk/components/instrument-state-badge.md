@@ -12,7 +12,7 @@ InstrumentStateBadge is a data display component exported by @morscherlab/mint-s
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/InstrumentStateBadge.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/InstrumentStateBadge.vue">Source</a>
 </div>
 
 <ComponentPlayground name="InstrumentStateBadge" />
@@ -43,7 +43,7 @@ The `state` prop takes an `InstrumentBadgeState`: the `InstrumentState` values p
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/InstrumentStateBadge.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/InstrumentStateBadge.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -57,7 +57,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` InstrumentBadgeState `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/instrument.ts#L44) | See the linked SDK type definition. |
+| [` InstrumentBadgeState `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/instrument.ts#L46) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

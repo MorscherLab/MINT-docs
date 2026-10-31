@@ -12,7 +12,7 @@ ExperimentPopover is a workflow component exported by @morscherlab/mint-sdk for 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ExperimentPopover.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ExperimentPopover.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ExperimentPopover" />
@@ -26,13 +26,17 @@ import { ExperimentPopover } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ExperimentPopover.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ExperimentPopover.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` experimentName ` | ` string ` | No | ` undefined ` | — |
 | ` experimentCode ` | ` string ` | No | ` undefined ` | — |
 | ` experimentStatus ` | ` string ` | No | ` undefined ` | — |
+| ` experimentId ` | ` number \| null ` | No | ` null ` | Platform id of the bound experiment; enables "Open in MINT". |
+| ` experimentProject ` | ` string ` | No | ` undefined ` | — |
+| ` experimentOwner ` | ` string ` | No | ` undefined ` | — |
+| ` experimentUpdatedAt ` | ` string ` | No | ` undefined ` | ISO timestamp of the last update, shown as relative time. |
 | ` isResolving ` | ` boolean ` | No | ` false ` | An experiment is bound but the platform has not returned its record yet. |
 | ` error ` | ` string ` | No | ` undefined ` | Message explaining why the bound experiment could not be resolved. |
 | ` showSave ` | ` boolean ` | No | ` false ` | — |
@@ -41,9 +45,13 @@ MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` saveLoading ` | ` boolean ` | No | ` false ` | — |
 | ` saveSuccessMessage ` | ` string ` | No | ` undefined ` | — |
 | ` saveDisabledMessage ` | ` string ` | No | ` undefined ` | — |
+| ` saveLabel ` | ` string ` | No | ` 'Save' ` | — |
+| ` dirty ` | ` boolean ` | No | ` false ` | Unsaved changes: marks the Save button with a dot. |
 | ` confirmSave ` | ` boolean ` | No | ` true ` | — |
 | ` confirmTitle ` | ` string ` | No | ` undefined ` | — |
 | ` confirmMessage ` | ` string ` | No | ` undefined ` | — |
+| ` placeholder ` | ` string ` | No | ` 'Attach experiment' ` | Empty-state trigger label. |
+| ` maxNameWidth ` | ` number ` | No | ` 200 ` | The trigger name truncates at this width (px); its title shows code and name in full. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 

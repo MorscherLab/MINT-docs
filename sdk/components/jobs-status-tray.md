@@ -12,7 +12,7 @@ Floating, source-driven job status tray for plugin and platform workflows.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/JobsStatusTray.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/JobsStatusTray.vue">Source</a>
 </div>
 
 <ComponentPlayground name="JobsStatusTray" />
@@ -32,17 +32,14 @@ import { JobsStatusTray } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/JobsStatusTray.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/JobsStatusTray.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` source ` | ` PluginJobCenterSource ` | No | ` undefined ` | — |
-| ` jobs ` | ` readonly JobStateInput[] ` | No | ` undefined ` | @deprecated Removed in MINT 1.4; pass a source instead. |
-| ` adapter ` | ` JobsStatusTrayAdapter ` | No | ` undefined ` | @deprecated Removed in MINT 1.4; pass source actions instead. |
-| ` eventStream ` | ` UsePluginEventStreamReturn<JobStreamData> ` | No | ` undefined ` | @deprecated Removed in MINT 1.4; event streams belong to the source runtime. |
-| ` loadOnMount ` | ` boolean ` | No | ` true ` | — |
-| ` title ` | ` string ` | No | ` 'Analysis jobs' ` | — |
+| ` center ` | ` UseJobCenterReturn ` | Yes | — | Job center from useJobCenter(); the parent owns it and opens the panel through it. |
+| ` title ` | ` string ` | No | ` 'Jobs' ` | — |
 | ` teleportTo ` | ` string \| HTMLElement \| false ` | No | ` 'body' ` | — |
+| ` confirm ` | ` boolean \| Partial<Record<ConfirmAction, boolean>> ` | No | ` false ` | Ask before Cancel, Delete and Clear (true), or before the named ones only. Default off. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -50,11 +47,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` PluginJobCenterSource `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/useJobsStatusTray.ts#L35) | See the linked SDK type definition. |
-| [` JobStateInput `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/jobs.ts#L51) | See the linked SDK type definition. |
-| [` JobsStatusTrayAdapter `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/useJobsStatusTray.ts#L150) | See the linked SDK type definition. |
-| [` UsePluginEventStreamReturn `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/composables/usePluginClient.ts#L235) | See the linked SDK type definition. |
-| [` JobStreamData `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/jobs.ts#L70) | See the linked SDK type definition. |
+| [` UseJobCenterReturn `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/composables/useJobCenter.ts#L184) | See the linked SDK type definition. |
+| [` ConfirmAction `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/JobsStatusTray.vue#L35) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

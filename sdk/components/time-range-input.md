@@ -12,7 +12,7 @@ Paired start/end time pickers that validate range order and display computed dur
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/TimeRangeInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/TimeRangeInput.vue">Source</a>
 </div>
 
 <ComponentPlayground name="TimeRangeInput" />
@@ -30,13 +30,13 @@ When end ≤ start, the fields show "End time must be after start time". The com
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/TimeRangeInput.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/TimeRangeInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` modelValue ` | ` TimeRange ` | No | ` undefined ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
-| ` error ` | ` boolean ` | No | ` false ` | — |
+| ` invalid ` | ` boolean ` | No | ` false ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 | ` min ` | ` string ` | No | ` undefined ` | — |
 | ` max ` | ` string ` | No | ` undefined ` | — |
@@ -52,8 +52,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TimeRange `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L69) | See the linked SDK type definition. |
-| [` TimeSlotDisabledFn `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L67) | See the linked SDK type definition. |
+| [` TimeRange `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L68) | See the linked SDK type definition. |
+| [` TimeSlotDisabledFn `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L66) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

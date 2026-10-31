@@ -12,7 +12,7 @@ Searchable, sortable, selectable table for dense experiment and analysis results
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/DataFrame.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/DataFrame.vue">Source</a>
 </div>
 
 <ComponentPlayground name="DataFrame" />
@@ -59,34 +59,19 @@ Leave `columnWidths` unset for uncontrolled resizing inside the table. Pass it w
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/DataFrame.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/DataFrame.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
+| ` spec ` | ` DataFrameSpec ` | No | ` () => ({}) ` | Structure built with defineDataFrame(). Optional: every option has a default. |
 | ` data ` | ` Record<string, unknown>[] ` | Yes | — | Array of data objects |
-| ` columns ` | ` DataFrameColumn[] ` | Yes | — | Column definitions |
-| ` rowKey ` | ` string \| ((row: Record<string, unknown>) => string \| number) ` | No | ` undefined ` | Unique key for each row (property name or function) |
-| ` striped ` | ` boolean ` | No | ` true ` | Alternate row background colors |
-| ` bordered ` | ` boolean ` | No | ` true ` | Show table borders |
-| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` undefined ` | Table size. Left unset, it follows the platform's tableDensity setting (compact → sm, normal → md, comfortable → lg) and falls back to md when no settings store is installed. |
-| ` stickyHeader ` | ` boolean ` | No | ` false ` | Make header sticky on scroll |
-| ` maxHeight ` | ` string \| number ` | No | ` undefined ` | Maximum table height (enables vertical scroll) |
 | ` loading ` | ` boolean ` | No | ` false ` | Show loading overlay |
-| ` error ` | ` string \| null ` | No | ` null ` | Error message. When set, the table body is replaced by an error state instead of the empty state. null/undefined renders normally. |
+| ` error ` | ` string \| null ` | No | ` null ` | Error message. When set, the table body is replaced by an error state. |
 | ` emptyText ` | ` string ` | No | ` 'No data' ` | Empty state message |
-| ` sortable ` | ` boolean ` | No | ` false ` | Enable column sorting |
-| ` sort ` | ` SortState \| null ` | No | ` undefined ` | Current sort state (controlled mode) |
-| ` pagination ` | ` PaginationState \| false ` | No | ` false ` | Pagination state or false to disable |
-| ` searchable ` | ` boolean ` | No | ` false ` | Enable search input |
-| ` searchPlaceholder ` | ` string ` | No | ` 'Search...' ` | Search input placeholder |
-| ` searchKeys ` | ` string[] ` | No | ` undefined ` | Column keys to search (defaults to all) |
-| ` selectable ` | ` boolean ` | No | ` false ` | Enable row selection with checkboxes |
-| ` selectedKeys ` | ` (string \| number)[] ` | No | ` () => [] ` | Currently selected row keys |
-| ` clickableRows ` | ` boolean ` | No | ` false ` | Make each body row act as a click/keyboard target. |
-| ` deletable ` | ` boolean ` | No | ` false ` | Show a trailing action column with a per-row delete button. |
-| ` deleteLabel ` | ` string ` | No | ` 'Delete row' ` | Tooltip / aria-label for the row delete button. |
-| ` resizable ` | ` boolean ` | No | ` false ` | Allow dragging a column's right edge to resize it. |
-| ` columnWidths ` | ` Record<string, number> ` | No | ` undefined ` | Controlled column widths in px, keyed by column key (omit for uncontrolled). |
+| ` sort ` | ` SortState \| null ` | No | ` undefined ` | Current sort state. Bind with v-model:sort; unbound, the table keeps its own. |
+| ` selected ` | ` (string \| number)[] ` | No | ` () => [] ` | Selected row keys. Bind with v-model:selected. |
+| ` page ` | ` number ` | No | ` undefined ` | Current page (1-indexed) when spec.pagination is set. Bind with v-model:page; unbound, the table keeps its own. |
+| ` columnWidths ` | ` Record<string, number> ` | No | ` undefined ` | Column widths in px keyed by column key. Bind with v-model:column-widths; unbound, the table keeps its own. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -94,9 +79,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` DataFrameColumn `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L415) | See the linked SDK type definition. |
-| [` SortState `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L407) | See the linked SDK type definition. |
-| [` PaginationState `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/components.ts#L447) | See the linked SDK type definition. |
+| [` DataFrameSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L469) | See the linked SDK type definition. |
+| [` SortState `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L425) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

@@ -12,7 +12,7 @@ Multi-step workflow container with progress, validation, and navigation slots.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/StepWizard.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/StepWizard.vue">Source</a>
 </div>
 
 <ComponentPlayground name="StepWizard" />
@@ -41,7 +41,7 @@ The default navigation shows a step counter (`2 / 4`) on the left and Cancel, Ba
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/StepWizard.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/StepWizard.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -51,6 +51,7 @@ MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` showProgress ` | ` boolean ` | No | ` true ` | — |
 | ` showStepNumbers ` | ` boolean ` | No | ` true ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
+| ` orientation ` | ` 'horizontal' \| 'vertical' ` | No | ` 'horizontal' ` | vertical stacks the steps in a rail beside the step content. |
 
 Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
@@ -58,7 +59,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` WizardStep `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L15) | See the linked SDK type definition. |
+| [` WizardStep `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L15) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

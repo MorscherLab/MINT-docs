@@ -12,7 +12,7 @@ AuditTrail is a data display component exported by @morscherlab/mint-sdk for plu
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AuditTrail.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/AuditTrail.vue">Source</a>
 </div>
 
 <ComponentPlayground name="AuditTrail" />
@@ -26,14 +26,14 @@ import { AuditTrail } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/AuditTrail.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/AuditTrail.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` entries ` | ` AuditEntry[] ` | Yes | — | — |
 | ` maxHeight ` | ` string ` | No | ` undefined ` | — |
 | ` showFilters ` | ` boolean ` | No | ` false ` | — |
-| ` emptyMessage ` | ` string ` | No | ` 'No activity yet' ` | — |
+| ` emptyText ` | ` string ` | No | ` 'No activity yet' ` | — |
 | ` order ` | ` 'newest' \| 'oldest' ` | No | ` 'newest' ` | — |
 | ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
 | ` loading ` | ` boolean ` | No | ` false ` | Replace the timeline with a loading placeholder. |
@@ -45,7 +45,7 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` AuditEntry `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L28) | See the linked SDK type definition. |
+| [` AuditEntry `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L28) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 

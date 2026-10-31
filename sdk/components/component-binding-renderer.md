@@ -12,7 +12,7 @@ ComponentBindingRenderer is a workflow component exported by @morscherlab/mint-s
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue">Source</a>
 </div>
 
 <ComponentPlayground name="ComponentBindingRenderer" />
@@ -26,7 +26,7 @@ import { ComponentBindingRenderer } from "@morscherlab/mint-sdk/components"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue).
+MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -36,7 +36,7 @@ MINT SDK **1.3.0**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` exclude ` | ` string[] ` | No | ` () => [] ` | Optional deny-list of component names. |
 | ` dense ` | ` boolean ` | No | ` false ` | Compact child component sizing. |
 | ` readonly ` | ` boolean ` | No | ` true ` | Prefer preview-safe props for editable components. |
-| ` showHeaders ` | ` boolean ` | No | ` true ` | Show component/template labels above each rendered component. |
+| ` showHeaders ` | ` boolean ` | No | ` true ` | Show component labels above each rendered component. |
 | ` showDescriptions ` | ` boolean ` | No | ` true ` | Show binding descriptions in each header. |
 | ` layout ` | ` ComponentBindingRendererLayout ` | No | ` 'grid' ` | Grid or vertical stack layout. |
 | ` emptyText ` | ` string ` | No | ` 'No renderable SDK component bindings.' ` | Message shown when no binding can be rendered. |
@@ -47,8 +47,8 @@ Defaults are source expressions; factory functions are evaluated for each compon
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ComponentBindingRendererBinding `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue#L21) | See the linked SDK type definition. |
-| [` ComponentBindingRendererLayout `](https://github.com/MorscherLab/MINT/blob/v1.3.0/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue#L30) | See the linked SDK type definition. |
+| [` ComponentBindingRendererBinding `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue#L18) | See the linked SDK type definition. |
+| [` ComponentBindingRendererLayout `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue#L26) | See the linked SDK type definition. |
 
 <!-- sdk-props:end -->
 
