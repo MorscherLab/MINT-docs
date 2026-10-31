@@ -20,7 +20,7 @@ ThemeToggle is a feedback component exported by @morscherlab/mint-sdk for plugin
 ## Import
 
 ```ts
-import { ThemeToggle } from "@morscherlab/mint-sdk/components"
+import { ThemeToggle } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

@@ -20,7 +20,7 @@ LoadingSpinner is a feedback component exported by @morscherlab/mint-sdk for plu
 ## Import
 
 ```ts
-import { LoadingSpinner } from "@morscherlab/mint-sdk/components"
+import { LoadingSpinner } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

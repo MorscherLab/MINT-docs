@@ -20,7 +20,7 @@ Compact status label for tables, metadata, and small state indicators.
 ## Import
 
 ```ts
-import { BasePill } from "@morscherlab/mint-sdk/components"
+import { BasePill } from "@morscherlab/mint-sdk"
 ```
 
 ## Status dots in 1.2.1

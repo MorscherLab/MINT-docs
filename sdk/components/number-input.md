@@ -20,7 +20,7 @@ NumberInput is a forms component exported by @morscherlab/mint-sdk for plugin fr
 ## Import
 
 ```ts
-import { NumberInput } from "@morscherlab/mint-sdk/components"
+import { NumberInput } from "@morscherlab/mint-sdk"
 ```
 
 ## Interaction in 1.2.1

@@ -20,7 +20,7 @@ AuditTrail is a data display component exported by @morscherlab/mint-sdk for plu
 ## Import
 
 ```ts
-import { AuditTrail } from "@morscherlab/mint-sdk/components"
+import { AuditTrail } from "@morscherlab/mint-sdk/data"
 ```
 
 <!-- sdk-props:start -->

@@ -20,7 +20,7 @@ Standard modal dialog with controlled visibility and footer slots.
 ## Import
 
 ```ts
-import { BaseModal } from "@morscherlab/mint-sdk/components"
+import { BaseModal } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage

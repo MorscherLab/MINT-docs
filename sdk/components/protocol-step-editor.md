@@ -20,7 +20,7 @@ ProtocolStepEditor is a lab widgets component exported by @morscherlab/mint-sdk 
 ## Import
 
 ```ts
-import { ProtocolStepEditor } from "@morscherlab/mint-sdk/components"
+import { ProtocolStepEditor } from "@morscherlab/mint-sdk/lab"
 ```
 
 <!-- sdk-props:start -->

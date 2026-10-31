@@ -20,7 +20,7 @@ Divider is a layout component exported by @morscherlab/mint-sdk for plugin front
 ## Import
 
 ```ts
-import { Divider } from "@morscherlab/mint-sdk/components"
+import { Divider } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

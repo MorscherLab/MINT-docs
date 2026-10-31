@@ -20,7 +20,7 @@ MoleculeInput is a lab widgets component exported by @morscherlab/mint-sdk for p
 ## Import
 
 ```ts
-import { MoleculeInput } from "@morscherlab/mint-sdk/components"
+import { MoleculeInput } from "@morscherlab/mint-sdk/lab"
 ```
 
 <!-- sdk-props:start -->

@@ -20,7 +20,7 @@ SampleSelector is a lab widgets component exported by @morscherlab/mint-sdk for 
 ## Import
 
 ```ts
-import { SampleSelector } from "@morscherlab/mint-sdk/components"
+import { SampleSelector } from "@morscherlab/mint-sdk/lab"
 ```
 
 <!-- sdk-props:start -->

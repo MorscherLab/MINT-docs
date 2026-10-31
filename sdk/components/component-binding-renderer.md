@@ -20,7 +20,7 @@ ComponentBindingRenderer is a workflow component exported by @morscherlab/mint-s
 ## Import
 
 ```ts
-import { ComponentBindingRenderer } from "@morscherlab/mint-sdk/components"
+import { ComponentBindingRenderer } from "@morscherlab/mint-sdk/runtime"
 ```
 
 <!-- sdk-props:start -->

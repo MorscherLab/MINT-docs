@@ -20,7 +20,7 @@ Hover/focus tooltip with smart positioning for compact explanations.
 ## Import
 
 ```ts
-import { Tooltip } from "@morscherlab/mint-sdk/components"
+import { Tooltip } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

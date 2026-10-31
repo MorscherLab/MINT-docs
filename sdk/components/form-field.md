@@ -20,7 +20,7 @@ Label, hint, error, and accessibility wrapper for form controls.
 ## Import
 
 ```ts
-import { FormField } from "@morscherlab/mint-sdk/components"
+import { FormField } from "@morscherlab/mint-sdk"
 ```
 
 ## Row layout in 1.2.1

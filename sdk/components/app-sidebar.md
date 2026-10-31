@@ -20,7 +20,7 @@ Sectioned sidebar for plugin-specific navigation and grouped tools.
 ## Import
 
 ```ts
-import { AppSidebar } from "@morscherlab/mint-sdk/components"
+import { AppSidebar } from "@morscherlab/mint-sdk/shell"
 ```
 
 ## Changes in 1.2.1

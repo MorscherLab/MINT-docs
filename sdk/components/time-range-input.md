@@ -20,7 +20,7 @@ Paired start/end time pickers that validate range order and display computed dur
 ## Import
 
 ```ts
-import { TimeRangeInput } from "@morscherlab/mint-sdk/components"
+import { TimeRangeInput } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Validation

@@ -20,7 +20,7 @@ FormulaInput is a forms component exported by @morscherlab/mint-sdk for plugin f
 ## Import
 
 ```ts
-import { FormulaInput } from "@morscherlab/mint-sdk/components"
+import { FormulaInput } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Behavior

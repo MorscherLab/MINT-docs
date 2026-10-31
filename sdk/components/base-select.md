@@ -20,7 +20,7 @@ Themed select control with option objects, placeholder, and v-model support.
 ## Import
 
 ```ts
-import { BaseSelect } from "@morscherlab/mint-sdk/components"
+import { BaseSelect } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

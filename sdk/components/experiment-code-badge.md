@@ -20,7 +20,7 @@ ExperimentCodeBadge is a data display component exported by @morscherlab/mint-sd
 ## Import
 
 ```ts
-import { ExperimentCodeBadge } from "@morscherlab/mint-sdk/components"
+import { ExperimentCodeBadge } from "@morscherlab/mint-sdk/data"
 ```
 
 <!-- sdk-props:start -->

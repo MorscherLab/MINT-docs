@@ -20,7 +20,7 @@ BatchProgressList is a data display component exported by @morscherlab/mint-sdk 
 ## Import
 
 ```ts
-import { BatchProgressList } from "@morscherlab/mint-sdk/components"
+import { BatchProgressList } from "@morscherlab/mint-sdk/data"
 ```
 
 <!-- sdk-props:start -->

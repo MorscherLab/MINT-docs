@@ -20,7 +20,7 @@ BaseTabs is a forms component exported by @morscherlab/mint-sdk for plugin front
 ## Import
 
 ```ts
-import { BaseTabs } from "@morscherlab/mint-sdk/components"
+import { BaseTabs } from "@morscherlab/mint-sdk"
 ```
 
 ## Changes in 1.2.1
@@ -30,7 +30,7 @@ is removed, including `variant="pills"`. Use [SegmentedControl](/sdk/components/
 with `variant="card"` for a pill-style choice control.
 
 ```vue
-<BaseTabs v-model="activeTab" :tabs="tabs" />
+<BaseTabs v-model="activeTab" :options="tabs" />
 ```
 
 <!-- sdk-props:start -->

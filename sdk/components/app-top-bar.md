@@ -20,7 +20,7 @@ Platform-style top bar for shells that need custom navigation chrome.
 ## Import
 
 ```ts
-import { AppTopBar } from "@morscherlab/mint-sdk/components"
+import { AppTopBar } from "@morscherlab/mint-sdk/shell"
 ```
 
 ## Plugin identity

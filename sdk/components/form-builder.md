@@ -20,7 +20,7 @@ Schema-driven form renderer for experiment-design and plugin settings UIs.
 ## Import
 
 ```ts
-import { FormBuilder } from "@morscherlab/mint-sdk/components"
+import { FormBuilder } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage

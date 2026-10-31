@@ -24,7 +24,7 @@ See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the 
 ## Import
 
 ```ts
-import { PluginWorkspaceView } from "@morscherlab/mint-sdk/components"
+import { PluginWorkspaceView } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage

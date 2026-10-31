@@ -20,7 +20,7 @@ Themed text and numeric input with error, placeholder, and v-model support.
 ## Import
 
 ```ts
-import { BaseInput } from "@morscherlab/mint-sdk/components"
+import { BaseInput } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage

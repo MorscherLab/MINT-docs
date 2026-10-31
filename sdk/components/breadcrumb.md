@@ -20,7 +20,7 @@ Breadcrumb is a layout component exported by @morscherlab/mint-sdk for plugin fr
 ## Import
 
 ```ts
-import { Breadcrumb } from "@morscherlab/mint-sdk/components"
+import { Breadcrumb } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

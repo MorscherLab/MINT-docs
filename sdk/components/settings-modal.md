@@ -20,7 +20,7 @@ SettingsModal is a feedback component exported by @morscherlab/mint-sdk for plug
 ## Import
 
 ```ts
-import { SettingsModal } from "@morscherlab/mint-sdk/components"
+import { SettingsModal } from "@morscherlab/mint-sdk"
 ```
 
 ## Layout

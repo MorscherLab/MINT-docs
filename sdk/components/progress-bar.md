@@ -20,7 +20,7 @@ ProgressBar is a feedback component exported by @morscherlab/mint-sdk for plugin
 ## Import
 
 ```ts
-import { ProgressBar } from "@morscherlab/mint-sdk/components"
+import { ProgressBar } from "@morscherlab/mint-sdk"
 ```
 
 `ProgressBar` shows a percentage rail (`value`) or an `indeterminate` bar. For step-by-step progress, use [StepWizard](/sdk/components/step-wizard).

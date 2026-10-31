@@ -20,7 +20,7 @@ Empty-list and empty-view treatment with optional action affordance.
 ## Import
 
 ```ts
-import { EmptyState } from "@morscherlab/mint-sdk/components"
+import { EmptyState } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

@@ -20,7 +20,7 @@ Multi-step workflow container with progress, validation, and navigation slots.
 ## Import
 
 ```ts
-import { StepWizard } from "@morscherlab/mint-sdk/components"
+import { StepWizard } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Basic Usage

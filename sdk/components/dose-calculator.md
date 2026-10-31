@@ -20,7 +20,7 @@ DoseCalculator is a lab widgets component exported by @morscherlab/mint-sdk for 
 ## Import
 
 ```ts
-import { DoseCalculator } from "@morscherlab/mint-sdk/components"
+import { DoseCalculator } from "@morscherlab/mint-sdk/lab"
 ```
 
 <!-- sdk-props:start -->

@@ -20,7 +20,7 @@ Compact overflow actions with an icon-only trigger and a viewport-safe teleporte
 ## Import
 
 ```ts
-import { ActionMenu } from "@morscherlab/mint-sdk/components"
+import { ActionMenu } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage

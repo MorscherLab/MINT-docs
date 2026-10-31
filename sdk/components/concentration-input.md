@@ -20,7 +20,7 @@ ConcentrationInput is a forms component exported by @morscherlab/mint-sdk for pl
 ## Import
 
 ```ts
-import { ConcentrationInput } from "@morscherlab/mint-sdk/components"
+import { ConcentrationInput } from "@morscherlab/mint-sdk/lab"
 ```
 
 <!-- sdk-props:start -->

@@ -20,7 +20,7 @@ InstrumentStateBadge is a data display component exported by @morscherlab/mint-s
 ## Import
 
 ```ts
-import { InstrumentStateBadge } from "@morscherlab/mint-sdk/components"
+import { InstrumentStateBadge } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## States

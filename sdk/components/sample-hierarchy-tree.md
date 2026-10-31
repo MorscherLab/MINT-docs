@@ -20,7 +20,7 @@ SampleHierarchyTree is a lab widgets component exported by @morscherlab/mint-sdk
 ## Import
 
 ```ts
-import { SampleHierarchyTree } from "@morscherlab/mint-sdk/components"
+import { SampleHierarchyTree } from "@morscherlab/mint-sdk/lab"
 ```
 
 <!-- sdk-props:start -->

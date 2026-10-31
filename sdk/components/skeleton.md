@@ -20,7 +20,7 @@ Skeleton is a feedback component exported by @morscherlab/mint-sdk for plugin fr
 ## Import
 
 ```ts
-import { Skeleton } from "@morscherlab/mint-sdk/components"
+import { Skeleton } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

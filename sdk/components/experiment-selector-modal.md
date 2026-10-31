@@ -20,7 +20,7 @@ ExperimentSelectorModal is a workflow component exported by @morscherlab/mint-sd
 ## Import
 
 ```ts
-import { ExperimentSelectorModal } from "@morscherlab/mint-sdk/components"
+import { ExperimentSelectorModal } from "@morscherlab/mint-sdk/data"
 ```
 
 <!-- sdk-props:start -->

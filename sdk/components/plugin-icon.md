@@ -20,7 +20,7 @@ PluginIcon is a layout component exported by @morscherlab/mint-sdk for plugin fr
 ## Import
 
 ```ts
-import { PluginIcon } from "@morscherlab/mint-sdk/components"
+import { PluginIcon } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

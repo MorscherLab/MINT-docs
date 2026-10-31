@@ -20,7 +20,7 @@ Single checkbox control for boolean plugin settings and form fields.
 ## Import
 
 ```ts
-import { BaseCheckbox } from "@morscherlab/mint-sdk/components"
+import { BaseCheckbox } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

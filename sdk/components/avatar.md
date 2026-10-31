@@ -20,7 +20,7 @@ Avatar is a feedback component exported by @morscherlab/mint-sdk for plugin fron
 ## Import
 
 ```ts
-import { Avatar } from "@morscherlab/mint-sdk/components"
+import { Avatar } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

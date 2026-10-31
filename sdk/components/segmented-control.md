@@ -20,7 +20,7 @@ SegmentedControl is a forms component exported by @morscherlab/mint-sdk for plug
 ## Import
 
 ```ts
-import { SegmentedControl } from "@morscherlab/mint-sdk/components"
+import { SegmentedControl } from "@morscherlab/mint-sdk"
 ```
 
 ## Sizing in 1.2.1

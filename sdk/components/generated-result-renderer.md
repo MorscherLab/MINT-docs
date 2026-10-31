@@ -24,7 +24,7 @@ This component renders a piece of the SDK's backend-driven **generated UI** syst
 ## Import
 
 ```ts
-import { GeneratedResultRenderer } from "@morscherlab/mint-sdk/components"
+import { GeneratedResultRenderer } from "@morscherlab/mint-sdk/runtime"
 ```
 
 ## Artifact downloads

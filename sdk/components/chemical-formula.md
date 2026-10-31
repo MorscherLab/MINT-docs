@@ -20,7 +20,7 @@ Formula renderer with scientific typography, optional MS adduct notation, and co
 ## Import
 
 ```ts
-import { ChemicalFormula } from "@morscherlab/mint-sdk/components"
+import { ChemicalFormula } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Basic Usage

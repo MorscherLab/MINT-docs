@@ -20,7 +20,7 @@ Inline status, warning, error, and success messages for plugin screens.
 ## Import
 
 ```ts
-import { AlertBox } from "@morscherlab/mint-sdk/components"
+import { AlertBox } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage

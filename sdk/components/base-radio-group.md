@@ -20,7 +20,7 @@ BaseRadioGroup is a forms component exported by @morscherlab/mint-sdk for plugin
 ## Import
 
 ```ts
-import { BaseRadioGroup } from "@morscherlab/mint-sdk/components"
+import { BaseRadioGroup } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

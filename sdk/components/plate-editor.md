@@ -20,7 +20,7 @@ Controlled multi-plate editor over [WellPlate](/sdk/components/well-plate): plat
 ## Import
 
 ```ts
-import { PlateEditor } from "@morscherlab/mint-sdk/components"
+import { PlateEditor } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Basic Usage
@@ -101,18 +101,6 @@ Features are opt-in props: `formats`, `slots`, `reorder`, `wellDrag`, `groups`, 
 - **Read-only.** `readonly` removes the editing controls; `well-click` still fires.
 
 Slots: `#well-editor`, `#tab-extra` (tab bar), `#toolbar-extra` (toolbar). Keyboard shortcuts listen on the component, never on the document.
-
-## Plate-map data
-
-A BioTemplate `plate-map` binding renders `PlateEditor` with the template's samples as `groups` and the format pinned to the plate format. To edit stored plate-map data by hand, convert it to racks:
-
-```ts
-import { racksFromPlateState, toPlateMapEditorState } from '@morscherlab/mint-sdk/templates'
-
-const racks = racksFromPlateState(toPlateMapEditorState(template))
-```
-
-`racksFromPlateState` assigns slots in order and moves each well's sample id from `sampleType` to `group`. Both helpers belong to the biology `templates` exports, which are scheduled to leave the core SDK in MINT 1.4.
 
 <!-- sdk-props:start -->
 ## Props

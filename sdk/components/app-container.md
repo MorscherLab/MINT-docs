@@ -20,7 +20,7 @@ Lightweight content shell for standalone plugin screens and routed views.
 ## Import
 
 ```ts
-import { AppContainer } from "@morscherlab/mint-sdk/components"
+import { AppContainer } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

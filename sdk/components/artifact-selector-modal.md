@@ -20,7 +20,7 @@ Modal for browsing and selecting an analysis artifact of an experiment, with fil
 ## Import
 
 ```ts
-import { ArtifactSelectorModal } from "@morscherlab/mint-sdk/components"
+import { ArtifactSelectorModal } from "@morscherlab/mint-sdk/data"
 ```
 
 ## Basic Usage

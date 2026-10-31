@@ -20,7 +20,7 @@ CollapsibleCard is a layout component exported by @morscherlab/mint-sdk for plug
 ## Import
 
 ```ts
-import { CollapsibleCard } from "@morscherlab/mint-sdk/components"
+import { CollapsibleCard } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

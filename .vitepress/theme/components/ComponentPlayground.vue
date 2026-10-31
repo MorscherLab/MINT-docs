@@ -214,9 +214,9 @@ const radioOptions = [
 ]
 
 const tabs = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'results', label: 'Results', badge: 12 },
-  { id: 'settings', label: 'Settings' },
+  { value: 'overview', label: 'Overview' },
+  { value: 'results', label: 'Results', badge: 12 },
+  { value: 'settings', label: 'Settings' },
 ]
 
 const resultColumns = [
@@ -1234,7 +1234,7 @@ const fallbackReason = computed(() => {
       </template>
 
       <template v-else-if="name === 'BaseTabs'">
-        <BaseTabs v-model="activeTab" :tabs="tabs" />
+        <BaseTabs v-model="activeTab" :options="tabs" />
         <p class="mint-live-caption">Active tab: {{ activeTab }}</p>
       </template>
 

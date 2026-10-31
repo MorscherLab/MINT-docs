@@ -20,7 +20,7 @@ description: "ChartContainer is a data display component exported by @morscherla
 ## Import
 
 ```ts
-import { ChartContainer } from "@morscherlab/mint-sdk/components"
+import { ChartContainer } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Workbench frame

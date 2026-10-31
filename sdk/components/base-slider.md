@@ -20,7 +20,7 @@ BaseSlider is a forms component exported by @morscherlab/mint-sdk for plugin fro
 ## Import
 
 ```ts
-import { BaseSlider } from "@morscherlab/mint-sdk/components"
+import { BaseSlider } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

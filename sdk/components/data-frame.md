@@ -20,7 +20,7 @@ Searchable, sortable, selectable table for dense experiment and analysis results
 ## Import
 
 ```ts
-import { DataFrame } from "@morscherlab/mint-sdk/components"
+import { DataFrame } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage

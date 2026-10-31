@@ -24,7 +24,7 @@ See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the 
 ## Import
 
 ```ts
-import { AppLayout } from "@morscherlab/mint-sdk/components"
+import { AppLayout } from "@morscherlab/mint-sdk/shell"
 ```
 
 <!-- sdk-props:start -->

@@ -20,7 +20,7 @@ ExperimentPopover is a workflow component exported by @morscherlab/mint-sdk for 
 ## Import
 
 ```ts
-import { ExperimentPopover } from "@morscherlab/mint-sdk/components"
+import { ExperimentPopover } from "@morscherlab/mint-sdk/data"
 ```
 
 <!-- sdk-props:start -->

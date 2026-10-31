@@ -20,7 +20,7 @@ TagsInput is a forms component exported by @morscherlab/mint-sdk for plugin fron
 ## Import
 
 ```ts
-import { TagsInput } from "@morscherlab/mint-sdk/components"
+import { TagsInput } from "@morscherlab/mint-sdk/data"
 ```
 
 <!-- sdk-props:start -->

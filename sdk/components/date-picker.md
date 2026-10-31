@@ -20,7 +20,7 @@ DatePicker is a forms component exported by @morscherlab/mint-sdk for plugin fro
 ## Import
 
 ```ts
-import { DatePicker } from "@morscherlab/mint-sdk/components"
+import { DatePicker } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

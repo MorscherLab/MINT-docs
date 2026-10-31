@@ -20,7 +20,7 @@ ScientificNumber is a data display component exported by @morscherlab/mint-sdk f
 ## Import
 
 ```ts
-import { ScientificNumber } from "@morscherlab/mint-sdk/components"
+import { ScientificNumber } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Copying

@@ -20,7 +20,7 @@ Edits one plugin secret setting: shows set / not set / provided-by-environment s
 ## Import
 
 ```ts
-import { SecretInput } from "@morscherlab/mint-sdk/components"
+import { SecretInput } from "@morscherlab/mint-sdk/data"
 ```
 
 ## Basic Usage

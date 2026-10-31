@@ -20,7 +20,7 @@ Drag-and-drop file picker with accept, size, multiple, and error handling.
 ## Import
 
 ```ts
-import { FileUploader } from "@morscherlab/mint-sdk/components"
+import { FileUploader } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage

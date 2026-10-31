@@ -20,7 +20,7 @@ Tokenized action button with variants, sizes, loading, and disabled states.
 ## Import
 
 ```ts
-import { BaseButton } from "@morscherlab/mint-sdk/components"
+import { BaseButton } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage

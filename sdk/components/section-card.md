@@ -20,7 +20,7 @@ One-card page region from the MINT 1.1 card system: header strip, hairline-separ
 ## Import
 
 ```ts
-import { SectionCard } from "@morscherlab/mint-sdk/components"
+import { SectionCard } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage

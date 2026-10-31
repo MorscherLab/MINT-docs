@@ -20,7 +20,7 @@ SequenceInput is a forms component exported by @morscherlab/mint-sdk for plugin 
 ## Import
 
 ```ts
-import { SequenceInput } from "@morscherlab/mint-sdk/components"
+import { SequenceInput } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Behavior

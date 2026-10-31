@@ -20,7 +20,7 @@ Card displaying a lab resource with availability status, specs, tags, and a book
 ## Import
 
 ```ts
-import { ResourceCard } from "@morscherlab/mint-sdk/components"
+import { ResourceCard } from "@morscherlab/mint-sdk/lab"
 ```
 
 <!-- sdk-props:start -->

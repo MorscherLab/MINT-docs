@@ -20,7 +20,7 @@ AppToastContainer is a feedback component exported by @morscherlab/mint-sdk for 
 ## Import
 
 ```ts
-import { AppToastContainer } from "@morscherlab/mint-sdk/components"
+import { AppToastContainer } from "@morscherlab/mint-sdk"
 ```
 
 ## Structured notifications in 1.2.1

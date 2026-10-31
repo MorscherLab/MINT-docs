@@ -20,7 +20,7 @@ Fixed-position notice offering a reload when a newer plugin or platform build is
 ## Import
 
 ```ts
-import { RuntimeUpdateNotice } from "@morscherlab/mint-sdk/components"
+import { RuntimeUpdateNotice } from "@morscherlab/mint-sdk/runtime"
 ```
 
 ## Basic Usage

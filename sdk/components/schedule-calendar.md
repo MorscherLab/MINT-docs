@@ -20,7 +20,7 @@ ScheduleCalendar is a workflow component exported by @morscherlab/mint-sdk for p
 ## Import
 
 ```ts
-import { ScheduleCalendar } from "@morscherlab/mint-sdk/components"
+import { ScheduleCalendar } from "@morscherlab/mint-sdk/lab"
 ```
 
 <!-- sdk-props:start -->

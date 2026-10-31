@@ -20,7 +20,7 @@ Floating, source-driven job status tray for plugin and platform workflows.
 ## Import
 
 ```ts
-import { JobsStatusTray } from "@morscherlab/mint-sdk/components"
+import { JobsStatusTray } from "@morscherlab/mint-sdk/data"
 ```
 
 ## Basic Usage

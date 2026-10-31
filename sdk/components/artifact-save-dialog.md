@@ -20,7 +20,7 @@ Save/update dialog for analysis artifacts; delegates the write to a plugin-suppl
 ## Import
 
 ```ts
-import { ArtifactSaveDialog } from "@morscherlab/mint-sdk/components"
+import { ArtifactSaveDialog } from "@morscherlab/mint-sdk/data"
 ```
 
 ## Basic Usage

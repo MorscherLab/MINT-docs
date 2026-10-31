@@ -24,7 +24,7 @@ This component renders a piece of the SDK's backend-driven **generated UI** syst
 ## Import
 
 ```ts
-import { GeneratedPlotlyResult } from "@morscherlab/mint-sdk/components"
+import { GeneratedPlotlyResult } from "@morscherlab/mint-sdk/runtime"
 ```
 
 ## Basic Usage

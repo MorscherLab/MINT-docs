@@ -20,7 +20,7 @@ Calendar is a forms component exported by @morscherlab/mint-sdk for plugin front
 ## Import
 
 ```ts
-import { Calendar } from "@morscherlab/mint-sdk/components"
+import { Calendar } from "@morscherlab/mint-sdk"
 ```
 
 <!-- sdk-props:start -->

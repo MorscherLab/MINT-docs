@@ -20,7 +20,7 @@ SequenceProgressBar is a data display component exported by @morscherlab/mint-sd
 ## Import
 
 ```ts
-import { SequenceProgressBar } from "@morscherlab/mint-sdk/components"
+import { SequenceProgressBar } from "@morscherlab/mint-sdk/lab"
 ```
 
 <!-- sdk-props:start -->

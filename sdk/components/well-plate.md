@@ -24,7 +24,7 @@ Interactive plate map with heatmaps, selection, and editing hooks. Supported for
 ## Import
 
 ```ts
-import { WellPlate } from "@morscherlab/mint-sdk/components"
+import { WellPlate } from "@morscherlab/mint-sdk/lab"
 ```
 
 ## Basic Usage

@@ -20,7 +20,7 @@ Pre-built confirm-or-cancel dialog for destructive or high-friction actions.
 ## Import
 
 ```ts
-import { ConfirmDialog } from "@morscherlab/mint-sdk/components"
+import { ConfirmDialog } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage
