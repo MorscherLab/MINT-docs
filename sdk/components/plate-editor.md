@@ -15,7 +15,7 @@ Controlled multi-plate editor over [WellPlate](/sdk/components/well-plate): plat
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PlateEditor.vue">Source</a>
 </div>
 
-<ComponentPlayground name="PlateEditor" />
+<demo vue="./demos/PlateEditor.vue" title="PlateEditor" description="A 96-well rack with blanks, QC and samples. Select wells, edit them, and undo or redo changes." />
 
 ## Import
 
@@ -109,7 +109,7 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` spec ` | ` PlateEditorSpec ` | No | ` () => ({}) ` | Structure built with definePlateEditor(). Optional: every option has a default. |
+| ` spec ` | ` PlateEditorSpec ` | No | ` {} ` | Structure built with definePlateEditor(). Optional: every option has a default. |
 | ` modelValue ` | ` Rack[] ` | Yes | — | The plates. Never mutated; changes arrive as emitted intents. |
 | ` activeRack ` | ` string ` | No | ` undefined ` | Id of the active plate. Bind with v-model:active-rack; unbound, the tabs keep their own choice. |
 | ` canUndo ` | ` boolean ` | No | ` false ` | — |
@@ -117,7 +117,7 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` readonly ` | ` boolean ` | No | ` false ` | No editing controls; well clicks still emit well-click. |
 | ` hint ` | ` string ` | No | ` undefined ` | Footer text while nothing is selected; replaces the built-in selection hint. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -125,6 +125,40 @@ Defaults are source expressions; factory functions are evaluated for each compon
 |---|---|
 | [` PlateEditorSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L184) | See the linked SDK type definition. |
 | [` Rack `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L110) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` clear ` | ` rackId: string ` | — |
+| ` well-click ` | ` rackId: string, wellId: string ` | — |
+| ` selection-change ` | ` wellIds: string[] ` | — |
+| ` well-move ` | ` rackId: string, sourceWellId: string, targetWellId: string ` | — |
+| ` well-edit ` | ` rackId: string, wellId: string, data: WellEditData ` | — |
+| ` well-clear ` | ` rackId: string, wellId: string ` | — |
+| ` sample-drop ` | ` rackId: string, wellId: string, data: WellSampleDropData, event: DragEvent ` | — |
+| ` update:activeRack ` | ` rackId: string ` | — |
+| ` rack-add ` | — | — |
+| ` rack-remove ` | ` rackId: string ` | — |
+| ` rack-reorder ` | ` rackIds: string[] ` | — |
+| ` update:format ` | ` rackId: string, format: WellPlateFormat ` | — |
+| ` update:slot ` | ` rackId: string, slot: SlotPosition ` | — |
+| ` assign ` | ` rackId: string, wellIds: string[], groupId: string \| undefined ` | — |
+| ` fill-series ` | ` rackId: string ` | — |
+| ` import ` | ` file: File ` | — |
+| ` import-text ` | ` text: string ` | — |
+| ` export ` | ` format: string ` | — |
+| ` group-add ` | — | — |
+| ` undo ` | — | — |
+| ` redo ` | — | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` well-editor ` | ` PlateEditorWellEditorSlotProps ` | Replaces the default single-well inspector, in the rail or the popover. |
+| ` tab-extra ` | — | Extra controls at the right end of the tab bar. |
+| ` toolbar-extra ` | — | Extra controls at the right end of the toolbar. |
 
 <!-- sdk-props:end -->
 

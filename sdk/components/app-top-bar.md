@@ -15,7 +15,7 @@ Platform-style top bar for shells that need custom navigation chrome.
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/AppTopBar.vue">Source</a>
 </div>
 
-<ComponentPlayground name="AppTopBar" />
+<demo vue="./demos/AppTopBar.vue" title="AppTopBar" description="A top bar with page selector, pill navigation and account menu. Click the pills to change the active view." />
 
 ## Import
 
@@ -48,7 +48,7 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 |---|---|---|---|---|
 | ` title ` | ` string ` | No | ` undefined ` | App or plugin title shown in the left title group when no page selector is present. |
 | ` subtitle ` | ` string ` | No | ` undefined ` | Secondary title copy shown under the title in title-group layouts. |
-| ` spec ` | ` PluginWorkspaceTopBarSpec ` | No | ` () => ({}) ` | Structure: variant, home link, logo, pills, theme toggle, settings, standalone badge. Optional: every option has a default. |
+| ` spec ` | ` PluginWorkspaceTopBarSpec ` | No | ` {} ` | Structure: variant, home link, logo, pills, theme toggle, settings, standalone badge. Optional: every option has a default. |
 | ` pill ` | ` string ` | No | ` undefined ` | Active pill id. Bind with v-model:pill. |
 | ` pageSelector ` | ` PageSelectorItemInput[] ` | No | ` undefined ` | Page selector of a platform page. Plugin pages get theirs from the plugin.nav_items metadata through the platform integration script. |
 | ` currentPageSelectorId ` | ` string ` | No | ` undefined ` | Active id of the platform page selector. |
@@ -57,7 +57,7 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` jobsOpen ` | ` boolean ` | No | ` undefined ` | Whether the jobs panel is open; aria-expanded of the job control. |
 | ` jobsPanelId ` | ` string ` | No | ` undefined ` | DOM id of the jobs panel; aria-controls of the job control. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -66,6 +66,31 @@ Defaults are source expressions; factory functions are evaluated for each compon
 | [` PluginWorkspaceTopBarSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L233) | See the linked SDK type definition. |
 | [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L230) | See the linked SDK type definition. |
 | [` TopBarJob `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/jobs.ts#L73) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` pill-select ` | ` item: PillNavItem ` | — |
+| ` pill-option-select ` | ` option: PillNavOption, item: PillNavItem ` | — |
+| ` settings-values-change ` | ` data: Record<string, unknown> ` | — |
+| ` job-click ` | — | — |
+| ` update:pill ` | ` pillId: string ` | — |
+| ` page-selector-select ` | ` page: PageSelectorItem ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` icon ` | — | — |
+| ` logo ` | — | — |
+| ` page-selector-icon ` | ` { page: PageSelectorItem; } ` | — |
+| ` page-selector-item-icon ` | ` { page: PageSelectorItem; } ` | — |
+| ` nav ` | — | — |
+| ` center ` | — | — |
+| ` actions ` | — | — |
+| ` account ` | — | — |
+| ` settings-appearance ` | — | — |
 
 <!-- sdk-props:end -->
 

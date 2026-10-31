@@ -34,6 +34,8 @@ Plus `index.md` (home), `team.md` (Vue components from `vitepress/theme`), and `
 
 `.vitepress/config.ts` is the single source of truth for nav bar, sidebar groups, search, and the GitHub edit-link pattern. **Adding a page requires two edits**: create the `.md` file, then register it in the matching `sidebar` group in `config.ts` — otherwise it won't appear in navigation.
 
+Each component demo is one file in `sdk/components/demos/<Name>.vue`, shown with a `<demo vue="./demos/<Name>.vue" title=... description=... />` tag (`vitepress-demo-plugin`; its `locale` keys are `<html lang>` values). Demos import only from public SDK entries and are type-checked by `bunx vue-tsc --noEmit -p sdk/components/demos`, which the PR workflow `check.yml` runs with `build:current`. `postcssIsolateStyles` keeps the doc typography out of the `.vp-raw` demo area. A component that needs the platform or Plotly gets a `::: info` note instead of a demo.
+
 `.vitepress/theme/` only adds `custom.css` on top of the default theme (the MINT v2 palette mapped onto the `--vp-c-*` variables: one teal accent, slate neutrals, no gradient or glow). The brand palette there is intentionally kept in sync with `packages/sdk-frontend/src/styles/variables.css` in the MINT platform repo — change both together if you change either. `.vitepress/public/` ships static assets straight to the site root — notably `CNAME` (custom domain) and `mint-icon.svg` (the platform's `frontend/public/icon.svg` with rounded corners). The Vite config sets `publicDir` explicitly so the CNAME survives builds run from any cwd.
 
 Edit links in the footer point to `MorscherLab/MINT-docs` on GitHub. The dev server uses `lastUpdated` git timestamps, which is why CI checks out with `fetch-depth: 0`.

@@ -15,7 +15,7 @@ Skeleton is a feedback component exported by @morscherlab/mint-sdk for plugin fr
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/Skeleton.vue">Source</a>
 </div>
 
-<ComponentPlayground name="Skeleton" />
+<demo vue="./demos/Skeleton.vue" title="Skeleton" description="Loading placeholders in circular, text, and rounded shapes. Use them to see how a loading layout looks." />
 
 ## Import
 
@@ -30,12 +30,20 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` variant ` | ` 'text' \| 'circular' \| 'rectangular' \| 'rounded' ` | No | ` 'text' ` | — |
+| ` variant ` | ` 'text' \| 'circular' \| 'rectangular' \| 'rounded' ` | No | ` "text" ` | — |
 | ` width ` | ` string \| number ` | No | ` undefined ` | — |
 | ` height ` | ` string \| number ` | No | ` undefined ` | — |
-| ` animation ` | ` 'pulse' \| 'wave' \| 'none' ` | No | ` 'wave' ` | — |
+| ` animation ` | ` 'pulse' \| 'wave' \| 'none' ` | No | ` "wave" ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Events
+
+This component emits no events.
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

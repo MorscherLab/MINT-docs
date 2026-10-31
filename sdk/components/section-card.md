@@ -15,7 +15,7 @@ One-card page region from the MINT 1.1 card system: header strip, hairline-separ
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SectionCard.vue">Source</a>
 </div>
 
-<ComponentPlayground name="SectionCard" />
+<demo vue="./demos/SectionCard.vue" title="SectionCard" description="A card with a header, run count and action button. Use it to group one page region." />
 
 ## Import
 
@@ -44,12 +44,12 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` title ` | ` string ` | Yes | — | — |
 | ` count ` | ` string \| number ` | No | ` undefined ` | Monospace meta shown next to the title, e.g. "14 ongoing · 42 total". |
 | ` icon ` | ` string \| string[] ` | No | ` undefined ` | SVG path(s) for the 22px icon chip; omit to render no chip. |
-| ` accent ` | ` SectionCardAccent ` | No | ` 'primary' ` | Tint of the icon chip. |
+| ` accent ` | ` SectionCardAccent ` | No | ` "primary" ` | Tint of the icon chip. |
 | ` uppercase ` | ` boolean ` | No | ` false ` | Uppercase category heading (home cards) vs plain heading (detail cards). |
-| ` divider ` | ` SectionCardDivider ` | No | ` 'strong' ` | Header hairline: 'strong' = --border-color, 'light' = --border-light. |
+| ` divider ` | ` SectionCardDivider ` | No | ` "strong" ` | Header hairline: 'strong' = --border-color, 'light' = --border-light. |
 | ` fill ` | ` boolean ` | No | ` false ` | Stretch to fill the height its parent offers, scrolling the body and pinning the header and footer. Requires a parent that gives the card a definite height (a flex or grid track). |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -57,6 +57,19 @@ Defaults are source expressions; factory functions are evaluated for each compon
 |---|---|
 | [` SectionCardAccent `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L128) | See the linked SDK type definition. |
 | [` SectionCardDivider `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L137) | ` 'strong' \| 'light' ` |
+
+### Events
+
+This component emits no events.
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` actions ` | — | — |
+| ` toolbar ` | — | — |
+| ` default ` | — | — |
+| ` footer ` | — | — |
 
 <!-- sdk-props:end -->
 

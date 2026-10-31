@@ -1,4 +1,5 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig, postcssIsolateStyles } from 'vitepress'
+import { vitepressDemoPlugin } from 'vitepress-demo-plugin/markdown'
 import { componentSidebarGroups } from './componentCatalog'
 import { currentDocsVersion, versionNav } from './versions'
 
@@ -18,6 +19,8 @@ export default defineConfig({
 
   markdown: {
     config(md) {
+      // Keys are <html lang> values, not paths.
+      md.use(vitepressDemoPlugin, { locale: { 'en-US': 'en-US' } })
       // `@MINT_VERSION@` works in prose, code blocks and links; one bump per release.
       md.core.ruler.before('normalize', 'mint-version', (state) => {
         state.src = state.src.replaceAll('@MINT_VERSION@', currentDocsVersion)
@@ -286,5 +289,7 @@ export default defineConfig({
     server: { port: 17174, strictPort: true },
     // Explicit publicDir so CNAME + icon ship in dist/ regardless of cwd
     publicDir: '.vitepress/public',
+    // Demos sit in .vp-raw; keep the doc typography off the SDK components.
+    css: { postcss: { plugins: [postcssIsolateStyles({ includeFiles: [/vp-doc\.css/, /base\.css/] })] } },
   },
 })

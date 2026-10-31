@@ -15,7 +15,7 @@ SampleSelector is a lab widgets component exported by @morscherlab/mint-sdk for 
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SampleSelector.vue">Source</a>
 </div>
 
-<ComponentPlayground name="SampleSelector" />
+<demo vue="./demos/SampleSelector.vue" title="SampleSelector" description="Select samples from a list and sort them into colored groups. Click samples to change the selection." />
 
 ## Import
 
@@ -30,9 +30,9 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` samples ` | ` string[] ` | No | ` () => [] ` | — |
+| ` samples ` | ` string[] ` | No | ` [] ` | — |
 | ` modelValue ` | ` string[] ` | Yes | — | — |
-| ` groups ` | ` SampleGroup[] ` | No | ` () => [] ` | — |
+| ` groups ` | ` SampleGroup[] ` | No | ` [] ` | — |
 | ` enableGrouping ` | ` boolean ` | No | ` true ` | — |
 | ` enableSmartGroup ` | ` boolean ` | No | ` true ` | — |
 | ` experimentId ` | ` number ` | No | ` undefined ` | — |
@@ -40,15 +40,31 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` autoloadExperimentData ` | ` boolean ` | No | ` true ` | — |
 | ` loading ` | ` boolean ` | No | ` false ` | Replace the selector body with a loading placeholder. |
 | ` error ` | ` string \| null ` | No | ` null ` | Error message. When set, the selector body is replaced by an error state. null/undefined renders normally. |
-| ` emptyText ` | ` string ` | No | ` 'No samples available' ` | Empty-state headline shown when there are no samples to select from. |
+| ` emptyText ` | ` string ` | No | ` "No samples available" ` | Empty-state headline shown when there are no samples to select from. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` SampleGroup `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L255) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` samples: string[] ` | — |
+| ` update:groups ` | ` groups: SampleGroup[] ` | — |
+| ` smartGroup ` | ` result: AutoGroupResult ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` error ` | ` { error: string; } ` | — |
+| ` loading ` | — | — |
+| ` empty ` | — | — |
 
 <!-- sdk-props:end -->
 

@@ -287,54 +287,6 @@
   max-width: min(1120px, 100%);
 }
 
-.mint-component-playground {
-  margin: 2rem 0;
-}
-
-.mint-component-playground__header {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.mint-component-playground__header h2 {
-  margin: 0;
-}
-
-.mint-component-playground__header p {
-  margin: 0.25rem 0 0;
-  color: var(--vp-c-text-2);
-}
-
-.mint-component-playground__surface {
-  display: grid;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
-  background: var(--vp-c-bg-alt);
-  overflow-x: auto;
-}
-
-.mint-component-playground__surface > .mint-well-plate {
-  min-width: 620px;
-}
-
-.mint-component-playground__fallback {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.mint-component-playground__fallback p {
-  margin: 0;
-  color: var(--vp-c-text-2);
-}
-
-.mint-component-playground__fallback pre {
-  margin: 0;
-}
-
 .mint-component-tile__meta {
   color: var(--vp-c-brand-1);
   font-size: 0.78rem;
@@ -415,6 +367,19 @@
   font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none !important;
+}
+
+/* The vitepress-demo-plugin preview lays out a demo's root nodes like the old playground surface. */
+.vitepress-demo-plugin-preview {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--vp-c-bg-alt);
+  overflow-x: auto;
+}
+
+.vitepress-demo-plugin-preview > .mint-well-plate {
+  min-width: 620px;
 }
 
 .mint-live-surface {

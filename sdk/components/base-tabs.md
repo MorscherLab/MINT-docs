@@ -15,7 +15,7 @@ BaseTabs is a forms component exported by @morscherlab/mint-sdk for plugin front
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseTabs.vue">Source</a>
 </div>
 
-<ComponentPlayground name="BaseTabs" />
+<demo vue="./demos/BaseTabs.vue" title="BaseTabs" description="Underline tabs with a count badge. Click a tab to change the model value." />
 
 ## Import
 
@@ -43,7 +43,7 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` modelValue ` | ` OptionPrimitive ` | Yes | — | — |
 | ` options ` | ` SelectOptionInput[] ` | Yes | — | Tabs; icon takes SVG path data, badge a count shown after the label. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -51,6 +51,16 @@ Defaults are source expressions; factory functions are evaluated for each compon
 |---|---|
 | [` OptionPrimitive `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L98) | See the linked SDK type definition. |
 | [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` value: OptionPrimitive ` | — |
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

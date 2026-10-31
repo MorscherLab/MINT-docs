@@ -15,7 +15,7 @@ Divider is a layout component exported by @morscherlab/mint-sdk for plugin front
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/Divider.vue">Source</a>
 </div>
 
-<ComponentPlayground name="Divider" />
+<demo vue="./demos/Divider.vue" title="Divider" description="Shows a divider with a centered label between two text blocks." />
 
 ## Import
 
@@ -32,10 +32,18 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 |---|---|---|---|---|
 | ` vertical ` | ` boolean ` | No | ` false ` | — |
 | ` label ` | ` string ` | No | ` undefined ` | — |
-| ` align ` | ` 'center' \| 'left' ` | No | ` 'center' ` | — |
-| ` spacing ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
+| ` align ` | ` 'center' \| 'left' ` | No | ` "center" ` | — |
+| ` spacing ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` "md" ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Events
+
+This component emits no events.
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

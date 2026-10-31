@@ -15,7 +15,7 @@ Sectioned sidebar for plugin-specific navigation and grouped tools.
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/AppSidebar.vue">Source</a>
 </div>
 
-<ComponentPlayground name="AppSidebar" />
+<demo vue="./demos/AppSidebar.vue" title="AppSidebar" description="A sidebar with collapsible panels and form controls. Change the slider, select and toggles in the panels." />
 
 ## Import
 
@@ -52,22 +52,43 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` spec ` | ` PluginWorkspaceSidebarSpec ` | No | ` () => ({}) ` | Structure: header, sections, forms, width, side, collapse. Optional: every option has a default. |
-| ` activeView ` | ` string ` | No | ` '' ` | Which view's panels to display. Defaults to the first non-empty panel view. |
-| ` values ` | ` Record<string, unknown> ` | No | ` () => ({}) ` | Values of the section forms. Bind with v-model:values. |
+| ` spec ` | ` PluginWorkspaceSidebarSpec ` | No | ` {} ` | Structure: header, sections, forms, width, side, collapse. Optional: every option has a default. |
+| ` activeView ` | ` string ` | No | ` "" ` | Which view's panels to display. Defaults to the first non-empty panel view. |
+| ` values ` | ` Record<string, unknown> ` | No | ` {} ` | Values of the section forms. Bind with v-model:values. |
 | ` collapsed ` | ` boolean ` | No | ` undefined ` | Collapsed state. Bind with v-model:collapsed; unbound, the sidebar keeps its own. |
-| ` toggleState ` | ` Record<string, boolean> ` | No | ` () => ({}) ` | On / off state of the section toggles, keyed by section id. |
+| ` toggleState ` | ` Record<string, boolean> ` | No | ` {} ` | On / off state of the section toggles, keyed by section id. |
 | ` formLoading ` | ` boolean ` | No | ` false ` | Loading / saving state of the section forms. |
 | ` formDisabled ` | ` boolean ` | No | ` false ` | Disabled state of the section forms. |
 | ` formReadonly ` | ` boolean ` | No | ` false ` | Readonly state of the section forms. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` PluginWorkspaceSidebarSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L251) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:values ` | ` values: Record<string, unknown> ` | — |
+| ` update:toggle ` | ` sectionId: string, value: boolean ` | — |
+| ` section-action ` | ` sectionId: string, actionId: string ` | — |
+| ` form-submit ` | ` sectionId: string, values: Record<string, unknown> ` | — |
+| ` form-cancel ` | ` sectionId: string ` | — |
+| ` update:collapsed ` | ` value: boolean ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` header ` | ` { collapsed: boolean; toggleCollapsed: () => void; } ` | — |
+| ` default ` | ` { sections: SidebarToolSection[]; activeView: string; values: Record<string, unknown>; } ` | — |
+| ` collapsed ` | ` { sections: SidebarToolSection[]; expand: () => void; } ` | — |
+| ` footer ` | — | — |
+| ` collapsed-footer ` | — | — |
 
 <!-- sdk-props:end -->
 

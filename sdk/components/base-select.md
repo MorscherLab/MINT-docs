@@ -15,7 +15,7 @@ Themed select control with option objects, placeholder, and v-model support.
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseSelect.vue">Source</a>
 </div>
 
-<ComponentPlayground name="BaseSelect" />
+<demo vue="./demos/BaseSelect.vue" title="BaseSelect" description="A select with three options. Choose an option to change the model value." />
 
 ## Import
 
@@ -40,11 +40,11 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` noResultsText ` | ` string ` | No | ` undefined ` | Text shown when the search matches no option (searchable). |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` invalid ` | ` boolean ` | No | ` false ` | — |
-| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
+| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` "md" ` | — |
 | ` ariaDescribedby ` | ` string ` | No | ` undefined ` | — |
 | ` ariaLabelledby ` | ` string ` | No | ` undefined ` | Id of the visible label. searchable: the trigger is then named by the label and the selected value. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -52,6 +52,19 @@ Defaults are source expressions; factory functions are evaluated for each compon
 |---|---|
 | [` OptionPrimitive `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L98) | See the linked SDK type definition. |
 | [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` value: M extends true ? OptionPrimitive[] : OptionPrimitive ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` option ` | ` { option: SelectOption<OptionPrimitive>; selected: boolean; active: boolean; } ` | searchable only: custom option row. |
+| ` footer ` | — | searchable only: content under the option list. |
 
 <!-- sdk-props:end -->
 

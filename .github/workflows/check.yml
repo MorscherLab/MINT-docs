@@ -1,0 +1,30 @@
+name: Check Docs
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # needed for VitePress lastUpdated git timestamps
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install docs dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Type-check component demos
+        run: bunx vue-tsc --noEmit -p sdk/components/demos
+
+      - name: Build current docs
+        run: bun run build:current

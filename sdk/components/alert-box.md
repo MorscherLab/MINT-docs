@@ -15,7 +15,7 @@ Inline status, warning, error, and success messages for plugin screens.
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/AlertBox.vue">Source</a>
 </div>
 
-<ComponentPlayground name="AlertBox" />
+<demo vue="./demos/AlertBox.vue" title="AlertBox" description="A success alert with a title, body text and an action button. Read how the alert is laid out." />
 
 ## Import
 
@@ -38,18 +38,32 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` tone ` | ` Tone ` | No | ` 'info' ` | — |
+| ` tone ` | ` Tone ` | No | ` "info" ` | — |
 | ` title ` | ` string ` | No | ` undefined ` | — |
 | ` dismissible ` | ` boolean ` | No | ` false ` | — |
 | ` actionLabel ` | ` string ` | No | ` undefined ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` Tone `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L4) | ` 'neutral' \| 'primary' \| 'cta' \| 'success' \| 'warning' \| 'error' \| 'info' ` |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` action ` | — | — |
+| ` dismiss ` | — | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` default ` | — | — |
+| ` actions ` | — | — |
 
 <!-- sdk-props:end -->
 

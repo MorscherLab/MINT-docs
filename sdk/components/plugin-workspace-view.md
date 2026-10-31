@@ -19,7 +19,7 @@ See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the 
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PluginWorkspaceView.vue">Source</a>
 </div>
 
-<ComponentPlayground name="PluginWorkspaceView" />
+<demo vue="./demos/PluginWorkspaceView.vue" title="PluginWorkspaceView" description="A plugin workspace with a top bar and sidebar. Select a pill to change the sidebar panels." />
 
 ## Import
 
@@ -57,7 +57,7 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` spec ` | ` PluginWorkspaceViewSpec ` | No | ` () => ({}) ` | Structure built with definePluginWorkspaceView(). Optional: every option has a default. |
+| ` spec ` | ` PluginWorkspaceViewSpec ` | No | ` {} ` | Structure built with definePluginWorkspaceView(). Optional: every option has a default. |
 | ` pill ` | ` string ` | No | ` undefined ` | Active pill id. Bind with v-model:pill; defaults to the active view. |
 | ` view ` | ` string ` | No | ` undefined ` | Active workspace view. Bind with v-model:view; unbound, the workspace keeps its own. |
 | ` values ` | ` Record<string, unknown> ` | No | ` undefined ` | Values of the sidebar control model. Bind with v-model:values. |
@@ -66,13 +66,50 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` formDisabled ` | ` boolean ` | No | ` false ` | Disabled state of the sidebar forms. |
 | ` formReadonly ` | ` boolean ` | No | ` false ` | Readonly state of the sidebar forms. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` PluginWorkspaceViewSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L299) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` pill-select ` | ` item: PillNavItem ` | — |
+| ` pill-option-select ` | ` option: PillNavOption, item: PillNavItem ` | — |
+| ` settings-values-change ` | ` data: Record<string, unknown> ` | — |
+| ` update:pill ` | ` pillId: string ` | — |
+| ` update:view ` | ` view: string ` | — |
+| ` update:values ` | ` values: Record<string, unknown> ` | — |
+| ` update:sidebarCollapsed ` | ` value: boolean ` | — |
+| ` experiment-select ` | ` experiment: ExperimentSummary ` | — |
+| ` experiment-detach ` | — | — |
+| ` update:toggle ` | ` sectionId: string, value: boolean ` | — |
+| ` section-action ` | ` sectionId: string, actionId: string ` | — |
+| ` form-submit ` | ` sectionId: string, values: Record<string, unknown> ` | — |
+| ` form-cancel ` | ` sectionId: string ` | — |
+| ` job-select ` | ` job: JobState ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` default ` | ` PluginWorkspaceSlotProps ` | — |
+| ` topbar ` | ` PluginWorkspaceSlotProps ` | — |
+| ` sidebar ` | ` PluginWorkspaceSlotProps ` | — |
+| ` icon ` | ` PluginWorkspaceForwardedSlotProps ` | — |
+| ` logo ` | ` PluginWorkspaceForwardedSlotProps ` | — |
+| ` nav ` | ` PluginWorkspaceForwardedSlotProps ` | — |
+| ` center ` | ` PluginWorkspaceForwardedSlotProps ` | — |
+| ` actions ` | ` PluginWorkspaceForwardedSlotProps ` | — |
+| ` settings-appearance ` | ` PluginWorkspaceForwardedSlotProps ` | — |
+| ` header ` | ` PluginWorkspaceForwardedSlotProps ` | — |
+| ` collapsed ` | ` PluginWorkspaceForwardedSlotProps ` | — |
+| ` collapsed-footer ` | ` PluginWorkspaceForwardedSlotProps ` | — |
+| ` footer ` | ` PluginWorkspaceForwardedSlotProps ` | — |
 
 <!-- sdk-props:end -->
 

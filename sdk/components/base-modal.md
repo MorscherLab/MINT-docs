@@ -15,7 +15,7 @@ Standard modal dialog with controlled visibility and footer slots.
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseModal.vue">Source</a>
 </div>
 
-<ComponentPlayground name="BaseModal" />
+<demo vue="./demos/BaseModal.vue" title="BaseModal" description="A modal with a footer. Click the button to open it, then cancel or save to close it." />
 
 ## Import
 
@@ -50,16 +50,16 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` open ` | ` boolean ` | Yes | — | — |
 | ` title ` | ` string ` | No | ` undefined ` | — |
 | ` subtitle ` | ` string ` | No | ` undefined ` | — |
-| ` size ` | ` ModalSize ` | No | ` 'md' ` | — |
-| ` variant ` | ` ModalVariant ` | No | ` 'centered' ` | — |
+| ` size ` | ` ModalSize ` | No | ` "md" ` | — |
+| ` variant ` | ` ModalVariant ` | No | ` "centered" ` | — |
 | ` closable ` | ` boolean ` | No | ` true ` | — |
 | ` closeOnOverlay ` | ` boolean ` | No | ` false ` | — |
 | ` closeOnEscape ` | ` boolean ` | No | ` true ` | — |
-| ` layout ` | ` ModalLayout ` | No | ` 'plain' ` | Shell layout. 'tabs' renders a tab strip between header and body; 'rail' renders a sidebar rail + pane as the shell's middle row. Both are shell regions — never part of the scrolling body content. |
-| ` tabs ` | ` ModalTab[] ` | No | ` () => [] ` | Sections for the tab strip / rail. The strip renders only with 2+ tabs. |
+| ` layout ` | ` ModalLayout ` | No | ` "plain" ` | Shell layout. 'tabs' renders a tab strip between header and body; 'rail' renders a sidebar rail + pane as the shell's middle row. Both are shell regions — never part of the scrolling body content. |
+| ` tabs ` | ` ModalTab[] ` | No | ` [] ` | Sections for the tab strip / rail. The strip renders only with 2+ tabs. |
 | ` activeTab ` | ` string ` | No | ` undefined ` | Id of the selected tab. Two-way bindable via update:activeTab. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -69,6 +69,24 @@ Defaults are source expressions; factory functions are evaluated for each compon
 | [` ModalVariant `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L40) | ` 'centered' \| 'drawer' \| 'sheet' ` |
 | [` ModalLayout `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L41) | ` 'plain' \| 'tabs' \| 'rail' ` |
 | [` ModalTab `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L44) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:open ` | ` value: boolean ` | — |
+| ` update:activeTab ` | ` id: string ` | — |
+| ` close ` | — | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` header ` | — | — |
+| ` rail-footer ` | — | — |
+| ` pane-header ` | ` { tab: ModalTab \| undefined; } ` | — |
+| ` default ` | — | — |
+| ` footer ` | — | — |
 
 <!-- sdk-props:end -->
 

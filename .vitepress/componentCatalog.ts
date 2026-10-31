@@ -65,6 +65,8 @@ const groups: Record<ComponentCategory, string[]> = {
     'Tooltip',
     'BaseModal',
     'ConfirmDialog',
+    'VersionConflictDialog',
+    'StaleFormBanner',
     'SettingsModal',
   ],
   'Data display': [
@@ -79,6 +81,8 @@ const groups: Record<ComponentCategory, string[]> = {
     'BatchProgressList',
     'ExperimentCodeBadge',
     'InstrumentStateBadge',
+    'InstrumentStatusPanels',
+    'PresenceAvatars',
     'BasePill',
   ],
   'Lab widgets': [
@@ -149,6 +153,10 @@ const descriptions: Record<string, string> = {
   GeneratedPlotlyResult: "Renders a generated job's Plotly result spec, with a static image fallback.",
   GeneratedPluginView: 'Standard generated workspace for a plugin that exposes an SDK job manifest.',
   GeneratedResultRenderer: 'Renders standardized text, table, image, Plotly, JSON, and artifact job results.',
+  PresenceAvatars: 'Avatar stack of the other people on a presence topic, with a list of each activity.',
+  InstrumentStatusPanels: 'Card with one tab for each typed panel of an instrument live status.',
+  VersionConflictDialog: 'Dialog for a save refused with a 412 version conflict; reload or overwrite.',
+  StaleFormBanner: 'Strip above a form that someone else changed while it held unsaved edits.',
 }
 
 const examples: Record<string, string> = {
