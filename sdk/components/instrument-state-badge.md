@@ -15,7 +15,7 @@ InstrumentStateBadge is a data display component exported by @morscherlab/mint-s
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/InstrumentStateBadge.vue">Source</a>
 </div>
 
-<ComponentPlayground name="InstrumentStateBadge" />
+<demo vue="./demos/InstrumentStateBadge.vue" title="InstrumentStateBadge" description="Badges for four instrument states: running, standby, error and disconnected." />
 
 ## Import
 
@@ -51,13 +51,21 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` label ` | ` string ` | No | ` undefined ` | — |
 | ` pulseWhenRunning ` | ` boolean ` | No | ` true ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` InstrumentBadgeState `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/instrument.ts#L46) | See the linked SDK type definition. |
+
+### Events
+
+This component emits no events.
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

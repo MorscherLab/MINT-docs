@@ -15,7 +15,9 @@ Modal for browsing and selecting an analysis artifact of an experiment, with fil
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue">Source</a>
 </div>
 
-<ComponentPlayground name="ArtifactSelectorModal" />
+::: info Needs the platform
+This component lists artifacts with `useArtifacts` and reads the current experiment from `useExperimentStore`. To see it work, open a plugin with `mint dev --platform`.
+:::
 
 ## Import
 
@@ -46,16 +48,30 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` currentArtifactId ` | ` number \| null ` | No | ` null ` | Highlights the currently used artifact. |
 | ` includeArchived ` | ` boolean ` | No | ` false ` | Start with archived artifacts visible. |
 | ` fetchDetailOnSelect ` | ` boolean ` | No | ` false ` | Fetch the full detail before emitting selectDetail. |
-| ` title ` | ` string ` | No | ` 'Select Analysis Artifact' ` | — |
-| ` size ` | ` ModalSize ` | No | ` 'full' ` | — |
+| ` title ` | ` string ` | No | ` "Select Analysis Artifact" ` | — |
+| ` size ` | ` ModalSize ` | No | ` "full" ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L39) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` select ` | ` artifact: AnalysisArtifactSummary ` | — |
+| ` update:open ` | ` value: boolean ` | — |
+| ` selectDetail ` | ` detail: AnalysisArtifactDetail ` | — |
+| ` archive ` | ` artifact: AnalysisArtifactSummary ` | — |
+| ` restore ` | ` artifact: AnalysisArtifactSummary ` | — |
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

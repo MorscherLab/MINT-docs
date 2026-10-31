@@ -15,7 +15,7 @@ CollapsibleCard is a layout component exported by @morscherlab/mint-sdk for plug
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/CollapsibleCard.vue">Source</a>
 </div>
 
-<ComponentPlayground name="CollapsibleCard" />
+<demo vue="./demos/CollapsibleCard.vue" title="CollapsibleCard" description="Collapsible card with a header toggle. Click the header to fold the card, or switch the toggle." />
 
 ## Import
 
@@ -33,19 +33,19 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` title ` | ` string ` | Yes | — | — |
 | ` subtitle ` | ` string ` | No | ` undefined ` | — |
 | ` badge ` | ` string \| number ` | No | ` undefined ` | — |
-| ` badgeTone ` | ` Tone ` | No | ` 'cta' ` | — |
+| ` badgeTone ` | ` Tone ` | No | ` "cta" ` | — |
 | ` defaultOpen ` | ` boolean ` | No | ` false ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` dense ` | ` boolean ` | No | ` false ` | — |
 | ` icon ` | ` string \| string[] ` | No | ` undefined ` | — |
 | ` iconColor ` | ` string ` | No | ` undefined ` | — |
 | ` iconBg ` | ` string ` | No | ` undefined ` | — |
-| ` actions ` | ` SidebarToolSectionAction[] ` | No | ` () => [] ` | — |
+| ` actions ` | ` SidebarToolSectionAction[] ` | No | ` [] ` | — |
 | ` showToggle ` | ` boolean ` | No | ` false ` | — |
 | ` toggleValue ` | ` boolean ` | No | ` false ` | — |
-| ` toggleColor ` | ` string ` | No | ` '' ` | — |
+| ` toggleColor ` | ` string ` | No | ` "" ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -53,6 +53,19 @@ Defaults are source expressions; factory functions are evaluated for each compon
 |---|---|
 | [` Tone `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L4) | ` 'neutral' \| 'primary' \| 'cta' \| 'success' \| 'warning' \| 'error' \| 'info' ` |
 | [` SidebarToolSectionAction `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L140) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:toggleValue ` | ` value: boolean ` | — |
+| ` action ` | ` actionId: string ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` default ` | — | — |
 
 <!-- sdk-props:end -->
 

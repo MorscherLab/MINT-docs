@@ -15,7 +15,7 @@ Empty-list and empty-view treatment with optional action affordance.
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/EmptyState.vue">Source</a>
 </div>
 
-<ComponentPlayground name="EmptyState" />
+<demo vue="./demos/EmptyState.vue" title="EmptyState" description="Placeholder for a view without data, with a title, a description, and an action button." />
 
 ## Import
 
@@ -33,18 +33,31 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` title ` | ` string ` | No | ` undefined ` | — |
 | ` description ` | ` string ` | No | ` undefined ` | — |
 | ` iconPath ` | ` string ` | No | ` undefined ` | — |
-| ` tone ` | ` Tone ` | No | ` 'neutral' ` | — |
-| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
-| ` variant ` | ` 'illustrated' \| 'inline' ` | No | ` 'illustrated' ` | — |
+| ` tone ` | ` Tone ` | No | ` "neutral" ` | — |
+| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` "md" ` | — |
+| ` variant ` | ` 'illustrated' \| 'inline' ` | No | ` "illustrated" ` | — |
 | ` actionLabel ` | ` string ` | No | ` undefined ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` Tone `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L4) | ` 'neutral' \| 'primary' \| 'cta' \| 'success' \| 'warning' \| 'error' \| 'info' ` |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` action ` | — | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` icon ` | — | — |
+| ` default ` | — | — |
 
 <!-- sdk-props:end -->
 

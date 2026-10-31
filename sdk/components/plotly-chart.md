@@ -10,6 +10,10 @@ description: "Render native Plotly traces with SDK theme, sizing, loading, empty
 
 Available since **1.2.0**. `PlotlyChart` renders native Plotly traces inside `ChartContainer`, loads Plotly lazily when mounted, follows theme/container changes, and cleans up on unmount.
 
+::: info Uses Plotly
+This component loads plotly.js when it mounts. The docs do not load plotly.js. To see it work, run a plugin with `mint dev`.
+:::
+
 ## Example
 
 ```vue
@@ -40,22 +44,40 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` data ` | ` PlotlyType.Data[] ` | Yes | — | — |
-| ` layout ` | ` Partial<PlotlyType.Layout> ` | No | ` () => ({}) ` | — |
-| ` config ` | ` Partial<PlotlyType.Config> ` | No | ` () => ({}) ` | — |
+| ` layout ` | ` Partial<PlotlyType.Layout> ` | No | ` {} ` | — |
+| ` config ` | ` Partial<PlotlyType.Config> ` | No | ` {} ` | — |
 | ` title ` | ` string ` | No | ` undefined ` | — |
 | ` description ` | ` string ` | No | ` undefined ` | — |
 | ` loading ` | ` boolean ` | No | ` false ` | — |
 | ` empty ` | ` boolean ` | No | ` false ` | — |
-| ` emptyText ` | ` string ` | No | ` 'No data available' ` | — |
-| ` ariaLabel ` | ` string ` | No | ` 'Interactive Plotly chart' ` | — |
+| ` emptyText ` | ` string ` | No | ` "No data available" ` | — |
+| ` ariaLabel ` | ` string ` | No | ` "Interactive Plotly chart" ` | — |
 | ` plotly ` | ` typeof PlotlyType ` | No | ` undefined ` | Use a custom Plotly build instead of the SDK's lazy-loaded default bundle. |
 | ` active ` | ` boolean ` | No | ` true ` | Pause rendering and resize work while a tab or panel is inactive. |
 | ` height ` | ` string \| number ` | No | ` undefined ` | Plot canvas height. Numbers are interpreted as pixels. |
 | ` clickEvents ` | ` boolean ` | No | ` false ` | Forward Plotly point clicks through the plotly-click event. |
-| ` variant ` | ` 'card' \| 'frame' ` | No | ` 'card' ` | Shared chart container chrome. frame fills a workbench panel. |
+| ` variant ` | ` 'card' \| 'frame' ` | No | ` "card" ` | Shared chart container chrome. frame fills a workbench panel. |
 | ` headerLegend ` | ` boolean ` | No | ` true ` | With two or more legend traces, list them in the chart header (click toggles the trace) instead of Plotly's in-plot legend. Any layout.showlegend leaves the legend to Plotly (true shows its legend, false shows none). |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` plotly-click ` | ` event: Plotly.PlotMouseEvent ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` header ` | — | — |
+| ` toolbar ` | — | — |
+| ` subhead ` | — | — |
+| ` empty ` | — | — |
+| ` error ` | — | — |
+| ` legend ` | — | — |
+| ` footer ` | — | — |
 
 <!-- sdk-props:end -->
 

@@ -10,6 +10,8 @@ description: "Adapter-driven file and folder selection with tree navigation, sea
 
 `FilePicker` is a file and folder picker in a `BaseModal` (`size="xl"`) with folder navigation, metadata preview, search, and a review step for file selections. Use `usePlatformFilePickerAdapter()` for authenticated MINT server mounts, or supply an adapter backed by your plugin's API.
 
+<demo vue="./demos/FilePicker.vue" title="FilePicker" description="A picker over two in-memory mounts. Open it, browse folders, select raw or mzML files and confirm." />
+
 ## Example
 
 This example requires a platform with configured mounts and `filesystem.browse` access:
@@ -84,17 +86,17 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 |---|---|---|---|---|
 | ` open ` | ` boolean ` | Yes | — | — |
 | ` adapter ` | ` PickerAdapter ` | Yes | — | — |
-| ` selectionMode ` | ` PickerSelectionMode ` | No | ` 'folder+files' ` | — |
-| ` sources ` | ` PickerSource[] ` | No | ` () => ['server'] ` | — |
-| ` capabilities ` | ` PickerCapabilities ` | No | ` () => ({}) ` | — |
-| ` initialPath ` | ` string ` | No | ` '' ` | — |
+| ` selectionMode ` | ` PickerSelectionMode ` | No | ` "folder+files" ` | — |
+| ` sources ` | ` PickerSource[] ` | No | ` ["server"] ` | — |
+| ` capabilities ` | ` PickerCapabilities ` | No | ` {} ` | — |
+| ` initialPath ` | ` string ` | No | ` "" ` | — |
 | ` initialSelection ` | ` PickerSelection \| null ` | No | ` null ` | — |
-| ` title ` | ` string ` | No | ` 'Choose data' ` | — |
-| ` view ` | ` PickerView ` | No | ` 'list' ` | list shows one folder at a time; tree adds disclosure triangles. |
-| ` defaultSort ` | ` PickerSort ` | No | ` 'newest' ` | Row order on each open; the user can change it from the path bar until closing. |
+| ` title ` | ` string ` | No | ` "Choose data" ` | — |
+| ` view ` | ` PickerView ` | No | ` "list" ` | list shows one folder at a time; tree adds disclosure triangles. |
+| ` defaultSort ` | ` PickerSort ` | No | ` "newest" ` | Row order on each open; the user can change it from the path bar until closing. |
 | ` systemFilter ` | ` (node: PickerNode, source: PickerSource) => boolean ` | No | ` undefined ` | Host-owned visibility/selection filter; backend must still enforce access. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -108,6 +110,18 @@ Defaults are source expressions; factory functions are evaluated for each compon
 | [` PickerView `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/filePicker.ts#L5) | ` 'list' \| 'tree' ` |
 | [` PickerSort `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/filePicker.ts#L7) | ` 'newest' \| 'oldest' \| 'name' \| 'name-desc' ` |
 | [` PickerNode `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/filePicker.ts#L32) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` select ` | ` selection: PickerSelection ` | — |
+| ` update:open ` | ` open: boolean ` | — |
+| ` cancel ` | — | — |
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

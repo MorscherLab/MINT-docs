@@ -1,9 +1,11 @@
 // Run: bun scripts/update-component-props.ts /path/to/MINT/packages/sdk-frontend
-// Use a clean checkout of the release matching the installed frontend SDK.
-import { readFileSync, existsSync, writeFileSync } from 'node:fs'
+// Use a clean checkout of the release matching the installed frontend SDK, with its node_modules installed.
+// vue-component-meta reads props, events and slots through the SDK tsconfig (needs TypeScript 5; TypeScript 7 breaks it).
+import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { strict as assert } from 'node:assert'
-import { parse, babelParse, walk, resolveTypeElements, inferRuntimeType } from '@vue/compiler-sfc'
+import ts from 'typescript'
+import { createChecker } from 'vue-component-meta'
 import { componentDocs, componentSlug } from '../.vitepress/componentCatalog'
 const sdkRoot = resolve(process.argv[2] ?? '')
 assert(process.argv[2], 'Pass the released packages/sdk-frontend directory')
@@ -24,88 +26,40 @@ interface Prop {
   description: string
   source: string
 }
-interface Component { source: string; props: Prop[] }
+interface Member { name: string; type: string; description: string }
+interface Component { source: string; props: Prop[]; events: Member[]; slots: Member[] }
 const results: Record<string, Component> = {}
-const cleanComment = (node: any): string => (node.leadingComments ?? [])
-  .filter((comment: any) => comment.type === 'CommentBlock' && comment.value.startsWith('*'))
-  .map((comment: any) => comment.value.replace(/^\s*\*\s?/gm, '').trim()).join('\n')
+const repoPath = (file: string): string => file.replace(`${sdkRoot}/`, 'packages/sdk-frontend/')
+const checker = createChecker(`${sdkRoot}/tsconfig.json`, { forceUseTs: true, printer: { newLine: 1 } })
 
 for (const component of componentDocs) {
   const exported = exports.find(entry => entry.name === component.name)
   assert(exported, `Missing public export: ${component.name}`)
   const filename = `${sdkRoot}/src/components/${exported.fileBase}.vue`
-  const descriptor = parse(readFileSync(filename, 'utf8'), { filename }).descriptor
-  const source = `${descriptor.script?.content ?? ''}\n${descriptor.scriptSetup?.content ?? ''}`
-  const ast = babelParse(source, { sourceType: 'module', plugins: ['typescript'] }).program.body
-  const context: any = {
-    filename, source, ast,
-    options: { fs: { fileExists: existsSync, readFile: (path: string) => readFileSync(path, 'utf8') } },
-    error(message: string): never { throw new Error(`${component.name}: ${message}`) },
-  }
-  let propType: any
-  let defaultsNode: any
-  const models: any[] = []
-  walk({ type: 'Program', body: ast } as any, {
-    enter(node: any) {
-      if (node.type !== 'CallExpression') return
-      if (node.callee.name === 'defineProps') {
-        assert(node.typeParameters?.params.length === 1 && !node.arguments.length, `Unsupported defineProps in ${component.name}`)
-        propType = node.typeParameters.params[0]
-      }
-      if (node.callee.name === 'withDefaults') {
-        assert(node.arguments[0].callee.name === 'defineProps', `Unsupported withDefaults in ${component.name}`)
-        defaultsNode = node.arguments[1]
-      }
-      if (node.callee.name === 'defineModel') models.push(node)
-    },
-  })
-  const defaults: Record<string, string> = {}
-  if (defaultsNode) {
-    assert(defaultsNode.type === 'ObjectExpression', `Nonliteral defaults in ${component.name}`)
-    for (const property of defaultsNode.properties) {
-      assert(property.type === 'ObjectProperty' && !property.computed, `Unsupported default in ${component.name}`)
-      defaults[property.key.name ?? property.key.value] = source.slice(property.value.start, property.value.end)
-    }
-  }
-  const props: Prop[] = propType ? Object.entries(resolveTypeElements(context, propType).props).map(([name, property]: any) => {
-    const typeNode = property.typeAnnotation?.typeAnnotation
-    assert(typeNode, `Missing type for ${component.name}.${name}`)
-    const type = property._ownerScope.source.slice(typeNode.start, typeNode.end)
-    assert(type.length, `Empty type for ${component.name}.${name}`)
-    const explicitDefault = Object.hasOwn(defaults, name)
-    const required = !property.optional
-    const implicitBoolean = !required && !explicitDefault && inferRuntimeType(context, typeNode, property._ownerScope).includes('Boolean')
+  const meta = checker.getComponentMeta(filename)
+  // Global props (class, style, key, ref, ...) are not declared by the component.
+  const props: Prop[] = meta.props.filter(prop => !prop.global).map(prop => {
+    // The declaration keeps the source type (SelectOptionInput[], 'sm' | 'md'); prop.type is the expanded checker type.
+    const declaration = prop.getDeclarations().find(entry => entry.file.startsWith(`${sdkRoot}/src/`))
+    assert(declaration, `Missing declaration for ${component.name}.${prop.name}`)
+    const text = readFileSync(declaration.file, 'utf8').slice(...declaration.range)
+    const type = text.match(/^(?:readonly\s+)?['"]?[\w$-]+['"]?\??\s*:\s*([\s\S]+?)[;,]?$/)?.[1]
+    assert(type, `Unsupported declaration for ${component.name}.${prop.name}: ${text}`)
+    // Vue casts an absent prop to false when a member of its type union is boolean (not a function returning one).
+    const typeObject = prop.getTypeObject()
+    const implicitBoolean = !prop.required && prop.default === undefined
+      && (typeObject.isUnion() ? typeObject.types : [typeObject]).some(member => member.flags & ts.TypeFlags.BooleanLike)
     return {
-      name, type, required,
-      ...(explicitDefault ? { default: defaults[name], defaultKind: 'explicit' } : implicitBoolean ? { default: 'false', defaultKind: 'implicit-boolean' } : {}),
-      description: cleanComment(property),
-      source: property._ownerScope.filename.replace(`${sdkRoot}/`, 'packages/sdk-frontend/'),
+      name: prop.name, type, required: prop.required,
+      ...(prop.default !== undefined ? { default: prop.default, defaultKind: 'explicit' } : implicitBoolean ? { default: 'false', defaultKind: 'implicit-boolean' } : {}),
+      description: prop.description,
+      source: repoPath(declaration.file),
     }
-  }) : []
-  for (const name of Object.keys(defaults)) assert(props.some(prop => prop.name === name), `Default without prop: ${component.name}.${name}`)
-  for (const model of models) {
-    const named = model.arguments[0]?.type === 'StringLiteral'
-    const name = named ? model.arguments[0].value : 'modelValue'
-    const options = model.arguments[named ? 1 : 0]
-    assert(!options || options.type === 'ObjectExpression', `Unsupported model options in ${component.name}`)
-    const fields = Object.fromEntries((options?.properties ?? []).map((p: any) => {
-      assert(p.type === 'ObjectProperty' && !p.computed, `Unsupported model option in ${component.name}`)
-      return [p.key.name ?? p.key.value, p.value]
-    }))
-    const typeNode = model.typeParameters?.params[0]
-    assert(typeNode, `Untyped defineModel in ${component.name}`)
-    const defaultNode: any = fields.default
-    const required = (fields.required as any)?.value === true
-    const implicitBoolean = !required && !defaultNode && inferRuntimeType(context, typeNode).includes('Boolean')
-    assert(!props.some(prop => prop.name === name), `Duplicate model prop in ${component.name}`)
-    props.push({
-      name, type: source.slice(typeNode.start, typeNode.end), required,
-      ...(defaultNode ? { default: source.slice(defaultNode.start, defaultNode.end), defaultKind: 'explicit' } : implicitBoolean ? { default: 'false', defaultKind: 'implicit-boolean' } : {}),
-      description: `Two-way value for v-model${name === 'modelValue' ? '' : `:${name}`}. Emits update:${name}.`,
-      source: filename.replace(`${sdkRoot}/`, 'packages/sdk-frontend/'),
-    })
-  }
-  results[component.name] = { source: filename.replace(`${sdkRoot}/`, 'packages/sdk-frontend/'), props }
+  })
+  // event.type is the argument tuple, for example [value: OptionPrimitive].
+  const events = meta.events.map(event => ({ name: event.name, type: event.type.replace(/^\[([\s\S]*)\]$/, '$1'), description: event.description }))
+  const slots = meta.slots.map(slot => ({ name: slot.name, type: slot.type, description: slot.description }))
+  results[component.name] = { source: repoPath(filename), props, events, slots }
 }
 
 const get = (name: string): any[] => (results[name] as any).props
@@ -127,9 +81,13 @@ assert(!get('AppSidebar').some(p => p.name === 'variant'))
 assert.equal(get('AppSidebar').find(p => p.name === 'spec').type, 'PluginWorkspaceSidebarSpec')
 assert(!get('BaseTabs').some(p => p.name === 'variant'))
 assert.equal(get('BasePill').find(p => p.name === 'dot').default, 'false')
-assert.equal(get('FormField').find(p => p.name === 'layout').default, "'stacked'")
+assert.equal(get('FormField').find(p => p.name === 'layout').default, '"stacked"')
+assert.equal(get('BaseSelect').find(p => p.name === 'options').type, 'SelectOptionInput[]')
+assert(results.BaseSelect.events.some(event => event.name === 'update:modelValue'))
+assert(results.BaseSelect.slots.some(slot => slot.name === 'option'))
 
-console.log(`Extracted ${componentDocs.length} components, ${Object.values(results).reduce((sum: number, entry: any) => sum + entry.props.length, 0)} props; regression assertions passed.`)
+const count = (key: 'props' | 'events' | 'slots'): number => Object.values(results).reduce((sum, entry) => sum + entry[key].length, 0)
+console.log(`Extracted ${componentDocs.length} components, ${count('props')} props, ${count('events')} events, ${count('slots')} slots; regression assertions passed.`)
 
 // Link uniquely named SDK types without guessing between ambiguous declarations.
 const types = new Map<string, { source: string; values?: string }[]>()
@@ -186,7 +144,7 @@ for (const [name, component] of Object.entries(results)) {
       const defaultValue = prop.default === undefined && prop.required ? '—' : inlineCode(prop.default ?? 'undefined')
       lines.push(`| ${inlineCode(prop.name)} | ${inlineCode(prop.type)} | ${prop.required ? 'Yes' : 'No'} | ${defaultValue} | ${description(prop.description)} |`)
     }
-    lines.push('', 'Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.', '')
+    lines.push('', 'Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.', '')
     const referencedTypes = [...new Set(component.props.flatMap(prop => prop.type.match(/\b[A-Z]\w+\b/g) ?? []))]
       .filter(type => typeDefinition(type))
     if (referencedTypes.length) {
@@ -200,7 +158,19 @@ for (const [name, component] of Object.entries(results)) {
   } else {
     lines.push('This component declares no public props. Its behavior is controlled through SDK state and composables.', '')
   }
-  lines.push('<!-- sdk-props:end -->')
+  // An empty payload ([] from the checker) or slot props ({} or any) has no row text.
+  const memberType = (type: string): string => ['', '{}', 'any'].includes(type.trim()) ? '—' : inlineCode(type)
+  lines.push('### Events', '')
+  if (component.events.length) {
+    lines.push('| Event | Payload | Description |', '|---|---|---|')
+    for (const event of component.events) lines.push(`| ${inlineCode(event.name)} | ${memberType(event.type)} | ${description(event.description)} |`)
+  } else lines.push('This component emits no events.')
+  lines.push('', '### Slots', '')
+  if (component.slots.length) {
+    lines.push('| Slot | Props | Description |', '|---|---|---|')
+    for (const slot of component.slots) lines.push(`| ${inlineCode(slot.name)} | ${memberType(slot.type)} | ${description(slot.description)} |`)
+  } else lines.push('This component declares no slots.')
+  lines.push('', '<!-- sdk-props:end -->')
   const block = lines.join('\n')
   if (content.includes('<!-- sdk-props:start -->')) {
     content = content.replace(/<!-- sdk-props:start -->[\s\S]*?<!-- sdk-props:end -->/, () => block)

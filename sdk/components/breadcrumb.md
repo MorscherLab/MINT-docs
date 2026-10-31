@@ -15,7 +15,7 @@ Breadcrumb is a layout component exported by @morscherlab/mint-sdk for plugin fr
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/Breadcrumb.vue">Source</a>
 </div>
 
-<ComponentPlayground name="Breadcrumb" />
+<demo vue="./demos/Breadcrumb.vue" title="Breadcrumb" description="Breadcrumb trail with three levels. Read the path from project to experiment to analysis." />
 
 ## Import
 
@@ -31,15 +31,28 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` items ` | ` BreadcrumbItemInput[] ` | Yes | — | — |
-| ` separator ` | ` string ` | No | ` '/' ` | — |
+| ` separator ` | ` string ` | No | ` "/" ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` BreadcrumbItemInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L528) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` navigate ` | ` item: BreadcrumbItem ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` item ` | ` { item: BreadcrumbItem; index: number; isLast: boolean; } ` | — |
+| ` separator ` | — | — |
 
 <!-- sdk-props:end -->
 

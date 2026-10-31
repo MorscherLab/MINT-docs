@@ -19,7 +19,7 @@ Interactive plate map with heatmaps, selection, and editing hooks. Supported for
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/WellPlate.vue">Source</a>
 </div>
 
-<ComponentPlayground name="WellPlate" />
+<demo vue="./demos/WellPlate.vue" title="WellPlate" description="A 96-well plate with heatmap colors and multiple selection. Click wells to select them." />
 
 ## Import
 
@@ -84,16 +84,16 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` spec ` | ` WellPlateSpec ` | No | ` () => ({}) ` | Structure built with defineWellPlate(). Optional: every option has a default. |
-| ` modelValue ` | ` string[] ` | No | ` () => [] ` | Selected well ids. Bind with v-model. |
-| ` wells ` | ` Record<string, Partial<Well>> ` | No | ` () => ({}) ` | Well data keyed by well id. |
+| ` spec ` | ` WellPlateSpec ` | No | ` {} ` | Structure built with defineWellPlate(). Optional: every option has a default. |
+| ` modelValue ` | ` string[] ` | No | ` [] ` | Selected well ids. Bind with v-model. |
+| ` wells ` | ` Record<string, Partial<Well>> ` | No | ` {} ` | Well data keyed by well id. |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` readonly ` | ` boolean ` | No | ` false ` | — |
 | ` loading ` | ` boolean ` | No | ` false ` | Replace the plate grid with a loading placeholder. |
 | ` error ` | ` string \| null ` | No | ` undefined ` | Error message. When set, the plate grid is replaced by an error state. null/undefined renders normally. |
 | ` emptyText ` | ` string ` | No | ` undefined ` | Opt-in empty-state headline. A blank plate is meaningful, so the empty state only replaces the grid when this message is supplied and no wells carry data. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -101,6 +101,29 @@ Defaults are source expressions; factory functions are evaluated for each compon
 |---|---|
 | [` WellPlateSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L132) | See the linked SDK type definition. |
 | [` Well `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L10) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` wellIds: string[] ` | — |
+| ` well-click ` | ` wellId: string, event: MouseEvent ` | — |
+| ` well-hover ` | ` wellId: string \| null, event?: MouseEvent \| undefined ` | — |
+| ` selection-change ` | ` wellIds: string[] ` | — |
+| ` context-menu ` | ` wellId: string, event: MouseEvent ` | — |
+| ` well-move ` | ` sourceWellId: string, targetWellId: string ` | — |
+| ` well-edit ` | ` wellId: string, data: WellEditData ` | — |
+| ` well-clear ` | ` wellId: string ` | — |
+| ` sample-drop ` | ` wellId: string, data: WellSampleDropData, event: DragEvent ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` well-editor ` | ` WellEditorSlotProps ` | — |
+| ` loading ` | — | Replaces the default loading placeholder. |
+| ` error ` | ` { error: string; } ` | Replaces the default error placeholder. |
+| ` empty ` | — | Replaces the default empty placeholder. |
 
 <!-- sdk-props:end -->
 

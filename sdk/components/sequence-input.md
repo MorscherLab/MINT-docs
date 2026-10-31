@@ -15,7 +15,7 @@ SequenceInput is a forms component exported by @morscherlab/mint-sdk for plugin 
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SequenceInput.vue">Source</a>
 </div>
 
-<ComponentPlayground name="SequenceInput" />
+<demo vue="./demos/SequenceInput.vue" title="SequenceInput" description="DNA sequence editor with tools and statistics. Type or edit the sequence to update the statistics." />
 
 ## Import
 
@@ -34,24 +34,36 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` modelValue ` | ` string ` | No | ` '' ` | — |
-| ` type ` | ` SequenceType ` | No | ` 'auto' ` | — |
+| ` modelValue ` | ` string ` | No | ` "" ` | — |
+| ` type ` | ` SequenceType ` | No | ` "auto" ` | — |
 | ` readonly ` | ` boolean ` | No | ` false ` | — |
 | ` showStats ` | ` boolean ` | No | ` true ` | — |
 | ` showTools ` | ` boolean ` | No | ` true ` | — |
 | ` maxLength ` | ` number ` | No | ` undefined ` | — |
-| ` placeholder ` | ` string ` | No | ` 'Paste or type sequence...' ` | — |
+| ` placeholder ` | ` string ` | No | ` "Paste or type sequence..." ` | — |
 | ` rows ` | ` number ` | No | ` 6 ` | — |
 | ` invalid ` | ` boolean ` | No | ` false ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` SequenceType `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/composables/useSequenceUtils.ts#L1) | ` 'dna' \| 'rna' \| 'protein' \| 'auto' ` |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` value: string ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` tools ` | ` { sequence: string; type: "dna" \| "rna" \| "protein"; stats: SequenceStats; } ` | — |
 
 <!-- sdk-props:end -->
 

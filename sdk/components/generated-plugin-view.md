@@ -19,7 +19,9 @@ This component renders a piece of the SDK's backend-driven **generated UI** syst
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/GeneratedPluginView.vue">Source</a>
 </div>
 
-<ComponentPlayground name="GeneratedPluginView" />
+::: info Needs the platform
+This component loads the job manifest and runs jobs through `useJobsEndpoint` against the plugin API. To see it work, open a plugin with `mint dev --platform`.
+:::
 
 ## Import
 
@@ -44,13 +46,21 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` showStandaloneLabel ` | ` boolean ` | No | ` false ` | — |
 | ` transport ` | ` GeneratedAnalysisTransport ` | No | ` undefined ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` GeneratedAnalysisTransport `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/composables/useJobsEndpoint.ts#L31) | See the linked SDK type definition. |
+
+### Events
+
+This component emits no events.
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

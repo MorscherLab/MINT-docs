@@ -15,7 +15,7 @@ Multi-step workflow container with progress, validation, and navigation slots.
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/StepWizard.vue">Source</a>
 </div>
 
-<ComponentPlayground name="StepWizard" />
+<demo vue="./demos/StepWizard.vue" title="StepWizard" description="A three-step wizard with free navigation. Click a step to show its panel." />
 
 ## Import
 
@@ -50,16 +50,32 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` linear ` | ` boolean ` | No | ` true ` | — |
 | ` showProgress ` | ` boolean ` | No | ` true ` | — |
 | ` showStepNumbers ` | ` boolean ` | No | ` true ` | — |
-| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
-| ` orientation ` | ` 'horizontal' \| 'vertical' ` | No | ` 'horizontal' ` | vertical stacks the steps in a rail beside the step content. |
+| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` "md" ` | — |
+| ` orientation ` | ` 'horizontal' \| 'vertical' ` | No | ` "horizontal" ` | vertical stacks the steps in a rail beside the step content. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` WizardStep `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L15) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` index: number ` | — |
+| ` cancel ` | — | — |
+| ` complete ` | — | — |
+| ` step-change ` | ` change: [from: number, to: number] ` | — |
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` progress ` | ` { steps: WizardStep[]; current: number; states: WizardStepState[]; } ` | — |
+| ` navigation ` | ` { goBack: () => void; goNext: () => void; finish: () => void; cancel: () => void; isFirst: boolean; isLast: boolean; canProceed: boolean; } ` | — |
 
 <!-- sdk-props:end -->
 

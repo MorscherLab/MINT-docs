@@ -15,7 +15,7 @@ SegmentedControl is a forms component exported by @morscherlab/mint-sdk for plug
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SegmentedControl.vue">Source</a>
 </div>
 
-<ComponentPlayground name="SegmentedControl" />
+<demo vue="./demos/SegmentedControl.vue" title="SegmentedControl" description="Card-style segmented control with option descriptions. Click an option to change the model value." />
 
 ## Import
 
@@ -41,13 +41,13 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 |---|---|---|---|---|
 | ` modelValue ` | ` string \| number ` | Yes | — | — |
 | ` options ` | ` SelectOptionInput[] ` | Yes | — | — |
-| ` variant ` | ` SegmentedControlVariant ` | No | ` 'card' ` | — |
-| ` size ` | ` SegmentedControlSize ` | No | ` 'md' ` | — |
+| ` variant ` | ` SegmentedControlVariant ` | No | ` "card" ` | — |
+| ` size ` | ` SegmentedControlSize ` | No | ` "md" ` | — |
 | ` fullWidth ` | ` boolean ` | No | ` false ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
-| ` disabledValues ` | ` Array<string \| number> ` | No | ` () => [] ` | — |
+| ` disabledValues ` | ` Array<string \| number> ` | No | ` [] ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -56,6 +56,16 @@ Defaults are source expressions; factory functions are evaluated for each compon
 | [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
 | [` SegmentedControlVariant `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L373) | ` 'simple' \| 'card' ` |
 | [` SegmentedControlSize `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L374) | ` 'sm' \| 'md' \| 'lg' ` |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` value: string \| number ` | — |
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

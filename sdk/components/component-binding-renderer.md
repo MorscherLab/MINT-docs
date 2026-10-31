@@ -15,7 +15,7 @@ ComponentBindingRenderer is a workflow component exported by @morscherlab/mint-s
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue">Source</a>
 </div>
 
-<ComponentPlayground name="ComponentBindingRenderer" />
+<demo vue="./demos/ComponentBindingRenderer.vue" title="ComponentBindingRenderer" description="Read-only renderer that builds a table and a well plate from binding data." />
 
 ## Import
 
@@ -31,17 +31,17 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` binding ` | ` ComponentBindingRendererBinding ` | No | ` undefined ` | Single generated SDK component binding to render. |
-| ` bindings ` | ` ComponentBindingRendererBinding[] ` | No | ` () => [] ` | Generated SDK component bindings to render. |
-| ` include ` | ` string[] ` | No | ` () => [] ` | Optional allow-list of component names, for example ['WellPlate', 'DataFrame']. |
-| ` exclude ` | ` string[] ` | No | ` () => [] ` | Optional deny-list of component names. |
+| ` bindings ` | ` ComponentBindingRendererBinding[] ` | No | ` [] ` | Generated SDK component bindings to render. |
+| ` include ` | ` string[] ` | No | ` [] ` | Optional allow-list of component names, for example ['WellPlate', 'DataFrame']. |
+| ` exclude ` | ` string[] ` | No | ` [] ` | Optional deny-list of component names. |
 | ` dense ` | ` boolean ` | No | ` false ` | Compact child component sizing. |
 | ` readonly ` | ` boolean ` | No | ` true ` | Prefer preview-safe props for editable components. |
 | ` showHeaders ` | ` boolean ` | No | ` true ` | Show component labels above each rendered component. |
 | ` showDescriptions ` | ` boolean ` | No | ` true ` | Show binding descriptions in each header. |
-| ` layout ` | ` ComponentBindingRendererLayout ` | No | ` 'grid' ` | Grid or vertical stack layout. |
-| ` emptyText ` | ` string ` | No | ` 'No renderable SDK component bindings.' ` | Message shown when no binding can be rendered. |
+| ` layout ` | ` ComponentBindingRendererLayout ` | No | ` "grid" ` | Grid or vertical stack layout. |
+| ` emptyText ` | ` string ` | No | ` "No renderable SDK component bindings." ` | Message shown when no binding can be rendered. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -49,6 +49,14 @@ Defaults are source expressions; factory functions are evaluated for each compon
 |---|---|
 | [` ComponentBindingRendererBinding `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue#L18) | See the linked SDK type definition. |
 | [` ComponentBindingRendererLayout `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue#L26) | See the linked SDK type definition. |
+
+### Events
+
+This component emits no events.
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

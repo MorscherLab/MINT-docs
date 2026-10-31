@@ -15,7 +15,7 @@ BaseSlider is a forms component exported by @morscherlab/mint-sdk for plugin fro
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseSlider.vue">Source</a>
 </div>
 
-<ComponentPlayground name="BaseSlider" />
+<demo vue="./demos/BaseSlider.vue" title="BaseSlider" description="A slider with a value label. Drag the handle to change the model value." />
 
 ## Import
 
@@ -36,20 +36,30 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` step ` | ` number ` | No | ` 1 ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` showValue ` | ` boolean ` | No | ` true ` | — |
-| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
+| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` "md" ` | — |
 | ` colorStops ` | ` SliderColorStop[] ` | No | ` undefined ` | Paint the track with a gradient through these stops instead of the primary fill. |
 | ` thresholds ` | ` [number, number] ` | No | ` undefined ` | Tone the value badge by percent of range: success up to the first, warning up to the second, error above. |
 | ` showLabels ` | ` boolean ` | No | ` false ` | Show the range ends under the slider. |
 | ` minLabel ` | ` string ` | No | ` undefined ` | Label for the low end. Defaults to min. |
 | ` maxLabel ` | ` string ` | No | ` undefined ` | Label for the high end. Defaults to max. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` SliderColorStop `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseSlider.vue#L8) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` value: number ` | — |
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

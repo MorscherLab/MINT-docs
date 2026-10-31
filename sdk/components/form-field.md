@@ -15,7 +15,7 @@ Label, hint, error, and accessibility wrapper for form controls.
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FormField.vue">Source</a>
 </div>
 
-<ComponentPlayground name="FormField" />
+<demo vue="./demos/FormField.vue" title="FormField" description="Field wrapper with a label, hint and required mark. Type in the wrapped input." />
 
 ## Import
 
@@ -49,9 +49,19 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` showOptional ` | ` boolean ` | No | ` false ` | — |
 | ` htmlFor ` | ` string ` | No | ` undefined ` | — |
 | ` fieldId ` | ` string ` | No | ` undefined ` | Prefix for the label (-label), error and hint ids. |
-| ` layout ` | ` 'stacked' \| 'row' ` | No | ` 'stacked' ` | row puts the label left and the control in a fixed 7.5rem column. Use for numbers, toggles, short enums. |
+| ` layout ` | ` 'stacked' \| 'row' ` | No | ` "stacked" ` | row puts the label left and the control in a fixed 7.5rem column. Use for numbers, toggles, short enums. |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Events
+
+This component emits no events.
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` default ` | ` { describedBy: string \| undefined; } ` | — |
 
 <!-- sdk-props:end -->
 
