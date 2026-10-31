@@ -10,9 +10,13 @@ A complete walkthrough from logging into MINT to running your first analysis plu
 - An account with the **Member** role (the default for new accounts) or equivalent permissions
 - At least one experiment type created by your admin, and one analysis plugin installed and visible to your role (see [Marketplace](/guide/marketplace))
 
+::: tip Getting started checklist
+On your first visit, MINT shows a short tour of the top bar and a **Getting started** chip with two tasks: create an experiment and create a project. Click the chip to see them, or open the **Help** button to play a tour again. See [UI tour -> Help and tours](/guide/ui-tour#help-and-tours).
+:::
+
 ## Step 1: Create a project
 
-Open **Projects** from the top navigation and click **New Project**.
+Open **Projects** from the **Experiments** menu in the top navigation and click **New project**.
 
 > [Screenshot: New project form with name, status, dates, description, lead, and members]
 
@@ -23,28 +27,27 @@ Open **Projects** from the top navigation and click **New Project**.
 | Lead (optional) | The person responsible; the lead can edit the project and manage members |
 | Members (optional) | Existing MINT users to add; they join as `editor` |
 
-Click **Create**. You're now inside the project page.
+Click **Create project**. The project page opens.
 
 ## Step 2: Create an experiment
 
-On the project page, click **New Experiment**. MINT assigns a unique code from the experiment type, such as `DR-EXP-001` for a `dose_response` type or `LCM-EXP-001` for `lcms`.
+On the project page, click **New experiment**. The form starts with this project and its members selected. The experiment gets a unique code from the experiment type, such as `DR-EXP-001` for a `dose_response` type or `LCM-EXP-001` for `lcms`, when you move it to **ongoing** (see step 3) or click **+ Assign number**.
 
 | Field | What it's for |
 |-------|---------------|
 | Name | Human label |
 | Type | One of the experiment types your admin created. Sets the code prefix. |
-| Sequence (optional) | Override the code number; leave empty for the next free number |
 | Start / End date, Notes (optional) | Planning details |
 | Project | Preset when you start from a project page |
-| Collaborators (optional) | Single-experiment access; you are stored as owner |
+| Team (optional) | Single-experiment access; you are stored as owner |
 
-Save the form. The experiment starts in `planned` status. Design data is added later by the design plugin for that type. See [Experiments](/guide/experiments) for the status flow.
+Click **Create experiment**. The experiment starts in `planned` status and has no code yet. Design data is added later by the design plugin for that type. See [Experiments](/guide/experiments) for the status flow.
 
 > [Screenshot: experiment-detail page in planned status]
 
 ## Step 3: Move to ongoing and attach data
 
-Switch the status to **ongoing**. Most plugins gate result writes on `ongoing` or `completed`. If your workflow needs files or instrument output, open the relevant design or analysis plugin and attach the data there; plugin-produced files come back to the experiment as analysis artifacts.
+Switch the status to **ongoing**. MINT assigns the experiment number now if the experiment has none. Most plugins gate result writes on `ongoing` or `completed`. If your workflow needs files or instrument output, open the relevant design or analysis plugin and attach the data there; plugin-produced files come back to the experiment as analysis artifacts.
 
 > [Screenshot: experiment detail page with status set to ongoing and plugin launch options visible]
 
@@ -52,11 +55,11 @@ Switch the status to **ongoing**. Most plugins gate result writes on `ongoing` o
 
 Use the experiment's **Analysis artifacts** card to pick an available analysis plugin, or open the plugin from the home **Plugins** launcher (it lists plugins by display name) and select this experiment. Fill in the plugin's parameters and click **Run**.
 
-If the plugin needs dependency isolation, MINT runs it in a subprocess and proxies its UI back into the page. Generated analysis plugins show run progress in the plugin page's job status tray.
+If the plugin needs dependency isolation, MINT runs it in a subprocess and proxies its UI back into the page. Generated analysis plugins show run progress in the **Jobs** button of the plugin page's top bar; click it to open the jobs tray.
 
 > [Screenshot: analysis-plugin sidebar with parameters and Run button]
 
-Approximate runtimes depend on the plugin and dataset size. The plugin job tray shows live status: queued → running → done (or failed).
+Approximate runtimes depend on the plugin and dataset size. The jobs tray shows live status: queued → running → done (or failed). See [UI tour -> Jobs tray](/guide/ui-tour#jobs-tray).
 
 ## Step 5: Review analysis artifacts
 
@@ -71,6 +74,7 @@ Switch the experiment status to **completed** when the work is finished. MINT re
 ## Further steps
 
 - **Add collaborators** — see [Experiments → Collaborators](/guide/experiments#collaborators)
+- **Connect an AI assistant** — see [AI Assistants and API Access](/guide/ai-and-api)
 - **Install another plugin** — see [Marketplace](/guide/marketplace)
 - **Use the CLI** — see [`mint` overview](/admin/cli) for scripted experiment + project access
 - **Build your own plugin** — start with the [Plugin Development Guide](/sdk/)

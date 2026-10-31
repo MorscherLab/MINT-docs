@@ -19,7 +19,7 @@ Projects are inexpensive to create and renaming is allowed at any time, so it's 
 
 ## Create a project
 
-Open **Projects** from the top navigation and click **New Project**.
+Open **Projects** from the **Experiments** menu in the top navigation and click **New project**.
 
 | Field | Description |
 |-------|-------------|
@@ -38,7 +38,7 @@ The project page is a compact record view:
 
 | Region | Contents |
 |--------|----------|
-| **Header** | Project name, status, description, **Edit**, and **New Experiment**. |
+| **Header** | Project name, status, description, **Edit**, and **New experiment**. The new experiment starts with this project selected and the project members in its **Team** list. |
 | **Rollup filters** | Counts for all experiments, experiments with design data, and experiments without design data. Clicking a chip filters the table. |
 | **Experiments table** | Dense list with code, name, type, status, design completeness, and created date. Click a row to open the experiment. |
 | **Metadata rail** | Project dates, lead and creator, the **Team** card with members, tags, and **Delete project**. |
@@ -49,13 +49,13 @@ The rollups describe the whole project, not just the current search filter. They
 
 ## Experiment codes within a project
 
-When you create an experiment inside a project, MINT auto-assigns a unique `experiment_code` in `TYPE-EXP-SEQ` format, such as `LCM-EXP-001` or `DR-EXP-001`. Codes are globally unique — they don't restart per project — so they're safe to copy across docs and grant reports.
+An experiment that you create in a project has no code at first. MINT assigns a unique `experiment_code` in `TYPE-EXP-SEQ` format, such as `LCM-EXP-001` or `DR-EXP-001`, when the experiment starts or when you click **+ Assign number**; see [Experiments -> Experiment numbers](/guide/experiments#experiment-numbers). Codes are globally unique — they don't restart per project — so they're safe to copy across docs and grant reports.
 
 The prefix comes from the experiment type slug: initials for slugs with underscores (`dose_response` → `DR`), the whole slug up to three characters, otherwise its first three letters (`lcms` → `LCM`). See [Experiment types](/admin/platform-settings#experiment-types).
 
 ## Project archival
 
-To archive a project, click **Edit** and set **Status** to **Archived**. Nothing is deleted. Archive projects when:
+To archive a project, click **Edit** and set **Status** to **Archived**. If someone else saved the project after you opened the form, MINT asks whether to reload their version or overwrite it; see [Experiments -> Edit an experiment and resolve conflicts](/guide/experiments#edit-an-experiment-and-resolve-conflicts). Nothing is deleted. Archive projects when:
 
 - The associated paper has been published and the data is frozen
 - A grant period has ended

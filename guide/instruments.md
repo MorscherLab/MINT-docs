@@ -36,8 +36,10 @@ Click a row or a tile to open the instrument page (`/instruments/<id>`). You nee
 | Area | Contents |
 |------|----------|
 | **Header** | Name, state, and a note such as the time since the state began. A link to the plugin that reports for the instrument, when there is one. |
-| **Current run** | Injection (for example `12 / 48`), elapsed time, remaining time, ETA, and average time per injection. Also a progress bar, a strip with the time of each injection, and the current sample, raw file, method, and sequence. |
+| **Current run** | Injection (for example `12 / 48`), elapsed time, remaining time, ETA, and average time per injection. Also a progress bar, a strip with the time of each injection, and the current sample, raw file, method, and sequence. When the plugin reports a metric for each injection, such as the maximum pressure, a switch under the strip changes the bars from **Time** to that metric. Point at a bar to see its injection and value. |
+| **Live data** | The extra panels that the reporting plugin shows: key-value lists, tables, text, JSON, and bar charts, one tab for each panel. Shown only when the plugin reports panels. |
 | **Alerts** | The alerts of the last 7 days from the reporting plugin. Shown only when that plugin serves alerts. |
+| **History** | The recorded status changes and finished samples. See [History](#history). |
 | **Details**, **Components**, **Reporting** | The instrument record, its parts, and the source and time of the last report. |
 
 If an instrument has no run, the card tells you why: no reports yet, inactive, standby, idle, error, or not reporting.
@@ -46,11 +48,29 @@ To acknowledge an alert, click **Acknowledge** next to it. The reporting plugin 
 
 > [Screenshot: instrument page with the current run card, the time-per-injection strip, and the Alerts card]
 
+## History
+
+MINT records a history row each time an instrument changes state, finishes a sample, finishes a sequence, or stops reporting. The **History** card on the instrument page lists the rows, newest first.
+
+| Column | Contents |
+|--------|----------|
+| **Time** | When the sample finished, or else when MINT received the report |
+| **Event** | A state change such as `idle → running`, `sample done`, `sequence done`, or `disconnected` |
+| **Sample** | The sample file, for a finished sample |
+| **Experiment** | A link to the experiment, when the plugin linked it and you may see it |
+| Metric columns | One column for each metric of the finished samples, such as the maximum pressure |
+
+Click a row to see the status snapshot of that moment. Click **Load more** for older rows. Click **Export CSV** to download the rows, including the start and end time of each finished sample.
+
+The experiment page shows the rows that name the experiment under **Instrument records**. You need `instruments.view`. A row whose experiment you cannot see does not show the experiment.
+
+By default MINT keeps every row. Your admin can set a retention period; MINT then deletes older rows once a day.
+
 ## Where live status comes from
 
 A plugin reports the status. An administrator must first grant that plugin **Instrument status** for each instrument, in the plugin's access control. See [Plugins](/admin/plugins).
 
-MINT keeps only the latest report for each instrument, and only in memory. A restart of the platform clears it, and the instrument shows **No reports yet** until the next report. An instrument shows as **Offline**, under **Needs attention**, 60 seconds after its last report.
+MINT keeps the latest report for each instrument in memory. A restart of the platform clears it, and the instrument shows **No reports yet** until the next report. An instrument shows as **Offline**, under **Needs attention**, 60 seconds after its last report. The history is stored in the database and survives a restart.
 
 ## Who can see and change instruments
 
@@ -82,6 +102,10 @@ The **Active** switch in the edit window does the same.
 With `instruments.view`, **Home** shows an **Instruments** card at the top of the left column when at least one instrument is active. The card lists errors and offline instruments first, then running instruments by ETA. It shows at most five rows, but always shows every instrument that needs attention. A line such as **3 more** counts the rest. Click a row to open that instrument, or click **All** to open the Instruments page.
 
 > [Screenshot: Home with the Instruments card at the top of the left column]
+
+## Push notifications
+
+People with `instruments.view` get a push message on the MINT iOS app when a sequence finishes or an instrument changes to **error**. See [Notifications and iOS push](/guide/notifications).
 
 ## Reservations and scheduling
 

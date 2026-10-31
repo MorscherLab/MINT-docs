@@ -13,12 +13,17 @@ The Morscher Lab default URL is [mint.morscherlab.org](https://mint.morscherlab.
 The login page offers up to three ways in, depending on how your admin set up MINT:
 
 - **Sign in with password** — your username or email and password.
-- **Continue with Passkey** — a passkey on your device (Touch ID, Windows Hello, a security key). Register one from **Your account -> Security**.
+- **Continue with passkey** — a passkey on your device (Touch ID, Windows Hello, a security key). The button shows after you register a passkey in this browser. Register one in **Your account -> Security** (account menu -> **Profile**).
 - **SWITCH edu-ID** — your institutional login, if your lab enabled it.
 
 No account yet? If the login page shows **No account yet? Create one**, you can register yourself; passwords need at least 8 characters and at most 72 bytes (UTF-8), and new accounts start with the Member role. An admin must activate a new account before you can sign in. If the link is missing, ask your admin to create an account for you.
 
-If your lab requires a second factor (the default on HTTPS sites), a password or edu-ID sign-in is followed by a passkey prompt. Without a passkey yet, MINT asks you to register one before you continue. If you lose every passkey, ask an admin to reset them.
+If your lab requires a second factor (the default when the site runs on HTTPS), a password or edu-ID sign-in is followed by a passkey step:
+
+- **Verify it's you** — click **Continue with passkey** and confirm with your device.
+- **Set up a passkey** — shown when your account has no passkey yet. Enter a device name and click **Create passkey**.
+
+Until you finish this step, the sign-in is valid for 10 minutes only. A direct passkey sign-in counts as both factors, so it asks for nothing more. While the second factor is required, you cannot delete your last passkey. If you lose every passkey, ask an admin to reset them in **Admin -> People -> Users**; the reset also signs you out everywhere. Personal access tokens and the MCP server do not use the second factor.
 
 If you enter the right password for an account that an admin has not activated yet, MINT shows **Waiting for approval** instead of a password error. Ask an admin to activate the account in **Admin -> People -> Users**. Waiting does not count toward the lockout.
 
@@ -30,7 +35,7 @@ Changing your password in **Your account -> Password** keeps you signed in on th
 
 ## Find your projects and plugins
 
-After logging in, the **Home** page shows:
+After logging in, the **Home** page shows a short tour of the top bar and a **Getting started** chip the first time; see [UI tour -> Help and tours](/guide/ui-tour#help-and-tours). The page shows:
 
 - **Needs you** reminders and the lab **Notice board**
 - **Experiments** and **Projects** cards, each with a switch to show only yours
@@ -47,7 +52,7 @@ Use the **Experiments** menu in the top navigation to open the full **Experiment
 |---|---|---|
 | **Where data lives** | On your own server | On the lab server |
 | **Login** | You configure auth (passkeys, SSO) | Lab credentials, possibly SSO |
-| **Plugin installs** | Anyone with admin rights | Admin-only, often via approval workflow |
+| **Plugin installs** | Anyone with admin rights | Admin-only; ask your admin |
 | **Updates** | You apply new releases | Admin updates the platform on a schedule |
 | **Sharing** | Within your install | Built-in — collaborators land on the same project URL |
 
@@ -61,6 +66,7 @@ The day-to-day workflow (creating experiments, running plugins, viewing results)
 | "Plugin not visible after login" | Your role may not include that plugin. Ask your admin to add it to your role's plugin access. |
 | Login loops back to the page | Cookies may be blocked for the lab domain. Allow them and reload. |
 | "Too many failed login attempts" | Wait for the lockout to end (15 minutes by default) or ask an admin to reset your password. |
+| "Verify it's you" appears after every sign-in | Your lab requires a second factor. Sign in with **Continue with passkey** to skip the extra step. |
 | Passkey prompt fails | Make sure you're using a browser and OS that support WebAuthn — recent Chrome, Safari, Firefox, or Edge. |
 | "Permission denied" on a project | You may not have the system permission or project membership needed for that action. Ask the project lead or an admin to check your access. |
 

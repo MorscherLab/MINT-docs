@@ -22,13 +22,13 @@ hero:
 features:
   - icon: 🔑
     title: Sign in
-    details: Open your lab's MINT in a browser and sign in with a password, a passkey, or SWITCH edu-ID. Create your own account if your lab allows it.
+    details: Open your lab's MINT in a browser and sign in with a password, a passkey, or SWITCH edu-ID. Your lab can require a passkey as a second factor. Create your own account if your lab allows it.
     link: /guide/access
     linkText: Access MINT
 
   - icon: 🧪
     title: Run your first experiment
-    details: Create a project, add an experiment, move it through planned, ongoing, and completed, and review the analysis outputs, in about five minutes.
+    details: Create a project, add an experiment, move it through planned, ongoing, and completed, and review the analysis outputs, in about five minutes. The Help button replays the tours.
     link: /guide/quickstart
     linkText: Quickstart
 
@@ -38,9 +38,21 @@ features:
     link: /guide/experiments
     linkText: Experiments
 
+  - icon: 📡
+    title: Watch your instruments
+    details: See which instruments run, which need attention, and what they measured, and get a push message on your phone when a run finishes.
+    link: /guide/instruments
+    linkText: Instruments
+
+  - icon: 🤖
+    title: Connect an AI assistant
+    details: Create a personal access token, connect Claude Code or another MCP client, and let it search experiments and start plugin jobs as you.
+    link: /guide/ai-and-api
+    linkText: AI and API access
+
   - icon: 🛒
-    title: Find and request plugins
-    details: Browse the plugin registry, install plugins if your role allows it, or request one with a short justification.
+    title: Find plugins
+    details: Browse the plugin registry. Admins install plugins from it; other users ask an admin.
     link: /guide/marketplace
     linkText: Marketplace
 
