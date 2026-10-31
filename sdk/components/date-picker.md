@@ -15,7 +15,7 @@ DatePicker is a forms component exported by @morscherlab/mint-sdk for plugin fro
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/DatePicker.vue">Source</a>
 </div>
 
-<ComponentPlayground name="DatePicker" />
+<demo vue="./demos/DatePicker.vue" title="DatePicker" description="Date field with a calendar popup. Pick a run date or clear the value." />
 
 ## Import
 
@@ -31,11 +31,11 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` modelValue ` | ` string ` | No | ` undefined ` | — |
-| ` type ` | ` 'date' \| 'time' \| 'datetime' ` | No | ` 'date' ` | — |
+| ` type ` | ` 'date' \| 'time' \| 'datetime' ` | No | ` "date" ` | — |
 | ` placeholder ` | ` string ` | No | ` undefined ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` invalid ` | ` boolean ` | No | ` false ` | — |
-| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
+| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` "md" ` | — |
 | ` min ` | ` string ` | No | ` undefined ` | Earliest value, in the format of the bound value. |
 | ` max ` | ` string ` | No | ` undefined ` | Latest value, in the format of the bound value. |
 | ` clearable ` | ` boolean ` | No | ` undefined ` | Show a clear button. Default: true for date, false otherwise. |
@@ -44,13 +44,23 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` locale ` | ` string ` | No | ` undefined ` | Locale of the calendar (datetime). |
 | ` disabledSlots ` | ` TimeSlotDisabledFn ` | No | ` undefined ` | Marks time slots unavailable; a returned string is shown inline as the reason (time). |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` TimeSlotDisabledFn `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L66) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` value: string \| undefined ` | — |
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

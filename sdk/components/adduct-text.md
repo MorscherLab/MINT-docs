@@ -10,7 +10,7 @@ description: "Compact, overflow-safe mass-spectrometry adduct notation."
 
 `AdductText` displays a supplied mass-spectrometry adduct with consistent typography and optional badge styling. The full trimmed value is available as the element's title when compact layouts truncate the text.
 
-<ComponentPlayground name="AdductText" />
+<demo vue="./demos/AdductText.vue" title="AdductText" description="Three adduct labels in plain, badge and muted styles. Compare how each variant and tone looks." />
 
 ## Example
 
@@ -41,13 +41,21 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` value ` | ` string \| null ` | No | ` null ` | — |
-| ` emptyText ` | ` string ` | No | ` '-' ` | — |
-| ` variant ` | ` 'inline' \| 'badge' ` | No | ` 'inline' ` | — |
-| ` tone ` | ` 'default' \| 'on-primary' \| 'muted' ` | No | ` 'default' ` | — |
-| ` size ` | ` 'xs' \| 'inherit' ` | No | ` 'xs' ` | — |
-| ` font ` | ` 'mono' \| 'sans' ` | No | ` 'sans' ` | — |
+| ` emptyText ` | ` string ` | No | ` "-" ` | — |
+| ` variant ` | ` 'inline' \| 'badge' ` | No | ` "inline" ` | — |
+| ` tone ` | ` 'default' \| 'on-primary' \| 'muted' ` | No | ` "default" ` | — |
+| ` size ` | ` 'xs' \| 'inherit' ` | No | ` "xs" ` | — |
+| ` font ` | ` 'mono' \| 'sans' ` | No | ` "sans" ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Events
+
+This component emits no events.
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

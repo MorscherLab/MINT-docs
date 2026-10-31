@@ -15,7 +15,7 @@ ConcentrationInput is a forms component exported by @morscherlab/mint-sdk for pl
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ConcentrationInput.vue">Source</a>
 </div>
 
-<ComponentPlayground name="ConcentrationInput" />
+<demo vue="./demos/ConcentrationInput.vue" title="ConcentrationInput" description="Value and unit input with a molecular weight. Change the value or the unit to convert the concentration." />
 
 ## Import
 
@@ -38,10 +38,10 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` max ` | ` number ` | No | ` undefined ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` invalid ` | ` boolean ` | No | ` false ` | — |
-| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
-| ` placeholder ` | ` string ` | No | ` 'Enter value' ` | — |
+| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` "md" ` | — |
+| ` placeholder ` | ` string ` | No | ` "Enter value" ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -49,6 +49,16 @@ Defaults are source expressions; factory functions are evaluated for each compon
 |---|---|
 | [` ConcentrationValue `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/composables/useConcentrationUnits.ts#L9) | See the linked SDK type definition. |
 | [` ConcentrationUnit `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/composables/useConcentrationUnits.ts#L7) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` value: ConcentrationValue \| undefined ` | — |
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

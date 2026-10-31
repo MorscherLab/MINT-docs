@@ -15,7 +15,7 @@ Hover/focus tooltip with smart positioning for compact explanations.
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/Tooltip.vue">Source</a>
 </div>
 
-<ComponentPlayground name="Tooltip" />
+<demo vue="./demos/Tooltip.vue" title="Tooltip" description="A button with a tooltip that shows text and a shortcut. Hover the button to see it." />
 
 ## Import
 
@@ -31,12 +31,22 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` text ` | ` string ` | Yes | — | — |
-| ` position ` | ` 'top' \| 'bottom' \| 'left' \| 'right' ` | No | ` 'top' ` | — |
+| ` position ` | ` 'top' \| 'bottom' \| 'left' \| 'right' ` | No | ` "top" ` | — |
 | ` delay ` | ` number ` | No | ` 200 ` | — |
 | ` shortcut ` | ` string ` | No | ` undefined ` | — |
 | ` maxWidth ` | ` string \| number ` | No | ` undefined ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Events
+
+This component emits no events.
+
+### Slots
+
+| Slot | Props | Description |
+|---|---|---|
+| ` default ` | — | — |
 
 <!-- sdk-props:end -->
 

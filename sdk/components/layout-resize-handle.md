@@ -10,7 +10,7 @@ description: "Accessible pointer and keyboard separator for resizable workbench 
 
 `LayoutResizeHandle` provides a focusable separator with bounded keyboard updates and a `resize-start` pointer event. Pair it with `useManualLayoutResize()` for drag handling; the handle alone does not listen for pointer movement or size your panels.
 
-<ComponentPlayground name="LayoutResizeHandle" />
+<demo vue="./demos/LayoutResizeHandle.vue" title="LayoutResizeHandle" description="Drag the handle to resize a side panel between 200 and 400 pixels." />
 
 ## Pointer and keyboard example
 
@@ -86,7 +86,18 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` step ` | ` number ` | No | ` 10 ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` value: number ` | — |
+| ` resize-start ` | ` event: PointerEvent ` | — |
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

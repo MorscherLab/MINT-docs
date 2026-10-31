@@ -106,8 +106,8 @@ SDK/dependency installation from package indexes is a separate concern.
 ## Updating component props
 
 Component pages use `aside: false` to give examples and API tables more space.
-Their props sections are generated from the released SDK's Vue/TypeScript
-declarations, including imported props, `withDefaults`, and `defineModel`.
+Their props, events and slots sections are generated from the released SDK's
+Vue/TypeScript declarations with `vue-component-meta`.
 
 Use a clean SDK checkout at the release matching the installed frontend package:
 
@@ -116,8 +116,8 @@ bun scripts/update-component-props.ts /path/to/MINT/packages/sdk-frontend
 bun run build
 ```
 
-The script uses the installed Vue compiler and the SDK's public export catalog;
-no additional package is needed. It checks representative prop signatures and
+The script reads the SDK through its `tsconfig.json` (`vue-component-meta` needs
+TypeScript 5.9; TypeScript 7 breaks it). It checks representative prop signatures and
 default values before writing. Review changes when updating the SDK release.
 Edit explanatory prose outside the `sdk-props:start` / `sdk-props:end` markers;
 fix generated types/defaults in the SDK source before regenerating.

@@ -15,7 +15,7 @@ TagsInput is a forms component exported by @morscherlab/mint-sdk for plugin fron
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/TagsInput.vue">Source</a>
 </div>
 
-<ComponentPlayground name="TagsInput" />
+<demo vue="./demos/TagsInput.vue" title="TagsInput" description="A tag field with suggestions. Type a tag or pick a suggestion to add it to the list." />
 
 ## Import
 
@@ -30,18 +30,18 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` modelValue ` | ` string[] ` | No | ` () => [] ` | — |
+| ` modelValue ` | ` string[] ` | No | ` [] ` | — |
 | ` placeholder ` | ` string ` | No | ` undefined ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` invalid ` | ` boolean ` | No | ` false ` | — |
-| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` 'md' ` | — |
+| ` size ` | ` 'sm' \| 'md' \| 'lg' ` | No | ` "md" ` | — |
 | ` maxTags ` | ` number ` | No | ` undefined ` | — |
 | ` allowDuplicates ` | ` boolean ` | No | ` false ` | — |
-| ` suggestions ` | ` string[] \| TagSuggestion[] ` | No | ` () => [] ` | — |
-| ` categories ` | ` TagCategory[] ` | No | ` () => [] ` | — |
+| ` suggestions ` | ` string[] \| TagSuggestion[] ` | No | ` [] ` | — |
+| ` categories ` | ` TagCategory[] ` | No | ` [] ` | — |
 | ` activeCategory ` | ` string ` | No | ` undefined ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
@@ -49,6 +49,17 @@ Defaults are source expressions; factory functions are evaluated for each compon
 |---|---|
 | [` TagSuggestion `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/TagsInput.vue#L8) | See the linked SDK type definition. |
 | [` TagCategory `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/TagsInput.vue#L13) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` update:modelValue ` | ` value: string[] ` | — |
+| ` update:activeCategory ` | ` prefix: string ` | — |
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 

@@ -15,7 +15,7 @@ DoseCalculator is a lab widgets component exported by @morscherlab/mint-sdk for 
   <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/DoseCalculator.vue">Source</a>
 </div>
 
-<ComponentPlayground name="DoseCalculator" />
+<demo vue="./demos/DoseCalculator.vue" title="DoseCalculator" description="Dose calculator for four target wells. Enter the concentrations to calculate the volumes." />
 
 ## Import
 
@@ -30,18 +30,29 @@ MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` mode ` | ` CalculatorMode \| 'auto' ` | No | ` 'auto' ` | — |
+| ` mode ` | ` CalculatorMode \| 'auto' ` | No | ` "auto" ` | — |
 | ` molecularWeight ` | ` number ` | No | ` undefined ` | — |
 | ` targetWells ` | ` string[] ` | No | ` undefined ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 
-Defaults are source expressions; factory functions are evaluated for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
+Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
 
 ### Related types
 
 | Type | Definition / accepted values |
 |---|---|
 | [` CalculatorMode `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/DoseCalculator.vue#L25) | See the linked SDK type definition. |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| ` apply-to-wells ` | ` results: WellConcentration[] ` | — |
+| ` calculate ` | ` result: DilutionResult \| SerialDilutionResult ` | — |
+
+### Slots
+
+This component declares no slots.
 
 <!-- sdk-props:end -->
 
