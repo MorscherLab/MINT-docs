@@ -99,6 +99,23 @@
   --vp-button-brand-active-bg: #99F6E4;
 }
 
+/* Code blocks are black in both themes (Shiki vitesse-black, set in config.ts) with slate chrome. */
+:root {
+  --vp-code-block-bg: #000000;
+  --vp-code-block-color: #CBD5E1;
+  --vp-code-block-divider-color: #1F2937;
+  --vp-code-lang-color: #94A3B8;
+  --vp-code-line-number-color: #64748B;
+  --vp-code-copy-code-border-color: #334155;
+  --vp-code-copy-code-bg: #1E293B;
+  --vp-code-copy-code-hover-border-color: #475569;
+  --vp-code-copy-code-hover-bg: #0F172A;
+  --vp-code-copy-code-active-text: #CBD5E1;
+  --vp-code-tab-text-color: #94A3B8;
+  --vp-code-tab-hover-text-color: #F1F5F9;
+  --vp-code-tab-active-text-color: #F1F5F9;
+}
+
 .VPHero .name {
   letter-spacing: -0.02em;
 }
