@@ -12,6 +12,8 @@ plugin before following the [tutorials](/sdk/tutorials/).
 | [PlatformContext](/sdk/concepts/platform-context) | Context namespaces, authenticated actors, files and settings |
 | [Data model](/sdk/concepts/data-model) | Experiments, design ownership, artifacts and projects |
 | [Migrations](/sdk/concepts/migrations) | Creating and upgrading plugin-owned SQL tables |
+| [Plugin communication](/sdk/concepts/plugin-communication) (1.5 beta) | Durable events and read-only exports between plugins |
+| [Database & revisions](/sdk/concepts/database-and-revisions) (1.5 beta) | Generated revisions, `mint dev`, `mint doctor --fix` |
 
 ## Standalone and integrated execution
 
