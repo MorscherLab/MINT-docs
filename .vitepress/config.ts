@@ -18,6 +18,7 @@ export default defineConfig({
   ],
 
   markdown: {
+    theme: { light: 'vitesse-black', dark: 'vitesse-black' },
     config(md) {
       // Keys are <html lang> values, not paths.
       md.use(vitepressDemoPlugin, { locale: { 'en-US': 'en-US' } })

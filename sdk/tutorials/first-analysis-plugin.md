@@ -70,6 +70,27 @@ uv run pytest -q
 
 Both should pass before you change anything.
 
+A complete run of this step looks like this:
+
+<Terminal title="~/plugins — zsh" :lines="[
+  '$ mint init hello-mint --name \'Hello MINT\' --description \'Hello world analysis plugin\' --mode generated --type analysis --yes',
+  'Creating mint-plugin-hello-mint/ ...',
+  '  pyproject.toml',
+  '  src/mint_plugin_hello_mint/plugin.py',
+  '  tests/test_plugin.py',
+  '  CLAUDE.md',
+  '  Initialized git repository',
+  '  Running uv sync...',
+  '[progress]',
+  '$ cd hello-mint',
+  '$ mint doctor --strict',
+  '  [ok]  Runtime boot  lifespan and safe GET probes passed',
+  '30/30 checks passed',
+  '$ uv run pytest -q',
+  '.                                                      [100%]',
+  '1 passed in 0.66s',
+]" />
+
 ## 2. Inspect the Plugin Class
 
 Open `src/mint_plugin_hello_mint/plugin.py`. The important parts look like this:

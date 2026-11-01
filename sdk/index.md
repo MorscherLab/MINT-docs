@@ -25,6 +25,28 @@ Use Python 3.14+ and install `mint-sdk[cli]` to scaffold plugins:
 uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
 ```
 
+Then scaffold a plugin, check it and run it:
+
+<Terminal title="~/plugins — zsh" :lines="[
+  '$ mint init my-plugin --mode generated --yes',
+  'Creating mint-plugin-my-plugin/ ...',
+  '  pyproject.toml',
+  '  src/mint_plugin_my_plugin/plugin.py',
+  '  tests/test_plugin.py',
+  '  Initialized git repository',
+  '  Running uv sync...',
+  '[progress]',
+  '$ cd my-plugin',
+  '$ uv run mint doctor',
+  '  [ok]  Deprecated SDK APIs  none found',
+  '  [ok]  Runtime boot  lifespan and safe GET probes passed',
+  '30/30 checks passed',
+  '$ uv run mint dev',
+  'Discovered plugin: MyPluginPlugin (mint_plugin_my_plugin.plugin)',
+  '  Backend   http://127.0.0.1:8003/api/my-plugin',
+  'Press Ctrl+C to stop.',
+]" />
+
 `mint init` supplies `mint-sdk[cli,server]` in the generated project's dev
 dependencies. Run `uv sync` and use `uv run mint` inside that project. The
 plain `mint-sdk` dependency is for the runtime library; see [CLI setup](/sdk/api/cli-reference#install-and-choose-the-environment).
