@@ -145,7 +145,8 @@ onBeforeUnmount(() => {
 .mint-term__body {
   margin: 0;
   padding: 16px 20px;
-  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   background: transparent;
   color: var(--vp-code-block-color);
   font: 400 14px/1.7 var(--vp-font-family-mono);
