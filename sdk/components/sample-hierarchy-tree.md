@@ -12,7 +12,7 @@ SampleHierarchyTree is a lab widgets component exported by @morscherlab/mint-sdk
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SampleHierarchyTree.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SampleHierarchyTree.vue">Source</a>
 </div>
 
 <demo vue="./demos/SampleHierarchyTree.vue" title="SampleHierarchyTree" description="Browse a study, experiment and plate tree with badges. Expand or collapse nodes to see the samples." />
@@ -26,7 +26,7 @@ import { SampleHierarchyTree } from "@morscherlab/mint-sdk/lab"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SampleHierarchyTree.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SampleHierarchyTree.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -47,7 +47,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TreeNode `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L285) | See the linked SDK type definition. |
+| [` TreeNode `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentLabTypes.ts#L285) | See the linked SDK type definition. |
 
 ### Events
 

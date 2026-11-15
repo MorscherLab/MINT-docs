@@ -12,7 +12,7 @@ Multi-step workflow container with progress, validation, and navigation slots.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/StepWizard.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/StepWizard.vue">Source</a>
 </div>
 
 <demo vue="./demos/StepWizard.vue" title="StepWizard" description="A three-step wizard with free navigation. Click a step to show its panel." />
@@ -41,7 +41,7 @@ The default navigation shows a step counter (`2 / 4`) on the left and Cancel, Ba
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/StepWizard.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/StepWizard.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -59,7 +59,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` WizardStep `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L15) | See the linked SDK type definition. |
+| [` WizardStep `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L15) | See the linked SDK type definition. |
 
 ### Events
 

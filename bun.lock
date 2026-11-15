@@ -5,7 +5,7 @@
     "": {
       "name": "mint-docs",
       "dependencies": {
-        "@morscherlab/mint-sdk": "^1.4.3",
+        "@morscherlab/mint-sdk": "^1.5.5",
         "beautiful-mermaid": "^1.1.3",
         "pinia": "^4.0.3",
         "vue-router": "^5.3.1",
@@ -54,7 +54,7 @@
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
-    "@morscherlab/mint-sdk": ["@morscherlab/mint-sdk@1.4.3", "", { "dependencies": { "@floating-ui/dom": "^1.8.0", "axios": "1.20.0", "lucide-vue-next": "1.0.0", "plotly.js-dist-min": "^4.1.1", "read-excel-file": "9.3.14" }, "peerDependencies": { "pinia": "^4.0.3", "vue": "^3.5.43", "vue-router": "^5.3.1" }, "optionalPeers": ["vue-router"] }, "sha512-kwjCCBoMV3lqkhg8fPI1FDbhTdZfy2U/JGN7+iD94WQJah7ZeTew0Hi8/sBQl//KceOiOzNj2CkgG66PYzrRmA=="],
+    "@morscherlab/mint-sdk": ["@morscherlab/mint-sdk@1.5.5", "", { "dependencies": { "@floating-ui/dom": "^1.8.0", "axios": "1.20.0", "lucide-vue-next": "1.0.0", "plotly.js-dist-min": "^4.1.1", "read-excel-file": "9.3.14" }, "peerDependencies": { "pinia": "^4.0.3", "vue": "^3.5.43", "vue-router": "^5.3.1" }, "optionalPeers": ["vue-router"] }, "sha512-RgZ9sAFbYPyEWbwGmjJ7Oy6kcicW5ZahMwRZGY0FCG6xZnqn+i/xzNeCZv4oOHYlNBEsHJLHHeGoEXBb5qP7HA=="],
 
     "@oxc-project/types": ["@oxc-project/types@0.156.0", "", {}, "sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw=="],
 

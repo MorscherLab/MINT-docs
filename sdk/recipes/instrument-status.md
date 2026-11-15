@@ -110,6 +110,20 @@ class LabMonitorPlugin(Plugin):
 
 Pass `alerts="open"` or `alerts="critical"` to `report`. The platform stores only the two flags that it derives from this value.
 
+### Send the time of the newest critical alert
+
+Set `latest_critical_at` on the report: the time of the newest **unacknowledged** critical alert of the instrument. The platform reads an instrument as critical only while that time is inside the alert window (`instruments.alertWindowHours`, default 72 hours; see [Configuration](/admin/configuration#instruments)). An old critical alert that nobody acknowledged then stops lighting the **Instruments** badge. A report without `latest_critical_at` keeps its critical flag, as before.
+
+```python
+return await self.context.instruments.report(
+    report.status,
+    alerts="critical",
+    latest_critical_at=newest_unacknowledged_critical.timestamp,
+)
+```
+
+The live status has two matching fields, `latest_critical_at` and `alerts_since` (the start of the window). Your alerts route can use `alerts_since` to list the same window. The alerts card on the instrument page asks for the alerts of the window with the `since` query of `GET /instruments/{instrument_id}/alerts`.
+
 ## Pitfalls
 
 - Do not store your own API key for daemons. Use platform service tokens.

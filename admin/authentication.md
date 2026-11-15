@@ -1,6 +1,6 @@
 # Authentication
 
-MINT supports three sign-in methods: username or email plus password, WebAuthn passkeys (a security key, Touch ID, Windows Hello, or another passkey-capable authenticator), and optional SWITCH edu-ID single sign-on. By default a password or edu-ID sign-in must be followed by a passkey step; see [Second factor](#second-factor).
+MINT supports three sign-in methods: username or email plus password, WebAuthn passkeys (a security key, Touch ID, Windows Hello, or another passkey-capable authenticator), and optional SWITCH edu-ID single sign-on. By default a password or edu-ID sign-in must be followed by a second step: a passkey, or a code from an authenticator app (TOTP). See [Second factor](#second-factor).
 
 > [Screenshot: login page showing the password form, the "SWITCH edu-ID" button, and "Continue with Passkey"]
 
@@ -11,8 +11,9 @@ MINT supports three sign-in methods: username or email plus password, WebAuthn p
 | **Password** | A password | A bcrypt password hash | Yes |
 | **Passkey (WebAuthn)** | Nothing - your device authenticates you | A public key only | Per-device unless you sync via iCloud Keychain / Google Password Manager |
 | **SWITCH edu-ID** | Your institutional edu-ID login | A linked external identity and normal MINT user record | Yes |
+| **Authenticator app (TOTP)** | Nothing - the app shows a 6-digit code. Second step only, never a sign-in alone | An encrypted secret | Yes, if the app syncs |
 
-All methods can be enabled at the same time. Users sign in with a password or edu-ID, confirm with a passkey (or register one on first sign-in), and can then sign in with the passkey alone.
+All methods can be enabled at the same time. Users sign in with a password or edu-ID, confirm with a second factor (or set one up on first sign-in), and can then sign in with the passkey alone.
 
 ## Accounts and registration
 
@@ -63,28 +64,61 @@ Set `server.rpId` to your public host name in production. A passkey is bound to 
 
 ## Second factor
 
-`auth.requireSecondFactor` (default `true`, env `MINT_AUTH__REQUIRE_SECOND_FACTOR`, **Admin -> Platform -> Configuration -> Authentication -> Second factor**) makes a passkey the second step after a password or edu-ID sign-in. A direct **Continue with Passkey** sign-in already proves two factors and stays one step.
+`auth.requireSecondFactor` (default `true`, env `MINT_AUTH__REQUIRE_SECOND_FACTOR`, **Admin -> Platform -> Configuration -> Authentication -> Second factor**) adds a second step after a password or edu-ID sign-in. The step is a passkey or, when you enable it, a code from an authenticator app. A direct **Continue with Passkey** sign-in already proves two factors and stays one step.
 
-It is enforced only when authentication and passkeys are enabled, dev mode is off, **and `server.externalUrl` starts with `https://`**; `server.rpId` alone does not count. A site that does not meet this stays single-factor and shows a warning at startup and in the admin panel, so an upgrade locks nobody out. Behind a TLS proxy, set an HTTPS `server.externalUrl` or the second factor stays off.
+MINT enforces the second factor only when all of these are true:
 
-When enforced:
+- `auth.enableAuth` is on and dev mode is off.
+- `auth.requireSecondFactor` is on.
+- The site offers at least one method:
+  - **Passkey**: `auth.enablePasskey` is on **and** `server.externalUrl` starts with `https://`. `server.rpId` alone does not count. Behind a TLS proxy, set an HTTPS `server.externalUrl`.
+  - **Authenticator app**: `auth.enableTotp` is on. It needs no HTTPS, so it enforces the second factor on a plain-HTTP site.
 
-- After the password or edu-ID step, an account with a passkey confirms with it. An account without one must enrol one before it can continue; there is no skip. Until then, the session token lasts 10 minutes and MINT sets no session cookie.
-- Sessions issued before the upgrade do the passkey step once, without retyping the password.
+A site that does not meet these conditions stays single-factor. MINT logs one warning at startup that names the unmet conditions, and the admin panel shows a warning. An upgrade locks nobody out.
+
+When the second factor is enforced:
+
+- After the password or edu-ID step, an account that holds a method confirms with it. An account without one must set one up before it can continue; there is no skip. If the site offers both methods, the user chooses. Until then, the session token lasts 10 minutes and MINT sets no session cookie.
+- Sessions issued before the upgrade do the second step once, without retyping the password.
 - A password-only session is refused with 401 `auth.second_factor_required` on every route, including plugin routes, plugin frontends and the admin terminal.
-- A user cannot delete their last passkey, and "delete all passkeys" is refused (409).
-- The password and edu-ID sign-in answers carry a `second_factor` step (`verify` or `enrol`), and 401 `auth.second_factor_required` names the same step in `details.second_factor`.
+- A user cannot remove their last second factor (409). "Delete all passkeys" is refused too.
+- The password and edu-ID sign-in answers carry a `second_factor` step (`verify` or `enrol`) and `second_factor_methods`. The 401 `auth.second_factor_required` error names the same step in `details.second_factor` and the methods in `details.methods`.
 - Personal access tokens, service tokens and `/mcp` are unchanged. Scripts, CI and the Python `MINTClient` must use a personal access token: `MINTClient.login(username, password)` raises `auth.second_factor_required`. The `mint` CLI signs in with a device code approved in the browser; see [CLI](/admin/cli#authenticate).
+
+### Authenticator app (TOTP)
+
+An authenticator app is off by default. To turn it on, switch on **Admin -> Platform -> Configuration -> Authentication -> Authenticator app**, or set `auth.enableTotp` to `true` (env `MINT_AUTH__ENABLE_TOTP=true`), then restart. The login page shows the code step only after you turn it on. The public config reports it as `totp_enabled`.
+
+Turning it on also enforces the second factor on a plain-HTTP site. Every user then needs a second factor before the next sign-in completes. On a plain-HTTP site, the authenticator app is the only method. Tell your users first.
+
+| Property | Behavior |
+|----------|----------|
+| Standard | RFC 6238: SHA-1, 6 digits, 30-second steps. MINT accepts the current step and one step on each side |
+| Storage | One authenticator app for each user. MINT stores the secret encrypted (`enc:v1`) with the platform secret key (`MINT_SECRETS__ENCRYPTION_KEY`), not with the JWT secret |
+| Replay | A code works once. A reused code gets 401 |
+| Lockout | A wrong or reused code counts as a failed sign-in and can lock the account (423). While the second factor is enforced, only a completed sign-in resets the count, not the password alone |
+| Recovery codes | None. A user who loses the app asks an admin for a [reset](#recovery) |
+| Audit | `totp.enrol`, `totp.delete`, and `auth.login_failure` for a refused code. The sign-in is recorded as `auth.login_success` with the method `totp` |
+
+The user flow:
+
+1. **Set up.** After the password step, the login page shows **Set up an authenticator app**. The user scans the QR code (drawn in the browser) or types the key, then enters the first 6-digit code. MINT marks the app as set up after the first correct code. A user who is already signed in can also set it up in **Your account -> Security**.
+2. **Sign in.** After the password step, the login page asks for the code. If the account holds both a passkey and an authenticator app, it offers both.
+3. **Remove.** The user removes the app in **Your account -> Security**. MINT refuses this (409) while it is the user's last second factor and the second factor is enforced.
+
+A user who is signed in with only a password session can add a first second factor of either kind, and no more than that. A user with a second factor adds another one only from a full session.
+
+The API routes are `POST /api/auth/totp/enrol/start`, `POST /api/auth/totp/enrol/confirm`, `POST /api/auth/totp/verify`, and `GET` and `DELETE /api/users/me/totp`. A personal access token cannot call them.
 
 ## Recovery
 
 | Scenario | Resolution |
 |----------|------------|
 | Lost passkey, password still known | Without an enforced second factor, sign in with the password, then remove the old credential and register a new passkey from **Your account -> Security**. With it, ask an admin to choose **Reset passkeys** for your account (next row). |
-| Lost every passkey | An admin opens **Admin -> People -> Users** and chooses **Reset passkeys** for the user. This removes all of the user's passkeys and ends their sessions; at the next sign-in they enrol a new one. It needs `users.manage`, cannot be used on your own account, and is recorded as `passkey.admin_reset`. |
+| Lost every passkey, or the authenticator app | An admin opens **Admin -> People -> Users** and chooses **Reset passkeys** for the user. This removes all of the user's passkeys **and the authenticator app** and ends their sessions; at the next sign-in they set up a new second factor. It needs `users.manage`, cannot be used on your own account, and is recorded as `passkey.admin_reset` (with `changes.passkeys` and `changes.totp`). |
 | Forgotten password | An admin resets it from **Admin -> People -> Users**. There is no self-service email reset. |
-| Password and every passkey lost | After the lab's normal identity check, an admin resets the password and the passkeys; the user signs in and enrols a fresh passkey. |
-| Last administrator lost their passkey | Set `MINT_AUTH__REQUIRE_SECOND_FACTOR=false`, restart, sign in with the password, replace the passkey in **Your account -> Security**, then unset the variable and restart. |
+| Password and every second factor lost | After the lab's normal identity check, an admin resets the password and the second factors; the user signs in and sets up a new one. |
+| Last administrator lost their second factor | Set `MINT_AUTH__REQUIRE_SECOND_FACTOR=false`, restart, sign in with the password, replace the passkey or authenticator app in **Your account -> Security**, then unset the variable and restart. |
 | Account compromised | An admin deactivates or deletes the user from **Admin -> People -> Users**, then restores access after a password reset and passkey review. |
 
 Resetting passwords and deactivating users needs `users.manage`, and only for users whose role does not outrank yours (see [Users & roles](/admin/users-roles#who-can-manage-whom)).
@@ -184,7 +218,7 @@ MINT takes the client IP from `X-Forwarded-For` only when the request comes from
 
 ## Audit log
 
-MINT records security-relevant events in the database, including `auth.login_success` and `auth.login_failure` for password and passkey logins, `user.register`, `user.create`, `auth.password_check_failure`, `api_token.create` and `api_token.revoke`, `service_token.create` and `service_token.revoke`, `passkey.admin_reset`, MCP write calls (`mcp.tool_call`), and project, experiment, and plugin changes. Read them through the API; there is no audit page in the UI. See [Audit log](/admin/platform-settings#logs-and-audit-log).
+MINT records security-relevant events in the database, including `auth.login_success` and `auth.login_failure` for password and passkey logins, `user.register`, `user.create`, `auth.password_check_failure`, `api_token.create` and `api_token.revoke`, `service_token.create` and `service_token.revoke`, `passkey.admin_reset`, `totp.enrol` and `totp.delete`, MCP write calls (`mcp.tool_call`), and project, experiment, and plugin changes. Read them through the API; there is no audit page in the UI. See [Audit log](/admin/platform-settings#logs-and-audit-log).
 
 For tracing, MINT can export OpenTelemetry spans for FastAPI, SQLAlchemy, and logging when `observability.enabled` is `true`.
 

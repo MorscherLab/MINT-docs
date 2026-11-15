@@ -162,14 +162,15 @@ While ready, the platform or SDK runtime may also call:
 |------|------|
 | `@health` | Periodically from the platform, at `GET /__mint/health`, and on demand from admin status |
 | `@on("experiment.before_save")` | Before platform design-data save; may veto the write |
-| `@on("experiment.after_save")` | After platform design-data save |
-| `@on("experiment.status_changed")` | Status flip such as `ongoing -> completed` |
+| `@on("experiment.after_save")` | After the platform commits a design-data save |
+| `@on("experiment.status_changed")` | After the platform commits a status change such as `ongoing -> completed` |
 | `@on("experiment.created")`, `@on("experiment.updated")`, `@on("experiment.deleted")` | After the platform commits the write |
+| `@on("<plugin>.<event>")` | An event of this plugin, or a bus event of a plugin in `reads_from` |
 | `@on("settings")` | When platform plugin settings are saved/reset or applied at startup |
 | `@notify` | When plugin code returns a typed notification event |
 | `@calendar_event` | When plugin code returns or cancels a typed calendar event |
 
-A plugin gets only the events that it declares with `@on`. The writing plugin does not receive the events of its own write. The legacy lifecycle overrides (`on_before_experiment_save()` and similar) and `check_health()` are removed.
+A plugin gets only the events that it declares with `@on`. The writing plugin does not receive the events of its own write. All observer events come through the durable event bus: at least once, after the commit, in no fixed order. See [Plugin communication](/sdk/concepts/plugin-communication#experiment-events). The legacy lifecycle overrides (`on_before_experiment_save()` and similar) and `check_health()` are removed.
 
 ### Upgrading
 
@@ -237,11 +238,11 @@ async def validate_design(self, event: BeforeExperimentSave) -> None:
 
 For platform design saves, `event.data` contains `{ "plugin_id": ..., "data": ... }`; it is not the inner design payload directly. Typed events also provide `experiment_id` and optional `experiment`, `request_id`, and `actor` information. Do not assume optional context is present for every host path.
 
-`experiment.before_save` is blocking and fails closed. Return `None` to allow the save and raise `EventVetoException` to refuse it (422). A handler failure, a return value other than `None`, or (for a plugin process, Docker-managed or external HTTP runtime) an unreachable runtime, timeout, missing token or error status also refuses the save. The platform sends the event to a plugin process at `/__mint/events`. A handler that raises in an in-process plugin blocks the save too; before 1.4 the platform logged the error and continued. After-save and status handlers are isolated observers; their failures do not roll back the completed operation.
+`experiment.before_save` is blocking and fails closed. Return `None` to allow the save and raise `EventVetoException` to refuse it (422). A handler failure, a return value other than `None`, or (for a plugin process, Docker-managed or external HTTP runtime) an unreachable runtime, timeout, missing token or error status also refuses the save. The platform sends the event to a plugin process at `/__mint/events`. A handler that raises in an in-process plugin blocks the save too; before 1.4 the platform logged the error and continued. The other `experiment.*` handlers are observers. They run after the commit, so a failure does not roll back the operation; the event bus delivers the event again. Make them idempotent.
 
 These are platform-service events, not database triggers. The platform design-save path (REST, MCP and plugin writes alike) runs the hooks of the other plugins. Enforce invariants that must apply to every design write with `Metadata.design` (a schema the platform validates on every `design.save`); perform operation-specific validation before calling a repository. Keep hooks fast and avoid saving the same design recursively from its own event handler.
 
-For plugin-local events, use a namespaced name with `await self.context.publish("my-plugin.refreshed", payload)` and a matching `@on("my-plugin.refreshed")` observer. The name must start with the normalized plugin name. This is not a durable job queue or a cross-plugin message bus. With `"realtime"` in `Metadata.features`, `publish` also streams the event to the browser; see [Python SDK](/sdk/api/python#events-health-and-realtime).
+For plugin events, use a namespaced name with `await self.context.publish("my-plugin.refreshed", payload)` and a matching `@on("my-plugin.refreshed")` observer. The name must start with the normalized plugin name. Declare the event in `Metadata.emits` to deliver it to other plugins through the durable event bus; see [Plugin communication](/sdk/concepts/plugin-communication#event-bus). With `"realtime"` in `Metadata.features`, `publish` also streams the event to the browser; see [Python SDK](/sdk/api/python#events-health-and-realtime).
 
 ## Settings revisions and runtime changes
 

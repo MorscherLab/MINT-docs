@@ -42,7 +42,7 @@ The scaffold's local `views/WorkspaceView.vue` is your **page content**, not ano
 
 ## Package entry points
 
-The package root holds the base controls, forms, feedback, the workspace shell, the core composables, the stores, and the types. Domain components and helpers come from subpaths. `app.use(MINTSdk)` registers the components of every entry globally.
+The package root holds the base controls, forms, feedback, the workspace shell, the core composables, the stores, and the types. Domain components and helpers come from subpaths. Import each component by name from its entry. Do not install `MINTSdk` with `app.use()`: a global install keeps the whole SDK in the first-load bundle. In 1.5.5, a plugin that replaced it with named imports loaded 37 percent less on first load (Large File Downloader and MS Planner).
 
 | Entry | Contents |
 |-------|----------|
@@ -54,10 +54,10 @@ The package root holds the base controls, forms, feedback, the workspace shell, 
 | `@morscherlab/mint-sdk/permissions` | Permission helpers such as `hasAllPermissions` and `isAdminUser` |
 | `@morscherlab/mint-sdk/host` | MINT platform only (`setSession`, `setSessionUser`, `setAuthRequired`). Plugins do not import it |
 | `@morscherlab/mint-sdk/stores`, `@morscherlab/mint-sdk/types` | The stores and the types. The root also exports them |
-| `@morscherlab/mint-sdk/install` | The `MINTSdk` Vue plugin. The root also exports it |
+| `@morscherlab/mint-sdk/install` | The `MINTSdk` Vue plugin. It remains for compatibility. Do not use it in new code |
 | `@morscherlab/mint-sdk/styles` | The single stylesheet |
 
-160 names of the 1.3 root are still exported from the root with a `@deprecated` tag. MINT 1.5 removes them. `mint doctor` warns for each such import and names the subpath. Examples in this guide import from the subpaths. For the 1.3 to 1.4 changes, see the [migration guide](/sdk/operations/migrate-1.3-to-1.4).
+MINT 1.5.0 removed the 160 names that the 1.3 root exported with a `@deprecated` tag. The root does not export them. `mint doctor` reports each such import and names the subpath. Examples in this guide import from the subpaths. For the 1.4 to 1.5 changes, see [Migrate from 1.4 to 1.5](/sdk/operations/migrate-1.4-to-1.5). For the 1.3 to 1.4 changes, see [Migrate from 1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4).
 
 ## Setup checklist
 
@@ -76,24 +76,28 @@ If you scaffolded with `mint init --mode standard`, all of this is already done.
    @import "@morscherlab/mint-sdk/styles";
    ```
 
-3. **Install the Vue plugin** before Pinia/router. `providePluginIdentity()` gives the standalone `AppTopBar` the plugin name, subtitle, and icon from the generated contract:
+   The stylesheet does not load the Geist fonts. Add this link to the `<head>` of `index.html`. Inside the platform, the platform loads the fonts, so nothing changes there.
+   ```html
+   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" />
+   ```
+
+3. **Create the app** with Pinia. Do not call `app.use(MINTSdk)`. The 1.5.5 scaffold still writes that line: delete it. `providePluginIdentity()` gives the standalone `AppTopBar` the plugin name, subtitle, and icon from the generated contract:
    ```ts
    // src/main.ts
    import { createApp } from 'vue'
    import { createPinia } from 'pinia'
-   import { MINTSdk, providePluginIdentity } from '@morscherlab/mint-sdk'
+   import { providePluginIdentity } from '@morscherlab/mint-sdk'
    import App from './App.vue'
    import { contract } from './generated/mint-plugin'
    import './style.css'
 
    const app = createApp(App)
-   app.use(MINTSdk)
    app.use(createPinia())
    providePluginIdentity(contract)
    app.mount('#app')
    ```
 
-4. **Keep the scaffold's Vite configuration**: Vue/Pinia aliases and deduplication, the `/api` proxy to port 8003, and the plugin route prefix as `base`. The single-page standard scaffold does not need Vue Router; add routing when you add pages.
+4. **Keep the scaffold's Vite configuration**: the `@tailwindcss/vite` plugin, Vue/Pinia aliases and deduplication, the `/api` proxy to port 8003, and the plugin route prefix as `base`. The single-page standard scaffold does not need Vue Router; add routing when you add pages.
 
 5. **Use the plugin workspace shell** in your root component. The standard scaffold wraps `WorkspaceView` in `PluginWorkspaceView` and `AppContainer`. For additional pages, use the generated contract's page-selector metadata.
 

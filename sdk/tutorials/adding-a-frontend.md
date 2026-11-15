@@ -40,10 +40,12 @@ hello-standard/
 └── frontend/
     ├── package.json
     ├── vite.config.ts
-    ├── vitest.config.ts
+    ├── tsconfig.json
+    ├── index.html
     └── src/
         ├── App.vue
         ├── main.ts
+        ├── env.d.ts
         ├── style.css
         ├── generated/
         │   ├── mint-plugin.contract.json
@@ -64,6 +66,8 @@ bun run build
 cd ..
 uv run pytest -q
 ```
+
+The frontend toolchain is small. Tailwind runs through `@tailwindcss/vite`, so the scaffold has no `postcss.config.js`. Vitest reads the `test` block of `vite.config.ts`, so there is no `vitest.config.ts`. The build is `vue-tsc --noEmit && vite build`, and there is no `tsconfig.node.json`. TypeScript is `^6.0.3`. `index.html` loads the Geist fonts with a `<link>`. `mint doctor` checks these points; see [`mint doctor`](/sdk/api/cli-reference#mint-doctor).
 
 The scaffold tests use `Harness`, which runs the backend app without a built frontend. Build the frontend (`bun run build`) before you run the plugin with `mint dev` against its bundled assets or build the bundle.
 
@@ -170,12 +174,12 @@ uv run pytest -q
 
 ## 4. Inspect the Frontend Shell
 
-`frontend/src/main.ts` installs the SDK Vue plugin and Pinia:
+`frontend/src/main.ts` creates the app and installs Pinia. It does not install `MINTSdk`. The app imports each SDK component by name from its entry. A global install keeps the whole SDK in the first-load bundle. The 1.5.5 scaffold can still contain `app.use(MINTSdk)`: delete that line. `MINTSdk` remains in the package for compatibility.
 
 ```ts
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { MINTSdk, providePluginIdentity } from '@morscherlab/mint-sdk'
+import { providePluginIdentity } from '@morscherlab/mint-sdk'
 
 import App from './App.vue'
 import { contract } from './generated/mint-plugin'
@@ -183,7 +187,6 @@ import './style.css'
 
 const app = createApp(App)
 
-app.use(MINTSdk)
 app.use(createPinia())
 providePluginIdentity(contract)
 app.mount('#app')

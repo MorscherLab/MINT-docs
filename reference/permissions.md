@@ -2,7 +2,7 @@
 
 MINT's RBAC has three pieces:
 
-1. **25 permissions** in 11 resource families
+1. **27 permissions** in 11 resource families
 2. **3 system roles** (Admin / Member / Viewer) plus admin-defined custom roles
 3. **Project membership and experiment collaborators** layered around visibility
 
@@ -20,7 +20,7 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 | `projects.delete` | Delete a project |
 | `projects.manage_members` | Add and remove members. To change the project role of a member, remove the member and add them again with the new role |
 
-### `experiments.*` (4)
+### `experiments.*` (5)
 
 | Permission | What it grants |
 |------------|----------------|
@@ -28,6 +28,7 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 | `experiments.create` | Create new experiments |
 | `experiments.edit` | Edit experiment metadata, design data, status |
 | `experiments.delete` | Delete an experiment |
+| `experiments.manage_codes` | Change or clear an assigned experiment number. Without it, only the administrator can. Only the Admin role has it at first |
 
 ### `instruments.*` (2)
 
@@ -58,11 +59,12 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 |------------|----------------|
 | `filesystem.browse` | Browse the read-only server directories configured in `filesystem.mounts` |
 
-### `notifications.*` (1)
+### `notifications.*` (2)
 
 | Permission | What it grants |
 |------------|----------------|
 | `notifications.receive_important` | Receive platform-routed important notifications |
+| `notifications.broadcast` | Let a notification that the user causes reach other people or a Teams or Slack channel. Without it, a user's notification reaches only that user. Only the Admin role has it at first |
 
 ### `calendar.*` (1)
 
@@ -111,6 +113,7 @@ Tabular form:
 | `experiments.create` | ✓ | ✓ | |
 | `experiments.edit` | ✓ | ✓ | |
 | `experiments.delete` | ✓ | ✓ | |
+| `experiments.manage_codes` | ✓ | | |
 | `instruments.view` | ✓ | ✓ | ✓ |
 | `instruments.edit` | ✓ | | |
 | `plugins.view` | ✓ | ✓ | ✓ |
@@ -120,6 +123,7 @@ Tabular form:
 | `jobs.read_all` | ✓ | | |
 | `jobs.manage_all` | ✓ | | |
 | `notifications.receive_important` | ✓ | | |
+| `notifications.broadcast` | ✓ | | |
 | `calendar.read_all` | ✓ | | |
 | `notices.publish` | ✓ | | |
 | `users.view` | ✓ | ✓ | ✓ |

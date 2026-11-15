@@ -12,7 +12,7 @@ description: "ChartContainer is a data display component exported by @morscherla
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ChartContainer.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ChartContainer.vue">Source</a>
 </div>
 
 <demo vue="./demos/ChartContainer.vue" title="ChartContainer" description="Chart frame with a toolbar button and a legend. Use it to wrap any chart content." />
@@ -64,7 +64,7 @@ When `loading` is true the normal body slot is not rendered. Initialize custom r
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ChartContainer.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ChartContainer.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -83,7 +83,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ChartLegendItem `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L365) | See the linked SDK type definition. |
+| [` ChartLegendItem `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L392) | See the linked SDK type definition. |
 
 ### Events
 

@@ -12,7 +12,7 @@ Drag-and-drop file picker with accept, size, multiple, and error handling.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FileUploader.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/FileUploader.vue">Source</a>
 </div>
 
 <demo vue="./demos/FileUploader.vue" title="FileUploader" description="File drop zone that accepts CSV and XLSX files. Drop or pick several files." />
@@ -37,7 +37,7 @@ import { FileUploader } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FileUploader.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/FileUploader.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

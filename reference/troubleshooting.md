@@ -129,7 +129,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Slow queries on Postgres | Missing index on a plugin-owned table | Add the index in a new plugin migration |
 | OpenTelemetry exporter errors in logs | OTLP endpoint unreachable | Set `observability.enabled: false` until fixed; the rest of the platform keeps working |
 | Push notifications do not arrive | Apple Push is not configured, the device registered with a session token, or Apple rejected the token | Open **Admin -> Platform -> Configuration -> Notifications -> Apple Push** and use **Send test push**. It shows Apple's or the relay's answer |
-| The page does not update when a colleague saves | `realtimeEnabled` is off (the default), or a proxy buffers or closes `GET /api/events` | Set `MINT_REALTIME_ENABLED=true`. Make the proxy pass the stream without buffering |
+| The page does not update when a colleague saves | `realtimeEnabled` is off, or a proxy buffers or closes `GET /api/events` | Remove `MINT_REALTIME_ENABLED=false` (it is on by default). Make the proxy pass the stream without buffering |
 | Auto-issued GitHub bug reports flooding | A recurring bug spams unique stack traces | Disable `errorReporting.enabled` until the bug is fixed |
 
 ## Hosted (lab) mode

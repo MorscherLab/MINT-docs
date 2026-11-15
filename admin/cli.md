@@ -129,6 +129,10 @@ mint platform update apply --yes
 
 `mint platform update check` reports platform and plugin update sources. `mint platform update apply` applies the latest platform update and requires `platform.configure`.
 
+## Libraries
+
+`mint libraries import|list|promote|retire|restore|delete` manages the [library store](/admin/libraries). The commands need `platform.configure`. See [`mint libraries`](/sdk/api/cli-reference#mint-libraries).
+
 ## Scripting tips
 
 Combine commands with `--json` and `jq`:

@@ -4,7 +4,7 @@ Public components, composables, stores, and types from `@morscherlab/mint-sdk` *
 
 ## Entry points
 
-SDK 1.4 splits the public surface into entry points. The package root (`@morscherlab/mint-sdk`) keeps the names that most plugins use. Every other name lives in one subpath. The root still re-exports the 1.3 root names, marked `@deprecated` in the editor; they are removed in MINT 1.5. `mint doctor` reports a root import of such a name and `mint doctor --fix` rewrites the safe cases.
+SDK 1.4 splits the public surface into entry points. The package root (`@morscherlab/mint-sdk`) keeps the names that most plugins use. Every other name lives in one subpath. MINT 1.5.0 removed the 160 names of the 1.3 root that the root re-exported with a `@deprecated` tag. `mint doctor` reports a root import of such a name and `mint doctor --fix` rewrites the safe cases.
 
 | Entry point | Contents |
 |-------------|----------|
@@ -51,7 +51,7 @@ Give the complex components one `:spec`, built in `<script setup>`: `PluginWorks
 
 Typed composables and helper factories. Source: [`packages/sdk-frontend/src/composables/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-frontend/src/composables).
 
-The entry column names the import path (`root` is `@morscherlab/mint-sdk`; the others are subpaths). The root also re-exports some subpath names until MINT 1.5; import them from their subpath.
+The entry column names the import path (`root` is `@morscherlab/mint-sdk`; the others are subpaths). Import every other name from its subpath.
 
 | Composable | Entry | Returns | Purpose |
 |------------|-------|---------|---------|
@@ -251,7 +251,7 @@ Instrument types include `InstrumentBadgeState`, `InstrumentLiveStatus`, `Instru
 ## Notes
 
 - Examples use Vue 3 Composition API and `<script setup lang="ts">`; call lifecycle-aware composables inside component setup.
-- Prefer named imports. Installing `MINTSdk` globally registers the SDK components; do not assume that a global install includes only one component. `PlotlyChart` loads its Plotly runtime on mount. See [PlotlyChart](/sdk/components/plotly-chart#plotly-4-builds-and-types) for Plotly setup.
+- Import each component by name from its entry. Do not call `app.use(MINTSdk)`: a global install registers every component, so the whole SDK stays in the first-load bundle (in 1.5.5, named imports in its place cut the first load by 37 percent in Large File Downloader and MS Planner). `MINTSdk` still exists for compatibility. `PlotlyChart` loads its Plotly runtime on mount. See [PlotlyChart](/sdk/components/plotly-chart#plotly-4-builds-and-types) for Plotly setup.
 - Current plugin scaffolds import Tailwind v4 and the SDK style bundle from `frontend/src/style.css`: `@import "tailwindcss";` then `@import "@morscherlab/mint-sdk/styles";`. Keep the SDK import unlayered so Tailwind preflight cannot outrank SDK component styles. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
 - For plugin-scoped API calls, prefer `useClient()` from `frontend/src/generated/mint-plugin.ts`; use raw `useApi()` for platform APIs outside the plugin contract.
 - With auth enabled, plugin routes need a Bearer credential; the platform does not read the session cookie there. Do not call them with a plain `<a href>` link or a `fetch` without a Bearer: the platform answers 401. Use the generated client, the generated `download()`, or `downloadEndpoint()`.

@@ -12,7 +12,7 @@ MoleculeInput is a lab widgets component exported by @morscherlab/mint-sdk for p
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/MoleculeInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/MoleculeInput.vue">Source</a>
 </div>
 
 <demo vue="./demos/MoleculeInput.vue" title="MoleculeInput" description="Read-only molecule view that draws a structure from a SMILES string." />
@@ -26,7 +26,7 @@ import { MoleculeInput } from "@morscherlab/mint-sdk/lab"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/MoleculeInput.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/MoleculeInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -44,7 +44,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` MoleculeData `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L265) | See the linked SDK type definition. |
+| [` MoleculeData `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentLabTypes.ts#L265) | See the linked SDK type definition. |
 
 ### Events
 

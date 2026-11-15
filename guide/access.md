@@ -18,12 +18,15 @@ The login page offers up to three ways in, depending on how your admin set up MI
 
 No account yet? If the login page shows **No account yet? Create one**, you can register yourself; passwords need at least 8 characters and at most 72 bytes (UTF-8), and new accounts start with the Member role. An admin must activate a new account before you can sign in. If the link is missing, ask your admin to create an account for you.
 
-If your lab requires a second factor (the default when the site runs on HTTPS), a password or edu-ID sign-in is followed by a passkey step:
+If your lab requires a second factor, a password or edu-ID sign-in is followed by a second step. Your admin chooses the methods: a passkey (needs an HTTPS site), an authenticator app, or both. The login page shows the step:
 
-- **Verify it's you** — click **Continue with passkey** and confirm with your device.
-- **Set up a passkey** — shown when your account has no passkey yet. Enter a device name and click **Create passkey**.
+- **Verify it's you** — confirm with your passkey, or enter the 6-digit code from your authenticator app. If your account holds both, choose one.
+- **Set up a passkey** — shown when your account has no second factor yet and the site offers passkeys. Enter a device name and click **Create passkey**.
+- **Set up an authenticator app** — shown when your account has no second factor yet and the site offers the app. Scan the QR code with an authenticator app (or type the key), then enter the first 6-digit code. If the site offers both methods, you choose which one to set up.
 
-Until you finish this step, the sign-in is valid for 10 minutes only. A direct passkey sign-in counts as both factors, so it asks for nothing more. While the second factor is required, you cannot delete your last passkey. If you lose every passkey, ask an admin to reset them in **Admin -> People -> Users**; the reset also signs you out everywhere. Personal access tokens and the MCP server do not use the second factor.
+Until you finish this step, the sign-in is valid for 10 minutes only. A direct passkey sign-in counts as both factors, so it asks for nothing more. A code works once, and a wrong code counts like a wrong password toward the lockout.
+
+You can add or remove a passkey or the authenticator app in **Your account -> Security**. While the second factor is required, you cannot remove your last one. MINT has no recovery codes. If you lose every passkey or your authenticator app, ask an admin to reset them in **Admin -> People -> Users**; the reset removes your passkeys and your authenticator app and signs you out everywhere. See [Authentication -> Recovery](/admin/authentication#recovery). Personal access tokens and the MCP server do not use the second factor.
 
 If you enter the right password for an account that an admin has not activated yet, MINT shows **Waiting for approval** instead of a password error. Ask an admin to activate the account in **Admin -> People -> Users**. Waiting does not count toward the lockout.
 
@@ -67,6 +70,7 @@ The day-to-day workflow (creating experiments, running plugins, viewing results)
 | Login loops back to the page | Cookies may be blocked for the lab domain. Allow them and reload. |
 | "Too many failed login attempts" | Wait for the lockout to end (15 minutes by default) or ask an admin to reset your password. |
 | "Verify it's you" appears after every sign-in | Your lab requires a second factor. Sign in with **Continue with passkey** to skip the extra step. |
+| The authenticator code is refused | Check that the clock of your phone is correct. Wait for the next code, because a code works once. Several wrong codes lock the account for a while. |
 | Passkey prompt fails | Make sure you're using a browser and OS that support WebAuthn — recent Chrome, Safari, Firefox, or Edge. |
 | "Permission denied" on a project | You may not have the system permission or project membership needed for that action. Ask the project lead or an admin to check your access. |
 

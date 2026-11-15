@@ -149,7 +149,7 @@ The same dialog appears when you edit a project. A plugin or an API client that 
 
 ## Work together live
 
-When your admin turns on realtime updates (`realtimeEnabled`, off by default), MINT shows changes that other people make without a manual reload:
+Realtime updates are on by default (`realtimeEnabled`). Your admin can turn them off. When they are on, MINT shows changes that other people make without a manual reload:
 
 - The experiment page, the experiments list, and the project page refresh when a matching change arrives. While an edit form is open, the refresh waits until you close it, so your unsaved edits stay.
 - If someone else saves the experiment while your edit form has unsaved edits, a banner at the top of the form tells you. Choose **Reload form**, or choose **Review** to open the experiment in a new tab. A form without edits reloads by itself.

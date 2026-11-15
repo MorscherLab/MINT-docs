@@ -12,7 +12,7 @@ Platform-style top bar for shells that need custom navigation chrome.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/AppTopBar.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/AppTopBar.vue">Source</a>
 </div>
 
 <demo vue="./demos/AppTopBar.vue" title="AppTopBar" description="A top bar with page selector, pill navigation and account menu. Click the pills to change the active view." />
@@ -42,7 +42,7 @@ the top of the viewport.
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/AppTopBar.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/AppTopBar.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -63,9 +63,9 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` PluginWorkspaceTopBarSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L233) | See the linked SDK type definition. |
-| [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L230) | See the linked SDK type definition. |
-| [` TopBarJob `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/jobs.ts#L73) | See the linked SDK type definition. |
+| [` PluginWorkspaceTopBarSpec `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L234) | See the linked SDK type definition. |
+| [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L231) | See the linked SDK type definition. |
+| [` TopBarJob `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/jobs.ts#L73) | See the linked SDK type definition. |
 
 ### Events
 

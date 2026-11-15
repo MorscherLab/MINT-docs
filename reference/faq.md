@@ -82,11 +82,11 @@ For UI, choose the plugin mode that matches the job:
 
 ## How do I update MINT?
 
-Update the platform from the admin page or with the CLI. This works for the [direct install](/admin/install-direct) and for [Docker](/admin/install-docker). Click **Apply Bundle** (or **Update** when the release has no runtime bundle) on the release card in **Admin -> Plugins -> Installed**, or run `mint platform update check` and `mint platform update apply --yes`. Then restart MINT. See [Updates](/admin/updates). A minor update can need new plugin releases: the platform pairs them for you when you confirm the update. For the step from MINT 1.3 to 1.4, read [Upgrading from MINT 1.3](/admin/updates#upgrading-from-mint-1-3) first.
+Update the platform from the admin page or with the CLI. This works for the [direct install](/admin/install-direct) and for [Docker](/admin/install-docker). Click **Update platform** in the platform row of **Available updates** in **Admin -> Platform -> Updates**, or run `mint platform update check` and `mint platform update apply --yes`. Then restart MINT. See [Updates](/admin/updates). A minor update can need new plugin releases: the platform pairs them for you when you confirm the update. For the step from MINT 1.3 to 1.4, read [Upgrading from MINT 1.3](/admin/updates#upgrading-from-mint-1-3) first.
 
 The `uv tool upgrade mint-sdk` and `pipx upgrade mint-sdk` commands only update the `mint` CLI in an admin shell. They do not upgrade the running platform service.
 
-To check available platform and plugin releases, open **Admin -> Plugins -> Installed**. Take a normal deployment/database backup before upgrading.
+To check available platform and plugin releases, open **Admin -> Platform -> Updates**. Take a normal deployment/database backup before upgrading.
 
 ## Is MINT open source?
 

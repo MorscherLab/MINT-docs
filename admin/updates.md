@@ -2,12 +2,28 @@
 
 MINT's update story has two related checks: the **platform** runtime and the **plugins** installed on top of it. A platform update carries the matching `mint-sdk`, so there is no separate SDK update inside the platform. Platform updates are checked from GitHub releases; marketplace plugin updates are checked from the configured registry.
 
-> [Screenshot: Admin -> Plugins -> Installed showing the platform release card and plugin update badges]
+> [Screenshot: Admin -> Platform -> Updates showing the status strip, the Available updates table and the Update settings card]
 
 Keep the platform, Python SDK and frontend SDK on matching releases; plugins retain their own
 package versions and are distributed as `.mint` bundles. Read the
 [release notes](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md), the
 [notable changes](/changelog) and the [SDK upgrade guide](/sdk/operations/upgrading) before updating.
+
+## The Updates page
+
+**Admin -> Platform -> Updates** is the one page for platform and plugin updates. The page needs `plugins.view` and either `platform.configure` or `plugins.install`. The rail item shows the number of available updates.
+
+| Part | What it shows |
+|------|---------------|
+| **Status strip** | The platform version (and the newer release, if any), the number of plugins with updates, the schedule, and the time of the last check |
+| **Available updates** | One row for the platform (needs `platform.configure`) and one for each plugin (needs `plugins.install`). Each row has an **Update platform** or **Update** button. **Update all plugins** applies every plugin update. **Plugin pre-releases** includes plugin pre-releases in the check |
+| **Update settings** | Schedule, checks and plugin sources; see below |
+
+The page reads the last check result without a call to GitHub. Before the first check, the strip shows **not checked yet**. Click **Check now** to query the update sources. A successful platform or plugin update, manual or scheduled, removes its row from the result at once. The API for the stored result is `GET /api/updates/status` (`plugins.view`). It returns the last check from memory, with `checkedAt` set to `null` before the first check.
+
+**Admin -> Plugins -> Installed** shows a link with the number of available updates, and an **Update** button on each plugin card. **Admin -> Plugins -> Advanced** holds only the private package indexes.
+
+> [Screenshot: Admin -> Platform -> Updates with one platform update and two plugin updates available]
 
 ## Platform updates
 
@@ -42,9 +58,9 @@ Configured under `updates` in `config.json`:
 
 The background checker always runs and re-reads `autoCheckEnabled` every minute, so turning checks on or off takes effect without a restart.
 
-Users with `plugins.configure` and `platform.configure` can edit these settings under **Admin -> Plugins -> Installed -> Advanced -> Update settings**; saving writes them to `config.json`. See [Plugins → Update settings](/admin/plugins#update-settings).
+Users with `platform.configure` can edit these settings in the **Update settings** card of the Updates page: **Schedule** (scheduled updates, daily time, scope), **Checks** (background checks, interval, platform repository, GitHub token status, platform pre-releases) and **Plugin sources** (needs `plugins.install`). Saving writes them to `config.json`. See [Plugins → Update settings](/admin/plugins#update-settings).
 
-When a newer platform release is found, a release card appears in **Admin -> Plugins -> Installed** for users with `platform.configure`. Click **Apply Bundle** (or **Update** when the release has no runtime bundle), then restart when asked. The CLI equivalent is `mint platform update check` followed by `mint platform update apply --yes`. Startup applies pending platform migrations; it does not
+When a newer platform release is found, the platform row of **Available updates** shows the release. Click **Update platform**, then restart when asked. The CLI equivalent is `mint platform update check` followed by `mint platform update apply --yes`. Startup applies pending platform migrations; it does not
 rerun completed revisions. Plan a maintenance window and verify readiness and
 plugin status after restart. A rolling restart alone does not guarantee a
 zero-downtime schema upgrade.
@@ -171,11 +187,24 @@ Back up the database before you upgrade. Database revisions run at startup and c
 
 For the full list, including the changes for plugin authors, see the [migration guide](/sdk/operations/migrate-1.3-to-1.4).
 
+## Upgrading from MINT 1.4
+
+Back up the database before you upgrade. Database revisions run at startup and cannot be undone.
+
+1. **Database.** Update from 1.4.x directly. Six Alembic revisions run at the first 1.5 start. One of them drops the unused `plugin_install_requests` table with its rows.
+2. **Docker.** A 1.4 container can update itself to 1.5, but an in-app update replaces the Python packages only. The 1.5 base image has Debian security updates and no system `pip`. Change the Compose image to `ghcr.io/morscherlab/mint:1.5` and run `docker compose pull && docker compose up -d`. In the new image, use `uv pip` in the admin terminal. See [Install with Docker](/admin/install-docker#upgrades).
+3. **Plugins.** A plugin built for SDK 1.4 with the range `mint-sdk>=1.4.0,<2.0` stays enabled. Check **Admin -> Plugins -> Installed** after the first start.
+4. **Realtime stream.** It is on by default now. Open pages refetch after the writes of other users. The platform must run as one worker. Set `realtimeEnabled` to `false` to turn it off. See [`realtimeEnabled`](/admin/configuration#realtimeenabled).
+5. **Second factor.** An authenticator app (TOTP) is off until you set `auth.enableTotp`. See [Authentication -> Authenticator app](/admin/authentication#authenticator-app-totp).
+6. **Updates page.** The update controls moved to **Admin -> Platform -> Updates**. See [The Updates page](#the-updates-page).
+7. **Teams and Slack.** A single `webhookUrl` becomes the channel `default`. See [Notifications](/admin/platform-settings#teams-and-slack-channels) and [`notifications`](/admin/configuration#notifications).
+8. **Roles.** The new permission `notifications.broadcast` goes to the Admin role. Give it to other roles that send notifications to other people. See [Permissions](/reference/permissions#notifications-2).
+
 ## Plugin updates
 
-Plugin updates are surfaced in **Admin -> Plugins -> Installed** and **Admin -> Plugins -> Registry**, with an **Update** action when the registry advertises a newer compatible version.
+Plugin updates are listed in **Available updates** on **Admin -> Platform -> Updates**. **Admin -> Plugins -> Installed** keeps an **Update** button on each plugin card that has an update, and **Admin -> Plugins -> Registry** shows the registry versions.
 
-> [Screenshot: installed plugin row with Update ready badge]
+> [Screenshot: installed plugin card with the Update ready badge]
 
 The [scheduled update batch](#scheduled-updates) is the only automatic plugin updater. It updates every plugin that has an update source (marketplace installs register one), and there is no per-plugin opt-in. To update plugins automatically, set `updates.autoApplyEnabled` and `updates.autoApplyPlugins`. `updates.autoApplyPlatform` defaults to `true`; set it to `false` for plugin updates only. The batch needs a [restart supervisor](#scheduled-updates).
 

@@ -12,7 +12,7 @@ ExperimentSelectorModal is a workflow component exported by @morscherlab/mint-sd
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ExperimentSelectorModal.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ExperimentSelectorModal.vue">Source</a>
 </div>
 
 <demo vue="./demos/ExperimentSelectorModal.vue" title="ExperimentSelectorModal" description="Experiment picker with filters and project groups. Open it, select an experiment, and read the result." />
@@ -23,10 +23,14 @@ ExperimentSelectorModal is a workflow component exported by @morscherlab/mint-sd
 import { ExperimentSelectorModal } from "@morscherlab/mint-sdk/data"
 ```
 
+## Selected row
+
+A selected row shows the soft accent fill, the teal title and a trailing check. It has no coloured left bar.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/ExperimentSelectorModal.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ExperimentSelectorModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -43,7 +47,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L39) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
+| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L39) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
 
 ### Events
 

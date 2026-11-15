@@ -175,7 +175,7 @@ See [Reverse proxy and first-run setup](/admin/proxy-and-setup).
 
 ## Upgrades
 
-Take a database backup, then apply the new release from **Admin -> Plugins -> Installed** (see [Updates](/admin/updates)). On this install path MINT downloads the release's runtime bundle into `/opt/mint` and asks for a restart:
+Take a database backup, then apply the new release from **Admin -> Platform -> Updates** (see [Updates](/admin/updates)). On this install path MINT downloads the release's runtime bundle into `/opt/mint` and asks for a restart:
 
 ```bash
 sudo systemctl restart mint

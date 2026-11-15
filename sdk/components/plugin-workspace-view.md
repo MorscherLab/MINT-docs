@@ -16,7 +16,7 @@ See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PluginWorkspaceView.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PluginWorkspaceView.vue">Source</a>
 </div>
 
 <demo vue="./demos/PluginWorkspaceView.vue" title="PluginWorkspaceView" description="A plugin workspace with a top bar and sidebar. Select a pill to change the sidebar panels." />
@@ -53,7 +53,7 @@ the SDK's declarations and source comments.
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PluginWorkspaceView.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PluginWorkspaceView.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -72,7 +72,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` PluginWorkspaceViewSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L299) | See the linked SDK type definition. |
+| [` PluginWorkspaceViewSpec `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L320) | See the linked SDK type definition. |
 
 ### Events
 

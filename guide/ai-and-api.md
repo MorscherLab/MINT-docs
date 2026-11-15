@@ -72,7 +72,7 @@ Every tool runs as you and respects your role, project access, and plugin visibi
 | **Jobs** | `mint_start_job`, `mint_get_job`, `mint_get_job_result`, `mint_cancel_job` | Status and results only |
 | **Plugin tools** | Tools, prompts, and resources that installed plugins publish, named `<plugin>_<name>` | Read tools only |
 
-The assistant can also read `mint://` resources: an experiment with its design data, a single analysis artifact, or a stored file of up to 5 MiB. Larger files must be downloaded from MINT directly.
+The assistant can also read `mint://` resources: an experiment with its design data, a single analysis artifact, or a stored file of up to 5 MiB. Larger files must be downloaded from MINT directly. A plugin can also offer its exports and its recent events as `mint://plugins/...` resources; see [Plugin communication](/sdk/concepts/plugin-communication#read-an-export-over-mcp).
 
 Things to know:
 

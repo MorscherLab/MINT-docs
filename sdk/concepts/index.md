@@ -10,6 +10,7 @@ plugin before following the [tutorials](/sdk/tutorials/).
 | [Lifecycle](/sdk/concepts/lifecycle) | Discovery, startup, settings, events, shutdown and uninstall |
 | [Isolation](/sdk/concepts/isolation) | In-process, subprocess, external and container runtime boundaries |
 | [PlatformContext](/sdk/concepts/platform-context) | Context namespaces, authenticated actors, files and settings |
+| [Plugin communication](/sdk/concepts/plugin-communication) | Event bus, exports, and calls between plugins |
 | [Data model](/sdk/concepts/data-model) | Experiments, design ownership, artifacts and projects |
 | [Migrations](/sdk/concepts/migrations) | Creating and upgrading plugin-owned SQL tables |
 

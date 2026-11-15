@@ -12,7 +12,7 @@ Divider is a layout component exported by @morscherlab/mint-sdk for plugin front
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/Divider.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/Divider.vue">Source</a>
 </div>
 
 <demo vue="./demos/Divider.vue" title="Divider" description="Shows a divider with a centered label between two text blocks." />
@@ -26,7 +26,7 @@ import { Divider } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/Divider.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/Divider.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

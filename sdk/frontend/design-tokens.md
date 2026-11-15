@@ -18,6 +18,14 @@ Tokens also make light/dark/density work universally. The dark theme just change
 @import "@morscherlab/mint-sdk/styles";
 ```
 
+The `styles` export does not load the Geist fonts. A `@import url(...)` inside it would follow other rules, and `@tailwindcss/vite` drops it. Load the fonts with a `<link>` in the plugin `index.html`. `mint init` does this. Inside the platform, the platform loads the fonts.
+
+```html
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" />
+```
+
+With `moduleResolution: "bundler"` (the `mint init` template), TypeScript 6 accepts `import '@morscherlab/mint-sdk/styles'` with no `declare module`.
+
 ## Token families
 
 ### Brand
@@ -39,11 +47,11 @@ MINT has one teal accent. The accent tokens follow the user's palette (`html[dat
 
 Always use `--text-on-accent` for text and icons on an accent fill, never `white`. White on the light accent `#0D9488` is 3.74:1, a known accepted exception.
 
-`--color-cta`, `--color-cta-hover`, and `--color-purple` are aliases of the accent. They remain until MINT 1.5, and `mint doctor` warns when a plugin uses them.
+`--color-cta`, `--color-cta-hover`, and `--color-purple` are aliases of the accent. They remain until MINT 2.0, and `mint doctor` warns when a plugin uses them.
 
 ### Entity accents (retired)
 
-Experiments and projects no longer have their own hues. `--color-experiment*` and `--color-project*` (base, `-hover`, `-soft`, `-border`) alias slate neutrals until MINT 1.5, and `mint doctor` warns on them. Tell entities apart by icon and label, not by hue.
+Experiments and projects no longer have their own hues. `--color-experiment*` and `--color-project*` (base, `-hover`, `-soft`, `-border`) alias slate neutrals until MINT 2.0, and `mint doctor` warns on them. Tell entities apart by icon and label, not by hue.
 
 Use brand tokens for: links, primary buttons, focused inputs, the most-prominent action on a screen.
 
@@ -221,7 +229,7 @@ Hits are usually candidates for `var(--…)` substitution.
 
 ## Notes
 
-- Token names are stable across SDK minor versions. The aliases `--color-cta*`, `--color-purple`, `--color-experiment*`, and `--color-project*` leave in 1.5 — check the changelog.
+- Token names are stable across SDK minor versions. The aliases `--color-cta*`, `--color-purple`, `--color-experiment*`, and `--color-project*` remain until MINT 2.0.
 - The platform may override variables in its own root stylesheet (`packages/sdk-frontend/src/styles/variables.css` is the master; the platform's `frontend/src/style.css` can `:root { --color-primary: ...; }` to re-skin).
 - Plugin Histoire stories should be reviewed in light, dark, AND white backgrounds — every story file declares them.
 

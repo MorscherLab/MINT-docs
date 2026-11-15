@@ -16,7 +16,7 @@ This component renders a piece of the SDK's backend-driven **generated UI** syst
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/GeneratedResultRenderer.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/GeneratedResultRenderer.vue">Source</a>
 </div>
 
 <demo vue="./demos/GeneratedResultRenderer.vue" title="GeneratedResultRenderer" description="A table result of four metabolites with m/z and retention time. Search and sort the rows." />
@@ -40,7 +40,7 @@ For an `artifact` result with a `download_url`, the renderer downloads the file 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/GeneratedResultRenderer.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/GeneratedResultRenderer.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -53,7 +53,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` GeneratedAnalysisResult `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/generated-ui.ts#L171) | See the linked SDK type definition. |
+| [` GeneratedAnalysisResult `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/generated-ui.ts#L173) | See the linked SDK type definition. |
 
 ### Events
 
