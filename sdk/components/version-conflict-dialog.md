@@ -12,7 +12,7 @@ Dialog for a save refused with a 412 version conflict; reload or overwrite.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/VersionConflictDialog.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/VersionConflictDialog.vue">Source</a>
 </div>
 
 <demo vue="./demos/VersionConflictDialog.vue" title="VersionConflictDialog" description="A button opens the dialog with two unsaved changes. Choose Overwrite or Reload." />
@@ -30,7 +30,7 @@ Show the dialog while `useVersionedSave().conflict` is set. Reload discards the 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/VersionConflictDialog.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/VersionConflictDialog.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

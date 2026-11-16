@@ -12,7 +12,7 @@ Hover/focus tooltip with smart positioning for compact explanations.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/Tooltip.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/Tooltip.vue">Source</a>
 </div>
 
 <demo vue="./demos/Tooltip.vue" title="Tooltip" description="A button with a tooltip that shows text and a shortcut. Hover the button to see it." />
@@ -26,7 +26,7 @@ import { Tooltip } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/Tooltip.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/Tooltip.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

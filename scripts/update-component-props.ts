@@ -41,8 +41,8 @@ for (const component of componentDocs) {
   const props: Prop[] = meta.props.filter(prop => !prop.global).map(prop => {
     // The declaration keeps the source type (SelectOptionInput[], 'sm' | 'md'); prop.type is the expanded checker type.
     const declaration = prop.getDeclarations().find(entry => entry.file.startsWith(`${sdkRoot}/src/`))
-    assert(declaration, `Missing declaration for ${component.name}.${prop.name}`)
-    const text = readFileSync(declaration.file, 'utf8').slice(...declaration.range)
+    // A defineModel prop has no declaration in the source; its checker type is already the source type.
+    const text = declaration ? readFileSync(declaration.file, 'utf8').slice(...declaration.range) : `${prop.name}: ${prop.type}`
     const type = text.match(/^(?:readonly\s+)?['"]?[\w$-]+['"]?\??\s*:\s*([\s\S]+?)[;,]?$/)?.[1]
     assert(type, `Unsupported declaration for ${component.name}.${prop.name}: ${text}`)
     // Vue casts an absent prop to false when a member of its type union is boolean (not a function returning one).
@@ -53,7 +53,7 @@ for (const component of componentDocs) {
       name: prop.name, type, required: prop.required,
       ...(prop.default !== undefined ? { default: prop.default, defaultKind: 'explicit' } : implicitBoolean ? { default: 'false', defaultKind: 'implicit-boolean' } : {}),
       description: prop.description,
-      source: repoPath(declaration.file),
+      source: repoPath(declaration?.file ?? filename),
     }
   })
   // event.type is the argument tuple, for example [value: OptionPrimitive].

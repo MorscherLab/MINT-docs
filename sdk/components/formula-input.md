@@ -12,7 +12,7 @@ FormulaInput is a forms component exported by @morscherlab/mint-sdk for plugin f
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FormulaInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/FormulaInput.vue">Source</a>
 </div>
 
 <demo vue="./demos/FormulaInput.vue" title="FormulaInput" description="Chemical formula field. Type a formula and read its formatted preview." />
@@ -30,7 +30,7 @@ While blurred, the field shows the rendered formula; while focused, the raw text
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/FormulaInput.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/FormulaInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

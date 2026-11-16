@@ -147,6 +147,36 @@ Rolling back applies a lock from `history/` and makes it current. There is no UI
 
 A lock compiled for another platform version is refused, so rollback cannot undo a platform upgrade. A lock with local or editable sources is refused outside dev mode. Rollback restores Python packages only; it does not undo plugin database migrations.
 
+### Cache cleanup
+
+A daily background task, `uv_cache_prune`, runs `uv cache prune --ci` under the plugin operation lock. It removes the downloaded wheels and keeps the wheels built from source. The next plugin install downloads its wheels again. The task does not run in dev mode.
+
+## Event deliveries
+
+MINT delivers plugin events through a durable event bus. The `experiment.*` observer events and the events that a plugin declares are written to the database in the transaction of the write. A background task then delivers each event to every subscribing plugin at least once, also after a subscriber outage or a platform restart. A plugin can receive the same event more than once. A plugin handler must be idempotent.
+
+To see the deliveries of one plugin, open **Admin -> Plugins -> Installed**, open the action menu of the plugin card, and choose **Event deliveries**. The action needs `plugins.configure`. The list shows the 50 most recent deliveries, newest first. Each row has the event name, the event number, the attempts, the time, the last error and a status.
+
+| Status | Meaning |
+|--------|---------|
+| `pending` | MINT has not delivered the event yet |
+| `processing` | MINT is delivering the event now |
+| `delivered` | The plugin accepted the event |
+| `skipped` | The plugin was disabled or uninstalled |
+| `dead` | The delivery failed five times |
+
+MINT retries a failed delivery after `min(3600, 5 x 2^(n-1))` seconds, where `n` is the number of attempts. After the fifth failed attempt, the delivery is `dead`. A plugin that is still starting keeps its events pending without an attempt.
+
+Click **Retry** on a dead delivery to give it five new attempts. MINT records each retry as `plugin.event_retry` in the [audit log](/admin/platform-settings#logs-and-audit-log). The API routes are `GET /api/plugins/{name}/event-deliveries` and `POST /api/plugins/{name}/event-deliveries/{event_id}/retry`. Both need `plugins.configure`.
+
+A daily task deletes delivered and skipped deliveries after 7 days and dead deliveries after 30 days. An uninstall drops the unfinished deliveries of the plugin.
+
+> [Screenshot: Event deliveries dialog of a plugin with one dead delivery and a Retry button]
+
+## Plugins that read other plugins
+
+A plugin declares the plugins that it reads in `reads_from`. The entry `"*"` means every enabled plugin. It grants nothing until an administrator consents: set the platform-owned plugin setting `reads_from_any_plugin` with `PATCH /api/plugins/{name}/config`. Only a platform administrator can set it. Until then, `GET /api/plugins` shows `reads_from_consent_needed` for the plugin. Plugin authors: see [Plugin communication](/sdk/concepts/plugin-communication).
+
 ## Plugin requests and credentials
 
 With authentication enabled, every request to a plugin route needs an `Authorization: Bearer` credential. This applies to the plugin proxy and to in-process plugin routes. The credential is one of:
@@ -200,9 +230,9 @@ If a migration fails, the plugin shows **Migration failed**, stays disabled, nev
 
 ## Update settings
 
-**Admin -> Plugins -> Installed -> Advanced -> Update settings** edits the `updates` section of `config.json`: scheduled updates, the daily update time, the update scope (platform, plugins), background checks, the check interval, the platform repository and platform pre-releases. The **Advanced** card needs `plugins.configure`; the Update settings group needs `platform.configure`. The controls for private package indexes (`PUT /api/plugins/config/extra-index-urls`), the update sources (`PUT|DELETE /api/updates/sources/{package}`) and the **Prereleases** toggle need `plugins.install`, because they change where plugin code comes from. A role with `plugins.configure` but not `plugins.install` (for example a Plugin operator) gets 403. These writes are audited (`plugins.extra_index_urls_update` with values redacted, `updates.source_update`, `updates.source_delete`). See [Updates](/admin/updates) for what each setting does.
+The **Update settings** card on **Admin -> Platform -> Updates** edits the `updates` section of `config.json`: scheduled updates, the daily update time, the update scope (platform, plugins), background checks, the check interval, the platform repository and platform pre-releases. It needs `platform.configure`. **Admin -> Plugins -> Advanced** keeps only the private package indexes and needs `plugins.configure`. The controls for private package indexes (`PUT /api/plugins/config/extra-index-urls`), the update sources (`PUT|DELETE /api/updates/sources/{package}`) and the **Plugin pre-releases** toggle need `plugins.install`, because they change where plugin code comes from. A role with `plugins.configure` but not `plugins.install` (for example a Plugin operator) gets 403. These writes are audited (`plugins.extra_index_urls_update` with values redacted, `updates.source_update`, `updates.source_delete`). See [Updates](/admin/updates) for what each setting does.
 
-> [Screenshot: Admin -> Plugins -> Installed -> Advanced -> Update settings with Scheduled updates, Daily update time and Update scope]
+> [Screenshot: Admin -> Platform -> Updates -> Update settings with Scheduled updates, Daily update time and Update scope]
 
 ## Uninstall modes
 

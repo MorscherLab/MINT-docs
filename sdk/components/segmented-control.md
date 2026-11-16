@@ -12,7 +12,7 @@ SegmentedControl is a forms component exported by @morscherlab/mint-sdk for plug
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SegmentedControl.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SegmentedControl.vue">Source</a>
 </div>
 
 <demo vue="./demos/SegmentedControl.vue" title="SegmentedControl" description="Card-style segmented control with option descriptions. Click an option to change the model value." />
@@ -35,7 +35,7 @@ should fill its container. An option's `color` renders a small swatch before its
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SegmentedControl.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SegmentedControl.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -53,9 +53,9 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
-| [` SegmentedControlVariant `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L373) | ` 'simple' \| 'card' ` |
-| [` SegmentedControlSize `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L374) | ` 'sm' \| 'md' \| 'lg' ` |
+| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
+| [` SegmentedControlVariant `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L400) | ` 'simple' \| 'card' ` |
+| [` SegmentedControlSize `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L401) | ` 'sm' \| 'md' \| 'lg' ` |
 
 ### Events
 

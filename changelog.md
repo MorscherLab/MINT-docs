@@ -12,6 +12,29 @@ MINT follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The pla
 
 → [Full CHANGELOG](https://github.com/MorscherLab/MINT/blob/main/CHANGELOG.md) — every change, every version.
 
+## Notable changes in 1.5
+
+Admin and plugin-author actions for the 1.5 minor release (1.5.0 to 1.5.5). Update the platform and both SDK packages together.
+
+| Area | Change | Action |
+|---|---|---|
+| Plugin compatibility | The Python SDK has no removal in 1.5. Plugins with `mint-sdk>=1.4.0,<2.0` stay enabled | Update both SDK packages when a plugin uses a 1.5 API. Follow [Migrate from 1.4 to 1.5](/sdk/operations/migrate-1.4-to-1.5). |
+| Database | Six Alembic revisions run at the first 1.5 start. One drops the unused `plugin_install_requests` table. A 1.4.10+ database upgrades directly | Back up the database before the first 1.5 start. See [Upgrading from MINT 1.4](/admin/updates#upgrading-from-mint-1-4). |
+| Docker | The 1.5 image has Debian security updates and no system `pip`. An in-app update from 1.4 replaces the Python packages only | Pin the Compose image to `ghcr.io/morscherlab/mint:1.5`, then `docker compose pull && docker compose up -d`. Use `uv pip` in the admin terminal. See [Upgrading from MINT 1.4](/admin/updates#upgrading-from-mint-1-4). |
+| Admin UI | Platform and plugin updates and the update schedule share one page, Admin → Platform → Updates | Use the Updates page. See [The Updates page](/admin/updates#the-updates-page). |
+| Realtime | The realtime event stream is on by default (`realtimeEnabled: true`). The platform must run as one worker | Make the reverse proxy pass `GET /api/events` without buffering, or set `realtimeEnabled: false`. See [`realtimeEnabled`](/admin/configuration#realtimeenabled). |
+| Authentication | An authenticator app (TOTP) is a second factor beside the passkey (`auth.enableTotp`, default off). With it, the second factor is enforced on plain-HTTP sites | Decide whether to set `auth.enableTotp`. See [Authenticator app (TOTP)](/admin/authentication#authenticator-app-totp). |
+| Plugin events | The `experiment.*` observer events arrive through the durable event bus after the commit, at least once and in no fixed order. `experiment.before_save` is unchanged | Make each handler idempotent. Check dead deliveries in [Event deliveries](/admin/plugins#event-deliveries). See [Experiment events](/sdk/concepts/plugin-communication#experiment-events). |
+| Plugin communication | New: plugin events (`Metadata.emits`, `@on`), read-only exports (`@export`, `context.plugins.read`) and calls to the tools and jobs of other plugins (`context.plugins.call`, `start_job`) | See [Plugin communication](/sdk/concepts/plugin-communication). |
+| Plugin access | `reads_from = {"*"}` grants nothing until an administrator sets `reads_from_any_plugin` | Give consent only where it is needed. See [Plugins that read other plugins](/admin/plugins#plugins-that-read-other-plugins). |
+| Libraries | New library store for large read-only reference files (`libraries.path`, `mint libraries`). Plugins declare `Metadata.libraries` | Import the libraries that a plugin declares. See [Libraries](/admin/libraries) and [Use a reference library](/sdk/recipes/libraries). |
+| Instruments | An instrument reads as critical only while its newest unacknowledged critical alert is inside the alert window (`instruments.alertWindowHours`, default 72). Plugins send `latest_critical_at` | Set the window if 72 hours does not fit. See [Configuration](/admin/configuration#instruments) and [Instrument status](/sdk/recipes/instrument-status#send-the-time-of-the-newest-critical-alert). |
+| Notifications | Teams and Slack hold named channels. New permission `notifications.broadcast`. Plugins send `channel_names` and `on_behalf_of` | Add the channels and give `notifications.broadcast` to the roles that notify other people. See [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels). |
+| Frontend SDK | The package root no longer exports the 160 names that 1.4 marked for a subpath | Run `mint doctor` before you change the npm version. See [Frontend root exports are removed](/sdk/operations/migrate-1.4-to-1.5#frontend-root-exports-are-removed). |
+| Frontend SDK (1.5.5) | An import from the package root no longer bundles every component. `app.use(MINTSdk)` still keeps the whole SDK in the first-load bundle | Delete `app.use(MINTSdk)` and import each component by name. See [Named imports](/sdk/operations/migrate-1.4-to-1.5#named-imports-instead-of-app-use-mintsdk). |
+| Frontend toolchain | The `styles` export no longer loads the Geist fonts. `mint init` scaffolds `@tailwindcss/vite`, Vitest in `vite.config.ts` and TypeScript 6. `mint doctor` checks the toolchain | Add the Geist `<link>` to `index.html` and run `mint doctor --fix`. See [Fonts and the frontend toolchain](/sdk/operations/migrate-1.4-to-1.5#fonts-and-the-frontend-toolchain). |
+| Components (1.5.1 to 1.5.4) | New `MetadataSheet`. `SectionCard` takes `collapsible`, `SampleSelector` takes `groupSeparator`. Selected rows have no coloured left bar | Use `runs` instead of the deprecated `runsEditable`. See [MetadataSheet](/sdk/components/metadata-sheet). |
+
 ## Notable changes in 1.4
 
 Admin and plugin-author actions for the 1.4 minor release (1.4.0 to 1.4.3). Update the platform and both SDK packages together.

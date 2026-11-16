@@ -201,6 +201,21 @@ Read-only diagnostics.
 | `mint platform update check [--json]` | Check platform and plugin update sources |
 | `mint platform update apply [--yes\|-y] [--json]` | Apply the latest platform update (admin) |
 
+### `mint libraries`
+
+Manages the [library store](/admin/libraries) of read-only reference files. It is a top-level command. Without `--local` it talks to the platform that `--url` or the default host names, and the signed-in user needs `platform.configure`. With `--local` it uses the standalone store in `~/.mint/libraries`, for plugin development. A library reference is `publisher/name`. Today the only publisher is `platform`.
+
+| Command | Purpose |
+|---------|---------|
+| `mint libraries import <source> --name NAME --version VERSION [--media-type T] [--license TEXT] [--meta JSON] [--promote] [--local]` | Import a file or directory as a new version. On the platform, `<source>` is a path inside `incoming/` of `libraries.path` (for example `incoming/gnps.mgf`), and the command waits for the hash. With `--local`, it is a local path. `--promote` makes the version the latest |
+| `mint libraries list [--local] [--json]` | List the libraries with the version, state, latest marker and size |
+| `mint libraries promote <ref> <version> [--local]` | Make a published version the latest. The platform hashes it again first |
+| `mint libraries retire <ref> <version> [--local]` | Retire a version that is not the latest |
+| `mint libraries restore <ref> <version> [--local]` | Publish a retired version again |
+| `mint libraries delete <ref> <version> [--yes\|-y] [--local]` | Delete a retired version and its files. Asks for confirmation without `--yes` |
+
+An error prints `Error: <code>: <message>` and exits with code 1. The codes are `library.*`; see [Libraries -> Errors](/admin/libraries#errors).
+
 ## Run commands
 
 `mint daemon` runs the plugin of the current project in the foreground, for Docker, Linux or WSL. The MINT platform has its own launcher, `mint-platform serve` (see [Install on Linux](/admin/install-direct)). `mint platform daemon` does not exist.
@@ -250,7 +265,7 @@ mint init [DIRECTORY] [flags]
 
 Without `--yes`, missing fields are prompted interactively. With `--yes`, the AI-assistant file defaults to `claude`, which creates `CLAUDE.md`. If `mint doctor` says that file is missing current SDK guidance, run `mint doctor --fix` once to refresh it. `--ai-assistant none` skips assistant files, but the current `mint doctor` check still expects one of those files; run `mint doctor --fix` if you later want a passing doctor report.
 
-The standard scaffold includes a read-only `@tool` example (`double_value`) with a test; see [MCP tools](/sdk/recipes/mcp-tools). The scaffolded CI workflow builds the `.mint` bundle (`uv run mint build --output-dir dist/`) on every push and pull request to `main`, after `mint doctor --strict` and the tests. The scaffold declares a `Metadata` subclass with `@plugin` and sets `title` from the plugin name. It sets `requires-python = ">=3.14"` and ruff `target-version = "py314"` (with `UP037` ignored). The generated CI and release workflows use Python 3.14. Frontend templates pin vue `^3.5.43`, pinia `^4.0.3`, vue-router `^5.3.1`, vite `^8.3.1`, tailwindcss `^4.3.3`, vitest `^5`, vue-tsc `^3` and jsdom `^30`. The `mint-sdk` range follows the running SDK's minor: a @MINT_VERSION@ CLI writes `>=1.4.0b1,<2.0`. From 1.4 the ceiling is the next major, because the plugin SDK contract has no breaking change within 1.x. A floor before 1.4 keeps the next-minor ceiling.
+The standard scaffold includes a read-only `@tool` example (`double_value`) with a test; see [MCP tools](/sdk/recipes/mcp-tools). The scaffolded CI workflow builds the `.mint` bundle (`uv run mint build --output-dir dist/`) on every push and pull request to `main`, after `mint doctor --strict` and the tests. The scaffold declares a `Metadata` subclass with `@plugin` and sets `title` from the plugin name. It sets `requires-python = ">=3.14"` and ruff `target-version = "py314"` (with `UP037` ignored). The generated CI and release workflows use Python 3.14. Frontend templates pin vue `^3.5.43`, pinia `^4.0.3`, vue-router `^5.3.1`, vite `^8.3.5`, `@tailwindcss/vite` and tailwindcss `^4.3.3`, typescript `^6.0.3`, vitest `^5.0.5`, vue-tsc `^3.3.14` and jsdom `^30.1.1`. Tailwind runs through `@tailwindcss/vite`, Vitest reads the `test` block of `vite.config.ts`, and the build script is `vue-tsc --noEmit && vite build`. The scaffold has no `postcss.config.js`, `vitest.config.ts` or `tsconfig.node.json`, and its `index.html` loads the Geist fonts. The `mint-sdk` range follows the running SDK's minor: a @MINT_VERSION@ CLI writes `>=1.4.0b1,<2.0`. From 1.4 the ceiling is the next major, because the plugin SDK contract has no breaking change within 1.x. A floor before 1.4 keeps the next-minor ceiling.
 
 The parser accepts `workflow`, although `init --help` omits it from its type description. Generated mode accepts only `analysis`; use standard mode for the other types.
 
@@ -340,6 +355,7 @@ The default run checks the project structure: `pyproject.toml`, the `mint.plugin
 - checks the page metadata (icons, stable page IDs and coverage of the frontend routes) and the platform-owned dependency constraints;
 - reports an error when a plugin on `mint-sdk>=1.3` has a `requires-python` that admits Python older than 3.14 or excludes 3.14 (a `mint-sdk` dependency limited by a `python_version >= '3.14'` marker is exempt);
 - reports a 1.3 author API as `SDK 1.4 manual changes` (an error breaks the plugin on SDK 1.4; a warning matches a removed method by name only) and the mechanical rewrites as `SDK 1.4 rewrites`. `--fix` applies the rewrites: `@mint_plugin` to `Metadata` and `@plugin`, the persistence helpers to `self.design` and `self.artifacts`, `@mcp_tool` to `@tool`, the old job, event, health and test names, and the renamed modules. The [migration guide](/sdk/operations/migrate-1.3-to-1.4) has the full table;
+- checks the frontend toolchain ("Frontend toolchain") against the `mint init` template and warns about these points: a `vite.config.js` or `vite.config.d.ts` next to `vite.config.ts` (Vite loads the `.js` file first, so edits to the `.ts` file have no effect), a `*.tsbuildinfo` file, a PostCSS config, the `postcss`, `@tailwindcss/postcss` or `autoprefixer` package, a `tsconfig.node.json` (it makes `vue-tsc -b` emit `vite.config.js`), and a `vite`, `vitest`, `vue-tsc`, `typescript` or `@vitejs/plugin-vue` major version below the template. `--fix` deletes the build outputs. It deletes the PostCSS config only when `vite.config.ts` imports and calls `@tailwindcss/vite` and the config names no plugin other than Tailwind and `autoprefixer`. Delete `tsconfig.node.json` yourself and build with `vue-tsc --noEmit && vite build`;
 - reports removed and deprecated frontend APIs with their replacements, including removed subpath imports, merged components and unified props. `mint docs deprecated-apis` lists them all;
 - does not report names removed before 1.2. Upgrade such a plugin to 1.2 first.
 

@@ -12,7 +12,7 @@ NumberInput is a forms component exported by @morscherlab/mint-sdk for plugin fr
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/NumberInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/NumberInput.vue">Source</a>
 </div>
 
 <demo vue="./demos/NumberInput.vue" title="NumberInput" description="A number input with a unit label. Type a value or use the steppers to change it." />
@@ -57,7 +57,7 @@ Arrow Up/Down adjust by `step`; Page Up/Down adjust by ten steps. Home/End jump 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/NumberInput.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/NumberInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -80,7 +80,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` UnitOption `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L7) | See the linked SDK type definition. |
+| [` UnitOption `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L7) | See the linked SDK type definition. |
 
 ### Events
 

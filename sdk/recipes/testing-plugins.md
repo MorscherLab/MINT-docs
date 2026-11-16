@@ -65,7 +65,7 @@ def test_summary_route_reads_the_design():
     assert response.status_code == 200
 ```
 
-Pass `plugin_id`, `reads_from`, `writes_to`, `experiment_types`, `experiments`, `users`, `instruments`, `design=Design(...)` and `instrument_status_grant` to `RecordingContext` to set up the case. A wrong `plugin_id` raises `ValueError` when the harness binds it. `context.set_actor(...)` changes the actor between calls. `context.published` keeps each `(name, payload)` that `context.publish` delivered, `context.streamed` keeps each `(topic, name, payload)` that the platform would stream for a `"realtime"` plugin, and `context.instruments.reports` keeps each accepted status report.
+Pass `plugin_id`, `reads_from`, `reads_from_any_plugin` (default `True`: a `"*"` counts as confirmed), `writes_to`, `experiment_types`, `experiments`, `users`, `instruments`, `design=Design(...)` and `instrument_status_grant` to `RecordingContext` to set up the case. A wrong `plugin_id` raises `ValueError` when the harness binds it. `context.set_actor(...)` changes the actor between calls. `context.published` keeps each `(name, payload)` that `context.publish` delivered, `context.streamed` keeps each `(topic, name, payload)` that the platform would stream for a `"realtime"` plugin, and `context.instruments.reports` keeps each accepted status report.
 
 The harness does not simulate real auth. `RecordingContext.is_authenticated` is `False` without an actor, and there is no real JWT verification. Tests that verify auth dependencies override the FastAPI dependency directly, or give the context an `Actor` with the role and permissions to test. Test `access="configure"` and `access="admin"` routes with an `Actor` that has `plugins.configure` and with the role `admin`.
 
@@ -116,6 +116,38 @@ def test_handler_reports_progress():
 ```
 
 `job_context(*, settings=None, cancelled=False, actor=None)` keeps `reports` and `warnings`. `job_context(cancelled=True)` makes `context.check()` raise `asyncio.CancelledError`. A settings mapping is exposed as attributes of `context.settings`.
+
+## Events, exports and calls
+
+`RecordingContext` fakes the [plugin communication](/sdk/concepts/plugin-communication) paths and applies the `reads_from` rule:
+
+| Path | Set up | Recorded in |
+|------|--------|-------------|
+| `context.publish` of a `Metadata.emits` event | Nothing. The payload is checked against the declared model | `emitted`, as `(name, JSON payload, experiment_id)` |
+| `context.plugins.read` | `stub_export(plugin, name, *, version, rows, key="id")` | `reads`, as `(plugin, name, version, ExportQuery)` |
+| `context.plugins.call` | `stub_call(plugin, tool, *, result)` | `calls`, as `(plugin, tool, args, on_behalf_of)` |
+| `context.plugins.start_job` | `stub_job(plugin, job, *, handle)` | `started_jobs`, as `(plugin, job, args, on_behalf_of)` |
+| `context.plugins.subscribe` | Nothing | `subscriptions` (a set of names) |
+
+`Harness` has the same `stub_export`, `stub_call` and `stub_job` methods; they need `context=RecordingContext(...)`. A stubbed export pages the rows in order and applies `ids` (on `key`), `experiment_id` and `updated_since` (on `updated_at`). A target outside `reads_from` raises `PermissionException` for a read and `PluginNotReadable` for a call. A target without a stub raises `NotFoundException`.
+
+`harness.deliver(name, payload, /, *, experiment_id=None)` delivers a bus event of another plugin to the `@on(name)` handlers, as the event bus does. Each handler gets a `PluginEvent` with a new increasing `id`, `attempt` 1 and no actor. A handler failure raises, and an event that no handler takes raises `ValueError`.
+
+```python
+from mint_sdk.testing import Harness, RecordingContext
+
+from my_plugin.plugin import MonitorPlugin
+
+
+def test_queue_change_reads_the_lc_method():
+    context = RecordingContext()
+    with Harness(MonitorPlugin, context=context) as harness:
+        harness.stub_export("ms-planner", "lc-methods", version=1, rows=[
+            {"id": "m1", "name": "HILIC", "updated_at": "2026-11-01T00:00:00Z"},
+        ])
+        harness.deliver("ms-planner.queue_changed", {"entry_id": 7, "state": "running"})
+    assert context.reads[0][:3] == ("ms-planner", "lc-methods", 1)
+```
 
 ## MCP declarations
 

@@ -12,7 +12,7 @@ CollapsibleCard is a layout component exported by @morscherlab/mint-sdk for plug
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/CollapsibleCard.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/CollapsibleCard.vue">Source</a>
 </div>
 
 <demo vue="./demos/CollapsibleCard.vue" title="CollapsibleCard" description="Collapsible card with a header toggle. Click the header to fold the card, or switch the toggle." />
@@ -26,14 +26,14 @@ import { CollapsibleCard } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/CollapsibleCard.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/CollapsibleCard.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | ` title ` | ` string ` | Yes | — | — |
 | ` subtitle ` | ` string ` | No | ` undefined ` | — |
 | ` badge ` | ` string \| number ` | No | ` undefined ` | — |
-| ` badgeTone ` | ` Tone ` | No | ` "cta" ` | — |
+| ` badgeTone ` | ` Tone ` | No | ` "primary" ` | — |
 | ` defaultOpen ` | ` boolean ` | No | ` false ` | — |
 | ` disabled ` | ` boolean ` | No | ` false ` | — |
 | ` dense ` | ` boolean ` | No | ` false ` | — |
@@ -51,8 +51,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` Tone `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L4) | ` 'neutral' \| 'primary' \| 'cta' \| 'success' \| 'warning' \| 'error' \| 'info' ` |
-| [` SidebarToolSectionAction `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L140) | See the linked SDK type definition. |
+| [` Tone `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L4) | ` 'neutral' \| 'primary' \| 'cta' \| 'success' \| 'warning' \| 'error' \| 'info' ` |
+| [` SidebarToolSectionAction `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L140) | See the linked SDK type definition. |
 
 ### Events
 

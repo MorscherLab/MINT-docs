@@ -4,7 +4,7 @@ This page covers the public **@MINT_VERSION@** composables and helper factories 
 
 ## Full list
 
-Each row names the entry that exports the composable. Import from that entry; see [Package entry points](/sdk/frontend/#package-entry-points). The package root still exports the names of the 1.3 root that moved, with a `@deprecated` tag, until MINT 1.5.
+Each row names the entry that exports the composable. Import from that entry; see [Package entry points](/sdk/frontend/#package-entry-points). The package root no longer exports the names of the 1.3 root that moved. MINT 1.5.0 removed them.
 
 ::: details Common composables (click to expand)
 | Composable | Entry | What it returns | When to reach for it |
@@ -47,7 +47,7 @@ Each row names the entry that exports the composable. Import from that entry; se
 | `useEventListener`, `useDebouncedWatch`, `useFocusTrap`, `useRovingFocus`, `useListReorder`, `useMenuKeyboard` | `shell` | Headless interaction helpers | Custom menus, dialogs, and reorderable lists |
 :::
 
-The 1.3 composable names that 1.4 renamed or removed are in the [migration guide](/sdk/operations/migrate-1.3-to-1.4). [Deprecated composables](/sdk/api/frontend#deprecated-composables) lists the root names that leave in 1.5.
+The 1.3 composable names that 1.4 renamed or removed are in the [migration guide](/sdk/operations/migrate-1.3-to-1.4). [Removed and renamed composables](/sdk/api/frontend#deprecated-composables) lists them with their replacements.
 
 ## Deep dives
 

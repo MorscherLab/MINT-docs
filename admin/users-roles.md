@@ -1,6 +1,6 @@
 # Users & Roles
 
-MINT controls access with a **system role** per user plus project membership. The system role decides which actions a user may take anywhere in the platform. Project membership records who works on a project and, in restricted visibility mode, which experiments a user can see. Roles combine 25 permissions in 11 groups; admins can build custom roles from them.
+MINT controls access with a **system role** per user plus project membership. The system role decides which actions a user may take anywhere in the platform. Project membership records who works on a project and, in restricted visibility mode, which experiments a user can see. Roles combine 27 permissions in 11 groups; admins can build custom roles from them.
 
 > [Screenshot: Admin -> People -> Roles page with the Admin / Member / Viewer presets and a custom role]
 
@@ -72,12 +72,12 @@ Permissions are `resource.action` strings. The backend checks them on every rout
 | Group | Permissions |
 |-------|-------------|
 | **`projects.*`** (5) | `view`, `create`, `edit`, `delete`, `manage_members` |
-| **`experiments.*`** (4) | `view`, `create`, `edit`, `delete` |
+| **`experiments.*`** (5) | `view`, `create`, `edit`, `delete`, `manage_codes` |
 | **`instruments.*`** (2) | `view`, `edit` |
 | **`plugins.*`** (4) | `view`, `use`, `configure`, `install` |
 | **`jobs.*`** (2) | `read_all`, `manage_all` |
 | **`filesystem.*`** (1) | `browse` |
-| **`notifications.*`** (1) | `receive_important` |
+| **`notifications.*`** (2) | `receive_important`, `broadcast` |
 | **`calendar.*`** (1) | `read_all` |
 | **`notices.*`** (1) | `publish` |
 | **`users.*`** (2) | `view`, `manage` |

@@ -12,7 +12,7 @@ Single checkbox control for boolean plugin settings and form fields.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseCheckbox.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseCheckbox.vue">Source</a>
 </div>
 
 <demo vue="./demos/BaseCheckbox.vue" title="BaseCheckbox" description="A checkbox with a label. Click it to change the model value." />
@@ -26,7 +26,7 @@ import { BaseCheckbox } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseCheckbox.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseCheckbox.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

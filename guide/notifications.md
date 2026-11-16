@@ -13,7 +13,7 @@ This page describes what you receive on your phone. Admins: set up Apple Push in
 | **Finished run** | Every user with `instruments.view` | `<instrument>: run finished` |
 | **Instrument error** | Every user with `instruments.view` | `<instrument>: error` |
 
-Critical alerts also go to the email, Teams, and Slack channels that your admin set up. A finished job also goes to its owner by email. The finished run and the instrument error messages are push only.
+Critical alerts also go to the email, Teams, and Slack channels that your admin set up. Teams and Slack can have several named channels, for example one for each team. A message that names only the service goes to its default channel. A finished job also goes to its owner by email. The finished run and the instrument error messages are push only.
 
 MINT keeps push text short: one title line and a body of at most 178 characters. A push never names a sample, a file path, or alert details. Tap a push to open the instrument or the job in the app.
 
@@ -36,6 +36,15 @@ The approval creates a personal access token for the app. It appears in **Your a
 - **Account deactivation.** When an admin deactivates your account, every push stops at once.
 
 MINT also stops sending to a phone when Apple reports that its device token is no longer valid.
+
+## For plugin authors
+
+A plugin can send a message to named Teams or Slack channels. The admin sets up the channels in **Admin -> Platform -> Notifications**; see [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels).
+
+- `await context.notification_channels()` returns the channel names and the default of each service, never the webhook URLs. A service that is not set up has no names. It raises `UnavailableException` when the context cannot reach the platform, for example in standalone mode.
+- `await context.enqueue_notifications(function_id=..., channels=..., events=..., channel_names={"teams": {"lab-a"}}, on_behalf_of=user_id)` sends events to those channels. Without `channel_names`, a service reaches its default channel. An unknown name is refused with `notifications.unknown_channel` (400). Declare the channels in `Metadata.notifications` when you do not use `@notify`.
+- `on_behalf_of` is a platform user id. The platform then checks that user. An `important` event, or any Teams or Slack channel, needs an active user with `notifications.broadcast` (`notifications.broadcast_forbidden`, 403). An `owner` event must name that user as `owner_user_id` (`notifications.owner_mismatch`, 403). A direct call without `on_behalf_of` is checked for the user that the request binds. `@notify` and a call with no bound user keep the plugin's own authority.
+- A refusal raises `NotificationDispatchError` with the `code`.
 
 ## Troubleshooting
 

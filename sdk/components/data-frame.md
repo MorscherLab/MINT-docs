@@ -12,7 +12,7 @@ Searchable, sortable, selectable table for dense experiment and analysis results
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/DataFrame.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/DataFrame.vue">Source</a>
 </div>
 
 <demo vue="./demos/DataFrame.vue" title="DataFrame" description="Sortable results table with search and row selection. Sort columns, resize them, and select rows." />
@@ -59,7 +59,7 @@ Leave `columnWidths` unset for uncontrolled resizing inside the table. Pass it w
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/DataFrame.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/DataFrame.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -79,8 +79,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` DataFrameSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L469) | See the linked SDK type definition. |
-| [` SortState `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L425) | See the linked SDK type definition. |
+| [` DataFrameSpec `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L496) | See the linked SDK type definition. |
+| [` SortState `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L452) | See the linked SDK type definition. |
 
 ### Events
 

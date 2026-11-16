@@ -55,10 +55,11 @@ Source: [`mint_sdk/plugin_decorators.py`](https://github.com/MorscherLab/MINT/bl
 | `database` | `MigrationSpec \| None` | `None` | Alembic revisions and models of the tables that the plugin owns. See [Migrations](/sdk/api/migrations) |
 | `features` | set of `"instrument_status"`, `"instrument_alerts"`, `"realtime"` | `set()` | Optional platform features |
 | `ui` | `"generated" \| None` | `None` | Serve the SDK-generated workspace |
-| `reads_from` | `frozenset[str]` | `frozenset()` | Plugin IDs whose artifacts this plugin may read |
+| `reads_from` | `frozenset[str]` | `frozenset()` | Plugin IDs whose artifacts, exports, bus events, tools and jobs this plugin may use. `{"*"}` needs administrator consent. See [Plugin communication](/sdk/concepts/plugin-communication#reads-from-is-the-gate) |
 | `writes_to` | `frozenset[str]` | `frozenset()` | Plugin IDs whose object store this plugin may write to, create-only, with `context.objects(experiment_id, plugin=...)`. It does not replace their artifacts |
 | `experiment_types` | `frozenset[str] \| None` | `None` | Experiment types that the plugin supports. Platform policy can narrow the set |
 | `depends_on` | `tuple[str, ...]` | `()` | Plugin names that must load first |
+| `emits` | `Mapping[str, type[BaseModel]]` | `{}` | Events of this plugin that go to the event bus: `"<plugin>.<event>"` to payload model. See [Event bus](/sdk/concepts/plugin-communication#event-bus) |
 
 `Page.access` hides the page from users below that level. `Page.flag` names a platform feature flag. A page with an `access` above `"use"` needs `auth = True`.
 
@@ -135,6 +136,7 @@ Plugin roles do not exist. An endpoint, job, MCP tool or page declares an `acces
 | `context.files` | The read-only `FileBrowser` of the server mounts |
 | `context.db()` | An async session on the plugin tables |
 | `context.experiment_types` | The experiment types that the plugin may use, or `None` |
+| `context.plugins` | `read`, `call`, `start_job`, `catalog`, `subscribe`, `unsubscribe`. See [Plugin communication](/sdk/concepts/plugin-communication) |
 | `context.publish(name, payload, *, experiment_id=None)` | Deliver an event. See [Events](#events-health-and-realtime) |
 
 Which writes work depends on `Metadata.writes`, the experiment types, platform policy and the current actor. Reads follow the visibility of the calling user.
@@ -246,18 +248,18 @@ class QcPlugin(Plugin):
 | Event | Payload class | Notes |
 |-------|--------------|-------|
 | `experiment.before_save` | `BeforeExperimentSave` | Runs in sequence and fails closed. Return `None` to allow; raise `EventVetoException` to refuse (422). Any other exception or return value also stops the save |
-| `experiment.after_save` | `AfterExperimentSave` | Observer. A failure is logged and isolated |
+| `experiment.after_save` | `AfterExperimentSave` | Observer. `data` is the design stored at delivery, with its `version` |
 | `experiment.status_changed` | `ExperimentStatusChanged` | Observer |
 | `experiment.created` | `ExperimentCreated` | After the write commits |
 | `experiment.updated` | `ExperimentUpdated` | `changed_fields` lists the changed fields |
 | `experiment.deleted` | `ExperimentDeleted` | `experiment_code` and `experiment_type` of the deleted row |
-| `<plugin>.<event>` | any JSON value | Custom event from `context.publish` |
+| `<plugin>.<event>` | any JSON value, or `PluginEvent[Model]` | Event of this plugin from `context.publish`, or a bus event of a plugin in `reads_from` |
 
-A plugin gets only the events that it declares with `@on`. The writing plugin does not receive the events of its own write. The platform sends events to a plugin process, Docker-managed runtime and external HTTP runtime at `/__mint/events`.
+A plugin gets only the events that it declares with `@on`. The writing plugin does not receive the events of its own write. The observer events and the bus events of other plugins come through the durable event bus: after the commit, at least once, in no fixed order. A handler failure makes the platform deliver the event again. See [Plugin communication](/sdk/concepts/plugin-communication#delivery-rules). The platform sends events to a plugin process, Docker-managed runtime and external HTTP runtime at `/__mint/events`.
 
 `@health` returns `Health(status="healthy" \| "degraded" \| "unhealthy", message=None, details={})`. The SDK serves the result at `GET /__mint/health`: 200 for healthy or degraded, 503 for unhealthy. The platform polls this route. A handler that raises or runs longer than `timeout` (at most 4 seconds) reports unhealthy. A plugin without `@health` reports healthy.
 
-`context.publish(name, payload, *, experiment_id=None)` delivers `"<plugin>.<event>"` to the `@on(name)` handlers of the same plugin. With `"realtime"` in `Metadata.features` and the platform flag `realtimeEnabled` on, the platform also streams the event on `plugin:<plugin>`, or `plugin:<plugin>:experiment:<id>` with `experiment_id`. The payload is JSON of at most 16 KiB (`mint_sdk.protocol.MAX_EVENT_PAYLOAD_BYTES`); a larger payload raises `ValidationException`. `experiment_id` must name an experiment that `experiments.get` returns, or `publish` raises `NotFoundException`. The platform sends a plugin topic to every user who may use the plugin; put experiment data only on the experiment topic. See `examples/realtime-events` in the MINT repository and `useRealtime` in the frontend SDK.
+`context.publish(name, payload, *, experiment_id=None)` delivers `"<plugin>.<event>"` to the `@on(name)` handlers of the same plugin. An event in `Metadata.emits` also goes to the [event bus](/sdk/concepts/plugin-communication#event-bus). With `"realtime"` in `Metadata.features` and the platform flag `realtimeEnabled` on, the platform also streams the event on `plugin:<plugin>`, or `plugin:<plugin>:experiment:<id>` with `experiment_id`. The payload is JSON of at most 16 KiB (`mint_sdk.protocol.MAX_EVENT_PAYLOAD_BYTES`); a larger payload raises `ValidationException`. `experiment_id` must name an experiment that `experiments.get` returns, or `publish` raises `NotFoundException`. The platform sends a plugin topic to every user who may use the plugin; put experiment data only on the experiment topic. See `examples/realtime-events` in the MINT repository and `useRealtime` in the frontend SDK.
 
 ## Jobs
 
@@ -330,7 +332,7 @@ class QcPlugin(Plugin):
 
 | Symbol | Description |
 |--------|-------------|
-| `Tool` | Spec base class. `effect` (`"read"`, `"write"` or `"destructive"`) is required. Optional: `title`, `idempotent` (defaults to `effect == "read"`), `timeout` (default 60 s), `access` (default `"use"`). The class is checked when Python defines it |
+| `Tool` | Spec base class. `effect` (`"read"`, `"write"` or `"destructive"`) is required. Optional: `title`, `idempotent` (defaults to `effect == "read"`), `timeout` (default 60 s), `access` (default `"use"`), `callers` (plugins that may call the tool with `context.plugins.call`; `"readers"` for a read tool, else none). The class is checked when Python defines it |
 | `@tool(Spec)` | Publishes `async def name(self, ctx, args: ArgsModel) -> ResultModel` as the tool `<plugin>_<name>`. The docstring is the description |
 | `@prompt(*, title=None)` | Publishes `async def name(self, args=None) -> str \| list[PromptMessage]` |
 | `@resource(path, *, title=None, mime_type="text/plain")` | Publishes `async def name(self, ctx, **path_params) -> str \| bytes` as `mint://plugins/<plugin>/<path>` |
@@ -382,8 +384,9 @@ Run a plugin with `mint dev`, or with `uv run uvicorn mint_sdk.app:create_app --
 | Symbol | Purpose |
 |--------|---------|
 | `Harness(plugin, *, settings=None, context=None, timeout=10.0)` | Run a plugin on its real app. `harness.client` is a `TestClient`. `harness.run(job, **inputs)` submits a job, waits and returns a `Run` (`value`, `job`) or raises `JobFailedException` |
-| `RecordingContext(actor=, plugin_id=, reads_from=, writes_to=, experiment_types=, experiments=, users=, instruments=, design=, instrument_status_grant=)` | In-memory `PlatformContext` with working namespaces. It applies the access rules and design validation. It keeps `published`, `streamed` and `instruments.reports` |
+| `RecordingContext(actor=, plugin_id=, reads_from=, reads_from_any_plugin=True, writes_to=, experiment_types=, experiments=, users=, instruments=, design=, instrument_status_grant=)` | In-memory `PlatformContext` with working namespaces. It applies the access rules and design validation. It keeps `published`, `emitted`, `streamed`, `reads`, `calls`, `started_jobs`, `subscriptions` and `instruments.reports`. `stub_export`, `stub_call` and `stub_job` set the answers of `context.plugins` |
 | `job_context(*, settings=None, cancelled=False, actor=None)` | A `JobContext` for a direct handler call. It keeps `reports` and `warnings` |
+| `Harness.deliver(name, payload, /, *, experiment_id=None)` | Deliver a bus event of another plugin to the `@on(name)` handlers |
 
 See [Testing plugins](/sdk/recipes/testing-plugins).
 
@@ -393,7 +396,7 @@ See [Testing plugins](/sdk/recipes/testing-plugins).
 
 ## Exceptions
 
-See [Exceptions](/sdk/api/exceptions) for the full list. These are exported from the package root: `PluginException`, `ValidationException`, `PermissionException`, `NotFoundException`, `ConflictException`, `UnavailableException` and `EventVetoException`. Import `ConfigurationException`, `RepositoryException`, `PluginLifecycleException`, `VersionConflictException` and `PlatformCompatibilityError` from `mint_sdk.exceptions`.
+See [Exceptions](/sdk/api/exceptions) for the full list. These are exported from the package root: `PluginException`, `ValidationException`, `PermissionException`, `NotFoundException`, `ConflictException`, `UnavailableException` and `EventVetoException`. Import `ConfigurationException`, `RepositoryException`, `PluginLifecycleException`, `VersionConflictException`, `PlatformCompatibilityError` and the plugin call errors (`PluginCallError`, `PluginNotReadable`, `PluginToolRefused`, `PluginUnreachable`) from `mint_sdk.exceptions`.
 
 ## Where the other names live
 
@@ -402,6 +405,7 @@ See [Exceptions](/sdk/api/exceptions) for the full list. These are exported from
 | `mint_sdk.analysis` | `ArtifactResult`, `ImageResult`, `TableResult`, `FileResult`, `ManagedFile`, `StagedInputs`, `StagedPart`, `FinalizeContext`, `JobContext` |
 | `mint_sdk.client` | `MINTClient` |
 | `mint_sdk.data_store` | `ObjectRef`, `ObjectStore`, `LocalObjectStore`, `DataTransferProgress`, `TransferProgressCallback`, `validate_object_key` |
+| `mint_sdk.exports` | `export`, `ExportQuery`, `Page` (an export page, not the navigation `mint_sdk.Page`), `page_of` |
 | `mint_sdk.design_validation` | `FieldError`, `design_schema_from_model`, `validate_design_data`, `ensure_valid_design_data` |
 | `mint_sdk.filesystem` | `FileBrowser`, `ServerMount`, `file_browser_router` and the directory models |
 | `mint_sdk.instruments` | `InstrumentState`, `InstrumentStatus`, `SampleInfo`, `SequenceProgress`, `build_sequence_progress`, `InstrumentLiveStatus`, `InstrumentRecord`, `InstrumentCreate`, `InstrumentUpdate` and the panel models |

@@ -33,6 +33,12 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 |--------|------|
 | [Report instrument status](/sdk/recipes/instrument-status) | Send live instrument state from a daemon through your plugin to the platform |
 
+## Reference data
+
+| Recipe | When |
+|--------|------|
+| [Use a reference library](/sdk/recipes/libraries) | Read a large read-only file from the platform's library store |
+
 ## Reliability
 
 | Recipe | When |

@@ -54,8 +54,8 @@ Plugins publish events; MINT delivers them. Configure delivery in **Admin -> Pla
 | Channel | Settings |
 |---------|----------|
 | **SMTP email** | Host, port (default 587), TLS mode (STARTTLS, implicit TLS, or none), from address and name, username, password |
-| **Microsoft Teams** | Teams Workflow webhook URL (alerts are posted as Adaptive Cards) |
-| **Slack** | Incoming webhook URL |
+| **Microsoft Teams** | Named channels, each with a Teams Workflow webhook URL (alerts are posted as Adaptive Cards). See [Teams and Slack channels](#teams-and-slack-channels) |
+| **Slack** | Named channels, each with an incoming webhook URL. See [Teams and Slack channels](#teams-and-slack-channels) |
 | **Apple Push** | See [Push notifications](#push-notifications) |
 
 Each channel has a test action. The deliveries table lists recent sends by channel, plugin, event, and attempts, and failed deliveries can be retried.
@@ -63,6 +63,35 @@ Each channel has a test action. The deliveries table lists recent sends by chann
 Email for important events goes to the event's owner and to every active user whose role has `notifications.receive_important`. A plugin can also name a recipient with `owner_user_id`; that active user gets the event by email and push in addition.
 
 > [Screenshot: notification settings with SMTP enabled and the deliveries table]
+
+### Teams and Slack channels
+
+Teams and Slack each hold a list of named channels. A channel is a name and a write-only webhook URL. MINT stores the URL encrypted, and the panel never shows it again. A name uses lowercase letters, digits and hyphens. A webhook URL must be an absolute `https://` URL.
+
+In **Admin -> Platform -> Notifications**, the **Teams channels** and **Slack channels** groups work like this:
+
+1. Switch on **Teams delivery** (or **Slack delivery**) and click **Save**.
+2. Under **Add channel**, enter a name and the webhook URL, then click **Add**. The first channel of a service becomes its default.
+3. Click **Test** in a channel row to send one standard test message to that channel.
+4. Click **Set default** to change the default. A message that names only the service goes to the default channel.
+5. To replace a webhook URL, edit the channel and click **Save URL**.
+6. Click **Remove** to delete a channel. The default channel can be removed only when it is the last channel. Otherwise set another default first (409 `notification_channel.default_in_use`).
+
+A removed channel fails its pending deliveries with `channel_removed`. MINT does not retry them.
+
+A config from before named channels has one `webhookUrl` (or `MINT_NOTIFICATIONS__TEAMS__WEBHOOK_URL`). MINT reads it as the channel `default`. The next save in this panel writes the new shape.
+
+The routes need `platform.configure` and are audited as `config.update`:
+
+| Route | Effect |
+|-------|--------|
+| `PATCH /api/admin/notifications/integrations/{teams\|slack}` | Switch the service on or off |
+| `POST /api/admin/notifications/integrations/{teams\|slack}/channels` | Add a channel (`name`, `webhookUrl`) |
+| `PATCH` and `DELETE .../channels/{name}` | Replace the URL, or remove the channel |
+| `POST .../channels/{name}/default` | Make the channel the default |
+| `POST .../channels/{name}/test` | Send a test message to the channel. `POST .../{teams\|slack}/test` tests the default channel |
+
+A plugin reads the channel names, never the URLs. A plugin chooses channels per message. See [Notifications -> For plugin authors](/guide/notifications#for-plugin-authors). A message that goes to another person or to a Teams or Slack channel needs a sender with the permission `notifications.broadcast`. The Admin role has it. Give it to other roles in **Admin -> People -> Roles**. See [Permissions](/reference/permissions#notifications-2).
 
 ## Push notifications
 

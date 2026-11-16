@@ -58,7 +58,7 @@ Access is the intersection of these rules:
 2. **Experiment compatibility**: the plugin's `experiment_types` plus any tighter platform/admin restriction. `context.experiment_types` is `None` when unrestricted; an empty set blocks all types.
 3. **Actor visibility**: deployment visibility settings, project membership, experiment ownership/collaboration, and platform administrator access.
 4. **Data ownership**: writes use the calling plugin's ID. A plugin cannot overwrite another plugin's design or artifacts.
-5. **Declared readers**: cross-plugin analysis reads require exact IDs in `reads_from`.
+5. **Declared readers**: cross-plugin reads (artifacts, exports, bus events, tool and job calls) require exact IDs in `reads_from`. See [Plugin communication](/sdk/concepts/plugin-communication).
 6. **Access level**: the `access` of the endpoint, job, tool or page (`use`, `configure`, `admin`). A role with only `plugins.use` reaches `use` routes.
 
 These rules also apply over isolated-plugin internal HTTP. Even `{"experiments", "design", "artifacts"}` receives scoped access. A plugin that creates an experiment makes the calling user its creator, as for one created in the UI; a call without a user creates an experiment without an owner. See [Route permissions](/sdk/recipes/route-permissions).
@@ -76,7 +76,8 @@ These rules also apply over isolated-plugin internal HTTP. Even `{"experiments",
 | `context.files` | Read-only access to configured server mounts |
 | `context.db()` | In-process SQL session for declared plugin-owned tables |
 | `context.experiment_types` | Effective type restrictions |
-| `context.publish(name, payload, *, experiment_id=None)` | Deliver a plugin event, and stream it with the `realtime` feature |
+| `context.plugins` | Other plugins: `read` exports, `call` tools, `start_job`, `catalog`, `subscribe`, `unsubscribe`. See [Plugin communication](/sdk/concepts/plugin-communication) |
+| `context.publish(name, payload, *, experiment_id=None)` | Deliver a plugin event, send a `Metadata.emits` event to the event bus, and stream it with the `realtime` feature |
 
 The caller, the job visibility and the service-token identity are handler parameters, not context calls: `CurrentActor`, `CurrentJobVisibility` and `CurrentServiceCaller`. The platform binds the actor of each request, job and tool call. Use `self.settings` and `self.update_settings()` for typed configuration, and `@on("settings")` for runtime effects. Notifications and calendar events use `@notify` and `@calendar_event`. See [Lifecycle](/sdk/concepts/lifecycle).
 

@@ -39,7 +39,7 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PlotlyChart.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PlotlyChart.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -144,4 +144,4 @@ The SDK uses `plotly.js-dist-min` ^4.1.1. The SDK `dist/` does not bundle Plotly
 
 Set `empty` yourself when an analysis has no data. Bind `loading` to request state and keep axis labels/units explicit. For another chart library or event bindings beyond this API, use [ChartContainer](/sdk/components/chart-container).
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)
+[Release source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)

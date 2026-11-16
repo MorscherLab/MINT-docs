@@ -12,7 +12,7 @@ SettingsModal is a feedback component exported by @morscherlab/mint-sdk for plug
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SettingsModal.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SettingsModal.vue">Source</a>
 </div>
 
 <demo vue="./demos/SettingsModal.vue" title="SettingsModal" description="Settings dialog with a custom tab and form fields. Click the button to open it and change values." />
@@ -30,7 +30,7 @@ With `layout` omitted, the modal shows a rail when there are more than three gro
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/SettingsModal.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SettingsModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -51,11 +51,11 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SettingsTabInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L550) | See the linked SDK type definition. |
-| [` SettingsModalLayout `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L552) | ` 'horizontal' \| 'vertical' ` |
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L156) | See the linked SDK type definition. |
-| [` SettingsModalSchema `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L577) | See the linked SDK type definition. |
-| [` SettingsUserType `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L581) | See the linked SDK type definition. |
+| [` SettingsTabInput `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L577) | See the linked SDK type definition. |
+| [` SettingsModalLayout `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L579) | ` 'horizontal' \| 'vertical' ` |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L156) | See the linked SDK type definition. |
+| [` SettingsModalSchema `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L604) | See the linked SDK type definition. |
+| [` SettingsUserType `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L608) | See the linked SDK type definition. |
 
 ### Events
 

@@ -38,13 +38,17 @@ Click a row or a tile to open the instrument page (`/instruments/<id>`). You nee
 | **Header** | Name, state, and a note such as the time since the state began. A link to the plugin that reports for the instrument, when there is one. |
 | **Current run** | Injection (for example `12 / 48`), elapsed time, remaining time, ETA, and average time per injection. Also a progress bar, a strip with the time of each injection, and the current sample, raw file, method, and sequence. When the plugin reports a metric for each injection, such as the maximum pressure, a switch under the strip changes the bars from **Time** to that metric. Point at a bar to see its injection and value. |
 | **Live data** | The extra panels that the reporting plugin shows: key-value lists, tables, text, JSON, and bar charts, one tab for each panel. Shown only when the plugin reports panels. |
-| **Alerts** | The alerts of the last 7 days from the reporting plugin. Shown only when that plugin serves alerts. |
+| **Alerts** | The alerts of the alert window (72 hours by default) from the reporting plugin. Shown only when that plugin serves alerts. See [Alerts and the alert window](#alerts-and-the-alert-window). |
 | **History** | The recorded status changes and finished samples. See [History](#history). |
 | **Details**, **Components**, **Reporting** | The instrument record, its parts, and the source and time of the last report. |
 
 If an instrument has no run, the card tells you why: no reports yet, inactive, standby, idle, error, or not reporting.
 
 To acknowledge an alert, click **Acknowledge** next to it. The reporting plugin decides whether you may do this.
+
+### Alerts and the alert window
+
+An instrument shows as critical only while its newest unacknowledged critical alert is inside the **alert window**. The default window is 72 hours. An old critical alert that nobody acknowledged stops marking the instrument as critical, and stops lighting the badge on **Instruments**, when it is older than the window. The Alerts card lists the alerts of the same window. Older alerts stay in the reporting plugin. Your admin sets the window or turns it off; see [Configuration](/admin/configuration#instruments).
 
 > [Screenshot: instrument page with the current run card, the time-per-injection strip, and the Alerts card]
 

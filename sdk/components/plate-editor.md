@@ -12,7 +12,7 @@ Controlled multi-plate editor over [WellPlate](/sdk/components/well-plate): plat
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PlateEditor.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PlateEditor.vue">Source</a>
 </div>
 
 <demo vue="./demos/PlateEditor.vue" title="PlateEditor" description="A 96-well rack with blanks, QC and samples. Select wells, edit them, and undo or redo changes." />
@@ -105,7 +105,7 @@ Slots: `#well-editor`, `#tab-extra` (tab bar), `#toolbar-extra` (toolbar). Keybo
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/PlateEditor.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PlateEditor.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -123,8 +123,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` PlateEditorSpec `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L184) | See the linked SDK type definition. |
-| [` Rack `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/componentLabTypes.ts#L110) | See the linked SDK type definition. |
+| [` PlateEditorSpec `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentLabTypes.ts#L184) | See the linked SDK type definition. |
+| [` Rack `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentLabTypes.ts#L110) | See the linked SDK type definition. |
 
 ### Events
 

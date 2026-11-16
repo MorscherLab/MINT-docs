@@ -12,7 +12,7 @@ BaseRadioGroup is a forms component exported by @morscherlab/mint-sdk for plugin
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseRadioGroup.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseRadioGroup.vue">Source</a>
 </div>
 
 <demo vue="./demos/BaseRadioGroup.vue" title="BaseRadioGroup" description="Tile radio group with three sample types. Click a tile to change the model value." />
@@ -26,7 +26,7 @@ import { BaseRadioGroup } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.4.3**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/components/BaseRadioGroup.vue).
+MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseRadioGroup.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -44,7 +44,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.4.3/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
+| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
 
 ### Events
 

@@ -22,7 +22,7 @@ For most installations, editing `config.json` is the only configuration step. Us
   "devMode": false,
   "setupCompleted": false,
   "adminTerminalEnabled": false,
-  "realtimeEnabled": false,
+  "realtimeEnabled": true,
   "server": { "...": "..." },
   "database": { "...": "..." },
   "storage": { "...": "..." },
@@ -36,6 +36,7 @@ For most installations, editing `config.json` is the only configuration step. Us
   "errorReporting": { "...": "..." },
   "audit": { "...": "..." },
   "instruments": { "...": "..." },
+  "libraries": { "...": "..." },
   "jobs": { "...": "..." },
   "observability": { "...": "..." },
   "access": { "...": "..." },
@@ -154,7 +155,8 @@ aliases such as `MINT_S3_ACCESS_KEY_ID`, `MINT_S3_SECRET_ACCESS_KEY`,
 | `tokenExpireMinutes` | `10080` (7 days) | Token lifetime; the admin UI accepts 15–43200 |
 | `failedLoginLimit` | `5` | Failed password logins before the account is locked |
 | `loginLockoutMinutes` | `15` | Lockout duration |
-| `requireSecondFactor` | `true` | Require a passkey after a password or edu-ID sign-in. Enforced only with auth and passkeys on, dev mode off and an `https://` `server.externalUrl`; see [Second factor](/admin/authentication#second-factor) |
+| `enableTotp` | `false` | Offer a code from an authenticator app (TOTP) as a second factor. It needs no HTTPS, so it also enforces the second factor on a plain-HTTP site. Changing it needs a restart; see [Authenticator app](/admin/authentication#authenticator-app-totp) |
+| `requireSecondFactor` | `true` | Require a second step (a passkey or an authenticator code) after a password or edu-ID sign-in. Enforced only with auth on, dev mode off and at least one method on the site: passkeys with an `https://` `server.externalUrl`, or `enableTotp`; see [Second factor](/admin/authentication#second-factor) |
 | `patMaxLifetimeDays` | `365` | Longest lifetime a [personal access token](/admin/authentication#personal-access-tokens) may be issued for: `30`, `90` or `365` |
 
 See [Security settings](#security-settings) for how these behave.
@@ -273,9 +275,28 @@ retry state, and recipient policy.
 | Section | Main keys |
 |---------|-----------|
 | `notifications.email` | `enabled`, `host`, `port`, `tlsMode`, `fromAddress`, `fromName`, `username`, `password` |
-| `notifications.teams` | `enabled`, `webhookUrl` |
-| `notifications.slack` | `enabled`, `webhookUrl` |
+| `notifications.teams` | `enabled`, `default`, `channels` |
+| `notifications.slack` | `enabled`, `default`, `channels` |
 | `notifications.apns` | `enabled`, `transport` (`relay` or `direct`), `topic` (default `org.morscherlab.mint`), `relayUrl`, `relayKey`, `teamId`, `keyId`, `privateKey` |
+
+`teams` and `slack` hold named channels. `channels` maps a name (`^[a-z0-9][a-z0-9-]*$`) to `{"webhookUrl": "https://..."}`. `default` names the channel that a message to the bare service reaches. It must name one channel, and it is empty only when there are no channels:
+
+```json
+{
+  "notifications": {
+    "teams": {
+      "enabled": true,
+      "default": "lab",
+      "channels": {
+        "lab": { "webhookUrl": "https://..." },
+        "alerts": { "webhookUrl": "https://..." }
+      }
+    }
+  }
+}
+```
+
+A config with one legacy `webhookUrl` (or `MINT_NOTIFICATIONS__TEAMS__WEBHOOK_URL`) is read as the channel `default`. Manage the channels in **Admin -> Platform -> Notifications**, not in the file: the panel stores each URL encrypted. See [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels).
 
 Only enable an integration when its required host/webhook fields are set. For `apns`, the `relay` transport needs `relayUrl` (HTTPS; a URL with no path gets `/v1/push`) and `relayKey`, and the `direct` transport needs `teamId`, `keyId` and the `.p8` key as `privateKey`. MINT stores the keys encrypted, and the admin API shows only whether they are set. Set them in **Admin -> Platform -> Configuration -> Notifications -> Apple Push**; see [Push notifications](/admin/platform-settings#push-notifications).
 
@@ -292,8 +313,19 @@ With `retentionDays` above 0, a daily job deletes older audit events and records
 | Key | Default | Description |
 |-----|---------|-------------|
 | `historyRetentionDays` | `0` | Days to keep rows of the instrument status history (`0`–`36500`). `0` keeps every row |
+| `alertWindowHours` | `72` | Hours that an unacknowledged critical alert keeps an instrument critical (`0`–`87600`). `0` turns the window off |
 
 With `historyRetentionDays` above 0, a daily job deletes older rows and records each purge as an `instrument_history.purge` event. Edit it under **Admin -> Platform -> Configuration -> Instruments**, or set `MINT_INSTRUMENTS__HISTORY_RETENTION_DAYS`.
+
+The alert window limits how long an old alert counts. The platform reads an instrument as critical only while its newest unacknowledged critical alert is inside the window. The reporting plugin sends the time of that alert as `latest_critical_at`; a report without it keeps its critical flag. An old alert that nobody acknowledged then no longer lights the **Instruments** badge for ever. The alerts card on the instrument page lists the alerts of the same window. Set the window with `instruments.alertWindowHours` in `config.json` or `MINT_INSTRUMENTS__ALERT_WINDOW_HOURS`. The panel has no field for it. Value `0` turns the window off, and an unacknowledged critical alert then counts until someone acknowledges it.
+
+## `libraries`
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `path` | empty | Absolute directory of the [library store](/admin/libraries). Empty means `<server.dataPath>/libraries` |
+
+Set `MINT_LIBRARIES__PATH` to change it. A relative path fails when MINT loads the config.
 
 ## `jobs`
 
@@ -323,10 +355,10 @@ Every value must be above 0. The nested name `MINT_JOBS__CPU_SLOTS` (and so on) 
 ## `realtimeEnabled`
 
 ```json
-{ "realtimeEnabled": false }
+{ "realtimeEnabled": true }
 ```
 
-Set `MINT_REALTIME_ENABLED=true` or this key to turn on the realtime event stream. It is off by default. When it is off, `GET /api/events`, `POST /api/presence/activity` and `POST /api/internal/events` do not exist, and the public `features` report `realtime: false`.
+The realtime event stream is on by default. Set `MINT_REALTIME_ENABLED=false` or this key to `false` to turn it off. When it is off, `GET /api/events`, `POST /api/presence/activity` and `POST /api/internal/events` do not exist, and the public `features` report `realtime: false`.
 
 When it is on, signed-in browsers keep one `text/event-stream` connection to `GET /api/events` (a Bearer credential or the session cookie). The experiment and project views refetch when someone else saves, and the experiment page shows who else is viewing. Plugins with the `realtime` feature can publish their own events. Details:
 
@@ -394,6 +426,9 @@ An environment variable or a `.env` entry outranks `config.json` also for the al
 | `auth.patMaxLifetimeDays` | `MINT_AUTH__PAT_MAX_LIFETIME_DAYS` |
 | `audit.retentionDays` | `MINT_AUDIT__RETENTION_DAYS` |
 | `instruments.historyRetentionDays` | `MINT_INSTRUMENTS__HISTORY_RETENTION_DAYS` |
+| `instruments.alertWindowHours` | `MINT_INSTRUMENTS__ALERT_WINDOW_HOURS` |
+| `auth.enableTotp` | `MINT_AUTH__ENABLE_TOTP` |
+| `libraries.path` | `MINT_LIBRARIES__PATH` |
 | `jobs.cpuSlots` | `MINT_JOBS__CPU_SLOTS` (or `MINT_JOB_CPU_SLOTS`) |
 | `realtimeEnabled` | `MINT_REALTIME_ENABLED` |
 | (not a config key) | `MINT_LISTEN_PORT`: the port that `mint-platform` binds |

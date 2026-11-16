@@ -42,6 +42,7 @@ A tool method takes `(self, ctx: ToolContext, args: ArgsModel)` and returns a Py
 | `idempotent` | Repeating the call changes nothing more. Defaults to `True` for `"read"` and `False` otherwise |
 | `timeout` | Seconds before the call is stopped; at most 600 (default 60) |
 | `access` | Who may call the tool: `"use"` (default), `"configure"` (adds `plugins.configure`) or `"admin"` (platform administrators) |
+| `callers` | Plugins that may call the tool with `context.plugins.call`: a set of plugin names, or `"readers"` for every plugin that lists this plugin in `reads_from`. Defaults to `"readers"` for `"read"` and to none otherwise. See [Plugin communication](/sdk/concepts/plugin-communication#calls-to-tools-and-jobs) |
 
 The class is checked when Python defines it: an unknown or invalid option raises `TypeError`. State the effect honestly: it becomes the MCP tool annotations that clients use to decide whether to ask the user before a call. For a tool with `effect = "destructive"`, the platform asks the user to confirm the question before the call runs, when the client supports it. A decline ends the call before the method runs. The question is not an authorization: a client hook can answer it.
 

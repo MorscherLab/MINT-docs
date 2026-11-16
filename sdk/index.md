@@ -103,6 +103,7 @@ The tutorials are written so you can follow them in order without reading the fu
 | Package | `mint build` |
 | Verify real install path | `mint verify` |
 | Deploy to a test platform | `mint deploy --to http://127.0.0.1:18020` |
+| Upgrade a 1.4 plugin | `mint doctor`, then see [Migrate from 1.4 to 1.5](/sdk/operations/migrate-1.4-to-1.5) |
 | Upgrade a 1.3 plugin | `mint doctor --fix`, then see the [migration guide](/sdk/operations/migrate-1.3-to-1.4) |
 
 

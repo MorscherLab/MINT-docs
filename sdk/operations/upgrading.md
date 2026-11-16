@@ -1,6 +1,6 @@
 # Upgrading the SDK
 
-Platform, Python SDK and frontend SDK releases share one `v*` release tag; your plugin keeps its own version. Read the [platform changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md) and [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md), or the [notable changes](/changelog), before changing dependencies. Moving a plugin from 1.3? Follow [Migrate from 1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4). Moving a plugin from 1.2? Follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3) first. A plugin still on 1.1 moves through [Migrate from 1.1 to 1.2](/sdk/operations/migrate-1.1-to-1.2) first.
+Platform, Python SDK and frontend SDK releases share one `v*` release tag; your plugin keeps its own version. Read the [platform changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md) and [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md), or the [notable changes](/changelog), before changing dependencies. Moving a plugin from 1.4? Follow [Migrate from 1.4 to 1.5](/sdk/operations/migrate-1.4-to-1.5). Moving a plugin from 1.3? Follow [Migrate from 1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4). Moving a plugin from 1.2? Follow [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3) first. A plugin still on 1.1 moves through [Migrate from 1.1 to 1.2](/sdk/operations/migrate-1.1-to-1.2) first.
 
 ## Prepare the project and target platform
 

@@ -48,7 +48,7 @@ The Compose file also sets `MINT_RESTART_SUPERVISED=1`: the `app` service has `r
 | `MINT_DB_PASSWORD` | none (required) | PostgreSQL password for the bundled database |
 | `MINT_PORT` | `8000` | Host side of the app port mapping. Set `127.0.0.1:8001` to keep MINT behind a host reverse proxy. Before MINT 1.4 the name was `MLD_PORT`; Compose ignores it now, and the app binds to host port 8000. |
 | `MINT_VERSION` | `0.0.0-dev` | Version string baked into a local image build (formerly `MLD_VERSION`) |
-| `MINT_REALTIME_ENABLED` | `false` | Turns on the [realtime event stream](/admin/configuration#realtimeenabled) |
+| `MINT_REALTIME_ENABLED` | `true` | Turns the [realtime event stream](/admin/configuration#realtimeenabled) on or off |
 | `MINT_SERVER__RP_ID` | empty | Passkey relying-party ID, e.g. `mint.example.org`. Empty derives it from the request host. |
 | `MINT_POSTGRES_HOST_PORT` | `5432` | Loopback host port for PostgreSQL. Change it if the host already runs PostgreSQL on 5432. |
 | `MINT_DATA_PATH` | `../../data` (repo `data/`) | Host directory mounted at `/app/data` |
@@ -126,10 +126,12 @@ docker compose -f deploy/docker/docker-compose.yml up -d --build --no-deps app
 docker compose -f deploy/docker/docker-compose.yml logs -f app
 ```
 
-You can also apply a release from **Admin -> Plugins -> Installed** without rebuilding; the container installs the release's `mint-platform-<version>.tar.gz` runtime bundle (see [Updates](/admin/updates)).
+You can also apply a release from **Admin -> Platform -> Updates** without rebuilding; the container installs the release's `mint-platform-<version>.tar.gz` runtime bundle (see [Updates](/admin/updates)).
 
 ::: warning Upgrading from MINT 1.3
 A 1.3 container cannot update itself to 1.4, because the runtime bundle protocol is now 3. Back up the database. Then check out the 1.4 tag and rebuild as above. If your Compose file pins an image (`mint:1.3`, `mint:1.3.12` or a digest), change it to `ghcr.io/morscherlab/mint:1.4` or `:@` and run `docker compose pull && docker compose up -d`. A Compose file or orchestrator that overrides the command with `mint daemon` must use `uv run --no-sync mint-platform serve --platform-dir /app --port 8000`. See [Updates](/admin/updates#upgrading-from-mint-1-3).
+
+A 1.4 container can update itself to 1.5, because the runtime bundle protocol is still 3. An in-app update replaces the Python packages only. The 1.5 image has Debian security updates and no system `pip`, so change the Compose image to `ghcr.io/morscherlab/mint:1.5` and run `docker compose pull && docker compose up -d`. In the new image, use `uv pip` in the admin terminal. See [Updates](/admin/updates#upgrading-from-mint-1-4).
 :::
 
 To roll back, check out the previous tag and rebuild `app`. Platform migrations are forward-only, so restore the matching database backup when the newer release applied migrations.
