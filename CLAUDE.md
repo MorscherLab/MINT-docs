@@ -52,3 +52,9 @@ Edit links in the footer point to `MorscherLab/MINT-docs` on GitHub. The dev ser
 - The home page (`index.md`) uses VitePress's `layout: home` frontmatter with `hero` + `features`; don't convert it to a regular markdown page.
 - For SDK function signatures, schema details, plugin loader internals, and RBAC model code, check the MINT platform source before editing. Keep reference pages concise and link to source files for details that are likely to churn.
 - The MINT name is canonical post-`v1.0.0`. Use `mint-sdk` / `@morscherlab/mint-sdk` / `mint` CLI / `MINT_` env vars when referring to current versions; only mention the legacy `mld` / `MLD_` names when explicitly documenting migration from older versions.
+
+## Comments and lint
+
+- Write no comment unless the code cannot say it: a license header, behavior that an external dependency or protocol forces, a public API doc comment, or an issue/RFC link. For a surprise in our own code, rename, extract or type it. Leave no commented-out code.
+- When a mistake recurs, add a check that fails on it instead of a note here or in the code. The checks in this repo are `bun run build` (dead links fail it) and `bunx vue-tsc --noEmit -p sdk/components/demos`. A suppression (`@ts-expect-error`) needs a rule that is wrong for that line, not a deadline.
+- Add few tests. Use a type or a build check when it catches the same error. A test asserts behavior a caller can observe, not internals. A bug fix starts with a check that fails without the fix. When the bug class can recur, make that check a rule.
