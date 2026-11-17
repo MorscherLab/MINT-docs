@@ -130,7 +130,8 @@ export default defineConfig({
           items: [
             { text: 'Install on Linux (direct)', link: '/admin/install-direct' },
             { text: 'Install on Linux (Docker)', link: '/admin/install-docker' },
-            { text: 'Reverse proxy & first run', link: '/admin/proxy-and-setup' },
+            { text: 'Reverse proxy', link: '/admin/reverse-proxy' },
+            { text: 'First-run setup', link: '/admin/first-run' },
           ],
         },
         {

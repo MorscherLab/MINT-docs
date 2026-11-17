@@ -161,7 +161,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 | `since`, `until` | Time range (ISO 8601) |
 | `skip`, `limit` | Paging; `limit` up to 500 |
 
-Events are returned newest first. Client IPs in the log follow the same trusted-proxy rule as the rate limiter (see [Reverse proxy](/admin/proxy-and-setup#reverse-proxy)).
+Events are returned newest first. Client IPs in the log follow the same trusted-proxy rule as the rate limiter (see [Reverse proxy](/admin/reverse-proxy#trusted-proxies)).
 
 With `audit.retentionDays` above 0, MINT deletes older events once a day and records the deletion as `audit.purge`. See [Configuration](/admin/configuration#audit).
 

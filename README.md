@@ -18,7 +18,7 @@ MINT-docs/
     experiments.md, instruments.md, ai-and-api.md,
     marketplace.md, ui-tour.md
   admin/                # Administer MINT (lab admins)
-    install-direct.md, install-docker.md, proxy-and-setup.md,
+    install-direct.md, install-docker.md, reverse-proxy.md, first-run.md,
     configuration.md, users-roles.md, authentication.md,
     plugins.md, updates.md, cli.md
   sdk/
