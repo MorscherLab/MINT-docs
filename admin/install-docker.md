@@ -72,7 +72,7 @@ With `MINT_PORT=127.0.0.1:8001`, Compose binds the container's port 8000 to `127
 
 ## Reverse proxy
 
-For the host nginx or Caddy configuration, see [Reverse proxy](/admin/proxy-and-setup#reverse-proxy). To run Caddy as a Compose service instead:
+For the host nginx or Caddy configuration, see [Reverse proxy](/admin/reverse-proxy). To run Caddy as a Compose service instead:
 
 ```yaml [Caddy (compose service)]
 # Add to docker-compose.yml
@@ -112,7 +112,7 @@ from users.
 
 ## First-run setup
 
-See [First-run setup](/admin/proxy-and-setup#first-run-setup).
+See [First-run setup](/admin/first-run).
 
 ## Upgrades
 

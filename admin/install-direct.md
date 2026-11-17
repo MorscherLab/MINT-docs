@@ -171,7 +171,7 @@ MINT keeps rate limits, the post-setup restart handoff, and several caches in pr
 
 ## Reverse proxy and first-run setup
 
-See [Reverse proxy and first-run setup](/admin/proxy-and-setup).
+See [Reverse proxy](/admin/reverse-proxy) and [First-run setup](/admin/first-run).
 
 ## Upgrades
 

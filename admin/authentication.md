@@ -214,7 +214,7 @@ The **Instruments** list shows only the instruments granted to the selected plug
 
 These paths are limited to **20 requests per 60 seconds per client IP**: `/api/auth` (including passkey routes), `/api/setup`, `/api/users/register`, and `PUT /api/users/me`. `/mcp` has its own bucket of 240 requests per 60 seconds, and `/oauth` has one of 60. MINT does not rate-limit in dev mode. The public bootstrap reads `GET /api/auth/config` and `GET /api/setup/config/public` are exempt. Over the limit, MINT answers 429.
 
-MINT takes the client IP from `X-Forwarded-For` only when the request comes from a proxy in `server.trustedProxyCidrs` (default: loopback). An explicitly empty list trusts no proxy. See [Reverse proxy](/admin/proxy-and-setup#reverse-proxy).
+MINT takes the client IP from `X-Forwarded-For` only when the request comes from a proxy in `server.trustedProxyCidrs` (default: loopback). An explicitly empty list trusts no proxy. See [Reverse proxy](/admin/reverse-proxy#trusted-proxies).
 
 ## Audit log
 
