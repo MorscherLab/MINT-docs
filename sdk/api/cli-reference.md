@@ -326,6 +326,8 @@ mint build [flags]
 
 Output: `dist/<name>-<version>.mint`. Note the `.mint` extension.
 
+`mint build` stops when the wheel leaves out a file under the `skills/` directory next to a `mint.plugins` module. See [MCP skills](/sdk/recipes/mcp-skills).
+
 ### `mint doctor`
 
 Validate the plugin's project structure.
@@ -351,6 +353,7 @@ The default run checks the project structure: `pyproject.toml`, the `mint.plugin
 - checks the SDK dependency. The Python range must be `>=<floor>,<ceiling>` with the ceiling at the next major (from 1.4) or the next minor (before 1.4). A ceiling at the next minor still passes for 1.4 plugins, so `<1.5` releases of the 1.4 plugins keep passing. `mint doctor --fix` writes `<2.0`;
 - checks the SDK version alignment: the Python and frontend SDK pins and their lockfiles must name the same release (`mint sdk update` aligns them);
 - checks `@tool` / `@prompt` / `@resource` names, docstrings, signatures and schemas (the platform publishes none of a plugin's declarations while any is invalid);
+- checks each skill in `Metadata.skills` ("MCP skills") with the rules of the platform, and warns about files that Claude does not load and tool names that nobody publishes. See [MCP skills](/sdk/recipes/mcp-skills#checks-before-you-ship);
 - fails a plugin that still defines `get_migrations_package()`, because the platform loader keeps such a plugin disabled and standalone database setup raises `ConfigurationException`. Declare `Metadata.database` and adopt the history with `LegacyBaseline.from_plugin_history()`;
 - checks the page metadata (icons, stable page IDs and coverage of the frontend routes) and the platform-owned dependency constraints;
 - reports an error when a plugin on `mint-sdk>=1.3` has a `requires-python` that admits Python older than 3.14 or excludes 3.14 (a `mint-sdk` dependency limited by a `python_version >= '3.14'` marker is exempt);

@@ -60,6 +60,7 @@ Source: [`mint_sdk/plugin_decorators.py`](https://github.com/MorscherLab/MINT/bl
 | `experiment_types` | `frozenset[str] \| None` | `None` | Experiment types that the plugin supports. Platform policy can narrow the set |
 | `depends_on` | `tuple[str, ...]` | `()` | Plugin names that must load first |
 | `emits` | `Mapping[str, type[BaseModel]]` | `{}` | Events of this plugin that go to the event bus: `"<plugin>.<event>"` to payload model. See [Event bus](/sdk/concepts/plugin-communication#event-bus) |
+| `skills` | `frozenset[str]` | `frozenset()` | Skills that the platform serves over MCP (SDK 1.6). Each name is a directory `skills/<name>/` with a `SKILL.md`, next to the module of the plugin class. At most 20. See [MCP skills](/sdk/recipes/mcp-skills) |
 
 `Page.access` hides the page from users below that level. `Page.flag` names a platform feature flag. A page with an `access` above `"use"` needs `auth = True`.
 
@@ -339,7 +340,7 @@ class QcPlugin(Plugin):
 | `ToolContext` | `actor`, `deadline`, `design`, `artifacts` (both act as the caller; they raise `PluginException` in standalone mode) and `report(progress, total=None, message=None)` |
 | `PromptMessage` | `role` (`"user"` or `"assistant"`) and `text` |
 
-`call_tool(plugin, name, arguments, *, actor, platform, progress=None, read_only=False)`, `render_prompt(plugin, name, arguments, *, actor, platform)`, `read_resource(plugin, name, params, *, actor, platform)`, `mcp_manifest(plugin)` and `mcp_problems(plugin)` run and describe declarations for tests and tooling. A tool with `effect = "destructive"` makes the platform ask the user to confirm before the call runs.
+`call_tool(plugin, name, arguments, *, actor, platform, progress=None, read_only=False)`, `render_prompt(plugin, name, arguments, *, actor, platform)`, `read_resource(plugin, name, params, *, actor, platform)`, `mcp_manifest(plugin)` and `mcp_problems(plugin)` run and describe declarations for tests and tooling. `mcp_manifest(plugin)` also lists each skill of `Metadata.skills` with the path, size and SHA-256 of every file; `mint_sdk.mcp_skills.skill_problems(plugin_name, name, files)` returns the reasons why the platform does not serve a skill ([MCP skills](/sdk/recipes/mcp-skills)). A tool with `effect = "destructive"` makes the platform ask the user to confirm before the call runs.
 
 ## Instrument status
 

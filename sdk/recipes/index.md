@@ -26,6 +26,7 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 | Recipe | When |
 |--------|------|
 | [MCP tools](/sdk/recipes/mcp-tools) | Publish plugin tools, prompts and resources on the platform's `/mcp` endpoint |
+| [MCP skills](/sdk/recipes/mcp-skills) | Ship a skill that tells an AI assistant how to use the plugin |
 
 ## Instruments
 
