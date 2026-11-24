@@ -60,7 +60,7 @@ The platform and `mint doctor` use the same rules (`mint_sdk.mcp_skills.skill_pr
 | Prefix | The name starts with the plugin name in the same form, then `-`. The plugin name is the entry-point key in lowercase, with each run of other characters replaced by `-`: plugin `drp` gives `drp-dose-response`, plugin `dose_response` gives `dose-response-fit` |
 | Frontmatter | `SKILL.md` starts with YAML frontmatter. `name` equals the directory name. `description` is not empty |
 | Size | At most 20 skills per plugin, 64 files and 1 MiB per skill |
-| Paths | Hidden files (a name that starts with `.`) are left out. A link that leads out of the skill directory is refused |
+| Paths | Hidden files (a name that starts with `.`) are left out. Each other file and directory name uses only `A-Z`, `a-z`, `0-9`, `.`, `_` and `-`: a name such as `Lab notes.md` makes the platform refuse the skill. A link that leads out of the skill directory is refused |
 | Secrets | No access token (`mint_pat_…`, `mint_svc_…`) and no private key. Every caller who sees the plugin can read the skill |
 
 All MINT skills, from the platform and from every plugin, share one server label in the client. The prefix keeps the skills of two plugins apart. The skill prefix uses `-`; the [tool prefix](/sdk/recipes/mcp-tools#names) uses `_`.
