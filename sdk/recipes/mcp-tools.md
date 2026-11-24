@@ -117,7 +117,7 @@ The platform treats plugin output as untrusted:
 
 The platform picks up an enabled plugin's declarations when the MCP endpoint starts and rechecks every 15 seconds, so a plugin process that starts late or changes its declarations is published without a platform restart. The platform reads `effect` and `idempotent` from the plugin MCP manifest, so a plugin process needs SDK 1.4.
 
-`@job` methods need no MCP declaration: the platform's job tools (`mint_start_job` and the related tools) offer every job the plugin declares. A client that supports MCP tasks runs a job as a [background task](/guide/ai-and-api#jobs-as-background-tasks).
+`@job` methods need no MCP declaration: the platform's job tools (`mint_start_job` and the related tools) offer every job the plugin declares. From MINT 1.6, a client that supports MCP tasks runs a job as a [background task](/guide/ai-and-api#jobs-as-background-tasks).
 
 To tell the assistant how to use your tools and jobs, ship a skill: see [MCP skills](/sdk/recipes/mcp-skills).
 

@@ -340,7 +340,7 @@ class QcPlugin(Plugin):
 | `ToolContext` | `actor`, `deadline`, `design`, `artifacts` (both act as the caller; they raise `PluginException` in standalone mode) and `report(progress, total=None, message=None)` |
 | `PromptMessage` | `role` (`"user"` or `"assistant"`) and `text` |
 
-`call_tool(plugin, name, arguments, *, actor, platform, progress=None, read_only=False)`, `render_prompt(plugin, name, arguments, *, actor, platform)`, `read_resource(plugin, name, params, *, actor, platform)`, `mcp_manifest(plugin)` and `mcp_problems(plugin)` run and describe declarations for tests and tooling. `mcp_manifest(plugin)` also lists each skill of `Metadata.skills` with the path, size and SHA-256 of every file; `mint_sdk.mcp_skills.skill_problems(plugin_name, name, files)` returns the reasons why the platform does not serve a skill ([MCP skills](/sdk/recipes/mcp-skills)). A tool with `effect = "destructive"` makes the platform ask the user to confirm before the call runs.
+`call_tool(plugin, name, arguments, *, actor, platform, progress=None, read_only=False)`, `render_prompt(plugin, name, arguments, *, actor, platform)`, `read_resource(plugin, name, params, *, actor, platform)`, `mcp_manifest(plugin)` and `mcp_problems(plugin)` run and describe declarations for tests and tooling. From SDK 1.6, `mcp_manifest(plugin)` also lists each skill of `Metadata.skills` with the path, size and SHA-256 of every file; `mint_sdk.mcp_skills.skill_problems(plugin_name, name, files)` returns the reasons why the platform does not serve a skill ([MCP skills](/sdk/recipes/mcp-skills)). A tool with `effect = "destructive"` makes the platform ask the user to confirm before the call runs.
 
 ## Instrument status
 
