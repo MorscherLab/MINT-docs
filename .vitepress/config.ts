@@ -80,6 +80,7 @@ export default defineConfig({
         text: 'Build Plugins',
         items: [
           { text: 'Plugin development overview', link: '/sdk/' },
+          { text: 'Install the toolchain', link: '/sdk/install' },
           { text: 'Start: first plugin', link: '/sdk/tutorials/first-analysis-plugin' },
           { text: 'Tutorials', link: '/sdk/tutorials/' },
           { text: 'Component Library', link: '/sdk/components/' },
@@ -167,6 +168,7 @@ export default defineConfig({
           text: 'Plugin Development',
           items: [
             { text: 'Overview', link: '/sdk/' },
+            { text: 'Install the toolchain', link: '/sdk/install' },
             { text: 'Tutorial path', link: '/sdk/tutorials/' },
             { text: 'First analysis plugin', link: '/sdk/tutorials/first-analysis-plugin' },
             { text: 'Adding a frontend', link: '/sdk/tutorials/adding-a-frontend' },
