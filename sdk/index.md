@@ -19,7 +19,7 @@ the released `v@MINT_VERSION@` source.
 
 ### The baseline
 
-Use Python 3.14+ and install `mint-sdk[cli]` to scaffold plugins:
+Install the toolchain with [one command](/sdk/install), or install only the CLI yourself with Python 3.14+:
 
 ```bash
 uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
