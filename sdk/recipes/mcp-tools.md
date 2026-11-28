@@ -119,7 +119,7 @@ The platform picks up an enabled plugin's declarations when the MCP endpoint sta
 
 ## Panels and jobs over MCP
 
-`@job` methods need no MCP declaration: the platform's job tools (`mint_start_job` and the related tools) offer every job the plugin declares. From MINT 1.6, a client that supports MCP tasks runs a job as a [background task](/guide/ai-and-api#jobs-as-background-tasks). Before `mint_start_job` starts a job with `effect = "destructive"` on its `Job` spec, the platform asks the user for confirmation, as for a destructive tool. A decline starts nothing.
+`@job` methods need no MCP declaration: the platform's job tools (`mint_start_job` and the related tools) offer every job the plugin declares. A client that supports MCP tasks runs a job as a [background task](/guide/ai-and-api#jobs-as-background-tasks). Before `mint_start_job` starts a job with `effect = "destructive"` on its `Job` spec, the platform asks the user for confirmation, as for a destructive tool. A decline starts nothing.
 
 `@panel` methods need no MCP declaration either. The platform publishes each [panel](/sdk/recipes/panels) as the resource template `mint://plugins/<plugin>/panels/<panel_id>/experiments/{experiment_id}`. A read returns the panel answer JSON `{plugin, panel, experiment_id, sections, built_at}`, built for the caller, with the checks of the REST route. A read-only token can read it. `mint://experiments/{id}` lists the panels that apply to the experiment and that the caller may open, as `panels: [{plugin, id, title, uri}]`. The export and panel templates are published before the plugin's own resources, so a `@resource` path cannot take their addresses.
 

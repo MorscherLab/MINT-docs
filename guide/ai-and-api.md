@@ -95,7 +95,7 @@ Plugin authors who want to publish their own tools: see [MCP tools for plugins](
 
 ## Skills
 
-From MINT 1.6, the MCP server also serves **skills** (MCP extension `io.modelcontextprotocol/skills`). A skill is a short set of instructions for the assistant: the order of tool calls for a task, the values you must choose, and the rules of a plugin. The assistant loads a skill only when a task needs it.
+The MCP server also serves **skills** (MCP extension `io.modelcontextprotocol/skills`). A skill is a short set of instructions for the assistant: the order of tool calls for a task, the values you must choose, and the rules of a plugin. The assistant loads a skill only when a task needs it.
 
 Claude Code shows each skill as `<server>:<skill>`. `<server>` is the name you gave the server in `claude mcp add`. With the command above, the name is `mint`:
 
@@ -111,7 +111,7 @@ Every token sees the two platform skills. You see the skill of a plugin only whe
 
 ## Jobs as background tasks
 
-From MINT 1.6, the MCP server also serves **tasks** (MCP extension `io.modelcontextprotocol/tasks`). A client that supports tasks runs a plugin job in the background:
+The MCP server also serves **tasks** (MCP extension `io.modelcontextprotocol/tasks`). A client that supports tasks runs a plugin job in the background:
 
 1. The assistant calls `mint_start_job`. MINT starts the job and answers at once with a task. The task id is the job handle.
 2. The client asks MINT for the status of the task. The assistant does not poll in the conversation. In Claude Code, the footer shows a count such as `1 MCP task`.
@@ -127,17 +127,7 @@ A client without tasks gets the plain job handle, as before. The assistant then 
 
 ## Client support
 
-MINT serves skills and tasks to every client. The client decides whether it uses them. At the time of writing (2026-11-24), Claude Code supports them as follows. Check the [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp#use-skills-from-mcp-servers) for the current state.
-
-| | Skills | Tasks |
-|---|---|---|
-| Status | Public beta | Generally available |
-| Claude Code version | 2.1.331 or later | 2.1.304 or later in the terminal; 2.1.331 or later in the VS Code extension and in local sessions of the Desktop app |
-| Sessions that get them | Terminal (also in JetBrains IDEs) and local sessions in the Desktop app. The VS Code extension gets them in a rollout | Calls of the main conversation. On 2.1.331 or later, also calls of a subagent in an interactive terminal session |
-| Sessions that do not get them | Cloud sessions, `claude -p`, `claude remote-control` server mode, GitHub Actions and the Agent SDK | A one-shot `claude -p "<prompt>"` run. Cloud sessions and claude.ai chats give tasks only to claude.ai connectors |
-| Other conditions | A Fable model, or Claude Opus 4.8, Sonnet 5, Haiku 5.5 or later, with a direct connection to Anthropic and feature flag fetching on. On a Team or Enterprise plan, skills are off until the organization turns them on. With an API key or a Console login, skills are off now (rolling out). Organizations with a compliance setting such as HIPAA or zero data retention do not get skills | Protocol revision 2026-07-28. `MCP_SDK_GENERATION=v1` or `MCP_PROTOCOL_NEGOTIATION=legacy` turns tasks off. The VS Code extension and the Desktop app need a session that fetches feature flags |
-
-Claude Code shows at most 100 skills per server. Other MCP clients can use the job tools and the `mint://` resources without skills or tasks.
+MINT serves skills and tasks to every client. The client decides whether it uses them. For the Claude Code versions, sessions and plans that use them, see the [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp#use-skills-from-mcp-servers). Other MCP clients can use the job tools and the `mint://` resources without skills or tasks.
 
 ## Troubleshooting
 
@@ -148,5 +138,5 @@ Claude Code shows at most 100 skills per server. Other MCP clients can use the j
 | Assistant cannot find a write tool | The token is read-only, or your role lacks the permission |
 | A tool says "This access token is read-only" | Create a full-access token for that task |
 | A destructive call is cancelled in a headless run | The client cannot show the confirmation question. Answer it with a client hook, or run the call in an interactive client |
-| Claude Code shows no `mint:` skills | Check the [client support](#client-support) table. MINT serves skills from version 1.6. A plugin skill needs `plugins.use` and a role that sees the plugin |
+| Claude Code shows no `mint:` skills | Check that your Claude Code session gets MCP skills; see [Client support](#client-support). A plugin skill needs `plugins.use` and a role that sees the plugin |
 | A task ends as failed after a platform restart | MINT keeps tasks in memory. Check the experiment for a saved result, then start the job again |

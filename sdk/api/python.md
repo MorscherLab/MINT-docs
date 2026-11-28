@@ -364,7 +364,7 @@ class QcPlugin(Plugin):
 | Symbol | Description |
 |--------|-------------|
 | `panel(panel_id, *, slot, title, access="use", experiment_types=None, actions=())` | Declares `async def name(self, experiment_id: int) -> list[PanelSection]` as a tab. `slot` is `"experiment.design"` or `"experiment.analysis"`. `panel_id` matches `^[a-z][a-z0-9_-]{0,39}$` |
-| `Action(title, job, inputs={})` | A button that starts a `@job` of the same plugin. The job takes one `ExperimentRef` input; `inputs` gives fixed JSON scalars. Raises `TypeError` for a missing or staged job |
+| `Action(title, job, inputs={})` | A button that starts a `@job` of the same plugin. The job takes one `ExperimentRef` input; `inputs` gives fixed JSON scalars. `@plugin` raises `TypeError` for a missing or staged job, so the plugin does not load |
 | `PanelSection` | The union of the section models, selected by `kind` |
 | `KeyValuePanel`, `TablePanel`, `TextPanel`, `JsonPanel`, `BarPanel` | The instrument status kinds `kv`, `table`, `text`, `json`, `bar`, with `width` |
 | `LinkPanel` | `link`: `label`, `href` (`http(s)://` or `/plugin/<prefix>[/...]`), optional `title` |

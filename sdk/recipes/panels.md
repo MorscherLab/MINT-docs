@@ -170,7 +170,7 @@ An `Action(title, job, inputs={})` is a button on the tab. It starts a `@job` of
 - The job takes one input of type `ExperimentRef` (`mint_sdk.jobs`). The page sets it to the experiment id.
 - `inputs` gives fixed JSON values for other inputs. Each input that `inputs` leaves out needs a default.
 - A staged job cannot be an action.
-- `Action` raises `TypeError` when the job is missing or does not meet these rules.
+- `@plugin` raises `TypeError` for an action whose job is missing, is staged, or does not meet these rules. The plugin then does not load, and `mint doctor` reports the error under "Panels".
 
 The button follows the job's `access`: a viewer below that level does not see it. Set `Job.effect` to state what the job changes:
 

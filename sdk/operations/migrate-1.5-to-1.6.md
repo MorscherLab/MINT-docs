@@ -43,13 +43,7 @@ A plugin page runs the frontend SDK that the plugin bundles. The frontend SDK ch
 
 The 1.6 CLI runs every frontend command through the global `vp`: `vp install`, `vp install --frozen-lockfile`, `vp run <script>` and `vp add -E <package>`. This applies to `mint dev`, `mint build`, `mint init`, `mint sdk update` and `mint migrate`, also for a plugin that still uses bun or npm. The CLI does not call bun, pnpm or npm itself and has no fallback. Without `vp` on `PATH`, or with a `vp` older than 1.5.1, these commands stop with exit 1 and print the install commands.
 
-1. Install Vite+ 1.5.1 or later:
-
-   ```bash
-   curl -fsSL https://vite.plus | bash              # macOS, Linux
-   brew install voidzero-dev/vite-plus/vp           # Homebrew
-   irm https://vite.plus/ps1 | iex                  # Windows PowerShell
-   ```
+1. Install Vite+ 1.5.1 or later. The install commands are in [Install and choose the environment](/sdk/api/cli-reference#install-and-choose-the-environment).
 
 2. Check the version:
 
@@ -72,17 +66,7 @@ mint migrate
 
 Run the global 1.6 `mint` from step 4 of [Before upgrading](#before-upgrading): a 1.5 SDK in `uv.lock` has no `migrate` command, so `uv run mint migrate` fails before the SDK update. `--dry-run` writes nothing and does not need `vp`. A dirty git tree stops the command; `--force` overrides that check. A second run changes nothing.
 
-The command makes these changes:
-
-- `frontend/package.json`: the `packageManager` field (`pnpm@…`), `vp` in place of the `vite` and `vitest` commands of the scripts, the `lint`, `fmt` and `fmt:check` scripts, and the Vite+ dependencies. A `devEngines.packageManager` that names another manager changes to pnpm.
-- `frontend/pnpm-workspace.yaml`, with `minimumReleaseAgeExclude: ['@morscherlab/*']`. pnpm does not install a package version younger than one day by default; the entry lets pnpm lock a new frontend SDK on the day that uv locks the new `mint-sdk`.
-- `frontend/vite.config.ts` imports `defineConfig` from `vite-plus`.
-- `bun.lock` or `package-lock.json` is removed. `pnpm-lock.yaml` is written.
-- The CI steps that `mint init` generated: `Setup Bun` becomes `voidzero-dev/setup-vp`, and the `bun install` and `bun run` frontend step becomes `vp` commands.
-- The `mint lint` setup: ruff in the dev dependency group, the frontend `lint` script `uv run mint -C .. lint`, `uv run mint lint` in place of each `uv run ruff check .` line of the workflows, and a `## Lint` section in each agent instructions file.
-- After the install, it locks the frontend SDK release that `uv.lock` holds for `mint-sdk` (`vp add -E`) and runs the "SDK version alignment" check of `mint doctor`.
-- It formats the sources with `vp fmt` until `fmt:check` passes (at most 3 passes), then runs type-check, test, lint, fmt:check and build with `vp run`.
-- It runs `mint lint` on the whole project. When `mint lint` reports findings, it writes them to `mint-lint-baseline.json`.
+The command moves `frontend/` to pnpm and Vite+, rewrites the CI steps that `mint init` generated, adds the `mint lint` setup, locks the frontend SDK release that `uv.lock` holds, formats the sources and runs the frontend scripts. When `mint lint` reports findings, it writes them to `mint-lint-baseline.json`. The full list of changes is in [`mint migrate`](/sdk/api/cli-reference#mint-migrate).
 
 Until every step passes, the old lockfile and the old `node_modules` wait in `.frontend-before-mint-migrate/` next to the frontend. A failed step, other than lint, restores every file. After a hard stop, the next run stops, lists what that directory holds and gives the steps to go back.
 
@@ -122,19 +106,7 @@ uv run mint doctor --strict
 uv run mint lint
 ```
 
-The 1.6 `mint doctor` has these new checks:
-
-| Check | Result | Counts for `--strict` |
-|---|---|---|
-| Released revisions | Error when a file of the `Metadata.database` migration package of the latest git tag changed or is gone in the working tree | Yes (error) |
-| Frontend chart dependency | Warning when the plugin renders an SDK chart component and does not declare `plotly.js-dist-min` | Yes |
-| Deprecated SDK APIs | Warning for each import of a deprecated frontend SDK export, with the replacement | Yes |
-| Global vp | Error when `vp` is missing, prints no version or is older than 1.5.1. Warning when the global `vp` and the locked `vite-plus` differ | Error yes, version warning no |
-| Package manager | Shows the manager that `vp` runs and the evidence. "not migrated" warning for bun, npm or no `vite-plus` | "not migrated" no; a conflict between the declared field and the lockfile, or two lockfiles, yes |
-| Lockfile tracking | Warning when `uv.lock` is git-ignored while `pnpm-lock.yaml` is tracked | No |
-| Design rules | Runs the design rules of `mint lint` and warns with the count of new findings | Yes |
-| Panels | Warning for a removed panel id of the latest tag, panel `experiment_types` outside `Metadata.experiment_types`, and an `experiment.design` panel without `"design"` in `writes` | Yes |
-| Analysis launch offer | Hint to set `analysis_offer = False` for an analysis plugin with no page, no frontend and no `@job` | No |
+The 1.6 `mint doctor` adds the checks "Released revisions", "Frontend chart dependency", "Deprecated SDK APIs", "Frontend SDK registration", "Global vp", "Package manager", "Lockfile tracking", "Design rules", "Panels", "MCP skills" and the hint "Analysis launch offer". Each check and the warnings that `--strict` does not count are in [`mint doctor`](/sdk/api/cli-reference#mint-doctor).
 
 `mint lint` runs three parts: the MINT design rules, ruff and oxlint, each with the SDK preset. It exits 1 on a new finding. Work with the baseline:
 
@@ -144,7 +116,7 @@ The 1.6 `mint doctor` has these new checks:
 4. After you fix accepted findings, run `mint lint --write-baseline`, so no stale entry stays.
 5. For an exception, add the comment `mint-lint-ignore <rule>: <reason>` above the line.
 
-The design rules include the layout rules `workspace-sidebar`, `experiment-field`, `nested-card`, `one-primary-action` and `wizard-in-modal`, and design-system rules such as `button-order`, `destructive-variant`, `sentence-case` and `font-size-token`. The full rule list and the configuration are in [`mint lint`](/sdk/api/cli-reference#mint-lint).
+The rule list, the flags and the configuration are in [`mint lint`](/sdk/api/cli-reference#mint-lint).
 
 ## Released revisions
 
@@ -159,13 +131,13 @@ These changes apply after the plugin moves `@morscherlab/mint-sdk` to 1.6. Detai
 | Change | Action |
 |---|---|
 | `axios` is not a dependency of the SDK | A plugin that imports `axios` adds it to `frontend/package.json` (`vp add axios`). `useApi().client` is not an axios instance |
-| `useApi` and 19 types are deprecated | Use the generated `useClient()` for plugin routes and `useExperimentNumber` for experiment numbers. They keep working; MINT 2.0 removes them. `mint doctor --strict` fails on each import |
+| `useApi` and 21 types are deprecated | Use the generated `useClient()` for plugin routes and `useExperimentNumber` for experiment numbers. They keep working; MINT 2.0 removes them. `mint doctor --strict` fails on each import |
 | Charts | A plugin that renders `PlotlyChart`, `PanelSections` or a generated result view declares `plotly.js-dist-min`: run `vp add plotly.js-dist-min` in `frontend/` |
 | Lazy form fields | `FormBuilder`, `SettingsModal` and the generated UI load the `path`, `file`, `molecule`, `formula` and `sequence` fields on first use. A test that finds one of these fields right after mount calls `beforeAll(() => preloadFormFieldTypes())` (from `@morscherlab/mint-sdk/runtime`) |
 | Type scale | Every SDK font size is a `--font-size-*` token. Medium controls are 13px. The `mint lint` rule `font-size-token` reports literal font sizes in plugin CSS |
 | Frames | Content components such as `MetadataSheet`, `ChartContainer` and `PlateEditor` draw no box of their own. Wrap one that sits straight on a page in a `SectionCard` |
 | `BaseButton` | An icon beside a label is 2px smaller. Move an icon from the default slot to `#icon-left` or `#icon-right` |
-| `PluginWorkspaceView` | The main pane is one card. Remove an `AppContainer` around `<router-view />`. Set `main: 'plain'` for a full-bleed view |
+| `PluginWorkspaceView` | `spec.main` defaults to `'plain'`, so the slot renders as it is. Remove an `AppContainer` around `<router-view />`. Set `main: 'card'` to stack `SectionCard`s in one scrolling card |
 | Browsers | The supported browsers are Chrome 116, Edge 116, Firefox 124 and Safari 17.4, or newer |
 
 ## New plugin APIs

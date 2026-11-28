@@ -179,7 +179,7 @@ A plugin declares the plugins that it reads in `reads_from`. The entry `"*"` mea
 
 ## MCP skills and tasks
 
-From MINT 1.6, the `/mcp` endpoint serves skills and tasks to AI clients. There is no setting for them. How users see them: [Skills](/guide/ai-and-api#skills) and [Jobs as background tasks](/guide/ai-and-api#jobs-as-background-tasks).
+The `/mcp` endpoint serves skills and tasks to AI clients. There is no setting for them. How users see them: [Skills](/guide/ai-and-api#skills) and [Jobs as background tasks](/guide/ai-and-api#jobs-as-background-tasks).
 
 **Skills.** MINT serves two platform skills and the skills of every enabled plugin. There is no switch per plugin. A plugin skill is text that the AI assistant reads as instructions, so install only plugins that you trust, as for their MCP tools.
 

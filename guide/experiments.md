@@ -169,7 +169,7 @@ Write actions are still gated by system permissions such as `experiments.edit` a
 | **Collaborator** (default) | Can see the experiment even if they are not a project member. Edits still need `experiments.edit`. |
 | **Owner** | Set for the creator. Can manage collaborators, change the design data, and delete the experiment; MINT keeps at least one owner. |
 
-The **Team** card marks only the owners. Collaborators that older versions stored as Viewer, Editor, or Admin act as collaborators.
+The **Team** card marks only the owners. Collaborators that older versions stored as Viewer, Editor, or Admin act as collaborators. `POST /api/experiments/{id}/collaborators` accepts only the roles `owner` and `collaborator` (the default). Another `role`, such as `viewer`, `editor` or `admin`, gets 422 `validation.request`.
 
 Collaborators are stored on the experiment itself (in `collaborators`), not on the project. They survive even if the user is later removed from the project. See [Users & roles](/admin/users-roles) for the underlying roles.
 
