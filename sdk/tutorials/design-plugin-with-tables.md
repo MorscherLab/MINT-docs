@@ -11,7 +11,7 @@ mint init panel-designer --name "Panel Designer" \
   --description "Reusable drug panels and experiment designs" \
   --mode standard --type experiment-design --yes
 cd panel-designer
-uv add 'mint-sdk[local-db]>=1.4.0,<2.0'
+uv add 'mint-sdk[local-db]>=@MINT_VERSION@,<2.0'
 ```
 
 The `local-db` extra of the SDK supplies compatible SQLModel, SQLAlchemy, aiosqlite, greenlet and Alembic versions. Keep the package metadata, the `mint.plugins` entry point, the frontend and the packaging files of the scaffold. The examples use `src/mint_plugin_panel_designer/`; use the package path of your scaffold if it is different.
@@ -85,6 +85,7 @@ class PanelOutput(PanelInput):
 class PanelDesignerMeta(Metadata):
     domain = "drug-response"
     title = "Panel Designer"
+    icon = "M4 4h16v16H4zM4 10h16M10 4v16"
     writes = {"experiments", "design"}
     design = Design(version="1.0")
     database = MigrationSpec(
