@@ -6,35 +6,36 @@ This page tells administrators how to use the lab-wide settings in **Admin -> La
 |---------|------------|-----|
 | **Experiment types** | `platform.configure` | Create and edit the types for new experiments |
 | **Notices** | `notices.publish` | Post announcements on the home page notice board |
-| **Configuration** | `platform.configure` | Edit platform settings, including notification delivery |
+| **Configuration** | `platform.configure` | Edit platform settings |
+| **Notifications** | `platform.configure` | Set up email, Teams, Slack and Apple Push delivery |
 | **Access tokens** | `users.manage` | List and revoke the personal access tokens of every user. See [Personal access tokens](/admin/authentication#personal-access-tokens) |
 | **Service tokens** | `users.manage` and `instruments.edit` | Issue and revoke tokens for instrument daemons. See [Service tokens](/admin/authentication#service-tokens) |
 | **Server** | `platform.configure` | Check versions, the database, caches and plugin processes |
 | **Terminal** | `platform.configure` | Run commands in the server environment. Off by default. See [Admin terminal](/reference/permissions#admin-terminal) |
 | **Logs** | `platform.view_logs` | Read and filter the platform log |
 
-> [Screenshot: Admin navigation rail with the People & access, Plugins, Lab content and System groups expanded]
+![Admin navigation rail with the People & access, Plugins, Lab content and System groups](/screenshots/admin/platform-settings-admin-rail.webp)
 
 ## Experiment types
 
 The **Type** list of the new-experiment form shows only these types. Plugins do not create them. Create a type before users need it.
 
 1. Open **Admin -> Lab content -> Experiment types**.
-2. Add a type with the fields below.
-3. Save the type.
+2. Fill in the **New type** form with the fields below.
+3. Click **Create type**.
 
 | Field | Rules |
 |-------|-------|
-| **Value** | The slug in codes and URLs. Lowercase letters, digits and underscores, starting with a letter, up to 50 characters. You cannot change it later |
 | **Label** | Display name, up to 100 characters |
+| **Slug** | The value in codes and URLs. MINT fills it from the label. Lowercase letters, digits and underscores, starting with a letter, up to 50 characters. You cannot change it later |
 | **Description** | Optional |
-| **Color** | Optional `#RRGGBB` |
-| **Sort order** | Lower numbers appear first |
-| **Active** | The new-experiment form hides inactive types |
+| **Colour** | Optional. Click one of the preset colours |
+| **Sort** | Lower numbers appear first. A new type goes after the last type. Change it with the pencil button of the row |
+| **Active** | The switch in the row. The new-experiment form hides inactive types |
 
-> [Screenshot: Admin -> Lab content -> Experiment types with the add-type form open]
+![Experiment types list with the New type form filled in for a Lipidomics type](/screenshots/admin/platform-settings-experiment-types.webp)
 
-The value sets the prefix of the experiment code:
+The slug sets the prefix of the experiment code:
 
 - A slug with underscores uses the first letter of each word: `dose_response` → `DR-EXP-001`.
 - A slug of up to three characters stays as it is: `drp` → `DRP-EXP-001`.
@@ -53,11 +54,11 @@ Notices appear on the home page notice board for every signed-in user. In **Admi
 | **Pinned** | Keeps the notice at the top |
 | **Expires** | Optional date after which MINT hides the notice |
 
-> [Screenshot: home page notice board with one pinned notice]
+![Home page with the notice board showing one pinned notice](/screenshots/admin/platform-settings-notice-board.webp)
 
 ## Notifications
 
-Plugins publish events, and MINT delivers them. Configure delivery in **Admin -> System -> Configuration** under the notification settings:
+Plugins publish events, and MINT delivers them. Configure delivery in **Admin -> System -> Notifications**:
 
 | Channel | Settings |
 |---------|----------|
@@ -66,11 +67,13 @@ Plugins publish events, and MINT delivers them. Configure delivery in **Admin ->
 | **Slack** | Named channels, each with an incoming webhook URL. See [Teams and Slack channels](#teams-and-slack-channels) |
 | **Apple Push** | See [Push notifications](#push-notifications) |
 
-Each channel has a test action. The deliveries table lists recent sends by channel, plugin, event and attempts. You can retry a failed delivery.
+Each channel has a test action: **Test SMTP connection** for email, **Test** in each Teams or Slack channel row, and **Send test push** for Apple Push. The **Failed deliveries** table lists the failed sends by channel, plugin, event, attempts and last attempt. To send one again, click the retry button in its row.
 
 Email for important events goes to the owner of the event and to every active user whose role has `notifications.receive_important`. A plugin can also name a recipient with `owner_user_id`. That active user then also gets the event by email and push.
 
-> [Screenshot: notification settings with SMTP on and the deliveries table with one failed delivery]
+![SMTP email settings with email delivery on and a successful connection test](/screenshots/admin/platform-settings-smtp.webp)
+
+![Failed deliveries table with one failed email delivery and its retry button](/screenshots/admin/platform-settings-failed-deliveries.webp)
 
 ### Teams and Slack channels
 
@@ -85,7 +88,7 @@ In **Admin -> System -> Notifications**, use the **Teams channels** and **Slack 
 5. To replace a webhook URL, edit the channel and click **Save URL**.
 6. To delete a channel, click **Remove**. You can remove the default channel only when it is the last channel. Otherwise, set another default first (409 `notification_channel.default_in_use`).
 
-> [Screenshot: Admin -> System -> Notifications with two Teams channels, one marked as default, and the Add channel form]
+![Teams channels with lab-alerts as the default channel, ms-facility, and the Add channel form](/screenshots/admin/platform-settings-teams-channels.webp)
 
 A removed channel fails its pending deliveries with `channel_removed`. MINT does not retry them.
 
@@ -111,7 +114,7 @@ MINT sends push notifications to the MINT iOS app through Apple Push (APNs). For
 
 To set up Apple Push:
 
-1. Open **Admin -> System -> Configuration -> Notifications -> Apple Push** (needs `platform.configure`).
+1. Open **Admin -> System -> Notifications -> Apple Push** (needs `platform.configure`).
 2. Choose the transport and fill in its settings (see the table below).
 3. Click **Send test push**. MINT sends a push to your own devices and shows the answer of Apple or the relay, for example `APNs returned HTTP 403 InvalidProviderToken`. The platform log records it too.
 
@@ -143,9 +146,15 @@ A feed URL works without sign-in, so keep it secret. If it leaks, rotate it in t
 
 ## Server health
 
-**Admin -> System -> Server** shows the platform version, the database, caches, background operations, and the **Plugin processes** card.
+**Admin -> System -> Server** has these cards:
 
-> [Screenshot: Admin -> System -> Server with the version, database status and the Plugin processes card]
+- **Resources**: CPU, memory and disk of the host, the platform version, the uptime, the number of installed plugins and the authentication state.
+- **Database**: the database engine and the connection pool in use.
+- **Plugin processes**: plugins that run in their own process on a separate port.
+- **Background activity**: background operations and the state of each background task.
+- **Server actions**: the current sessions and jobs, and **Restart server**.
+
+![Server section with the Database, Plugin processes and Background activity cards](/screenshots/admin/platform-settings-server.webp)
 
 For monitoring, MINT has two endpoints:
 

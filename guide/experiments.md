@@ -2,7 +2,7 @@
 
 An experiment is the central unit of work in MINT. This page tells you how to create, fill in, analyze, share and delete experiments.
 
-> [Screenshot: experiment detail page with the header, the Design data card, the Analysis artifacts card and the metadata rail]
+![Experiment detail page with the header and status stepper, the Design data card, the Analysis artifacts card with a stale artifact, and the metadata rail](/screenshots/guide/experiments-detail-page.webp)
 
 ## Anatomy
 
@@ -39,7 +39,7 @@ On a project page, the form starts with that project selected and its members in
 
 The new experiment starts in `planned` status and has no number. The design plugin of the type writes the design data later. See [Fill in the design](#fill-in-the-design).
 
-> [Screenshot: New experiment form with the name, type, notes, project and team fields]
+![New experiment form with name, type, dates and notes on the left, and project, derived from, tags and team on the right](/screenshots/guide/experiments-new-form.webp)
 
 ## Experiment numbers
 
@@ -76,7 +76,7 @@ Rules for an assigned number:
 
 MINT itself checks only the `cancelled` rules. Plugins can be stricter. Many plugins write results only on `ongoing` or `completed` experiments. Some plugins require `completed` before they publish results.
 
-> [Screenshot: experiment header with the status stepper on ongoing and the Cancel action in its menu]
+![Experiment header with the status stepper on Ongoing, and the Edit and Cancel experiment buttons](/screenshots/guide/experiments-status-header.webp)
 
 ## Plugin interaction
 
@@ -90,11 +90,11 @@ The experiment detail page shows the design, the analysis outputs and the metada
 
 | Region | Use it to |
 |--------|-----------|
-| Header | Read the code and name, or assign the number. Change the status, edit metadata, cancel or reactivate. **Open in &lt;plugin&gt;** shows when the design plugin has a page. With realtime updates, avatars show who else has the experiment open; see [Work together live](#work-together-live). |
+| Header | Read the code and name, or assign the number. Change the status, edit metadata, cancel or reactivate. **Open in &lt;plugin&gt;** shows when the design plugin has a page and the experiment has no design data yet. With realtime updates, avatars show who else has the experiment open; see [Work together live](#work-together-live). |
 | Design data | Read the design as grouped fields and sample rows, or fill in the form of a live design plugin. Export JSON or CSV when there is design data. Plugin tabs can follow the **Design** tab; see [Plugin tabs](#plugin-tabs). |
 | Analysis artifacts | Read the outputs, grouped by plugin. An experiment without outputs shows the analysis plugins that can run next, and why the other plugins cannot. Plugin tabs can follow the **Artifacts** tab. |
 | Instrument records | Read the instrument history rows that name this experiment, for example finished samples. You need `instruments.view`. See [Instruments -> History](/guide/instruments#history). |
-| Metadata rail | Read the type, project, timeline, creator, data lineage, collaborators and tags. Delete the experiment. |
+| Metadata rail | Read the type, project, timeline, creator, data lineage, team and tags. Delete the experiment. |
 
 When your role cannot see the design plugin, the **Design data** card shows **Design data not shown** and does not name the plugin.
 
@@ -112,11 +112,11 @@ A plugin can offer both. To use the form:
 3. Fill in the fields marked **Required**. The header shows **N required left** until all have a value. You can save one field before the others.
 4. If MINT refuses a value, the field keeps it and shows the reason. Correct the value, or click **Discard** to show the stored value.
 
-While another person edits a field, the field shows their avatar and is read-only for you. It unlocks when their value is stored. Other people can edit other fields at the same time. Each field keeps the last saved value.
+While another person has the cursor in a field, the field shows their avatar and is read-only for you. It unlocks when their value is stored. Other people can edit other fields at the same time. Each field keeps the last saved value.
 
 You can edit the form when you own the experiment and your role has `experiments.edit` and `plugins.use`. Admins can also edit it. Other users see the form read-only (**View only**).
 
-> [Screenshot: Design data card with a live design form, the save state in the header, and a field locked by another user's avatar]
+![Design data card with a live Cell seeding form, Saved in the card header, and the Cell line field locked with the avatar of another user](/screenshots/guide/experiments-live-design-lock.webp)
 
 ### Choose a design plugin
 
@@ -128,7 +128,7 @@ When the experiment has no design data and two or more design plugins accept its
 
 To choose again, click **Clear design data** in the card menu. The list comes back. Other users see the first plugin by display name.
 
-> [Screenshot: Design data card with "No design yet" and two plugin rows with Open and Start]
+![Design data card with No design yet and one row for each design plugin, with Start for a form on the page and Open for a plugin page](/screenshots/guide/experiments-choose-design-plugin.webp)
 
 ### Plugin tabs
 
@@ -143,7 +143,7 @@ A tab can have action buttons that start a plugin job for the experiment. The bu
 
 A plugin that shows its results only in tabs is not offered as an analysis to start. When no plugin can start, the **Analysis artifacts** card says "No analysis to start here. Plugin results are in the tabs above."
 
-> [Screenshot: Analysis artifacts card with the Artifacts tab, two plugin tabs, a refresh button, and an action button on the selected tab]
+![Analysis artifacts card with the Artifacts tab, the QC scores plugin tab selected, the refresh button at the end of the tab bar, and the Score plate action button](/screenshots/guide/experiments-analysis-tabs.webp)
 
 ### Artifacts
 
@@ -197,7 +197,7 @@ The **Experiments** page lists every experiment you can see. Use **Table** and *
 
 On a project page, the rollup chips filter by design data. See [Projects -> Project page](/guide/projects#project-page).
 
-> [Screenshot: Experiments page in Table layout with the ongoing status chip, one type and the Mine chip selected]
+![Experiments page in Table layout with the Ongoing status chip, the Isotope tracing type and the Mine chip selected](/screenshots/guide/experiments-list-filters.webp)
 
 ## Edit an experiment and resolve conflicts
 

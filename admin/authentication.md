@@ -4,7 +4,7 @@ This page tells administrators how to configure sign-in, the second factor, toke
 
 MINT has three sign-in methods: a username or email with a password, a WebAuthn passkey, and SWITCH edu-ID single sign-on. By default, a password or edu-ID sign-in needs a [second factor](#second-factor): a passkey or a code from an authenticator app (TOTP).
 
-> [Screenshot: login page with the password form, the SWITCH edu-ID button and the Continue with Passkey button]
+![Sign-in form with the Continue with passkey button, the SWITCH edu-ID button and the password fields](/screenshots/admin/authentication-login.webp)
 
 | Method | The user remembers | The server stores | Cross-device |
 |--------|--------------------|-------------------|--------------|
@@ -63,9 +63,11 @@ A new `auth.jwtSecretKey` makes every active session invalid. Every user is sign
 
 Passkeys are on by default (`auth.enablePasskey`). A user registers one or more authenticators in **Your account -> Security** after sign-in.
 
-> [Screenshot: Your account -> Security with two registered passkeys, each with a device name and a creation date]
+![Your account dialog on the Security tab with two passkeys, the authenticator app and the SWITCH edu-ID link](/screenshots/admin/authentication-passkeys.webp)
 
-The login page shows **Continue with Passkey** when the server has at least one passkey and the browser supports WebAuthn. A deactivated account cannot sign in with a passkey.
+The list shows each passkey as **Passkey** with the time it was added. The UI does not ask for a device name.
+
+The login page shows **Continue with passkey** when the server has at least one passkey and the browser supports WebAuthn. A deactivated account cannot sign in with a passkey.
 
 MINT takes the passkey relying-party ID and origin from:
 
@@ -76,7 +78,7 @@ Set `server.rpId` to your public host name in production. A passkey is bound to 
 
 ## Second factor
 
-`auth.requireSecondFactor` (default `true`, env `MINT_AUTH__REQUIRE_SECOND_FACTOR`) adds a second step after a password or edu-ID sign-in. Change it in **Admin -> System -> Configuration -> Authentication -> Second factor**. A direct **Continue with Passkey** sign-in already proves two factors and stays one step.
+`auth.requireSecondFactor` (default `true`, env `MINT_AUTH__REQUIRE_SECOND_FACTOR`) adds a second step after a password or edu-ID sign-in. Change it in **Admin -> System -> Configuration -> Authentication -> Second factor**. A direct **Continue with passkey** sign-in already proves two factors and stays one step.
 
 MINT enforces the second factor only when all of these conditions are true:
 
@@ -187,7 +189,7 @@ Users create personal access tokens for scripts, the `mint` CLI (`MINT_TOKEN`) a
 
 **Admin -> People & access -> Access tokens** (needs `users.manage`) lists the unrevoked tokens of every user. Click **Revoke** to end one. The API routes are `GET /api/admin/tokens` and `DELETE /api/admin/tokens/{id}`. The audit log records `api_token.create` and `api_token.revoke`.
 
-> [Screenshot: Admin -> People & access -> Access tokens with tokens of three users and a Revoke button in each row]
+![Admin access tokens list with tokens of three users, each with a Revoke button](/screenshots/admin/authentication-access-tokens.webp)
 
 If an account is compromised, deactivate it. MINT refuses the sessions and tokens of an inactive account. Revoke its tokens before you activate it again.
 
@@ -209,7 +211,7 @@ To create a service token:
 | **Instruments** | One or more of the instruments granted to that plugin |
 | **Expires** | 90 days, 365 days or Never (default) |
 
-> [Screenshot: New service token dialog with a plugin selected and two instruments checked]
+![New service token dialog with the instrument-demo plugin and two instruments selected](/screenshots/admin/authentication-service-token-dialog.webp)
 
 | Property | Behavior |
 |----------|----------|

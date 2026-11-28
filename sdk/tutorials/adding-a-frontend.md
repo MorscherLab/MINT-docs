@@ -20,6 +20,7 @@ The scaffold creates backend and frontend files:
 
 ```text
 hello-standard/
+├── hatch_build.py            # Refuses a wheel without frontend/dist
 ├── pyproject.toml
 ├── src/
 │   └── mint_plugin_hello_standard/
@@ -424,9 +425,9 @@ Backend   http://127.0.0.1:8003/api/hello-standard
 Frontend  http://localhost:5175/hello-standard/
 ```
 
-Open the frontend URL and submit the form in the sidebar. The Vite dev server proxies `/api` to the backend URL that `mint dev` passes in `MINT_DEV_BACKEND_URL`.
+Open the frontend URL, enter a number in **Value** and click **Run**. The **Result** card shows the calculation, for example `2.5 × 2 = 5`. The Vite dev server proxies `/api` to the backend URL that `mint dev` passes in `MINT_DEV_BACKEND_URL`.
 
-> [Screenshot: hello-standard workspace with the Value field in the Parameters sidebar and the Result card in the main area]
+![hello-standard workspace with the Value field in the Parameters sidebar and the Result card in the main area](/screenshots/sdk/adding-a-frontend-workspace.webp)
 
 Keep the `resolve.alias` and `resolve.dedupe` entries for Vue and Pinia in the scaffold, so that the SDK and the plugin use the same runtime instances. Keep the Vite `base: '/hello-standard/'` equal to the plugin route prefix, so that the built assets resolve after install. Add a route to `main.ts` for each further page of the workspace.
 

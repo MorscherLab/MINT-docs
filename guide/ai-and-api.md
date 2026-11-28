@@ -11,21 +11,21 @@ A token can do what your account can do, and no more. Keep it as secret as a pas
 
 The section shows the MCP URL of this MINT server, for example `https://mint.example.org/mcp`, with a **Copy** button. Below it is the table of your **Access tokens**.
 
-> [Screenshot: Your account modal with the AI & API section: MCP URL and the Access tokens table]
+![Your account modal with the AI & API section: the MCP URL with Copy, the New token button and the Access tokens table](/screenshots/guide/ai-and-api-account-section.webp)
 
 ## Create a token
 
 1. In **AI & API**, click **New token**.
 2. Enter a **Name** that tells where you use the token, for example "Claude Code on my laptop".
 3. Choose **Expires in**: 30, 90, or 365 days. The default is 90 days. If your admin set a maximum lifetime, longer options are disabled.
-4. Optional: switch on **Read-only**. A read-only token can read data. It cannot create, change or delete data.
+4. Optional: select **Read-only**. A read-only token can read data. It cannot create, change or delete data.
 5. Click **Create token**.
 6. Copy the token, which starts with `mint_pat_`, or copy the **Add to Claude Code** command.
 7. Click **Done**.
 
 MINT shows the secret only once. MINT stores only a fingerprint, so nobody can see the secret again. If you lose it, revoke the token and create a new one.
 
-> [Screenshot: New token dialog, step 2 Copy, with the secret and the Add to Claude Code command]
+![New token dialog at step 2 Copy, with the token secret and the Add to Claude Code command, each with a Copy button](/screenshots/guide/ai-and-api-new-token-copy.webp)
 
 ## Connect Claude Code
 

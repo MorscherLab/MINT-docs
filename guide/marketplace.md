@@ -10,20 +10,20 @@ An entry marked `source.private` shows only when the server has a GitHub token f
 
 The **Registry** catalog lists only registry plugins. A plugin installed outside the registry shows only under **Installed**.
 
-MINT keeps a cache of the registry in memory and under `server.dataPath/marketplace/`. When the registry is not available, the catalog uses the cache and marks the response as cached. To fetch the registry again, click **Refresh** in the **Registry** section. You need `plugins.configure`.
+MINT keeps a cache of the registry in memory and under `server.dataPath/marketplace/`. When the registry is not available, the catalog uses the cache and the **Registry** section shows a warning. To fetch the registry again, click **Refresh** in the warning. You need `plugins.configure`.
 
 ## Browse plugins
 
 1. Open **Admin -> Plugins -> Registry**.
-2. Select a type in the **Filter plugins** list, or **Installed** or **Updates**. Each item shows a count.
+2. Select a type in the filter list, or **Installed** or **Updates**. **Installed** and **Updates** show a count when it is not zero.
 3. Optional: type in **Search**.
 4. Click a card to open its details.
 
 To see the **Registry** section, you need `plugins.view` and `plugins.configure` or `plugins.install`. The Member role does not have these; see [Users & roles -> Plugin access levels](/admin/users-roles#plugin-access-levels).
 
-A card shows the name, type, latest version, tags, author and a one-line summary. The details show the GitHub repository, the documentation link, the license, the type and the **Min Platform** version. If the plugin needs a newer MINT version, the card shows **Incompatible** and the install and update buttons are disabled.
+A card shows the name, the author, the latest version, a one-line summary and up to three tags. An **Installed** or **Update** badge follows the name. The details show the GitHub repository, the documentation link, the license, the type and the **Min Platform** version. If the plugin needs a newer MINT version, the card shows **Incompatible** and the install and update buttons are disabled.
 
-> [Screenshot: Admin -> Plugins -> Registry with the Filter plugins list, plugin cards with Installed and Update badges, and the Refresh button]
+![Admin, Plugins, Registry with the plugin type filter, the search field, and plugin cards with an Update badge, Install buttons and one Incompatible plugin](/screenshots/guide/marketplace-registry.webp)
 
 ## Install
 

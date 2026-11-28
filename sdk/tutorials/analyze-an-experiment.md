@@ -50,7 +50,6 @@ Replace `src/mint_plugin_panel_summary/plugin.py`:
 
 ```python
 from fastapi import HTTPException
-
 from mint_sdk import (
     CurrentActor,
     CurrentExperiment,
@@ -60,6 +59,7 @@ from mint_sdk import (
     job,
     plugin,
 )
+
 from mint_plugin_panel_summary.summary import summarize_panel
 
 
@@ -136,7 +136,8 @@ def test_summarize_panel_rejects_designs_without_a_panel() -> None:
 
 def test_generated_job_still_runs() -> None:
     with Harness(PanelSummaryPlugin) as harness:
-        assert harness.run(PanelSummaryPlugin.analyze, value=2.5).value == {"input": 2.5, "doubled": 5.0}
+        run = harness.run(PanelSummaryPlugin.analyze, value=2.5)
+    assert run.value == {"input": 2.5, "doubled": 5.0}
 
 
 def test_summary_route_requires_the_platform() -> None:
@@ -150,6 +151,7 @@ Standalone mode has no platform context, so `CurrentExperiment` returns 503. Tes
 ```bash
 uv run pytest -q
 mint doctor --strict
+uv run mint lint
 ```
 
 ## 5. Verify and deploy
@@ -158,7 +160,7 @@ Test the bundle in a disposable platform with `mint verify`, then install it on 
 
 On the test platform:
 
-1. Allow this plugin to use the experiment type that panel-designer creates.
+1. Make sure that this plugin may use the type of the target experiment. By default a plugin may use every type. If an admin limited the experiment types of this plugin, add the type in its access control.
 2. Publish a panel to an experiment with panel-designer ([Tutorial 3](/sdk/tutorials/design-plugin-with-tables)).
 3. Call the route as a user with `experiments.edit`:
 
@@ -167,11 +169,11 @@ curl -X POST https://mint-test.example.org/api/panel-summary/experiments/<experi
   -H "Authorization: Bearer <token>"
 ```
 
-4. Open the experiment page. Check that a **Panel summary** artifact shows under Panel Summary.
+4. Open the experiment page. Check that a **Panel summary** artifact shows on the **Artifacts** tab of the **Analysis artifacts** card, under **Panel Summary**.
 5. Call the route as a user without `experiments.edit`. Expect 403.
 6. Call the route with an experiment that the user cannot see. Expect 404.
 
-> [Screenshot: experiment page showing the Panel summary artifact grouped under the Panel Summary plugin]
+![Experiment page with the Panel summary artifact under the Panel Summary plugin on the Artifacts tab of the Analysis artifacts card](/screenshots/sdk/analyze-an-experiment-artifact.webp)
 
 ## Next
 

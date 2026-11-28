@@ -2,13 +2,13 @@
 
 The **Instruments** page shows the live status of the lab's shared equipment, such as mass spectrometers and LC systems. Each instrument has one record for the whole platform, so all plugins use the same names.
 
-> [Screenshot: Instruments page in Table view with filter chips and grouped rows]
+![Instruments page in Table view with the filter chips and the rows grouped under Needs attention, Running and Available](/screenshots/guide/instruments-table-view.webp)
 
 ## Navigate to instruments
 
 **Instruments** in the pill navigation shows when you have `instruments.view`, or when the server has authentication off. A red dot on it means that an active instrument has a critical alert that nobody acknowledged.
 
-> [Screenshot: pill navigation with the red dot on Instruments]
+![Pill navigation with a red dot on Instruments](/screenshots/guide/instruments-nav-red-dot.webp)
 
 ## Check the live status
 
@@ -19,13 +19,13 @@ The **Instruments** page shows the live status of the lab's shared equipment, su
 
 The page groups the instruments in this order: **Needs attention** (errors and offline instruments), **Running**, **Available**, **Not reporting yet**, and **Inactive**. Running instruments are sorted by ETA.
 
-In **Table** view, each row shows the state, the instrument, the current run, the progress, the ETA and the last report. In **Cards** view, each instrument is a tile with the same data. Use the **Table** and **Cards** buttons to switch. Your browser keeps your choice.
+In **Table** view, each row shows the state, the instrument, the current run, the progress, the ETA and the last report. In **Cards** view, each instrument is a tile with the same data. Use the **Table** and **Cards** icon buttons at the top right to switch. Your browser keeps your choice.
 
 The page refreshes by itself every 15 seconds.
 
 When there are no instruments, the page shows **No instruments yet**. Users with `instruments.edit` see **New instrument**. Other users see a note to ask an instrument editor.
 
-> [Screenshot: Instruments page in Cards view]
+![Instruments page in Cards view, one tile for each instrument](/screenshots/guide/instruments-cards-view.webp)
 
 ## Open one instrument
 
@@ -42,13 +42,13 @@ Click a row or a tile to open the instrument page (`/instruments/<id>`). You nee
 
 If an instrument has no run, the card tells you why: no reports yet, inactive, standby, idle, error, or not reporting.
 
-To acknowledge an alert, click **Acknowledge** next to it. The reporting plugin decides whether you may do this.
+Only a critical alert asks for acknowledgment. Warnings and info alerts are notices. To acknowledge a critical alert, click **Acknowledge** next to it. The reporting plugin decides whether you may do this. The card header counts the open critical alerts and all alerts of the window, for example **1 open · 3 in 3 days**.
 
 ### Alerts and the alert window
 
 An instrument shows as critical only while its newest unacknowledged critical alert is inside the alert window. The default window is 72 hours. When the alert is older than the window, the instrument is no longer critical and the red dot on **Instruments** goes away. The **Alerts** card lists the alerts of the same window. Older alerts stay in the reporting plugin. Your admin sets the window or turns it off; see [Configuration](/admin/configuration#instruments).
 
-> [Screenshot: instrument page with the current run card, the time-per-injection strip, and the Alerts card]
+![Instrument page with the Current run card, the time-per-injection strip, the Live data panel and the Alerts card](/screenshots/guide/instruments-instrument-page.webp)
 
 ## History
 
@@ -106,7 +106,7 @@ The instrument leaves the default list and the Home card. It stays under **Show 
 
 The **Instruments** card on [Home](/guide/ui-tour#home-dashboard) lists errors and offline instruments first, then running instruments by ETA. It shows at most five rows, but always every instrument that needs attention. A line such as **3 more** counts the rest. Click a row to open that instrument, or **All** to open the Instruments page.
 
-> [Screenshot: Home with the Instruments card at the top of the left column]
+![Home with the Instruments card at the top of the left column](/screenshots/guide/instruments-home-card.webp)
 
 ## Push notifications
 

@@ -2,7 +2,7 @@
 
 This page shows where each control is. Use it when you cannot find a setting or a workflow.
 
-> [Screenshot: home page with the top action bar, the status strip, the Experiments and Projects cards, the Plugins launcher and the open account menu labeled]
+![Home page with the top action bar, the status strip, the Instruments, Experiments, Projects and Plugins cards, and the open account menu](/screenshots/guide/ui-tour-home-account-menu.webp)
 
 ## Top action bar
 
@@ -30,7 +30,7 @@ MINT has two short tours and a checklist for new users. MINT keeps their state p
 - Getting started: the checklist has two tasks, **Create an experiment** and **Create a project**. A task shows only when your role may do it. MINT marks a task done when you create the record. If you already own an experiment or belong to a project, the task is done at once. The **Open** link beside a task goes to the right page.
 - Help button: click it to open the checklist, play a tour again, read **What's new**, or hide or show the **Getting started** chip. The chip goes away when all tasks are done.
 
-> [Screenshot: Help panel with the Getting started checklist and the list of tours]
+![Help panel with the completed Getting started checklist and the list of tours](/screenshots/guide/ui-tour-help-panel.webp)
 
 ## Appearance
 
@@ -44,7 +44,7 @@ Click **Settings** on the home page. The **Appearance** tab has three settings. 
 
 The settings apply to all platform pages and plugin pages. Other pages have only the theme toggle.
 
-> [Screenshot: Settings window on the Appearance tab with the theme, color palette and density options and the preview]
+![Settings window on the Appearance tab with the theme, color palette and density options](/screenshots/guide/ui-tour-settings-appearance.webp)
 
 ## Jobs tray
 
@@ -65,7 +65,7 @@ Click the control to open the tray under the top bar. The tray lists your jobs i
 
 A plugin can make the tray ask for confirmation before **Cancel**, **Delete** and **Clear**. Press Escape to close the tray. The tray shows the jobs of that plugin only. MINT has no platform-wide jobs list.
 
-> [Screenshot: plugin page with the jobs tray open under the top bar]
+![Generated plugin page with the jobs tray open under the top bar, one active job and one finished job](/screenshots/guide/ui-tour-jobs-tray.webp)
 
 ## Send feedback
 
@@ -88,7 +88,7 @@ Admins who can manage notices see a link from the notice board to **Admin -> Lab
 
 A plugin shows under the display name from its author, or under its plugin ID when there is none. The plugin page, the experiment page and the settings list use the same name. In the settings window, the **Plugins** tab under **Platform** lists the installed plugins that you can open.
 
-> [Screenshot: home dashboard with the status strip, the notice board, the Experiments and Projects cards, and the Plugins launcher labeled]
+![Home dashboard with the status strip, the notice board, the Instruments, Experiments and Projects cards, and the Plugins launcher](/screenshots/guide/ui-tour-home-dashboard.webp)
 
 ## Sign-in pages
 
@@ -119,14 +119,14 @@ Open the account menu in the top action bar and choose **Profile**.
 
 | Section | Contains |
 |---------|----------|
-| Profile | First name, last name, short name, email, and the read-only username |
+| Profile | First name, last name, display name (**Display as**), email, and the read-only username |
 | Password | Change your password. See [Access -> Change your password](/guide/access#change-your-password) |
 | Security | Passkeys, the authenticator app and SWITCH edu-ID, when your lab turned them on. See [Access -> Second factor](/guide/access#second-factor) |
 | AI & API | The MCP URL for AI assistants, and your personal access tokens. See [AI Assistants and API Access](/guide/ai-and-api) |
 
 **Log out** is at the bottom of the side rail of the window.
 
-> [Screenshot: Your account modal with Profile, Password, Security, and AI & API sections]
+![Your account window on the Profile section, with the Password, Security and AI & API sections in the side rail](/screenshots/guide/ui-tour-your-account.webp)
 
 ## Admin workspace
 
@@ -152,7 +152,7 @@ Click **Admin** in the top action bar, or go to `/admin`. You see only the secti
 
 The admin navigation rail shows the running version and API health in its footer.
 
-> [Screenshot: Admin workspace showing the People & access, Plugins, Lab content and System groups in the navigation rail]
+![Admin workspace on the Users section, with the People & access, Plugins, Lab content and System groups in the navigation rail](/screenshots/guide/ui-tour-admin-workspace.webp)
 
 ## Plugin views
 

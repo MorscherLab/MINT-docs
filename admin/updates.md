@@ -8,12 +8,12 @@ Before an update, read the [release notes](https://github.com/MorscherLab/MINT/b
 
 **Admin -> System -> Updates** shows platform and plugin updates on one page. The page needs `plugins.view` and `platform.configure` or `plugins.install`. The rail item shows the number of available updates.
 
-> [Screenshot: Admin -> System -> Updates with the status strip, one platform update and two plugin updates in Available updates, and the Update settings card]
+![Updates page after a check with the status strip, Available updates with every plugin current, and the start of the Update settings card](/screenshots/admin/updates-page.webp)
 
 | Part | Contents |
 |------|----------|
 | **Status strip** | The platform version and the newer release, the number of plugins with updates, the schedule, and the time of the last check |
-| **Available updates** | One row for the platform (needs `platform.configure`) and one row for each plugin (needs `plugins.install`). Each row has an **Update platform** or **Update** button. **Update all plugins** applies every plugin update. **Plugin pre-releases** adds plugin pre-releases to the check |
+| **Available updates** | A row for the platform when a newer release exists (needs `platform.configure`), and one row for each plugin (needs `plugins.install`). A row with an update has an **Update platform** or **Update** button; a plugin without an update shows **current**. **Update all plugins** applies every plugin update. **Plugin pre-releases** adds plugin pre-releases to the check |
 | **Update settings** | Schedule, checks and plugin sources. See [Platform updates](#platform-updates) |
 
 The page shows the result of the last check and does not call GitHub. Before the first check, the strip shows **not checked yet**. Click **Check now** to query the update sources. A successful update, manual or scheduled, removes its row at once. The API is `GET /api/updates/status` (`plugins.view`). It returns the last check from memory, with `checkedAt` set to `null` before the first check.
@@ -76,8 +76,6 @@ A plugin built for SDK 1.4 or later admits every 1.x platform; see [Declare comp
 2. Review the list in the **Update to MINT `<version>`** dialog, then click **Update**.
 3. The listed plugin releases switch with the platform at the next restart. The audit log records each switch as `plugin.upgrade`.
 4. A plugin without a compatible release is listed under **Plugins without a compatible release**. To continue, select **Disable these plugins until a compatible release is installed**. The plugin stays disabled until you install a compatible release.
-
-> [Screenshot: Update to MINT dialog with one paired plugin release and one plugin under Plugins without a compatible release]
 
 With the CLI, `mint platform update apply` shows the paired releases and the plugins to disable, and asks. With `--yes` or `--json`, confirm them with flags:
 
@@ -246,7 +244,7 @@ You can go back only with the backup. After the first 1.6 start, a 1.5 release r
 
 **Available updates** on **Admin -> System -> Updates** lists plugin updates. **Admin -> Plugins -> Installed** has an **Update** button on each plugin card with an update. **Admin -> Plugins -> Registry** shows the registry versions.
 
-> [Screenshot: installed plugin card with the Update ready badge]
+![Registry with an Update badge and an Update button on the MS Designer card](/screenshots/admin/updates-registry-update.webp)
 
 The [scheduled update batch](#scheduled-updates) is the only automatic plugin updater. It updates every plugin that has an update source. A marketplace install registers one. There is no opt-in for each plugin. To update only plugins automatically:
 

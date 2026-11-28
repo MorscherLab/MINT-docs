@@ -46,7 +46,7 @@ Edit links in the footer point to `MorscherLab/MINT-docs` on GitHub. The dev ser
 - Each topic has one home (plugin types: `sdk/concepts/plugin-types`; runtimes: `sdk/concepts/isolation`; migration mechanics: `sdk/api/migrations`; components: `sdk/components/`). Link instead of copying.
 
 - The audience is lab scientists and lab admins, not core developers — keep tone task-oriented, prefer screenshots and short steps over prose.
-- Screenshot placeholders use the convention `> [Screenshot: description of what should be shown]` as a blockquote — these are TODOs for the actual image. Match this pattern when drafting new pages so they're easy to grep for and replace later.
+- Screenshots live in `.vitepress/public/screenshots/<section>/` as WebP, taken from a local MINT instance with invented data, and are referenced as `![alt text](/screenshots/<section>/<name>.webp)`. The alt text says what the image shows.
 - Internal links use VitePress clean URLs (no `.md` extension, since `cleanUrls: true`).
 - `ignoreDeadLinks: false` — broken internal links fail the build, so verify links resolve before committing.
 - The home page (`index.md`) uses VitePress's `layout: home` frontmatter with `hero` + `features`; don't convert it to a regular markdown page.

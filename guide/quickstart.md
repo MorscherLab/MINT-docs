@@ -16,8 +16,7 @@ On your first visit, MINT shows a tour and a **Getting started** checklist. See 
 1. Open **Experiments -> Projects** in the top navigation.
 2. Click **New project**.
 3. Fill in the form and click **Create project**. For the fields, see [Projects -> Create a project](/guide/projects#create-a-project).
-
-The project page opens.
+4. The new project shows in the list. Click it to open the project page.
 
 ## Step 2: Create an experiment
 
@@ -28,7 +27,7 @@ The project page opens.
 
 The experiment starts in `planned` status and has no code yet. For when MINT assigns the code, see [Experiments -> Experiment numbers](/guide/experiments#experiment-numbers). For the other form fields, see [Experiments -> Create an experiment](/guide/experiments#create-an-experiment).
 
-> [Screenshot: experiment detail page in planned status, with no code next to the title and the + Assign number button]
+![Experiment detail page in planned status, with the + Assign number button in place of the code](/screenshots/guide/quickstart-experiment-planned.webp)
 
 ## Step 3: Move the experiment to ongoing
 
@@ -42,17 +41,17 @@ Most plugins write results only when the experiment is `ongoing` or `completed`.
 1. Open an analysis plugin. Use the **Analysis artifacts** card on the experiment page, or the **Plugins** launcher on the home page.
 2. If you opened the plugin from the home page, select this experiment.
 3. Fill in the parameters of the plugin.
-4. Click **Run**.
+4. Click **Run analysis**.
 
 A generated analysis plugin shows the run status in the **Jobs** control of its top bar: queued, running, done or failed. See [UI tour -> Jobs tray](/guide/ui-tour#jobs-tray). The run time depends on the plugin and the size of the dataset.
 
-> [Screenshot: generated analysis plugin page with the parameter form, the Run button, and a running job in the Jobs control of the top bar]
+![Generated analysis plugin page with the parameter form, the Run analysis button, and the progress of a running job in the Jobs control of the top bar](/screenshots/guide/quickstart-running-job.webp)
 
 ## Step 5: Review the analysis artifacts
 
 When the plugin finishes, its outputs show in the **Analysis artifacts** card of the experiment, grouped by plugin. See [Experiments -> Artifacts](/guide/experiments#artifacts).
 
-> [Screenshot: Analysis artifacts card with one plugin group and a Download action on an artifact]
+![Analysis artifacts card with one plugin group and an artifact with Open, Edit, Download and Archive actions](/screenshots/guide/quickstart-analysis-artifacts.webp)
 
 ## Step 6: Complete the experiment
 

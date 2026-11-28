@@ -23,13 +23,14 @@ You can rename a project at any time. Prefer more, narrower projects to one larg
 | Field | Description |
 |-------|-------------|
 | Name | Required. Shows on the dashboard and in breadcrumbs. |
-| Status | Active, Completed, or Archived. |
+| Status | Active, Completed, or Archived. The status chip is next to the form title. New projects start active. |
 | Start date / End date | Optional. |
 | Description | Goals and scope. Shows on the project tile. |
 | Lead | Optional. The lead can edit the project and manage members. |
 | Members | Optional. Existing MINT users. They join as `editor`. To change a member to `viewer`, use **Edit**. |
+| Tags | Optional. Labels for the project. |
 
-> [Screenshot: New project form with the name, status, dates, description, lead and members fields]
+![New project form with the status chip, the name, dates, description, lead, members and tags fields](/screenshots/guide/projects-new-project-form.webp)
 
 ## Project page
 
@@ -38,11 +39,11 @@ You can rename a project at any time. Prefer more, narrower projects to one larg
 | Header | Project name, status, description, **Edit**, and **New experiment**. A new experiment starts with this project selected and the project members in its **Team** list. |
 | Rollup filters | Counts of all experiments, experiments with design data, and experiments without design data. Click a chip to filter the table. |
 | Experiments table | Code, name, type, status, design completeness, and created date. Click a row to open the experiment. |
-| Metadata rail | Project dates, lead and creator, the **Team** card with members, tags, and **Delete project**. |
+| Metadata rail | Status, lead, timeline (start and end dates), created and updated times, the **Team** card with members, tags, and **Delete project**. |
 
 The rollup counts include all experiments of the project, not only the experiments that match the search. Use them to find the experiments that have a design ready to analyze.
 
-> [Screenshot: project page with the "with design data" rollup chip selected and the experiments table filtered]
+![Project page with the With design data rollup chip selected and the experiments table filtered to two experiments](/screenshots/guide/projects-design-data-filter.webp)
 
 An experiment gets its code from its experiment type, not from the project. Codes are unique across all projects. See [Experiments -> Experiment numbers](/guide/experiments#experiment-numbers).
 

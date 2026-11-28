@@ -2,7 +2,7 @@
 
 This page tells administrators how to install, check, update and remove plugins. The platform holds projects, experiments, members and the marketplace. Plugins add all lab-specific functions, for example LC-MS sequence design, drug-response prediction, importers and viewers.
 
-> [Screenshot: Admin -> Plugins -> Installed with one running plugin, one plugin with a Restart required badge, and one row disabled by the dependency lock]
+![Installed plugins list with running plugins, one plugin disabled by the dependency lock and one plugin with a Restart required badge](/screenshots/admin/plugins-installed.webp)
 
 Each plugin has a type that sets its default experiment write policy. See [How plugins attach data](/guide/data-model#how-plugins-attach-data). Plugin authors: see [Plugin types](/sdk/concepts/plugin-types).
 
@@ -12,7 +12,7 @@ Each plugin has a type that sets its default experiment write policy. See [How p
 
 - **Installed but not loaded yet**, with a **Restart required** badge: the package is installed, but MINT does not serve its routes until the server restarts.
 - **Running**: MINT mounted the routes, jobs, generated UI and frontend assets of the plugin.
-- **Update ready**: a newer release is staged and becomes active at the next restart.
+- **Update ready**: an update check found a newer release. Click **Update** to install it. See [Plugin updates](/admin/updates#plugin-updates).
 - **Updating**: an update is in progress.
 - **Migration failed**: a plugin migration failed. See [Plugin migrations](#plugin-migrations).
 - **Disabled**: the plugin does not load, for example after the [dependency lock](#startup-reconcile) disabled it.
@@ -30,7 +30,9 @@ To install a plugin, use **Admin -> Plugins -> Registry**, upload a `.mint` bund
 5. MINT compiles the [plugin dependency lock](#plugin-dependency-lock) with the new plugin and installs the package exactly as the lock pins it.
 6. MINT reports whether a restart is necessary. At the next start, MINT applies the plugin migrations, resolves the settings, runs `initialize(context)`, and mounts the plugin.
 
-> [Screenshot: install progress dialog with the compatibility, lock and install steps complete and a Restart required message]
+There is no progress dialog. The upload or install button shows a spinner until all steps are complete. Then a message above **Install a plugin** tells you the result, for example "Plugin installed successfully. Restart the server to load it."
+
+![Install a plugin card with the message Plugin installed successfully. Restart the server to load it.](/screenshots/admin/plugins-install-bundle.webp)
 
 After the install, open **Admin -> Plugins -> Installed**. If the plugin shows **Restart required**, restart the server.
 
@@ -102,7 +104,9 @@ A disabled plugin appears at the bottom of **Admin -> Plugins -> Installed** as 
 
 To fix it, install a compatible plugin release, or uninstall the plugin from the row's action menu.
 
-> [Screenshot: Admin -> Plugins -> Installed footer with a "Disabled by the dependency lock" row and its reason]
+![Installed plugins footer with a Disabled by the dependency lock row and its Incompatible with MINT reason](/screenshots/admin/plugins-dependency-lock-disabled.webp)
+
+The row shows the start of the reason. Point to the row to see the full reason.
 
 ### Rollback
 
@@ -148,7 +152,7 @@ To try a dead delivery again, click **Retry**. It gets five new attempts. The [a
 
 A daily task deletes delivered and skipped deliveries after 7 days and dead deliveries after 30 days. An uninstall drops the unfinished deliveries of the plugin.
 
-> [Screenshot: Event deliveries dialog of a plugin with one dead delivery and a Retry button]
+![Event deliveries dialog of the Run log plugin with one dead delivery, its last error and a Retry button, and two delivered events](/screenshots/admin/plugins-event-deliveries.webp)
 
 ## Plugins that read other plugins
 

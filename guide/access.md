@@ -27,7 +27,9 @@ The sign-in page shows up to three methods. Your admin decides which ones:
 - **Continue with passkey**: a passkey on your device, such as Touch ID, Windows Hello or a security key. The button shows after you register a passkey in this browser. To register one, open the account menu, choose **Profile**, and go to **Security**.
 - **SWITCH edu-ID**: your institutional login, if your lab turned it on.
 
-> [Screenshot: MINT sign-in page with the password form, the Continue with passkey button, and the "No account yet? Create one" link]
+![MINT sign-in page with the password form and the "No account yet? Create one" link](/screenshots/guide/access-sign-in.webp)
+
+This site has no registered passkey and no edu-ID, so the image shows only the password form.
 
 ### Create an account
 
@@ -41,7 +43,7 @@ If your lab requires a second factor, a password or edu-ID sign-in has a second 
 - **Set up a passkey**: shows when your account has no second factor and the site offers passkeys. Enter a device name and click **Create passkey**.
 - **Set up an authenticator app**: shows when your account has no second factor and the site offers the app. Scan the QR code with an authenticator app, or type the key. Then enter the first 6-digit code. If the site offers both methods, you choose one.
 
-> [Screenshot: "Verify it's you" step with the passkey button and the 6-digit code field]
+!["Verify it's you" step for an account with an authenticator app: the 6-digit code field and the Verify button](/screenshots/guide/access-verify-totp.webp)
 
 Until you finish this step, the sign-in is valid for 10 minutes only. A direct passkey sign-in counts as both factors and asks for nothing more. A code works once. A wrong code counts like a wrong password toward the lockout.
 

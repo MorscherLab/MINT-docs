@@ -4,7 +4,7 @@ This page tells administrators how to import and manage reference libraries. The
 
 You import each file or directory once. MINT checks it with a SHA-256 hash and keeps every version. A plugin that declares a library reads the version that you choose. Plugin authors: see [Use a reference library](/sdk/recipes/libraries).
 
-> [Screenshot: Admin -> Plugins -> Libraries listing two libraries with versions, states and the Promote, Retire and Delete actions]
+![Libraries page with two libraries, their versions, states, readers and a pin, and the Promote, Retire, Restore and Delete actions](/screenshots/admin/libraries-list.webp)
 
 ## Where the files live
 

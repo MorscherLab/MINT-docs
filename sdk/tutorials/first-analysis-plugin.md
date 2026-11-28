@@ -60,7 +60,7 @@ Both commands must pass before you change anything. A complete run of this step 
 
 <Terminal title="~/plugins — zsh" :lines="[
   '$ mint init hello-mint --name \'Hello MINT\' --description \'Hello world analysis plugin\' --mode generated --type analysis --yes',
-  'Creating mint-plugin-hello-mint/ ...',
+  'Creating mint-plugin-hello-mint in ~/plugins/hello-mint/ ...',
   '  pyproject.toml',
   '  src/mint_plugin_hello_mint/plugin.py',
   '  tests/test_plugin.py',
@@ -71,7 +71,7 @@ Both commands must pass before you change anything. A complete run of this step 
   '$ cd hello-mint',
   '$ mint doctor --strict',
   '  [ok]  Runtime boot  lifespan and safe GET probes passed',
-  '30/30 checks passed',
+  '36/36 checks passed',
   '$ uv run pytest -q',
   '.                                                      [100%]',
   '1 passed in 0.66s',
@@ -108,7 +108,7 @@ class HelloMintPlugin(Plugin):
 | `@plugin(HelloMint)` | Joins the class to its `Metadata` |
 | `@job()` | A typed calculation the runtime can submit, track, cancel, and render. `@job(Spec)` takes a `Job` subclass with options such as `cpu` or `access` |
 
-The package name and dependency constraints live in `pyproject.toml`. The scaffold uses `dynamic = ["version"]` with `hatch-vcs`; Git tags supply the package version, with `0.1.0` as the fallback before a tag exists. The plugin name is the key of the `mint.plugins` entry point; do not duplicate package identity inside the class. The route prefix defaults to `/hello-mint`. See [packaging](/sdk/operations/packaging) for bundle and release versioning.
+The package name and dependency constraints live in `pyproject.toml`. The scaffold uses `dynamic = ["version"]` with `hatch-vcs`; Git tags supply the package version. Before the first tag, Git supplies a development version such as `0.1.1.dev0+d20261128`. `0.1.0` is the fallback only when no Git metadata is available. The plugin name is the key of the `mint.plugins` entry point; do not duplicate package identity inside the class. The route prefix defaults to `/hello-mint`. See [packaging](/sdk/operations/packaging) for bundle and release versioning.
 
 `Metadata.writes` defaults to `{"artifacts"}`: the plugin can write its own analysis results when integrated, but cannot create experiments or change design data. The sample calculation uses no platform data and saves no experiment artifact. A generated form alone does not authorize access to experiments; platform authentication is on by default (`auth = True`).
 
@@ -139,14 +139,13 @@ uv run pytest -q
 
 ## 4. Make the Job More Real
 
-Replace `analyze()` with a normalization example that accepts finite, nonnegative intensities. Add these imports at the top of `plugin.py`:
+Replace `analyze()` with a normalization example that accepts finite, nonnegative intensities. Replace the imports at the top of `plugin.py` with this block, and add the `Intensity` type and the `Normalize` job spec below it. `mint lint` sorts `mint_sdk` and `pydantic` into one third-party import group:
 
 ```python
 from typing import Annotated
 
+from mint_sdk import Job, Metadata, Plugin, job, plugin
 from pydantic import Field
-
-from mint_sdk import Job
 
 Intensity = Annotated[float, Field(ge=0, allow_inf_nan=False)]
 
@@ -196,7 +195,7 @@ from mint_plugin_hello_mint.plugin import HelloMintPlugin
         }),
     ],
 )
-def test_normalization(values: list[float], expected: dict[str, object]) -> None:
+def test_analyze_values_normalized(values: list[float], expected: dict[str, object]) -> None:
     with Harness(HelloMintPlugin) as harness:
         run = harness.run(HelloMintPlugin.analyze, values=values)
 
@@ -232,7 +231,9 @@ Because the `Metadata` sets `ui = "generated"`, the same process also serves the
 http://127.0.0.1:8003/hello-mint
 ```
 
-> [Screenshot: generated hello-mint workspace showing the Normalize intensities job form and completed JSON result]
+Open the workspace in a browser. **Values** is a tag field: type one value, press Enter, and repeat for each value. A comma-separated line is one tag, and the job returns **Validation error**. Click **Run analysis**. The result card shows the returned JSON.
+
+![Generated hello-mint workspace with the Normalize intensities form in the Parameters sidebar and the JSON result of a completed job](/screenshots/sdk/first-analysis-plugin-generated-workspace.webp)
 
 The generated UI fits a plugin that has typed inputs and a result. For a custom layout, multi-step interaction, live previews or a domain control such as a plate map, use `standard` mode in [Tutorial 2](/sdk/tutorials/adding-a-frontend).
 
