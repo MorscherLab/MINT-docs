@@ -1,6 +1,6 @@
 # Design tokens
 
-Every visual aspect of the platform — color, radius, focus rings, shadows, layers, and common component states — is parameterized as a CSS custom property. The frontend SDK ships about 110 tokens in `styles/variables.css` (MINT design v2). **Plugin frontends should reference tokens, never hex codes.** Tailwind CSS is optional; to use a token as a utility, map it in your own `@theme` block (see [Tailwind utilities](#tailwind-utilities)).
+Every visual aspect of the platform — color, type size, radius, focus rings, shadows, layers, and common component states — is parameterized as a CSS custom property. The frontend SDK ships about 125 tokens in `styles/variables.css` (MINT design v2). **Plugin frontends should reference tokens, never hex codes.** Tailwind CSS is optional; to use a token as a utility, map it in your own `@theme` block (see [Tailwind utilities](#tailwind-utilities)).
 
 ## Why tokens
 
@@ -88,6 +88,33 @@ Semantic colors mark state only. Every semantic color has `--mint-{name}-bg` and
 | `--text-muted` | Even more recessed (helper text) |
 | `--text-secondary-strong` | Label color for secondary/ghost buttons; stays at WCAG AA on `--bg-tertiary` |
 
+### Type scale
+
+Each font size in the SDK is one of ten tokens. Plugin CSS sets a font size with a token too.
+
+| Token | Size | Role |
+|-------|------|------|
+| `--font-size-2xs` | 11px | Field labels, the smallest pills and badges |
+| `--font-size-xs` | 12px | Column captions and small group headings (weight 500, sentence case, no letter-spacing), helper and error text, mono codes, ids, counts and timestamps, pills and badges |
+| `--font-size-sm` | 13px | Table cells and list rows, `sm` and `md` controls, card and section titles |
+| `--font-size-md` | 14px | Tile names |
+| `--font-size-lg` | 15px | Modal and top-bar titles |
+| `--font-size-xl` | 16px | `lg` controls |
+| `--font-size-2xl` | 18px | Larger text, for example the `ResourceCard` `lg` name |
+| `--font-size-3xl` | 20px | Larger text |
+| `--font-size-4xl` | 24px | Larger text |
+| `--font-size-display` | 40px | Larger text |
+
+The `.text-sm` utility class of the SDK is 13px, the same step as `--font-size-sm`. `.text-xs` is 12px. To keep another size, set it with a token on a plugin class:
+
+```css
+.run-table__caption {
+  font-size: var(--font-size-xs);
+}
+```
+
+The `mint lint` rule `font-size-token` (on by default, and part of the "Design rules" check of `mint doctor`) accepts `var(--font-size-*)` without a fallback or `inherit`. It reports `px`, `rem`, keywords, `calc()`, a `font` shorthand with such a size and a Tailwind arbitrary size class such as `text-[11px]`. `em` and `%` are accepted only for subscripts, superscripts and charge marks. For another exception, add `/* mint-lint-ignore font-size-token: <reason> */` above the declaration.
+
 ### Focus
 
 | Variable | Use |
@@ -152,6 +179,8 @@ The SDK respects `prefers-reduced-motion` globally. Custom animations should eit
 | `--font-sans` | Geist stack for UI text |
 | `--font-mono` | Geist Mono stack for codes, m/z, retention times, counts, and timestamps |
 | `--mint-disabled-opacity` | Opacity of disabled controls (`0.6`) |
+| `--mint-scrim` | Overlay behind a modal (`rgba(15, 23, 42, 0.45)` in both themes). Use it for your own overlay |
+| `--mint-strip-bg` | Background of strip content (`AlertBox`, `EmptyState variant="inline"`) in a `SectionCard` |
 | `--scrollbar-track`, `--scrollbar-thumb`, `--scrollbar-hover` | Scrollbar colors |
 | `--mint-toast-offset-top` | Top offset of the toast stack. Not declared in the stylesheet: a mounted `AppTopBar` sets it on `<html>` to its bottom edge plus 1rem and updates it on resize and scroll. The toast stack falls back to `1rem` |
 
@@ -215,10 +244,11 @@ When utility classes are not sufficient:
 - **Do not import code from the platform frontend** — your plugin is its own bundle. Tokens are the contract.
 - **Do not make new semantic colors** — `--mint-success` already exists. A different green from yours will look out of place.
 - **Do not repeat transition values** — use `var(--mint-transition)` or the SDK's components/utilities where possible.
+- **Do not write a literal font size** — use a `--font-size-*` token. See [Type scale](#type-scale).
 
 ## Auditing your plugin
 
-A quick check before merging plugin frontend changes:
+Run `mint lint` before each push. Its design rules report literal colours, literal font sizes, retired tokens and other token misuse. `mint lint --explain <rule>` gives the reason for a rule. A quick extra check before merging plugin frontend changes:
 
 ```bash
 # Find any hardcoded hex codes in your plugin's Vue / CSS

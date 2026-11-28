@@ -12,7 +12,7 @@ ComponentBindingRenderer is a workflow component exported by @morscherlab/mint-s
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue">Source</a>
 </div>
 
 <demo vue="./demos/ComponentBindingRenderer.vue" title="ComponentBindingRenderer" description="Read-only renderer that builds a table and a well plate from binding data." />
@@ -26,7 +26,7 @@ import { ComponentBindingRenderer } from "@morscherlab/mint-sdk/runtime"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -47,8 +47,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ComponentBindingRendererBinding `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue#L18) | See the linked SDK type definition. |
-| [` ComponentBindingRendererLayout `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue#L26) | See the linked SDK type definition. |
+| [` ComponentBindingRendererBinding `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue#L18) | See the linked SDK type definition. |
+| [` ComponentBindingRendererLayout `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ComponentBindingRenderer.vue#L26) | See the linked SDK type definition. |
 
 ### Events
 

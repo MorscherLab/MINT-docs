@@ -1,18 +1,20 @@
 ---
 aside: false
 title: AppContainer
-description: "Lightweight content shell for standalone plugin screens and routed views."
+description: "Lightweight content shell for standalone screens; not needed around router-view in PluginWorkspaceView."
 ---
 
 <p class="mint-component-library__eyebrow">Layout</p>
 
 # AppContainer
 
-Lightweight content shell for standalone plugin screens and routed views.
+Lightweight content shell for standalone screens; not needed around router-view in PluginWorkspaceView.
+
+Do not wrap `<router-view />` in an `AppContainer` inside [PluginWorkspaceView](/sdk/components/plugin-workspace-view). A card `AppContainer` (`scrollable`, or no `direction`) is then a second card, and `mint doctor` warns on it. A transparent `direction="column"` one does nothing there. Use `spec.main` of the workspace instead.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/AppContainer.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/AppContainer.vue">Source</a>
 </div>
 
 <demo vue="./demos/AppContainer.vue" title="AppContainer" description="A row of three cards inside a container. Read how the container sets direction and gap." />
@@ -26,7 +28,7 @@ import { AppContainer } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/AppContainer.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/AppContainer.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

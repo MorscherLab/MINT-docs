@@ -12,7 +12,7 @@ Save/update dialog for analysis artifacts; delegates the write to a plugin-suppl
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ArtifactSaveDialog.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ArtifactSaveDialog.vue">Source</a>
 </div>
 
 ::: info Needs the platform
@@ -46,7 +46,7 @@ The selected file row shows the soft accent fill and no coloured left bar.
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ArtifactSaveDialog.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ArtifactSaveDialog.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -74,11 +74,11 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ArtifactSaveDialogHandler `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L176) | See the linked SDK type definition. |
-| [` ArtifactFileSource `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L61) | ` 'upload' \| 'handler' ` |
-| [` ExperimentSummary `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L158) | See the linked SDK type definition. |
-| [` AnalysisArtifactDetail `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L30) | See the linked SDK type definition. |
-| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L39) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
+| [` ArtifactSaveDialogHandler `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L176) | See the linked SDK type definition. |
+| [` ArtifactFileSource `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L68) | ` 'upload' \| 'handler' ` |
+| [` ExperimentSummary `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L161) | See the linked SDK type definition. |
+| [` AnalysisArtifactDetail `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/analysisArtifactTypes.ts#L34) | See the linked SDK type definition. |
+| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L40) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
 
 ### Events
 

@@ -41,6 +41,6 @@ The component pages above are compiled into the VitePress docs site. SDK maintai
 
 ```bash
 cd packages/sdk-frontend
-bun run story:dev
+pnpm run story:dev
 # http://localhost:6006
 ```

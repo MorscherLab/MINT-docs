@@ -19,7 +19,7 @@ The top action bar appears on platform pages and SDK plugin shells. The exact co
 | **Help** | Opens the [Getting started checklist, the tours, and **What's new**](#help-and-tours). A count on the button shows unread news |
 | **Theme toggle** | Switches the active light/dark/system theme for the shell |
 | **Settings** | On the home page: opens the settings window, which starts on [Appearance](#appearance) |
-| **Admin** | Opens the Admin workspace when your role exposes at least one admin section |
+| **Admin** | Opens the Admin workspace. Shown when your role can manage something: `users.manage`, `platform.configure`, `plugins.configure`, `plugins.install` or `notices.publish`. See [Users & roles](/admin/users-roles#system-roles) |
 | **Account menu** | Shows your name. Choose **Profile** to open **Your account**, **Send feedback** to [send a message to the lab admins](#send-feedback), or **Sign out** |
 
 ## Help and tours
@@ -64,12 +64,12 @@ The landing page after logging in. The dashboard is built for quick triage:
 |--------|---------------|
 | **Status strip** | Today's date, open items that need attention, and the lab notice board |
 | **Notice board** | The pinned or newest active notice, with an earlier-notices modal when history exists |
-| **Experiments** | Recently updated experiments with status and code; a toggle shows only your own |
-| **Projects** | Recently updated projects with experiment counts and project status; a toggle shows only your own |
+| **Experiments** | Recently updated experiments with status and code; the **Mine** chip shows only your own |
+| **Projects** | Recently updated projects with experiment counts and project status; the **Mine** chip shows only your own |
 | **Instruments** | Live status of active instruments, errors and offline first. Shown with `instruments.view` when at least one instrument is active. See [Instruments](/guide/instruments#instruments-on-home) |
 | **Plugins** | Searchable grid/list of enabled plugins by display name or plugin ID, with per-user pinning and entry-point links |
 
-Admins who can manage notices see a shortcut from the notice board to **Admin -> Platform -> Notices**.
+Admins who can manage notices see a shortcut from the notice board to **Admin -> Lab content -> Notices**.
 
 Plugins appear under the display name their authors declare, or under the plugin ID if there is none. The plugin page, the experiment page, and the settings list use the same name. The Home settings window opens on [**Appearance**](#appearance). Its **Plugins** tab, under **Platform** in the side rail, lists the installed plugins you can open.
 
@@ -109,9 +109,9 @@ Single experiment record view:
 
 | Region | Contents |
 |--------|----------|
-| **Header** | Experiment code (or **+ Assign number**), title, status stepper, people avatars when realtime updates are on, edit/cancel/reactivate actions, and an **Open in plugin** action when a design plugin owns the experiment |
-| **Design data** | Grouped design fields, sample rows, JSON/CSV export, and fallback full-document viewer |
-| **Analysis artifacts** | Outputs grouped by producing plugin, with status, artifact key, result keys, open/download/edit/archive actions, and a show-archived toggle |
+| **Header** | Experiment code (or **+ Assign number**), title, status stepper, people avatars when realtime updates are on, edit/cancel/reactivate actions, and an **Open in plugin** action when the design plugin of the experiment has a page |
+| **Design data** | Grouped design fields, sample rows, JSON/CSV export, and fallback full-document viewer. A live design plugin shows its form here. Tabs of the design plugin's panels follow the **Design** tab |
+| **Analysis artifacts** | Outputs grouped by producing plugin, with status, artifact key, result keys, open/download/edit/archive actions, and a show-archived toggle. Tabs of plugin panels follow the **Artifacts** tab |
 | **Instrument records** | With `instruments.view`: instrument history rows that name this experiment |
 | **Metadata rail** | Type, project, timeline, creator, parent link, data lineage, collaborators, tags, and delete action |
 
@@ -140,22 +140,25 @@ Open **Admin** from the top action bar or go to `/admin`. Users only see section
 
 | Group | Section | Contains |
 |-------|---------|----------|
-| **People** | **Users** | Account list, role assignment, disable / re-enable, password reset, and passkey reset |
-| **People** | **Roles** | Built-in role presets and custom-role editor |
+| **People & access** | **Users** | Account list, role assignment, disable / re-enable, password reset, and passkey reset |
+| **People & access** | **Roles** | Built-in role presets and custom-role editor |
+| **People & access** | **Access tokens** | Every user's personal access tokens, with revoke |
+| **People & access** | **Service tokens** | Tokens for instrument daemons that report to a plugin, with revoke |
 | **Plugins** | **Installed** | Installed plugins (display name; the second line adds the plugin ID when it is different), runtime state, access control, update, and uninstall actions |
 | **Plugins** | **Registry** | Marketplace catalog, install (admins only), refresh, compatibility, and update badges |
-| **Platform** | **Experiment types** | Experiment type registration and platform-owned design metadata |
-| **Platform** | **Notices** | Publish, pin, archive, restore, and delete home-dashboard notices |
-| **Platform** | **Configuration** | Platform, auth, database, storage, access, marketplace, notification (email, Teams, Slack, Apple Push), and observability settings |
-| **Platform** | **Access tokens** | Every user's personal access tokens, with revoke |
-| **Platform** | **Service tokens** | Tokens for instrument daemons that report to a plugin, with revoke |
-| **Platform** | **Server** | Runtime health, platform version, update status, and plugin process information |
-| **Platform** | **Terminal** | Optional container/process shell and persisted startup script; hidden unless enabled and permitted |
-| **Platform** | **Logs** | Structured platform logs and health diagnostics |
+| **Plugins** | **Libraries** | Reference files that plugins read. See [Libraries](/admin/libraries) |
+| **Lab content** | **Experiment types** | Experiment type registration and platform-owned design metadata |
+| **Lab content** | **Notices** | Publish, pin, archive, restore, and delete home-dashboard notices |
+| **System** | **Configuration** | Platform, auth, database, storage, access, marketplace, notification (email, Teams, Slack, Apple Push), and observability settings |
+| **System** | **Notifications** | Teams and Slack channels. See [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels) |
+| **System** | **Updates** | Platform and plugin updates, and the update settings. See [Updates](/admin/updates) |
+| **System** | **Server** | Runtime health, platform version, update status, and plugin process information |
+| **System** | **Logs** | Structured platform logs and health diagnostics |
+| **System** | **Terminal** | Optional container/process shell and persisted startup script; hidden unless enabled and permitted |
 
 The admin navigation rail shows the running version and API health in its footer.
 
-> [Screenshot: Admin workspace showing People, Plugins, and Platform groups in the navigation rail]
+> [Screenshot: Admin workspace showing the People & access, Plugins, Lab content and System groups in the navigation rail]
 
 ## Plugin views
 

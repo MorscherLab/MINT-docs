@@ -12,7 +12,7 @@ SettingsModal is a feedback component exported by @morscherlab/mint-sdk for plug
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SettingsModal.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/SettingsModal.vue">Source</a>
 </div>
 
 <demo vue="./demos/SettingsModal.vue" title="SettingsModal" description="Settings dialog with a custom tab and form fields. Click the button to open it and change values." />
@@ -25,12 +25,12 @@ import { SettingsModal } from "@morscherlab/mint-sdk"
 
 ## Layout
 
-With `layout` omitted, the modal shows a rail when there are more than three groups and stacks every group on one page otherwise; `layout="horizontal"` and `layout="vertical"` force a layout. The rail separates plugin groups from personal (Appearance) settings. Schema-driven settings get a search across groups, a modified-from-default marker with a per-row reset, and "Restore group defaults". Changes apply immediately; the default footer closes with "Done", and a `#footer` slot replaces it.
+With `layout` omitted, the modal puts the tabs in a sidebar rail when there is more than one tab. The Appearance tab counts. A single tab is a plain page without navigation. `layout="vertical"` is the same rail. `layout="horizontal"` puts the tabs in a strip above the pane (a plain page for a single tab). The rail separates plugin groups from personal (Appearance) settings. Schema-driven settings get a search across groups, a modified-from-default marker with a per-row reset, and "Restore group defaults". Changes apply immediately; the default footer closes with "Done", and a `#footer` slot replaces it.
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SettingsModal.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/SettingsModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -51,11 +51,11 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SettingsTabInput `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L577) | See the linked SDK type definition. |
-| [` SettingsModalLayout `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L579) | ` 'horizontal' \| 'vertical' ` |
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L156) | See the linked SDK type definition. |
-| [` SettingsModalSchema `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L604) | See the linked SDK type definition. |
-| [` SettingsUserType `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L608) | See the linked SDK type definition. |
+| [` SettingsTabInput `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L579) | See the linked SDK type definition. |
+| [` SettingsModalLayout `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L581) | ` 'horizontal' \| 'vertical' ` |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L153) | See the linked SDK type definition. |
+| [` SettingsModalSchema `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L606) | See the linked SDK type definition. |
+| [` SettingsUserType `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L610) | See the linked SDK type definition. |
 
 ### Events
 

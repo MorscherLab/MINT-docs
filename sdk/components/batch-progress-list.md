@@ -12,7 +12,7 @@ BatchProgressList is a data display component exported by @morscherlab/mint-sdk 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BatchProgressList.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/BatchProgressList.vue">Source</a>
 </div>
 
 <demo vue="./demos/BatchProgressList.vue" title="BatchProgressList" description="Batch list with completed, processing, pending and failed items. Read the status and progress of each item." />
@@ -26,7 +26,7 @@ import { BatchProgressList } from "@morscherlab/mint-sdk/data"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BatchProgressList.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/BatchProgressList.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -45,7 +45,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` BatchItem `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L41) | See the linked SDK type definition. |
+| [` BatchItem `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L41) | See the linked SDK type definition. |
 
 ### Events
 

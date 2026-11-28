@@ -12,7 +12,7 @@ Card with one tab for each typed panel of an instrument live status.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/InstrumentStatusPanels.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/InstrumentStatusPanels.vue">Source</a>
 </div>
 
 <demo vue="./demos/InstrumentStatusPanels.vue" title="InstrumentStatusPanels" description="Four panel kinds in tabs. Switch tabs and pick the series of the bar chart." />
@@ -23,10 +23,12 @@ Card with one tab for each typed panel of an instrument live status.
 import { InstrumentStatusPanels } from "@morscherlab/mint-sdk/lab"
 ```
 
+Each tab draws its panel with [PanelSections](/sdk/components/panel-sections). A `json` panel is a collapsed tree. A table of more than 20 rows shows 20 rows and "Show all N rows". A table reads `column_types`; a column without an entry whose values are all numbers or null is right-aligned in the mono font. A `bar` panel renders `PlotlyChart`: declare `plotly.js-dist-min` in the plugin.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/InstrumentStatusPanels.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/InstrumentStatusPanels.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -40,7 +42,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` StatusPanel `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/instrument.ts#L46) | See the linked SDK type definition. |
+| [` StatusPanel `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/instrument.ts#L52) | See the linked SDK type definition. |
 
 ### Events
 

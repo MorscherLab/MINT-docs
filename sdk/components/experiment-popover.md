@@ -12,7 +12,7 @@ ExperimentPopover is a workflow component exported by @morscherlab/mint-sdk for 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ExperimentPopover.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ExperimentPopover.vue">Source</a>
 </div>
 
 <demo vue="./demos/ExperimentPopover.vue" title="ExperimentPopover" description="Experiment chip with a popover. Open it to see the save and detach actions." />
@@ -26,7 +26,7 @@ import { ExperimentPopover } from "@morscherlab/mint-sdk/data"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ExperimentPopover.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ExperimentPopover.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

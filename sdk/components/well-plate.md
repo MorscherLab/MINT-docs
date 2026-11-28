@@ -16,7 +16,7 @@ Interactive plate map with heatmaps, selection, and editing hooks. Supported for
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/WellPlate.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/WellPlate.vue">Source</a>
 </div>
 
 <demo vue="./demos/WellPlate.vue" title="WellPlate" description="A 96-well plate with heatmap colors and multiple selection. Click wells to select them." />
@@ -80,7 +80,7 @@ Both callbacks receive the resolved `Well` (including its `id`, `row`, `col`, an
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/WellPlate.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/WellPlate.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -99,8 +99,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` WellPlateSpec `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentLabTypes.ts#L132) | See the linked SDK type definition. |
-| [` Well `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentLabTypes.ts#L10) | See the linked SDK type definition. |
+| [` WellPlateSpec `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L131) | See the linked SDK type definition. |
+| [` Well `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L10) | See the linked SDK type definition. |
 
 ### Events
 

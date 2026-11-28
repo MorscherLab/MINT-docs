@@ -76,7 +76,9 @@ or an admin install request through the platform API. The platform:
 3. Refuses a plugin wheel whose `mint-sdk` requirement excludes the platform SDK.
 4. Compiles the requirements of all in-process plugins against the platform lock (`uv pip compile --generate-hashes --only-binary :all:`). A compile that fails is the conflict check.
 5. Applies the new `plugins.lock` and records the source artifact in the plugin manifest.
-6. Keeps the ten most recent previous locks, so an admin can roll back.
+6. Keeps the ten most recent previous locks, so an admin can roll back (`mint platform plugin snapshots` and `mint platform plugin rollback`).
+
+At the first start of a new platform release, the platform compiles the plugin requirements against the new platform lock again. It disables a plugin whose requirements no longer resolve, for example a `mint-sdk` range that excludes the new release or a cap such as `sqlalchemy<2.1` below a new platform floor. Admin > Plugins shows the reason.
 
 Most successful installs report that a server restart is required. Until that
 restart/load cycle completes, the package may be installed but not serving

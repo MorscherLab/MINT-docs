@@ -12,7 +12,7 @@ Compact overflow actions with an icon-only trigger and a viewport-safe teleporte
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ActionMenu.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ActionMenu.vue">Source</a>
 </div>
 
 <demo vue="./demos/ActionMenu.vue" title="ActionMenu" description="An overflow menu for a run row. Open it and pick an action to see the last choice." />
@@ -49,7 +49,7 @@ The `#trigger` slot replaces the default icon trigger. Render one `<button>` and
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ActionMenu.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ActionMenu.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -63,7 +63,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ActionMenuItem `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L23) | See the linked SDK type definition. |
+| [` ActionMenuItem `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L24) | See the linked SDK type definition. |
 
 ### Events
 
@@ -77,7 +77,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Slot | Props | Description |
 |---|---|---|
-| ` trigger ` | ` { open: boolean; toggle: () => void; keydown: (event: KeyboardEvent) => void; } ` | Replaces the ellipsis button; toggle and keydown go on the slotted button. |
+| ` trigger ` | ` { open: boolean; toggle: () => void; keydown: (event: KeyboardEvent) => void; attrs: MenuTriggerAttrs; } ` | Replaces the ellipsis button. Bind attrs on the slotted button (v-bind="attrs"): it carries the menu-button ARIA, the toggle and the keyboard handler. The menu anchors to the element with aria-haspopup. |
 
 <!-- sdk-props:end -->
 

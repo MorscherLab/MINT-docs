@@ -51,7 +51,7 @@ const data = ref({})
 </template>
 ```
 
-`data.value` updates as the user types. Validation errors are rendered inline. `actions: true` shows the submit and cancel bar; without `actions`, the bar is hidden. The `submit` event carries only the values of the visible fields.
+`data.value` updates as the user types. Validation errors are rendered inline. `actions: true` shows the submit and cancel bar; without `actions`, the bar is hidden. The bar is at the right: Cancel (a `secondary` button) directly left of Submit. In a wizard form with `actions`, the bar matches the `StepWizard` navigation: the step counter `n / total` at the left, then Cancel, Back and Next (Submit on the last step) at the right. Back shows disabled on step 1. The `submit` event carries only the values of the visible fields.
 
 ## Control models
 
@@ -128,6 +128,24 @@ A raw `FormSchema` (sections, wizard `steps`, and exact field definitions) is st
 | `path` | `GeneratedPathInput` | Server path reference from a read-only mount |
 
 The canonical list is `FormFieldType` in `packages/sdk-frontend/src/types/form-builder.ts`. The internal registry is readable through `getFieldRegistryEntry(type)` from `@morscherlab/mint-sdk/runtime`.
+
+### Field types that load on first use
+
+The components of the `path`, `file`, `molecule`, `formula` and `sequence` types load when a form first shows such a field. The other types, `date`, `time` and `datetime` included, load with the form. This applies to `FormBuilder`, `SettingsModal` and the generated UI.
+
+- Until the component arrives, the field keeps its label and a box of its height. Values, validation, `submit` and `v-model` work as before.
+- When the chunk does not load, the field shows an error with a **Retry** button, and the console logs the error one time. When the retry also fails, the message asks for a page reload.
+- For these types, `getFieldRegistryEntry(type).component` returns the loading wrapper.
+- A `field:<name>` slot renders its own component at once.
+
+In a test that finds one of these fields right after mount (`find`, `findComponent` or `global.stubs`), load the components first:
+
+```ts
+import { beforeAll } from 'vitest'
+import { preloadFormFieldTypes } from '@morscherlab/mint-sdk/runtime'
+
+beforeAll(() => preloadFormFieldTypes())
+```
 
 ## Typed tags
 

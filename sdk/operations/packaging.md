@@ -10,11 +10,13 @@ mint build
 # → dist/my-plugin-1.0.0.mint
 ```
 
+Run it in the plugin directory, or use `mint -C DIR build`. `mint build` stops with exit 1 when `uv.lock` locks a `mint-sdk` of a newer minor than the running `mint`; run `uv run mint build` then.
+
 What happens:
 
 1. Read `[project]` and `[tool.mint]` from `pyproject.toml`. If `requires_mint` is omitted, derive a floor from the `mint-sdk` dependency; without one, the manifest uses `>=` the build SDK version
 2. Run `uv run pytest`; packaging stops if the test suite fails
-3. If the frontend directory exists (`frontend/`, or `[tool.mint].frontend_dir`) and `--no-frontend` isn't set: run the detected JS package manager's `install` and `run build`, require Python and frontend SDKs to resolve to the same release, validate the build output and record its content revision
+3. If the frontend directory exists (`frontend/`, or `[tool.mint].frontend_dir`) and `--no-frontend` isn't set: run `vp install` (`--frozen-lockfile` when the frontend has a lockfile of its manager) and `vp run build`, require Python and frontend SDKs to resolve to the same release, validate the build output and record its content revision
 4. When a frontend was built, warn if `pyproject.toml` does not force-include `frontend/dist` in the wheel
 5. Build the Python wheel via `uv build --wheel`; the version comes from `[project].version` or the wheel filename
 6. (If `--vendor-deps`) Export runtime requirements with `uv export --no-dev` and download binary-only wheels
@@ -25,7 +27,6 @@ What happens:
 
 | Flag | Effect |
 |------|--------|
-| `PATH` (positional) | Plugin project directory (default `.`) |
 | `--no-frontend` | Skip the frontend build step. Use for backend-only plugins or fast iteration on the Python side. |
 | `--include-wheel PATH` | Vendor an existing extra wheel; repeat for multiple files. This does not export the main wheel separately. |
 | `--output-dir` | Override the default `dist/` directory. |
@@ -153,7 +154,7 @@ For very large plugins, consider:
 
 ## Notes
 
-- `mint build` is self-contained enough for CI, but it still needs the local toolchain (`uv`, Python, and bun/npm for frontends) and network access unless dependencies are already cached.
+- `mint build` is self-contained enough for CI, but it still needs the local toolchain (`uv`, Python, and the global Vite+ CLI `vp` 1.5.1 or later for frontends) and network access unless dependencies are already cached.
 - Bundles are versioned by their internal manifest, not by filename. Renaming a `.mint` doesn't change what's installed.
 - Don't ship secrets in bundles. They're public artifacts. Use platform plugin settings declared with `Metadata.settings` and applied through `@on("settings")` for runtime credentials (mark a credential field as a secret).
 

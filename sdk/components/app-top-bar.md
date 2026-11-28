@@ -12,7 +12,7 @@ Platform-style top bar for shells that need custom navigation chrome.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/AppTopBar.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/AppTopBar.vue">Source</a>
 </div>
 
 <demo vue="./demos/AppTopBar.vue" title="AppTopBar" description="A top bar with page selector, pill navigation and account menu. Click the pills to change the active view." />
@@ -25,7 +25,7 @@ import { AppTopBar } from "@morscherlab/mint-sdk/shell"
 
 ## Plugin identity
 
-Inside the platform, `AppTopBar` shows an integrated plugin's icon and name as a static identity. The name is `PluginInfo.display_name`; it falls back to `name` when the platform sends no display name. It takes the place of `title` / `subtitle` when no page selector is present. It is not a control. Users switch plugins from the platform home. Standalone plugins show `title` / `subtitle`. Every control is 32px high, so the bar stays 52px.
+Inside the platform, `AppTopBar` shows an integrated plugin's icon and name as a static identity. The name is `PluginInfo.display_name`; it falls back to `name` when the platform sends no display name. It takes the place of `title` / `subtitle` when no page selector is present. It is not a control. Users switch plugins from the platform home. Standalone plugins show `title` / `subtitle`. In a standalone plugin with a router and two or more pages, `AppTopBar` without `pageSelector` shows a page selector from the `navItems` of the generated contract (seeded by `providePluginIdentity(contract)`). The current page follows the route, and the selector takes the place of the title and subtitle. Every control is 32px high, so the bar stays 52px.
 
 ## Pill navigation
 
@@ -42,7 +42,7 @@ the top of the viewport.
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/AppTopBar.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/AppTopBar.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -63,9 +63,9 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` PluginWorkspaceTopBarSpec `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L234) | See the linked SDK type definition. |
-| [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L231) | See the linked SDK type definition. |
-| [` TopBarJob `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/jobs.ts#L73) | See the linked SDK type definition. |
+| [` PluginWorkspaceTopBarSpec `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L232) | See the linked SDK type definition. |
+| [` PageSelectorItemInput `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L229) | See the linked SDK type definition. |
+| [` TopBarJob `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/jobs.ts#L68) | See the linked SDK type definition. |
 
 ### Events
 

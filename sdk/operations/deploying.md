@@ -10,6 +10,7 @@ is development storage, not the platform database.
 ```bash
 uv run mint doctor --strict
 uv run mint sdk generate --check
+uv run mint lint
 uv run pytest
 uv run mint build
 ```
@@ -50,13 +51,16 @@ the new bundle and verify that data after restart.
 ## 3. Deploy to a test platform
 
 ```bash
-mint platform auth login --url http://127.0.0.1:18020
+mint platform auth login --url http://127.0.0.1:18020 --name test
 mint platform status
-mint deploy --to http://127.0.0.1:18020 --bundle dist/my-plugin-0.2.0.mint
-mint platform plugin list --json
+mint deploy --url test --bundle dist/my-plugin-0.2.0.mint
+mint platform plugin list
 ```
 
-The URL must identify your intended test platform. `deploy` uploads the bundle
+The URL must identify your intended test platform. `--url` takes a URL or
+part of a host name from `mint platform auth hosts`, and deploy then uses the
+credential stored for that host before `MINT_TOKEN`. `--to` is the older
+name of the same option. `deploy` uploads the bundle
 and, by default, performs the restart/load workflow. `--no-restart` leaves any
 required restart to the administrator. The equivalent upload-only path is:
 
@@ -77,7 +81,9 @@ package name; `plugin list --json` shows both.
 ### What deploy confirms
 
 Without `--bundle`, `mint deploy` first builds the bundle exactly like
-`mint build` (tests included). Without `--to`, it targets the stored host. It
+`mint build` (tests included). A dirty git tree stops the build; pass
+`--allow-dirty` to build anyway. Without `--url`, it targets `MINT_URL`, then
+the default host. It
 then uploads the bundle, which requires `plugins.install`. If the platform
 reports that a restart is needed, it restarts the platform and waits:
 
@@ -91,6 +97,11 @@ reports that a restart is needed, it restarts the platform and waits:
    If the loaded version differs from the bundle version, it prints a warning
    naming both and still succeeds; check that `Plugin.metadata.version` follows
    the package version.
+3. **Enabled.** It reads the plugin entry and exits 1 when the platform
+   disabled the plugin: `enabled` is false, a `migration_error` is set (for
+   example "Migration checksum or owner mismatch" after a released revision
+   changed), or the dependency lock disabled it. The message gives the error
+   text and the reason. `mint platform plugin list` shows the same state.
 
 `--timeout` (default 180 seconds) is one budget for restart and load together.
 Failures print `Error: ...` and exit 1; with `--json` they print
@@ -119,7 +130,9 @@ connect frontend failures with backend logs.
 
 A plugin runs only on a platform whose `mint-sdk` its requirement admits. At the first start of a new minor, the platform disables every in-process plugin whose wheel excludes the platform SDK, and uninstalls its packages from the platform environment. A plugin process whose cached wheel excludes it does not start. The plugin data stays, and Admin > Plugins shows the reason. Install the release of the plugin that is built for the new SDK to enable it again. The startup log shows one error line for each disabled plugin; this is expected.
 
-Test against the platform image of the target minor, for example `mint verify --image ghcr.io/morscherlab/mint:1.4.0`. The platform and the plugin process also compare the internal API version at the handshake; a plugin process on an older SDK fails with HTTP 426 `plugin.api_version_mismatch`.
+The platform also disables a plugin whose own requirements do not resolve against the platform lock, for example a cap below a new platform floor such as `sqlalchemy<2.1` on 1.6. The plugin runs on the libraries of the platform, so a new platform minor can change its behavior without a plugin release. See [Migrate from 1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6#changes-without-a-new-plugin-release).
+
+Test against the platform image of the target minor, for example `mint verify --image ghcr.io/morscherlab/mint:1.6.0`. The platform and the plugin process also compare the internal API version at the handshake; a plugin process on an older SDK fails with HTTP 426 `plugin.api_version_mismatch`.
 
 A Dockerfile or process unit for a plugin process runs `mint -C DIR daemon` or `uv run uvicorn mint_sdk.app:create_app --factory`. A command that names `mint_sdk.runtime:create_plugin_app` or a plugin-written factory does not work any more.
 

@@ -266,7 +266,7 @@ uv run pytest -q
 
 ## 6. Connect the frontend
 
-The scaffolded `WorkspaceView.vue` calls `client.analyze()`, which this plugin no longer has. Regenerate the typed client first:
+The scaffold keeps the page state in `frontend/src/stores/analysis.ts`, which calls `client.analyze()`. This plugin no longer has that endpoint. Regenerate the typed client first:
 
 ```bash
 mint sdk generate
@@ -275,70 +275,100 @@ mint docs contract
 
 Generated client methods are camelCase versions of the Python method names (the `operation_id` defaults to the method name in lowerCamel case): `listPanels()`, `createPanel(body)`, `replacePanel(...)`, `deletePanel(...)`, and `publishPanel(...)`. `mint docs contract` prints the exact call shape for methods with path parameters.
 
-Replace `frontend/src/views/WorkspaceView.vue`:
+The scaffold `App.vue` shows the controls of `analysisControls` in the sidebar and calls `run(values)` of the store when the user submits them. Keep `App.vue` and the export names, and replace `frontend/src/stores/analysis.ts`. The sidebar form now creates a panel:
+
+```ts
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+import { defineControlModel, useRequest } from '@morscherlab/mint-sdk'
+
+import { useClient, type PanelOutput } from '../generated/mint-plugin'
+
+export const analysisControls = defineControlModel({
+  actions: { submitLabel: 'Create panel' },
+  initialValues: { name: '', drug: '' },
+  controls: {
+    name: { type: 'text', label: 'Panel name', required: true, maxLength: 200 },
+    drug: { type: 'text', label: 'Drug', required: true, maxLength: 200 },
+  },
+})
+
+export const useAnalysisStore = defineStore('analysis', () => {
+  const client = useClient()
+  const request = useRequest('Could not load the panels')
+  const panels = ref<PanelOutput[]>([])
+  const running = computed(() => request.isLoading.value)
+  const error = computed(() => request.error.value)
+
+  async function refresh(): Promise<void> {
+    await request
+      .run(
+        async () => {
+          panels.value = await client.listPanels()
+          return panels.value
+        },
+        { kind: 'load' },
+      )
+      .catch(() => undefined)
+  }
+
+  async function run(values: Record<string, unknown>): Promise<void> {
+    await request
+      .run(
+        async () => {
+          await client.createPanel({
+            name: String(values.name ?? '').trim(),
+            drugs: [{ name: String(values.drug ?? '').trim(), doses_uM: [0.1, 1, 10] }],
+          })
+          panels.value = await client.listPanels()
+          return panels.value
+        },
+        { kind: 'save', errorMessage: 'Could not create the panel' },
+      )
+      .catch(() => undefined)
+  }
+
+  return { panels, running, error, refresh, run }
+})
+```
+
+Replace `frontend/src/views/WorkspaceView.vue`. The main area lists the panels in one `SectionCard`:
 
 ```vue
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useClient, type PanelOutput } from '../generated/mint-plugin'
+import { onMounted } from 'vue'
+import { AlertBox, EmptyState, SectionCard } from '@morscherlab/mint-sdk'
 
-const client = useClient()
-const panels = ref<PanelOutput[]>([])
-const name = ref('')
-const drug = ref('')
-const error = ref('')
+import { useAnalysisStore } from '../stores/analysis'
 
-async function refresh(): Promise<void> {
-  panels.value = await client.listPanels()
-}
+const panels = useAnalysisStore()
 
-async function create(): Promise<void> {
-  error.value = ''
-  try {
-    await client.createPanel({
-      name: name.value.trim(),
-      drugs: [{ name: drug.value.trim(), doses_uM: [0.1, 1, 10] }],
-    })
-    name.value = ''
-    drug.value = ''
-    await refresh()
-  } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : 'Could not create panel'
-  }
-}
-
-onMounted(() => {
-  refresh().catch((cause) => {
-    error.value = cause instanceof Error ? cause.message : 'Could not load panels'
-  })
-})
+onMounted(panels.refresh)
 </script>
 
 <template>
-  <section aria-labelledby="panels-title">
-    <h2 id="panels-title">Drug panels</h2>
-    <p v-if="error" role="alert">{{ error }}</p>
-    <form @submit.prevent="create">
-      <label for="panel-name">Panel name</label>
-      <input id="panel-name" v-model="name" required maxlength="200" />
-      <label for="panel-drug">Drug</label>
-      <input id="panel-drug" v-model="drug" required maxlength="200" />
-      <button type="submit">Create panel</button>
-    </form>
-    <ul>
-      <li v-for="panel in panels" :key="panel.id">
-        {{ panel.name }} ({{ panel.drugs.length }} drugs)
-      </li>
-    </ul>
-  </section>
+  <SectionCard title="Drug panels" fill>
+    <div class="mint-section-card__content">
+      <AlertBox v-if="panels.error" tone="error">
+        {{ panels.error }}
+      </AlertBox>
+      <ul v-if="panels.panels.length">
+        <li v-for="panel in panels.panels" :key="panel.id">{{ panel.name }} ({{ panel.drugs.length }} drugs)</li>
+      </ul>
+      <EmptyState v-else title="No panels yet" description="Enter a panel name and a drug in the sidebar." size="sm" />
+    </div>
+  </SectionCard>
 </template>
 ```
 
-Replace `frontend/src/views/WorkspaceView.test.ts`:
+Replace `frontend/src/views/WorkspaceView.test.ts`. The test runs the store action that the sidebar submit calls:
 
 ```typescript
 import { flushPromises, mount } from '@vue/test-utils'
-import { expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, expect, it, vi } from 'vitest'
+
+import { useAnalysisStore } from '../stores/analysis'
 import WorkspaceView from './WorkspaceView.vue'
 
 const client = vi.hoisted(() => ({
@@ -349,7 +379,11 @@ vi.mock('../generated/mint-plugin', () => ({
   useClient: () => client,
 }))
 
-it('should create a panel and refresh the list when the form is submitted', async () => {
+beforeEach(() => {
+  setActivePinia(createPinia())
+})
+
+it('should create a panel and refresh the list when the sidebar form is submitted', async () => {
   const panel = { id: 'p1', name: 'Pilot', drugs: [{ name: 'Cisplatin', doses_uM: [0.1, 1, 10] }] }
   client.listPanels.mockResolvedValueOnce([])
   client.listPanels.mockResolvedValueOnce([panel])
@@ -357,11 +391,13 @@ it('should create a panel and refresh the list when the form is submitted', asyn
   const wrapper = mount(WorkspaceView)
   await flushPromises()
 
-  await wrapper.get('#panel-name').setValue('Pilot')
-  await wrapper.get('#panel-drug').setValue('Cisplatin')
-  await wrapper.get('form').trigger('submit')
+  await useAnalysisStore().run({ name: 'Pilot', drug: 'Cisplatin' })
   await flushPromises()
 
+  expect(client.createPanel).toHaveBeenCalledWith({
+    name: 'Pilot',
+    drugs: [{ name: 'Cisplatin', doses_uM: [0.1, 1, 10] }],
+  })
   expect(wrapper.get('li').text()).toContain('Pilot')
 })
 ```
@@ -371,9 +407,9 @@ Check the contract and frontend, then build the frontend. The backend refuses to
 ```bash
 mint doctor --strict
 cd frontend
-bun run type-check
-bun run test
-bun run build
+vp run type-check
+vp run test
+vp run build
 cd ..
 mint dev
 ```
@@ -423,7 +459,7 @@ Then deploy to a test platform you administer:
 
 ```bash
 mint platform auth login --url https://mint-test.example.org
-mint deploy --to https://mint-test.example.org
+mint deploy --url https://mint-test.example.org
 ```
 
 `mint deploy` uploads the same bundle, restarts the platform, and confirms the restart by the new server `boot_id`. The restart requires the `platform.configure` permission; `--timeout` (default 180 s) covers the restart and the plugin load together. Use a test platform, not production.

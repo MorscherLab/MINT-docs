@@ -12,7 +12,7 @@ Multi-step workflow container with progress, validation, and navigation slots.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/StepWizard.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/StepWizard.vue">Source</a>
 </div>
 
 <demo vue="./demos/StepWizard.vue" title="StepWizard" description="A three-step wizard with free navigation. Click a step to show its panel." />
@@ -38,10 +38,28 @@ import { StepWizard } from "@morscherlab/mint-sdk/lab"
 
 The default navigation shows a step counter (`2 / 4`) on the left and Cancel, Back, and Next / Finish as `BaseButton`s on the right. A custom `#navigation` slot replaces all of it; style custom navigation through that slot.
 
+The `#actions-start` slot adds an action that keeps the wizard open, for example **Save draft**. It shows left of Cancel, Back and Next.
+
+## In a modal
+
+Inside a [BaseModal](/sdk/components/base-modal), the wizard puts its buttons in the modal footer: one dialog has one footer. Do not give the modal a `#footer` slot of its own. The `mint lint` rule `wizard-in-modal` reports a `StepWizard` in a `BaseModal` that has its own footer.
+
+```vue
+<BaseModal v-model:open="open" title="New sequence">
+  <StepWizard v-model="step" :steps="steps" @complete="create" @cancel="open = false">
+    <template #step-samples><!-- sample fields --></template>
+    <template #step-review><!-- summary --></template>
+    <template #actions-start>
+      <BaseButton variant="ghost" @click="saveDraft">Save draft</BaseButton>
+    </template>
+  </StepWizard>
+</BaseModal>
+```
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/StepWizard.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/StepWizard.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -59,7 +77,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` WizardStep `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L15) | See the linked SDK type definition. |
+| [` WizardStep `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L15) | See the linked SDK type definition. |
 
 ### Events
 
@@ -74,8 +92,9 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Slot | Props | Description |
 |---|---|---|
-| ` progress ` | ` { steps: WizardStep[]; current: number; states: WizardStepState[]; } ` | — |
-| ` navigation ` | ` { goBack: () => void; goNext: () => void; finish: () => void; cancel: () => void; isFirst: boolean; isLast: boolean; canProceed: boolean; } ` | — |
+| ` progress ` | ` { steps: WizardStep[]; current: number; states: WizardStepState[]; } ` | Replaces the step indicator. |
+| ` navigation ` | ` { goBack: () => void; goNext: () => void; finish: () => void; cancel: () => void; isFirst: boolean; isLast: boolean; canProceed: boolean; } ` | Replaces the button row. |
+| ` actions-start ` | — | An action that keeps the wizard open (Save draft), left of Cancel / Back / Next. |
 
 <!-- sdk-props:end -->
 

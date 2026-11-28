@@ -12,7 +12,7 @@ Calendar is a forms component exported by @morscherlab/mint-sdk for plugin front
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/Calendar.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/Calendar.vue">Source</a>
 </div>
 
 <demo vue="./demos/Calendar.vue" title="Calendar" description="Month calendar with three dated markers. Click a day to change the model value." />
@@ -23,10 +23,12 @@ Calendar is a forms component exported by @morscherlab/mint-sdk for plugin front
 import { Calendar } from "@morscherlab/mint-sdk"
 ```
 
+The component has no border, radius or background of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. In the card it keeps the text inset of the card.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/Calendar.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/Calendar.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -51,8 +53,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` CalendarSelectionMode `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L411) | ` 'none' \| 'single' \| 'range' \| 'multiple' ` |
-| [` CalendarMarker `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L414) | See the linked SDK type definition. |
+| [` CalendarSelectionMode `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L407) | ` 'none' \| 'single' \| 'range' \| 'multiple' ` |
+| [` CalendarMarker `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L410) | See the linked SDK type definition. |
 
 ### Events
 

@@ -153,6 +153,34 @@ def test_queue_change_reads_the_lc_method():
 
 Run a tool, prompt or resource through the same code as the platform with `call_tool`, `render_prompt` and `read_resource` from `mint_sdk.mcp`. Pass `platform=RecordingContext(...)` so that `ctx.design` and `ctx.artifacts` act as the actor. See [MCP tools](/sdk/recipes/mcp-tools#test-a-tool).
 
+## Panels
+
+`Harness.panel(id, experiment_id, as_user=)` calls a `@panel` method through the runtime and returns its sections as dictionaries. The `mint init` standard scaffold has one such test:
+
+```python
+def test_summary_panel_shows_the_experiment_and_links_to_the_workspace() -> None:
+    with Harness(LabQcPlugin) as harness:
+        sections = harness.panel("summary", 7)
+
+    assert [(section["kind"], section.get("href")) for section in sections] == [
+        ("kv", None),
+        ("link", "/plugin/lab-qc"),
+    ]
+```
+
+## Frontend tests
+
+Frontend tests run with `vp run test` (Vitest through Vite+) in `frontend/`. Name each test `it('should <behavior> when <condition>')`: the oxlint preset of `mint lint` checks that titles start with "should".
+
+`FormBuilder`, `SettingsModal` and the generated UI load the `path`, `file`, `molecule`, `formula` and `sequence` fields on first use. A test that finds one of these fields right after mount loads them first:
+
+```ts
+import { beforeAll } from 'vitest'
+import { preloadFormFieldTypes } from '@morscherlab/mint-sdk/runtime'
+
+beforeAll(() => preloadFormFieldTypes())
+```
+
 ## Testing migrations
 
 For Alembic migrations (`Metadata.database`), use `run_migrations`, `inspect_migrations` and `check_migrations` against temporary SQLite databases; [Backfill migrations](/sdk/recipes/backfill-migration#test-the-real-upgrade-path) has a complete upgrade test. The `mint-sdk[local-db]` extra supplies `aiosqlite` and `greenlet` for `sqlite+aiosqlite://` tests. The legacy `MigrationRunner` is removed.
@@ -173,7 +201,7 @@ The platform doesn't require any specific coverage threshold — pick what your 
 
 - `pytest-asyncio` is the conventional async test runner. Add it via `uv add --dev pytest-asyncio` and set `asyncio_mode = "auto"` in `pyproject.toml`.
 - `RecordingContext` keeps state in memory; share one instance across several route calls within one test.
-- Run `mint doctor --strict` in the test suite or CI to catch removed APIs.
+- Run `mint doctor --strict` and `mint lint` in CI to catch removed and deprecated APIs and design-rule findings.
 
 ## Related
 

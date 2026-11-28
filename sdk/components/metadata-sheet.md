@@ -12,7 +12,7 @@ Spreadsheet-style editor for per-run sample metadata. Each row is one run. Each 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/MetadataSheet.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/MetadataSheet.vue">Source</a>
 </div>
 
 <demo vue="./demos/MetadataSheet.vue" title="MetadataSheet" description="Four samples and one blank with three factor columns. Edit a cell, drag the fill handle, or paste a table from Excel." />
@@ -112,6 +112,17 @@ async function onImportExperiment(experiment, mode) {
 
 The `actions` slot adds host buttons before Undo. An empty sheet shows only these host actions, and no toolbar when the host has none. The drop zone is the one import entry of an empty sheet. Filter, Import, Copy sheet and Paste appear when the sheet has rows. The `empty` slot replaces the drop zone.
 
+## Select runs from the host
+
+The component exposes `selectRuns(runs)`. It selects the rows whose run is in the list, on the Type column (the first factor column when `showType` is false), and scrolls the first one into view. One pasted value or a fill-drag then sets exactly those rows. Rows that are not adjacent show alone until the user clicks **Show all rows**. Use it, for example, for chips that select all runs of one file-name pattern.
+
+```ts
+const sheet = useTemplateRef<{ selectRuns: (runs: readonly string[]) => void }>('sheet')
+sheet.value?.selectRuns(['QC_01', 'QC_02'])
+```
+
+The sheet has no frame of its own. As the direct child of a `SectionCard` body it runs to the card edges, and in a `fill` card it takes the height that is left and scrolls its own rows.
+
 ## Helpers
 
 The `lab` entry also exports the pure helpers that the component uses. The type of the whole sheet is `MetadataSheetData`.
@@ -127,7 +138,7 @@ The `lab` entry also exports the pure helpers that the component uses. The type 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/MetadataSheet.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/MetadataSheet.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -152,11 +163,11 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` MetadataSheetRow `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/utils/metadataSheet.ts#L20) | See the linked SDK type definition. |
-| [` MetadataSheetColumn `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/utils/metadataSheet.ts#L10) | See the linked SDK type definition. |
-| [` MetadataSheetType `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/utils/metadataSheet.ts#L28) | See the linked SDK type definition. |
-| [` MetadataSheetExperiment `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/MetadataSheet.vue#L33) | See the linked SDK type definition. |
-| [` MetadataSheetRuns `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/utils/metadataSheet.ts#L39) | ` 'editable' \| 'imported' \| 'fixed' ` |
+| [` MetadataSheetRow `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/utils/metadataSheet.ts#L20) | See the linked SDK type definition. |
+| [` MetadataSheetColumn `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/utils/metadataSheet.ts#L10) | See the linked SDK type definition. |
+| [` MetadataSheetType `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/utils/metadataSheet.ts#L28) | See the linked SDK type definition. |
+| [` MetadataSheetExperiment `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/MetadataSheet.vue#L45) | See the linked SDK type definition. |
+| [` MetadataSheetRuns `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/utils/metadataSheet.ts#L39) | ` 'editable' \| 'imported' \| 'fixed' ` |
 
 ### Events
 

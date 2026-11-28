@@ -72,14 +72,15 @@ Every tool runs as you and respects your role, project access, and plugin visibi
 | **Jobs** | `mint_start_job`, `mint_get_job`, `mint_get_job_result`, `mint_cancel_job` | Status and results only |
 | **Plugin tools** | Tools, prompts, and resources that installed plugins publish, named `<plugin>_<name>` | Read tools only |
 
-The assistant can also read `mint://` resources: an experiment with its design data, a single analysis artifact, or a stored file of up to 5 MiB. Larger files must be downloaded from MINT directly. A plugin can also offer its exports and its recent events as `mint://plugins/...` resources; see [Plugin communication](/sdk/concepts/plugin-communication#read-an-export-over-mcp).
+The assistant can also read `mint://` resources: an experiment with its design data, a single analysis artifact, or a stored file of up to 5 MiB. Larger files must be downloaded from MINT directly. A plugin can also offer its exports and its recent events as `mint://plugins/...` resources; see [Plugin communication](/sdk/concepts/plugin-communication#read-an-export-over-mcp). The tabs that plugins add to the experiment page are resources too: `mint://experiments/{id}` lists them as `panels`, each with its `mint://plugins/<plugin>/panels/<panel>/experiments/<id>` address. A read-only token can read them.
 
 Things to know:
 
 - **Confirmation questions.** Before a destructive call, MINT asks you in the AI client. If you decline or cancel, the call stops before it runs. MINT asks for these calls:
   - `mint_save_design` without `expected_version`, when a design is already stored.
   - `mint_save_artifact` with `replace=true`, over an artifact that an assistant saved.
-  - `mint_cancel_job`, for a queued or running job.
+  - `mint_start_job`, for a job that the plugin marks destructive. The question shows the job title.
+  - `mint_cancel_job`, unless MINT knows that the job has already ended.
   - A plugin tool that the plugin marks destructive. The question shows the tool title and the argument values, shortened.
 
   A client that cannot ask questions runs the call without a question. Some clients say that they can ask, but they cannot show a dialog, for example in a headless run. These clients cancel the question, so the call fails. Answer the question with a client hook. In Claude Code, use an `Elicitation` hook. The question is not a permission check. A hook can answer it, and your role limits stay the same.
@@ -88,9 +89,45 @@ Things to know:
 - **Writes are audited.** Every write call appears in the audit log as `mcp.tool_call`, and artifacts saved over MCP record that they came from MCP and which token saved them.
 - **Saving results is create-only.** An assistant cannot overwrite an artifact a plugin created. With `replace=true` it can replace only an artifact that an assistant saved before.
 - **Jobs.** `mint_list_plugins` lists each plugin's jobs and their inputs. A job input can be an experiment file, a file on a server mount, or an inline file of at most 4 MiB. One token can hold at most 64 unfinished job handles; finished, cancelled, and saved jobs do not count.
-- **Restarts.** Job handles do not survive a platform restart; they then report `lost`. Start the job again.
+- **Restarts.** Job handles and [tasks](#jobs-as-background-tasks) do not survive a platform restart. A handle then reports `lost`, and a task ends as failed. Start the job again.
 
 Plugin authors who want to publish their own tools: see [MCP tools for plugins](/sdk/recipes/mcp-tools).
+
+## Skills
+
+The MCP server also serves **skills** (MCP extension `io.modelcontextprotocol/skills`). A skill is a short set of instructions for the assistant: the order of tool calls for a task, the values you must choose, and the rules of a plugin. The assistant loads a skill only when a task needs it.
+
+Claude Code shows each skill as `<server>:<skill>`. `<server>` is the name you gave the server in `claude mcp add`. With the command above, the name is `mint`:
+
+| Skill | Source | Use |
+|-------|--------|-----|
+| `mint:mint-experiments` | Platform | Find and read experiments, create an experiment, save design data or an analysis artifact |
+| `mint:mint-jobs` | Platform | Start a plugin job, follow it, read its result, keep it in an experiment, or cancel it |
+| `mint:<plugin>-<name>` | A plugin | The procedure of that plugin, for example `mint:backend-only-charts-summary` |
+
+To find the skills in Claude Code, type `/` at the prompt, or run `/skills` in the terminal. To use a skill, ask Claude, or type its name as a command, for example `/mint:mint-jobs`.
+
+Every token sees the two platform skills. You see the skill of a plugin only when your role sees the plugin and has `plugins.use`, as for the tools of that plugin. A skill gives no permission: MINT checks each tool call again.
+
+## Jobs as background tasks
+
+The MCP server also serves **tasks** (MCP extension `io.modelcontextprotocol/tasks`). A client that supports tasks runs a plugin job in the background:
+
+1. The assistant calls `mint_start_job`. MINT starts the job and answers at once with a task. The task id is the job handle.
+2. The client asks MINT for the status of the task. The assistant does not poll in the conversation. In Claude Code, the footer shows a count such as `1 MCP task`.
+3. When the job ends, the client gives the result to the assistant. A task with `save_to` continues until MINT has saved the result in the experiment, or the save has failed.
+
+The task and the job handle are the same object. `mint_get_job`, `mint_get_job_result` and `mint_cancel_job` accept the task id. Tasks and handles share the limit of 64 unfinished jobs per token. MINT keeps a task for 24 hours.
+
+To stop a task in Claude Code, select it in `/tasks` and press `x`, or ask Claude to stop it. MINT then cancels the job without a confirmation question. A job that has ended stays as it is.
+
+MINT keeps tasks in memory. After a platform restart, MINT reports the task as failed with the reason "The job was lost in a platform restart: its handle and in-memory result are gone." A result that MINT saved with `save_to` before the restart stays in the experiment. Ask the assistant to check the experiment before you start the job again.
+
+A client without tasks gets the plain job handle, as before. The assistant then polls with `mint_get_job`. The job tools work the same in both cases.
+
+## Client support
+
+MINT serves skills and tasks to every client. The client decides whether it uses them. For the Claude Code versions, sessions and plans that use them, see the [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp#use-skills-from-mcp-servers). Other MCP clients can use the job tools and the `mint://` resources without skills or tasks.
 
 ## Troubleshooting
 
@@ -101,3 +138,5 @@ Plugin authors who want to publish their own tools: see [MCP tools for plugins](
 | Assistant cannot find a write tool | The token is read-only, or your role lacks the permission |
 | A tool says "This access token is read-only" | Create a full-access token for that task |
 | A destructive call is cancelled in a headless run | The client cannot show the confirmation question. Answer it with a client hook, or run the call in an interactive client |
+| Claude Code shows no `mint:` skills | Check that your Claude Code session gets MCP skills; see [Client support](#client-support). A plugin skill needs `plugins.use` and a role that sees the plugin |
+| A task ends as failed after a platform restart | MINT keeps tasks in memory. Check the experiment for a saved result, then start the job again |

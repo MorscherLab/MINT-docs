@@ -28,7 +28,7 @@ An experiment combines platform fields with plugin-defined fields:
 | Identity | `id`, `experiment_code`, `name`, `version` | `experiment_code` is generated from type + sequence, e.g. `DR-EXP-001` for type `dose_response`. It is empty until the experiment starts or a user assigns it; see [Experiment numbers](/guide/experiments#experiment-numbers). `version` goes up with every write and lets MINT detect two people saving at the same time |
 | Classification | `experiment_type`, `status`, project link | Status is `planned`, `ongoing`, `completed`, or `cancelled` |
 | Ownership | creator, collaborators, project members | Access is resolved from platform RBAC and project membership |
-| Design data | sample layout, plate map, run sequence, treatment plan | One JSON payload written when the plugin's resolved policy allows `design_data_write` |
+| Design data | sample layout, plate map, run sequence, treatment plan | One JSON payload written when the plugin's resolved policy allows `design_data_write`. A live design plugin saves it field by field from a form on the experiment page, so it can lack required fields for a while |
 | Analysis artifacts | result summaries, reports, exported tables, file-backed outputs | Named records written when the plugin's resolved policy allows `analysis_result_write` |
 | File objects | RAW files, generated reports, binary analysis outputs | Stored under the configured data path or object store, referenced from artifacts |
 
@@ -79,9 +79,10 @@ MINT uses PostgreSQL for every platform deployment. A plugin running standalone 
 1. A user creates a project.
 2. An admin creates or enables an experiment type and installs the plugin(s) that act on it.
 3. A user creates an experiment and chooses that type.
-4. The design plugin writes structured design data.
+4. The design plugin writes structured design data, on its own page or in the design form of the experiment page. When two or more design plugins admit the type, the user chooses one; see [Choose a design plugin](/guide/experiments#choose-a-design-plugin).
 5. One or more analysis/full plugins read the experiment and save named analysis artifacts.
-6. Users review artifact groups, export files or JSON payloads, archive stale outputs, or launch follow-up plugin workflows.
+6. Users review artifact groups and plugin tabs, export files or JSON payloads, archive stale outputs, or launch follow-up plugin workflows.
+7. When a user deletes the experiment, MINT removes its records and deletes its stored files from the object store.
 
 ## Read next
 

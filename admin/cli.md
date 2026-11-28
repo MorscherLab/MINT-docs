@@ -2,7 +2,7 @@
 
 The `mint` command talks to a running MINT instance: sign in, script experiment and project changes, administer plugins and users, check health and apply platform updates. It uses the platform's REST API with the same JWT sign-in as the browser UI.
 
-Plugin developers use the same CLI to scaffold and build plugins; see the [CLI reference](/sdk/api/cli-reference), which lists every command and flag.
+Plugin developers use the same CLI to scaffold, lint and build plugins; see the [CLI reference](/sdk/api/cli-reference), which lists every command and flag. The plugin development commands also need the Vite+ CLI `vp`; the platform commands on this page do not.
 
 ## Install
 
@@ -83,11 +83,15 @@ Plugin commands are for administrators and other users with matching server-side
 
 ```bash
 mint platform plugin list
+mint platform plugin snapshots
+mint platform plugin rollback <snapshot-id>
 mint platform plugin upload ./dist/my-plugin-1.0.0.mint
 mint platform plugin github install MorscherLab/my-plugin --tag v1.0.0
 mint platform plugin config get my-plugin
 mint platform plugin config update my-plugin --file settings.json
 ```
+
+`plugin list` shows the state of each plugin (`enabled`, `disabled`, or `error` with the migration error) and the plugins that the dependency lock disabled, with the reason. `plugin snapshots` lists the plugin lock history, and `plugin rollback` applies one lock again; restart the platform afterwards.
 
 These commands do not install plugins into your local shell environment. They call the running MINT server, and the server performs dependency checks, bundle extraction, settings writes, and restart-required reporting.
 
@@ -104,7 +108,7 @@ Prints a one-screen health overview:
 - Platform reachability via the public `/api/health` endpoint (it reports status, version and a per-process `boot_id`, not the plugin list)
 - Token validity / expiry when the server can verify it
 
-For deeper operational status, use **Admin -> Platform -> Server** in the browser UI.
+For deeper operational status, use **Admin -> System -> Server** in the browser UI.
 
 ## Admin
 
@@ -128,6 +132,14 @@ mint platform update apply --yes
 ```
 
 `mint platform update check` reports platform and plugin update sources. `mint platform update apply` applies the latest platform update and requires `platform.configure`.
+
+When installed plugins do not support the new platform SDK, the update needs plugin changes. `update apply` shows the plugin releases that the update installs and the plugins that it disables, with the reason, and asks. With `--yes` or `--json`, accept them with flags:
+
+```bash
+mint platform update apply --yes --pair-all --disable mint-plugin-old-tool
+```
+
+`--pair-all` accepts every paired plugin release. Give one `--disable PACKAGE` for each plugin to disable. A plugin that is not named is never disabled: the command exits 1 and names the missing flags. See [Updates](/admin/updates).
 
 ## Libraries
 

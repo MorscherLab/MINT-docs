@@ -12,7 +12,7 @@ ExperimentCodeBadge is a data display component exported by @morscherlab/mint-sd
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ExperimentCodeBadge.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ExperimentCodeBadge.vue">Source</a>
 </div>
 
 <demo vue="./demos/ExperimentCodeBadge.vue" title="ExperimentCodeBadge" description="Experiment code badges in two sizes. Copy the code from the default badge." />
@@ -26,7 +26,7 @@ import { ExperimentCodeBadge } from "@morscherlab/mint-sdk/data"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ExperimentCodeBadge.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ExperimentCodeBadge.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

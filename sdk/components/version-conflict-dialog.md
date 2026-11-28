@@ -12,7 +12,7 @@ Dialog for a save refused with a 412 version conflict; reload or overwrite.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/VersionConflictDialog.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/VersionConflictDialog.vue">Source</a>
 </div>
 
 <demo vue="./demos/VersionConflictDialog.vue" title="VersionConflictDialog" description="A button opens the dialog with two unsaved changes. Choose Overwrite or Reload." />
@@ -23,6 +23,8 @@ Dialog for a save refused with a 412 version conflict; reload or overwrite.
 import { VersionConflictDialog } from "@morscherlab/mint-sdk/data"
 ```
 
+The footer shows **Overwrite** at the far left in error ink, then **Keep editing** and the primary **Reload and discard mine** at the right. **Keep editing** emits `update:open` with `false`, as the close button does.
+
 ## Usage
 
 Show the dialog while `useVersionedSave().conflict` is set. Reload discards the edits and refetches. Overwrite saves the edits on top of the newer version.
@@ -30,7 +32,7 @@ Show the dialog while `useVersionedSave().conflict` is set. Reload discards the 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/VersionConflictDialog.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/VersionConflictDialog.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

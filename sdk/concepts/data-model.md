@@ -15,7 +15,7 @@ The `mint-sdk` data classes mirror the platform's core entities. Context namespa
 | `status` | `planned`, `ongoing`, `completed`, or `cancelled`. The platform refuses an unknown status or a transition it does not allow |
 | `tags`, `custom_metadata` | Free-form JSON columns plugins can read but generally should not mutate unless their plugin type owns the experiment update path |
 | `parent_experiment_id` | For nested experiments / sub-runs |
-| `design_owner_plugin_id` | Existing design owner; `None` before a design payload establishes ownership |
+| `design_owner_plugin_id` | Existing design owner; `None` before a design payload establishes ownership. The REST experiment answers also give `None` when the caller's role cannot see the design plugin |
 
 ### `DesignData`
 
@@ -48,7 +48,11 @@ class BatchDesigner(Plugin):
     pass
 ```
 
-`schema` is a JSON Schema (draft 2020-12) `dict` or a pydantic model class that the SDK converts. The platform validates every `design.save` write against it: in-process, from a plugin process, and from the user paths (`PUT /api/experiments/{id}/data` and the MCP tool `mint_save_design`). A mismatch raises `ValidationException` with the field paths. The contract is opt-in; a plugin without `Metadata.design` keeps free-form JSON. Schema validation is separate from SQL migrations and typed administrator settings. The schema is readable at `GET /api/plugins/{name}/design-schema`.
+`schema` is a JSON Schema (draft 2020-12) `dict` or a pydantic model class that the SDK converts. The platform validates every `design.save` write against it: in-process, from a plugin process, and from the user paths (`PUT /api/experiments/{id}/data` and the MCP tool `mint_save_design`). A mismatch raises `ValidationException` with the field paths. The contract is opt-in; a plugin without `Metadata.design` keeps free-form JSON. Schema validation is separate from SQL migrations and typed administrator settings. The schema is readable at `GET /api/plugins/{name}/design-schema`, with `live` for a live design.
+
+`Design(live=True)` makes the platform draw a form from the schema on the experiment page. Each field saves by itself as a patch (`PATCH /api/experiments/{id}/data/{plugin_id}`). A patch checks the schema without its root `required` list, so the stored `data` of a live design can lack required fields. Every reader of the design data must accept such a document. See [Live design forms](/sdk/recipes/live-design).
+
+Before the first save, the experiment has no design owner. The platform then uses the first design plugin by display name that admits the type. On the experiment page, a user who may manage the design data chooses among two or more such plugins; the first save makes the chosen plugin the owner. See [Choose a design plugin](/guide/experiments#choose-a-design-plugin).
 
 ### `Artifact`
 
@@ -88,6 +92,8 @@ An artifact is a discoverable result record; an `ObjectRef` identifies bytes in 
 Use `self.context.objects(experiment_id)` for raw object operations (`put(key, source)`, `get`, `stream`, `download`, `exists`, `list`, `delete`). An integrated store is scoped to experiment and plugin; another plugin's read scope requires a `reads_from` declaration and does not allow mutation. Standalone object storage is local; it does not create platform artifact records.
 
 `artifacts.save(experiment_id, path, key)` uploads a file and creates or replaces its artifact record. `replace=False` rejects a reused key. Replacing a file artifact is a compare-and-swap on its object key (`expect=`), and the platform removes the old object after the replacement commits. JSON artifact saves replace by default. See [Writing results](/sdk/recipes/writing-results).
+
+An experiment delete also removes the stored objects of the experiment. The delete transaction writes one cleanup job per object, and the object cleanup worker deletes each object by key after the commit. An object that another experiment still references stays. The delete does not wait for the storage. Administrators see the cleanup jobs at `GET /api/admin/object-cleanup`.
 
 ## JSONB portability
 

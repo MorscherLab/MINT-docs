@@ -12,7 +12,7 @@ Modal for browsing and selecting an analysis artifact of an experiment, with fil
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue">Source</a>
 </div>
 
 ::: info Needs the platform
@@ -42,7 +42,7 @@ A selected row shows the soft accent fill, the teal title and a trailing check. 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ArtifactSelectorModal.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -50,9 +50,10 @@ MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` experimentId ` | ` number \| null ` | No | ` null ` | Experiment id override; defaults to the current experiment (useExperimentStore). |
 | ` pluginId ` | ` string \| null ` | No | ` null ` | Scope to a single owning plugin; omit to show all plugins. |
 | ` currentArtifactId ` | ` number \| null ` | No | ` null ` | Highlights the currently used artifact. |
+| ` accept ` | ` string[] ` | No | ` [] ` | Only file artifacts of these types (.csv matches the filename end, any other entry the file kind). |
 | ` includeArchived ` | ` boolean ` | No | ` false ` | Start with archived artifacts visible. |
 | ` fetchDetailOnSelect ` | ` boolean ` | No | ` false ` | Fetch the full detail before emitting selectDetail. |
-| ` title ` | ` string ` | No | ` "Select Analysis Artifact" ` | — |
+| ` title ` | ` string ` | No | ` "Select analysis artifact" ` | — |
 | ` size ` | ` ModalSize ` | No | ` "full" ` | — |
 
 Defaults are the values that vue-component-meta resolves from the source; object and array defaults come from factories that run for each component instance. `undefined` may be resolved internally from other props or platform settings. “—” in Description means the source does not provide a prop comment.
@@ -61,7 +62,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L39) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
+| [` ModalSize `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L40) | ` 'sm' \| 'md' \| 'lg' \| 'xl' \| 'full' ` |
 
 ### Events
 

@@ -12,7 +12,7 @@ Avatar is a feedback component exported by @morscherlab/mint-sdk for plugin fron
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/Avatar.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/Avatar.vue">Source</a>
 </div>
 
 <demo vue="./demos/Avatar.vue" title="Avatar" description="Avatars in three sizes with status dots. Compare the online, away and busy states." />
@@ -26,7 +26,7 @@ import { Avatar } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/Avatar.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/Avatar.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

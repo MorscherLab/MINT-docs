@@ -18,6 +18,8 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Restart takes a long time | A startup phase is slow, for example `plugin_restore` or `isolated_plugins` | Read the startup log. MINT writes one line per phase (`Startup phase '<name>' took 1.03s`) and a summary (`Startup complete in 3.90s (database=0.41s, ...)`). The phase with the largest time is the cause |
 | Migration fails with advisory-lock error | Two MINT processes started simultaneously | Stop one, let the other finish, restart |
 | MINT exits at startup with "This database still uses the pre-Alembic integer migration history, which MINT 1.3 no longer runs" | The database was never started on MINT 1.2.2 or later, so it was not adopted into Alembic | Go back to your MINT 1.2.x deployment, upgrade it to 1.2.2 or later, start it once, then upgrade to 1.3. Do not create or stamp `alembic_version` by hand. See [Upgrading from MINT 1.1](/admin/updates#upgrading-from-mint-1-1) |
+| A 1.5 release exits at startup with `Unknown database revision platform_object_cleanup_kind` | MINT 1.6 started on this database once. A 1.5 release cannot run on it, and no command runs a downgrade | Start MINT 1.6, or restore the database dump from before the upgrade and start 1.5 with the data directory from before the upgrade. See [Go back to 1.5](/admin/updates#go-back-to-1-5) |
+| Pages show errors, and the browser console shows a `TypeError` | The browser is older than the supported releases | Use Chrome 116, Edge 116, Firefox 124, Safari 17.4 or newer. See [Supported browsers](/guide/access#supported-browsers) |
 | Plugin migration fails on startup | Migration, ownership, history or model/schema validation failed, or the plugin still defines the removed `get_migrations_package()` (shown as `migration_error`) | The plugin remains disabled before initialization. Inspect migration status in **Admin -> Plugins -> Installed** and the platform logs; fix the cause in a reviewed plugin release. |
 
 ## Authentication
@@ -26,29 +28,30 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 |---------|-------|-----|
 | Login loops back to the page | Cookies blocked for the platform domain, or `server.externalUrl` is `https://` while users open MINT over plain HTTP (the `Secure` auth cookie is then dropped) | Allow cookies and reload; open MINT at the `externalUrl` address over HTTPS, or correct `server.externalUrl` |
 | "Account is temporarily locked" | `auth.failedLoginLimit` (default 5) failed password logins | Wait `auth.loginLockoutMinutes` (default 15), then sign in again |
-| Login fails with the right password | The account is deactivated | Ask an admin to re-activate it under **Admin -> People -> Users** |
+| Login fails with the right password | The account is deactivated | Ask an admin to re-activate it under **Admin -> People & access -> Users** |
 | Password rejected when setting or changing it | Passwords must be at least 8 characters and at most 72 bytes in UTF-8 (422 `validation.request`) | Choose a password within these limits |
 | `/register` sends you to the login page | Self-registration is off (`auth.allowRegistration: false`) | Ask an admin to create your account |
-| Signed out after a password change | Changing a password revokes every earlier session of that account | Sign in again with the new password |
+| Signed out after a password change | Changing a password revokes every earlier session of that account. An admin password reset ends every session of the user | Sign in again with the new password |
 | AI client gets 421 from `/mcp` | The request's `Host` is neither localhost nor the host of `server.externalUrl`; without `externalUrl`, only localhost is accepted | Set `server.externalUrl` to the address clients use (including a non-default port), make the reverse proxy pass the original `Host` header, and restart MINT |
 | Passkey prompt fails | Browser doesn't support WebAuthn, or platform is on `127.0.0.1` over HTTP from a non-localhost browser | Use a recent Chrome/Safari/Firefox/Edge; serve over HTTPS for non-loopback access. Behind a reverse proxy, add the proxy to `server.trustedProxyCidrs` so MINT honors `X-Forwarded-Host` |
 | SWITCH edu-ID button missing | `sso.eduid.enabled` is false or the frontend is still using cached auth config | Enable `sso.eduid`, reload the page, and confirm `/api/auth/config` returns `sso.eduid.enabled: true` |
 | edu-ID callback fails | Missing `server.externalUrl`, missing `openid` scope, or callback URL not registered with edu-ID | Set `server.externalUrl` to the public HTTPS URL and register `<externalUrl>/api/auth/sso/eduid/callback` with edu-ID |
 | 401 `auth.second_factor_required` | The session came from a password or edu-ID sign-in, and the second factor is on. Its `details.second_factor` is `verify` (use your passkey) or `enrol` (register one) | Finish the passkey step on the login page. A script must use a personal access token. See [Second factor](/admin/authentication#second-factor) |
 | Second factor is on in the settings but the login has no passkey step | Enforcement needs auth, passkeys, dev mode off, and an `https://` `server.externalUrl` | Set `server.externalUrl` to the public HTTPS URL (`server.rpId` alone does not count). The startup log names the unmet condition |
-| User lost every passkey | The second factor blocks the sign-in | An admin chooses **Reset passkeys** for the user in **Admin -> People -> Users** (`passkey.admin_reset`). For the last administrator, set `MINT_AUTH__REQUIRE_SECOND_FACTOR=false` and restart. See [Recovery](/admin/authentication#recovery) |
+| User lost every passkey | The second factor blocks the sign-in | An admin chooses **Reset passkeys** for the user in **Admin -> People & access -> Users** (`passkey.admin_reset`). For the last administrator, set `MINT_AUTH__REQUIRE_SECOND_FACTOR=false` and restart. See [Recovery](/admin/authentication#recovery) |
 | 423 on a password change | Too many wrong current passwords; the account is locked | Wait for `Retry-After` (`auth.loginLockoutMinutes`) |
 | Role create or update returns 422 on `slug` | The slug does not match `^[a-z0-9][a-z0-9_-]*$` | Use lowercase letters, digits, `-` and `_` |
 | 409 when you delete, deactivate or demote an administrator | It would remove the last active administrator | Create or keep another administrator first |
 | "Rate limit exceeded" on auth | More than 20 requests in 60 s from one client IP to the sign-in, passkey, setup, registration or password-change endpoints | Wait 60 s. Behind a reverse proxy, make sure it sends `X-Forwarded-For` and that its address is in `server.trustedProxyCidrs`; otherwise all users share the proxy's IP. An empty list trusts no proxy |
 | `mint platform auth login` waits and then fails | The code expired (it lasts 10 minutes) before approval, or the platform restarted (pending codes live in memory) | Run the command again and approve the code at `<externalUrl>/device`. The page must be reachable from your browser; set `server.externalUrl` |
 | All admins lost access | Last admin demoted by mistake | Recover by editing the database directly: set the desired user's role back to Admin (`UPDATE users SET role_id = ...`) |
+| A Member or Viewer does not see the **Admin** entry | The admin panel opens only for a role with `users.manage`, `platform.configure`, `plugins.configure`, `plugins.install` or `notices.publish`. `users.view` and `platform.view_logs` alone do not open it | This is expected. Give a custom role one of these permissions when the user must manage something. See [Users & roles](/admin/users-roles#system-roles) |
 
 ### Waiting for approval
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| After registration or sign-in, the page says "Waiting for approval" | A self-registered account is inactive until an administrator activates it | An admin opens **Admin -> People -> Users**, selects the account and chooses **Activate user**. To skip this step, create accounts as an admin and turn off `auth.allowRegistration` |
+| After registration or sign-in, the page says "Waiting for approval" | A self-registered account is inactive until an administrator activates it | An admin opens **Admin -> People & access -> Users**, selects the account and chooses **Activate user**. To skip this step, create accounts as an admin and turn off `auth.allowRegistration` |
 
 ## Projects and experiments
 
@@ -58,7 +61,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Experiment status pill won't change | The plugin owning the type rejects the transition | Check the plugin's UI for blockers (missing required fields, unfinished steps) |
 | Auto-assigned experiment code skipped a number | Code generator allocates per-attempt; failed creates can leave gaps | Cosmetic only; codes are unique, not gapless |
 | An edit returns 412 `experiment.version_conflict` or `project.version_conflict` | The `If-Match` version is stale: someone else saved first | Reload the entity and apply the edit again. The UI asks whether to reload or overwrite. A write without `If-Match` always wins |
-| Deleted experiment needs recovery | Experiment delete removes the row from the database | Restore from your platform-level database backup; the UI does not currently provide an undo window |
+| Deleted experiment needs recovery | Experiment delete removes the row from the database and its stored objects from the object store. An object that another experiment still references stays | Restore the database backup and the object store backup; the UI does not provide an undo window |
 
 ## Plugins
 
@@ -72,21 +75,30 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | After the 1.4 upgrade, a user cannot change a plugin's settings | Plugin roles are gone. The plugin asks for the `configure` level, or for a platform administrator | Give the role `plugins.configure`, or ask the author to set `settings_access = "configure"` |
 | 403 on update sources, private package indexes or the Prereleases toggle | These writes need `plugins.install`, and the role does not have it | Give a custom role `plugins.install`, or use an administrator |
 | After a platform upgrade, a plugin shows **Disabled by the dependency lock** | Startup reconcile found the plugin incompatible with the new platform, in conflict with an earlier-installed plugin, or not reinstallable from its lock | The row in **Admin -> Plugins -> Installed** shows the reason. Install a compatible plugin release, or uninstall the plugin. See [Startup reconcile](/admin/plugins#startup-reconcile) |
+| After the 1.6 upgrade, a plugin is disabled | The plugin's own requirements do not resolve against the 1.6 platform lock: a `mint-sdk` range that excludes 1.6 (such as `mint-sdk<1.6`), or a cap below a platform floor (such as `sqlalchemy<2.1`; the lock has SQLAlchemy 2.1, FastAPI 0.163 and Starlette 1.10) | Install a plugin release that admits 1.6. The reason shows in **Admin -> Plugins -> Installed**. See [Upgrading from MINT 1.5](/admin/updates#upgrading-from-mint-1-5) |
+| `mint platform plugin rollback` refuses a lock after a platform upgrade | The lock was made for another platform release | Use a lock made after the upgrade. To go back to the earlier platform, restore the backups. See [Rollback](/admin/updates#rollback) |
 | A plugin operation waits or a scheduled update is skipped | Plugin installs, upgrades, uninstalls, rollbacks and platform updates run one at a time | Wait for the running operation to finish; a scheduled batch retries every minute |
 | Plugin calls return 401 `auth.required` after an upgrade | The caller sends no `Authorization: Bearer` credential, or MINT cannot resolve it. Plugin routes do not read the session cookie | Send a session token, a personal access token or a service token. Use the SDK client in plugin frontends and scripts. Move a plugin that used its own ingest key to a [service token](/admin/authentication#service-tokens). See [Plugin requests and credentials](/admin/plugins#plugin-requests-and-credentials) |
 | Plugin calls return 503 `auth.unavailable` | MINT cannot reach the database to check the credential | Restore the database connection, then retry the request |
-| Plugin tile not visible to a user | The user's role lacks `plugins.use` or access to that plugin, or the page has the `configure` level and the role lacks `plugins.configure` | Check the role and its **Plugin access** under **Admin -> People -> Roles** |
+| Plugin tile not visible to a user | The user's role lacks `plugins.use` or access to that plugin, or the page has the `configure` level and the role lacks `plugins.configure` | Check the role and its **Plugin access** under **Admin -> People & access -> Roles** |
 | Plugin upgrade fails partway | Installation or migration failed | Inspect **Admin -> Plugins -> Installed** and logs. A failed install re-applies the previous lock; [lock rollback](/admin/plugins#rollback) restores Python packages but does not undo database changes. Use the verified deployment/database backup when needed. |
-| Plugin process keeps crashing | Plugin error in `initialize()` or a request handler | In development, run `mint dev logs backend --lines 100`; in production, use **Admin -> Platform -> Server**, **Admin -> Platform -> Logs**, or the platform service logs. If the failure came from a generated analysis run, also check the plugin page's job status tray. |
+| Plugin process keeps crashing | Plugin error in `initialize()` or a request handler | In development, run `mint dev logs backend --lines 100`; in production, use **Admin -> System -> Server**, **Admin -> System -> Logs**, or the platform service logs. If the failure came from a generated analysis run, also check the plugin page's job status tray. |
 | `mint dev` can't find the plugin | Working directory has no `pyproject.toml` with `mint.plugins` entry point | `cd` into the plugin root, or `mint init` to scaffold |
 | Plugin appears installed but routes return 404 | Plugin failed `initialize()` and the loader skipped mounting | **Admin -> Plugins -> Installed** shows the failure reason; fix and reload |
+
+## API clients and scripts
+
+| Problem | Cause | Fix |
+|---------|-------|-----|
+| A script that compares the error `code` no longer matches, for example it expects `resource.not_found` | Platform refusals have a specific code, such as `user.not_found`. The HTTP status did not change | Compare `code` with the specific code, or use the HTTP status. See [Error codes](/reference/error-codes) |
+| An error answer has an unknown `code` | — | Look up the code in [Error codes](/reference/error-codes). Give the `request_id` of the answer when you report the problem |
 
 ## Jobs and file browsing
 
 | Problem | Check | Next step |
 |---------|-------|-----------|
 | Failed job only shows `Job failed (job …)` | Platform and plugin SDK version | Upgrade the platform and plugin SDK together; current releases report the handler's exception type and message. Preserve the job ID when reporting the problem. |
-| Worker traceback is absent from admin logs | Runtime version | The worker sends its traceback to the host logger. Check **Admin -> Platform -> Logs** or service logs by job ID. |
+| Worker traceback is absent from admin logs | Runtime version | The worker sends its traceback to the host logger. Check **Admin -> System -> Logs** or service logs by job ID. |
 | Finished analysis fails with `Job worker could not be stopped` | Host resource pressure | The host waits up to 30 seconds for a worker to exit after SIGKILL. Inspect process/kernel cleanup and resource pressure; this message is not the analysis timeout. |
 | Newly added server files are missing from a picker | Cached directory metadata | Use refresh or close and reopen the picker. Refresh invalidates directory snapshots and reopening re-reads the location. |
 | A directory looks empty after filtering | Search/type filters and mount visibility | Clear filters and refresh; expansion controls stay available for filtered zero counts. Hidden paths and mount permissions still apply. |
@@ -106,6 +118,10 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | "Update available" notification keeps coming back | Background update checks are enabled and a newer release exists | Install the update or set `updates.autoCheckEnabled: false` |
 | Platform update breaks a plugin | Plugin needs a fix for the new SDK | Restore the previous platform deployment/database backup until the plugin is updated |
 | Prereleases do not show up | Prerelease checks are disabled, or you're already on the newest tag | Set `updates.includePrereleases: true` if you intentionally want prereleases |
+| The platform update installed a pre-release | **Platform pre-releases** (`updates.includePrereleases`) is on, so the update applies the newest pre-release | Turn off **Platform pre-releases** in the **Update settings** card before the update |
+| `mint platform update apply --yes` stops with "confirm these plugin changes: run again with …" | The update pairs plugin releases or disables plugins, and the command does not ask with `--yes` or `--json` | Run the command again with the flags that it names: `--pair-all` and one `--disable PACKAGE` for each plugin. See [Plugins that exclude the new platform version](/admin/updates#plugins-that-exclude-the-new-platform-version) |
+| The release list of a plugin source says "GitHub rejected the configured token" or "GitHub repository … does not exist" (400 `update_source.repository_inaccessible`) | The GitHub token expired or was revoked, the repository name is wrong, or the repository is private and no token can read it | Correct the repository, or set a token with read access in `updates.githubToken` (`MINT_UPDATES__GITHUB_TOKEN`). See [Update settings](/admin/plugins#update-settings) |
+| After an in-app update in Docker, a new container does not start | The container was created again from the old image. The in-app update changes the container, not the image | Set the Compose image to the new release, or check out the new tag and rebuild. See [Upgrading from MINT 1.5](/admin/updates#upgrading-from-mint-1-5) |
 | Docker container updates on restart when you did not expect it | Startup auto-update is enabled | Set `MINT_UPDATES__AUTO_APPLY_ON_STARTUP=false` and redeploy |
 | Docker startup auto-update is skipped but MINT still starts | The update was rejected safely; the entrypoint logs a warning and keeps the current runtime | Check `docker compose -f deploy/docker/docker-compose.yml logs app`, fix GitHub token/network/release access, then restart when ready |
 | **Scheduled updates** toggle is disabled | No restart supervisor is declared ("Requires mint-platform daemon or MINT_RESTART_SUPERVISED=1.") | Run MINT with `mint-platform daemon start`, or set `MINT_RESTART_SUPERVISED=1` under a supervisor that restarts it after a clean exit. See [Scheduled updates](/admin/updates#scheduled-updates) |
@@ -115,7 +131,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| **Admin -> Platform -> Terminal** shows disabled | `adminTerminalEnabled` is false | Set `MINT_ADMIN_TERMINAL_ENABLED=true` or `"adminTerminalEnabled": true`, then restart MINT |
+| **Admin -> System -> Terminal** shows disabled | `adminTerminalEnabled` is false | Set `MINT_ADMIN_TERMINAL_ENABLED=true` or `"adminTerminalEnabled": true`, then restart MINT |
 | Terminal tab missing | User lacks `platform.configure`, or admin tabs are filtered by role | Ask an admin to assign a role with `platform.configure` |
 | Terminal connects then closes | The short-lived WebSocket token expired or another session replaced it | Click connect again; only one terminal session per user is kept active |
 | Terminal closes with "access revoked" | The account was deactivated, its role lost `platform.configure`, or its session was revoked (for example by a password change) | Sign in again with an account that has `platform.configure` |
@@ -128,7 +144,7 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 | Disk full | Plugin artifact uploads fill `server.dataPath` | Move `server.dataPath` to a larger volume, or purge unused plugin caches |
 | Slow queries on Postgres | Missing index on a plugin-owned table | Add the index in a new plugin migration |
 | OpenTelemetry exporter errors in logs | OTLP endpoint unreachable | Set `observability.enabled: false` until fixed; the rest of the platform keeps working |
-| Push notifications do not arrive | Apple Push is not configured, the device registered with a session token, or Apple rejected the token | Open **Admin -> Platform -> Configuration -> Notifications -> Apple Push** and use **Send test push**. It shows Apple's or the relay's answer |
+| Push notifications do not arrive | Apple Push is not configured, the device registered with a session token, or Apple rejected the token | Open **Admin -> System -> Configuration -> Notifications -> Apple Push** and use **Send test push**. It shows Apple's or the relay's answer |
 | The page does not update when a colleague saves | `realtimeEnabled` is off, or a proxy buffers or closes `GET /api/events` | Remove `MINT_REALTIME_ENABLED=false` (it is on by default). Make the proxy pass the stream without buffering |
 | Auto-issued GitHub bug reports flooding | A recurring bug spams unique stack traces | Disable `errorReporting.enabled` until the bug is fixed |
 
@@ -142,6 +158,6 @@ If something isn't working, check here first. If your problem isn't listed, [ope
 
 ## Still stuck?
 
-1. **Check the logs** — `journalctl -u mint -n 200` (direct install), `docker compose -f deploy/docker/docker-compose.yml logs app` (Docker), or **Admin -> Platform -> Logs** in the UI — for error messages.
+1. **Check the logs** — `journalctl -u mint -n 200` (direct install), `docker compose -f deploy/docker/docker-compose.yml logs app` (Docker), or **Admin -> System -> Logs** in the UI — for error messages.
 2. **Search [GitHub issues](https://github.com/MorscherLab/MINT/issues)** — someone may have hit it before.
 3. **Open a new issue** with: MINT platform version (shown in the Admin navigation footer or returned by `GET /api/health`; `mint --version` shows only the CLI version), OS, the steps you took, and the error message. Include the request ID from the failing response if available — every response carries one and it indexes the structured logs.

@@ -16,7 +16,7 @@ This component renders a piece of the SDK's backend-driven **generated UI** syst
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/GeneratedPlotlyResult.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/GeneratedPlotlyResult.vue">Source</a>
 </div>
 
 ::: info Uses Plotly
@@ -38,7 +38,7 @@ import { GeneratedPlotlyResult } from "@morscherlab/mint-sdk/runtime"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/GeneratedPlotlyResult.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/GeneratedPlotlyResult.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

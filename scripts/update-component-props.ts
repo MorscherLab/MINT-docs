@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { strict as assert } from 'node:assert'
 import ts from 'typescript'
-import { createChecker } from 'vue-component-meta'
+import { createCheckerByJson } from 'vue-component-meta'
 import { componentDocs, componentSlug } from '../.vitepress/componentCatalog'
 const sdkRoot = resolve(process.argv[2] ?? '')
 assert(process.argv[2], 'Pass the released packages/sdk-frontend directory')
@@ -30,7 +30,10 @@ interface Member { name: string; type: string; description: string }
 interface Component { source: string; props: Prop[]; events: Member[]; slots: Member[] }
 const results: Record<string, Component> = {}
 const repoPath = (file: string): string => file.replace(`${sdkRoot}/`, 'packages/sdk-frontend/')
-const checker = createChecker(`${sdkRoot}/tsconfig.json`, { forceUseTs: true, printer: { newLine: 1 } })
+// With the SDK's `fallthroughAttributes`, the attributes of a component's root element would count as its props.
+const tsconfig = ts.readConfigFile(`${sdkRoot}/tsconfig.json`, ts.sys.readFile).config
+tsconfig.vueCompilerOptions = { ...tsconfig.vueCompilerOptions, fallthroughAttributes: false }
+const checker = createCheckerByJson(sdkRoot, tsconfig, { forceUseTs: true, printer: { newLine: 1 } })
 
 for (const component of componentDocs) {
   const exported = exports.find(entry => entry.name === component.name)
@@ -65,6 +68,7 @@ for (const component of componentDocs) {
 const get = (name: string): any[] => (results[name] as any).props
 assert.equal(Object.keys(results).length, componentDocs.length)
 assert.equal(get('BaseButton').length, 8)
+assert.equal(get('GeneratedPluginView').length, 3)
 assert.equal(get('DataFrame').length, 9)
 assert.equal(get('DataFrame').find(p => p.name === 'spec').type, 'DataFrameSpec')
 assert.equal(get('DataFrame').find(p => p.name === 'data').required, true)
@@ -82,7 +86,7 @@ assert.equal(get('AppSidebar').find(p => p.name === 'spec').type, 'PluginWorkspa
 assert(!get('BaseTabs').some(p => p.name === 'variant'))
 assert.equal(get('BasePill').find(p => p.name === 'dot').default, 'false')
 assert.equal(get('FormField').find(p => p.name === 'layout').default, '"stacked"')
-assert.equal(get('BaseSelect').find(p => p.name === 'options').type, 'SelectOptionInput[]')
+assert.equal(get('BaseSelect').find(p => p.name === 'options').type, 'SelectOptionInput<T>[]')
 assert(results.BaseSelect.events.some(event => event.name === 'update:modelValue'))
 assert(results.BaseSelect.slots.some(slot => slot.name === 'option'))
 

@@ -8,7 +8,7 @@ description: "Render native Plotly traces with SDK theme, sizing, loading, empty
 
 # PlotlyChart
 
-Available since **1.2.0**. `PlotlyChart` renders native Plotly traces inside `ChartContainer`, loads Plotly lazily when mounted, follows theme/container changes, and cleans up on unmount.
+`PlotlyChart` renders native Plotly traces inside `ChartContainer`, loads Plotly lazily when mounted, follows theme/container changes, and cleans up on unmount. The plugin declares `plotly.js-dist-min` in its own frontend dependencies (`vp add plotly.js-dist-min`). See [Charts need Plotly](/sdk/frontend/#charts-need-plotly).
 
 ::: info Uses Plotly
 This component loads plotly.js when it mounts. The docs do not load plotly.js. To see it work, run a plugin with `mint dev`.
@@ -18,7 +18,7 @@ This component loads plotly.js when it mounts. The docs do not load plotly.js. T
 
 ```vue
 <script setup lang="ts">
-import { PlotlyChart } from '@morscherlab/mint-sdk'
+import { PlotlyChart } from '@morscherlab/mint-sdk/lab'
 </script>
 
 <template>
@@ -39,7 +39,7 @@ import { PlotlyChart } from '@morscherlab/mint-sdk'
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PlotlyChart.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/PlotlyChart.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -53,7 +53,7 @@ MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` emptyText ` | ` string ` | No | ` "No data available" ` | — |
 | ` ariaLabel ` | ` string ` | No | ` "Interactive Plotly chart" ` | — |
 | ` plotly ` | ` typeof PlotlyType ` | No | ` undefined ` | Use a custom Plotly build instead of the SDK's lazy-loaded default bundle. |
-| ` active ` | ` boolean ` | No | ` true ` | Pause rendering and resize work while a tab or panel is inactive. |
+| ` active ` | ` boolean ` | No | ` true ` | Pause rendering while a tab or panel is inactive. |
 | ` height ` | ` string \| number ` | No | ` undefined ` | Plot canvas height. Numbers are interpreted as pixels. |
 | ` clickEvents ` | ` boolean ` | No | ` false ` | Forward Plotly point clicks through the plotly-click event. |
 | ` variant ` | ` 'card' \| 'frame' ` | No | ` "card" ` | Shared chart container chrome. frame fills a workbench panel. |
@@ -87,12 +87,12 @@ With two or more legend traces, the series are listed in the chart header and a 
 
 ## Workbench charts and point clicks
 
-Set `variant="frame"` for compact chrome that fills a workbench panel. Give the parent a definite height and set `height="100%"` on the plot canvas. Numeric `height` values are pixels. Use `active` to pause rendering and resize work while a retained tab is hidden.
+Set `variant="frame"` for compact chrome that fills a workbench panel. Give the parent a definite height and set `height="100%"` on the plot canvas. Numeric `height` values are pixels. Use `active` to pause rendering and resize work while a retained tab is hidden. The chart follows the size of its container with the Plotly `responsive` option. `responsive` is always on; `responsive: false` in `config` has no effect.
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue'
-import { PlotlyChart } from '@morscherlab/mint-sdk'
+import { PlotlyChart } from '@morscherlab/mint-sdk/lab'
 
 const active = ref(true)
 const selectedPoint = ref<number | null>(null)
@@ -122,11 +122,11 @@ const selectedPoint = ref<number | null>(null)
 
 `plotly-click` emits Plotly's `PlotMouseEvent` only when `clickEvents` is enabled. `pointNumber` is the point index within its trace; use `curveNumber` or trace `customdata` when mapping a multi-trace plot to domain records. The SDK does not expose every Plotly event as a Vue emit.
 
-If your application already owns a compatible custom Plotly build, pass it through `:plotly="customPlotly"` to bypass the default lazy import. That build must include the trace types you use. Otherwise retain the SDK default; a custom build is optional.
+If your application already owns a compatible custom Plotly build, pass it through `:plotly="customPlotly"` to bypass the default lazy import. That build must be Plotly 4.1.2 or later, or the chart does not follow the size of its container, and it must include the trace types you use. A plugin that always passes its own build does not need the `plotly.js-dist-min` package. Otherwise retain the SDK default; a custom build is optional.
 
 ## Plotly 4 builds and types
 
-The SDK uses `plotly.js-dist-min` ^4.1.1. The SDK `dist/` does not bundle Plotly. `PlotlyChart` loads Plotly lazily from your plugin's `node_modules` when it first renders.
+The SDK uses `plotly.js-dist-min` ^4.3.0. The SDK `dist/` does not bundle Plotly. `PlotlyChart` loads Plotly lazily from your plugin's `node_modules` when it first renders. Declare the package in the plugin: `mint doctor` gives the warning "Frontend chart dependency" when it is missing, and `--strict` counts it. When Plotly cannot load, the chart shows "Unable to load the chart library." and logs the cause one time with `console.error`. A render failure shows "Unable to display this chart."
 
 - A plugin that calls `Plotly.newPlot` itself with `mintPlotlyTemplate()` does not get the `PlotlyChart` defaults. Pass `showSendToCloud: false` in the config.
 - Import Plotly types from `plotly.js-dist-min`. Do not use `@types/plotly.js`, which describes Plotly 3.
@@ -144,4 +144,4 @@ The SDK uses `plotly.js-dist-min` ^4.1.1. The SDK `dist/` does not bundle Plotly
 
 Set `empty` yourself when an analysis has no data. Bind `loading` to request state and keep axis labels/units explicit. For another chart library or event bindings beyond this API, use [ChartContainer](/sdk/components/chart-container).
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)
+[Release source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)

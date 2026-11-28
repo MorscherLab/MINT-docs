@@ -12,7 +12,7 @@ DatePicker is a forms component exported by @morscherlab/mint-sdk for plugin fro
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/DatePicker.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/DatePicker.vue">Source</a>
 </div>
 
 <demo vue="./demos/DatePicker.vue" title="DatePicker" description="Date field with a calendar popup. Pick a run date or clear the value." />
@@ -26,7 +26,7 @@ import { DatePicker } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/DatePicker.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/DatePicker.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -50,7 +50,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TimeSlotDisabledFn `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L66) | See the linked SDK type definition. |
+| [` TimeSlotDisabledFn `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L66) | See the linked SDK type definition. |
 
 ### Events
 

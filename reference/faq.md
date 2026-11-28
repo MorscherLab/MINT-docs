@@ -62,7 +62,7 @@ MINT has no plugin roles. A plugin tags its endpoints, jobs, tools and pages wit
 
 ## Does MINT support push notifications?
 
-Yes, to the MINT iOS app, through Apple Push. An administrator sets up the relay or a direct `.p8` key under **Admin -> Platform -> Configuration -> Notifications**. See [Push notifications](/admin/platform-settings#push-notifications).
+Yes, to the MINT iOS app, through Apple Push. An administrator sets up the relay or a direct `.p8` key under **Admin -> System -> Configuration -> Notifications**. See [Push notifications](/admin/platform-settings#push-notifications).
 
 ## Does MINT support SSO?
 
@@ -82,11 +82,15 @@ For UI, choose the plugin mode that matches the job:
 
 ## How do I update MINT?
 
-Update the platform from the admin page or with the CLI. This works for the [direct install](/admin/install-direct) and for [Docker](/admin/install-docker). Click **Update platform** in the platform row of **Available updates** in **Admin -> Platform -> Updates**, or run `mint platform update check` and `mint platform update apply --yes`. Then restart MINT. See [Updates](/admin/updates). A minor update can need new plugin releases: the platform pairs them for you when you confirm the update. For the step from MINT 1.3 to 1.4, read [Upgrading from MINT 1.3](/admin/updates#upgrading-from-mint-1-3) first.
+Update the platform from the admin page or with the CLI. This works for the [direct install](/admin/install-direct) and for [Docker](/admin/install-docker). Click **Update platform** in the platform row of **Available updates** in **Admin -> System -> Updates**, or run `mint platform update check` and `mint platform update apply --yes`. Then restart MINT. See [Updates](/admin/updates). A minor update can need new plugin releases: the platform pairs them for you when you confirm the update. For the step from MINT 1.5 to 1.6, read [Upgrading from MINT 1.5](/admin/updates#upgrading-from-mint-1-5) first: back up the database, because there is no way back to 1.5 without the backup.
 
 The `uv tool upgrade mint-sdk` and `pipx upgrade mint-sdk` commands only update the `mint` CLI in an admin shell. They do not upgrade the running platform service.
 
-To check available platform and plugin releases, open **Admin -> Platform -> Updates**. Take a normal deployment/database backup before upgrading.
+To check available platform and plugin releases, open **Admin -> System -> Updates**. Take a normal deployment/database backup before upgrading.
+
+## Which browsers does MINT support?
+
+Chrome 116, Edge 116, Firefox 124 and Safari 17.4, or newer, on a desktop computer. See [Supported browsers](/guide/access#supported-browsers).
 
 ## Is MINT open source?
 

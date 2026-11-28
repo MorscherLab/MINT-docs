@@ -15,6 +15,13 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 |--------|------|
 | [Writing results](/sdk/recipes/writing-results) | Save named `Artifact` outputs, preserve visible run history, and publish file-backed artifacts |
 
+## Experiment page
+
+| Recipe | When |
+|--------|------|
+| [Plugin panels](/sdk/recipes/panels) | Show plugin data as a tab in the Design data or Analysis artifacts card, without a frontend |
+| [Live design forms](/sdk/recipes/live-design) | Let the platform draw the design form from the schema and save each field by itself |
+
 ## Permissions and identity
 
 | Recipe | When |
@@ -26,6 +33,7 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 | Recipe | When |
 |--------|------|
 | [MCP tools](/sdk/recipes/mcp-tools) | Publish plugin tools, prompts and resources on the platform's `/mcp` endpoint |
+| [MCP skills](/sdk/recipes/mcp-skills) | Ship a skill that tells an AI assistant how to use the plugin |
 
 ## Instruments
 
@@ -45,7 +53,7 @@ Goal-oriented patterns for the operations plugin authors do most often. Each rec
 |--------|------|
 | [Error handling](/sdk/recipes/error-handling) | Typed SDK errors, HTTP envelopes and request IDs |
 | [Logging & tracing](/sdk/recipes/logging-tracing) | Stdlib `logging` in the platform formatter; request IDs and spans |
-| [Testing plugins](/sdk/recipes/testing-plugins) | `RecordingContext`, `Harness` route and job tests, migrations |
+| [Testing plugins](/sdk/recipes/testing-plugins) | `RecordingContext`, `Harness` route, job and panel tests, frontend tests, migrations |
 
 ## Schema evolution
 

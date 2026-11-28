@@ -12,7 +12,7 @@ Single checkbox control for boolean plugin settings and form fields.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseCheckbox.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/BaseCheckbox.vue">Source</a>
 </div>
 
 <demo vue="./demos/BaseCheckbox.vue" title="BaseCheckbox" description="A checkbox with a label. Click it to change the model value." />
@@ -23,10 +23,24 @@ Single checkbox control for boolean plugin settings and form fields.
 import { BaseCheckbox } from "@morscherlab/mint-sdk"
 ```
 
+## Descriptions and screen readers
+
+- `ariaDescribedby` takes the id (or ids) of elements that describe the control, for example its error. It works for `type="checkbox"` and `type="switch"`.
+- With `layout="row"`, a `label` and a `description`, the description shows in a tooltip on the label. The label never takes focus, so the checkbox itself names the tooltip in its `aria-describedby`. A screen reader reads the description when the checkbox takes focus.
+- `ariaLabel` names the control when there is no visible label, for example in a table row.
+
+```vue
+<FormField label="Notifications" :error="errors.notify" field-id="notify">
+  <template #default="{ describedBy }">
+    <BaseCheckbox v-model="notify" type="switch" label="E-mail me when a run ends" :aria-describedby="describedBy" />
+  </template>
+</FormField>
+```
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseCheckbox.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/BaseCheckbox.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -34,6 +48,7 @@ MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/
 | ` type ` | ` 'checkbox' \| 'switch' ` | No | ` "checkbox" ` | checkbox (default) or an on/off switch. |
 | ` indeterminate ` | ` boolean ` | No | ` false ` | Partially checked (e.g. select-all over a partial selection); sets aria-checked="mixed". |
 | ` ariaLabel ` | ` string ` | No | ` undefined ` | Accessible name for the native input when no visible label is rendered (e.g. table rows). |
+| ` ariaDescribedby ` | ` string ` | No | ` undefined ` | Id(s) of the element(s) that describe the control, e.g. its error. |
 | ` label ` | ` string ` | No | ` undefined ` | — |
 | ` description ` | ` string ` | No | ` undefined ` | — |
 | ` icon ` | ` string \| string[] ` | No | ` undefined ` | — |

@@ -93,7 +93,7 @@ tray. Handler failures carry `<ExceptionType>: <message>`. Service jobs preserve
 cause when present and log the exception.
 
 Process workers send their formatted traceback to the host, which logs it
-through the platform's handlers. Inspect **Admin -> Platform -> Logs** or the
+through the platform's handlers. Inspect **Admin -> System -> Logs** or the
 service logs with the job ID. Keep raised messages free of credentials and raw sensitive
 inputs, because the job error is visible to its authorized readers.
 

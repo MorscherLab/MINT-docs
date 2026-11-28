@@ -22,6 +22,7 @@ develop ──▶ test ──▶ build ──▶ publish ──▶ install ─�
 | [CI patterns](/sdk/operations/ci-patterns) | Scaffold GitHub Actions workflows plus checksum, registry PR and SDK-compatibility additions |
 | [Versioning](/sdk/operations/versioning) | SemVer, `hatch-vcs`, SDK ranges, `requires_mint`/`min_platform_version`, committed lockfiles |
 | [Deploying](/sdk/operations/deploying) | `mint verify`, `mint deploy` and what it confirms, storage and recovery |
+| [Migrate from 1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6) | Vite+ and pnpm, `mint migrate`, `mint lint`, the new `mint doctor` checks, runtime library changes and the frontend SDK deprecations |
 | [Migrate from 1.4 to 1.5](/sdk/operations/migrate-1.4-to-1.5) | Frontend root exports, named SDK imports, observer events through the event bus, the frontend toolchain and the new 1.5 APIs |
 | [Migrate from 1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4) | The SDK 1.4 author API, access levels, migrations, CLI and frontend changes |
 | [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3) | Removed Python and frontend APIs, settings `access`, SDK range, deprecated legacy migrations |

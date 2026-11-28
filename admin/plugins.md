@@ -177,6 +177,20 @@ A daily task deletes delivered and skipped deliveries after 7 days and dead deli
 
 A plugin declares the plugins that it reads in `reads_from`. The entry `"*"` means every enabled plugin. It grants nothing until an administrator consents: set the platform-owned plugin setting `reads_from_any_plugin` with `PATCH /api/plugins/{name}/config`. Only a platform administrator can set it. Until then, `GET /api/plugins` shows `reads_from_consent_needed` for the plugin. Plugin authors: see [Plugin communication](/sdk/concepts/plugin-communication).
 
+## MCP skills and tasks
+
+The `/mcp` endpoint serves skills and tasks to AI clients. There is no setting for them. How users see them: [Skills](/guide/ai-and-api#skills) and [Jobs as background tasks](/guide/ai-and-api#jobs-as-background-tasks).
+
+**Skills.** MINT serves two platform skills and the skills of every enabled plugin. There is no switch per plugin. A plugin skill is text that the AI assistant reads as instructions, so install only plugins that you trust, as for their MCP tools.
+
+- A user sees a plugin skill only with `plugins.use` and a role that sees the plugin (**Plugin access**), as for the tools of the plugin. A skill gives no permission: MINT checks each tool call again.
+- A disabled or uninstalled plugin loses its skills at once.
+- MINT reads the skill files when the MCP declarations of a plugin change, checks them and serves its own copy. The check runs every 15 seconds. A plugin in its own process must answer in 15 seconds; otherwise MINT keeps the skills that it served before and tries again at the next check.
+- MINT does not serve a skill that breaks a rule, for example a name without the plugin name in front, more than 64 files, more than 1 MiB, or text that looks like an access token. The log then has the warning `Skipping MCP skill '<name>' of plugin '<plugin>': <reason>`. A plugin can serve at most 20 skills.
+- A plugin from the dev proxy (`config.dev.toml`) serves skills only in dev mode.
+
+**Tasks.** A task is a plugin job that an MCP client follows in the background. MINT keeps tasks in memory, with the job handles. A platform restart, also a scheduled update, ends every task: the client reports it as failed. A result that a job saved with `save_to` before the restart stays in the experiment. Tasks and job handles share the limit of 64 unfinished jobs per access token. When a user stops a task in the client, MINT cancels the job without a confirmation question and records the call as `mcp.tool_call` of `tasks/cancel` in the [audit log](/admin/platform-settings#logs-and-audit-log).
+
 ## Plugin requests and credentials
 
 With authentication enabled, every request to a plugin route needs an `Authorization: Bearer` credential. This applies to the plugin proxy and to in-process plugin routes. The credential is one of:
@@ -230,9 +244,17 @@ If a migration fails, the plugin shows **Migration failed**, stays disabled, nev
 
 ## Update settings
 
-The **Update settings** card on **Admin -> Platform -> Updates** edits the `updates` section of `config.json`: scheduled updates, the daily update time, the update scope (platform, plugins), background checks, the check interval, the platform repository and platform pre-releases. It needs `platform.configure`. **Admin -> Plugins -> Advanced** keeps only the private package indexes and needs `plugins.configure`. The controls for private package indexes (`PUT /api/plugins/config/extra-index-urls`), the update sources (`PUT|DELETE /api/updates/sources/{package}`) and the **Plugin pre-releases** toggle need `plugins.install`, because they change where plugin code comes from. A role with `plugins.configure` but not `plugins.install` (for example a Plugin operator) gets 403. These writes are audited (`plugins.extra_index_urls_update` with values redacted, `updates.source_update`, `updates.source_delete`). See [Updates](/admin/updates) for what each setting does.
+The **Update settings** card on **Admin -> System -> Updates** edits the `updates` section of `config.json`: scheduled updates, the daily update time, the update scope (platform, plugins), background checks, the check interval, the platform repository and platform pre-releases. It needs `platform.configure`. **Admin -> Plugins -> Advanced** keeps only the private package indexes and needs `plugins.configure`. The controls for private package indexes (`PUT /api/plugins/config/extra-index-urls`), the update sources (`PUT|DELETE /api/updates/sources/{package}`) and the **Plugin pre-releases** toggle need `plugins.install`, because they change where plugin code comes from. A role with `plugins.configure` but not `plugins.install` (for example a Plugin operator) gets 403. These writes are audited (`plugins.extra_index_urls_update` with values redacted, `updates.source_update`, `updates.source_delete`). See [Updates](/admin/updates) for what each setting does.
 
-> [Screenshot: Admin -> Platform -> Updates -> Update settings with Scheduled updates, Daily update time and Update scope]
+The release list of a GitHub plugin source comes from `GET /api/updates/releases` (`plugins.install`). When GitHub answers 401 or 404, the list shows 400 `update_source.repository_inaccessible` with the cause:
+
+| Message | Cause | Fix |
+|---------|-------|-----|
+| GitHub rejected the configured token | The GitHub token expired or was revoked | Replace the token in the update settings |
+| GitHub repository `<owner>/<repo>` does not exist, or the configured GitHub token cannot read it | The repository name is wrong, or the token has no access to the private repository | Correct the repository, or give the token read access |
+| GitHub repository `<owner>/<repo>` does not exist, or it is private | No token is set, and the repository is wrong or private | Correct the repository, or set `updates.githubToken` (`MINT_UPDATES__GITHUB_TOKEN`) |
+
+> [Screenshot: Admin -> System -> Updates -> Update settings with Scheduled updates, Daily update time and Update scope]
 
 ## Uninstall modes
 

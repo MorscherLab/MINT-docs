@@ -161,7 +161,7 @@ mint doctor --strict
 ```bash
 mint verify
 mint platform auth login --url https://mint-test.example.org
-mint deploy --to https://mint-test.example.org
+mint deploy --url https://mint-test.example.org
 ```
 
 `mint verify` builds the bundle, boots the MINT platform image in Docker, installs the bundle through the normal upload path, restarts, and waits until the plugin loads. `mint deploy` uploads the same bundle to a test platform you administer, restarts it (requires `platform.configure`), and confirms the restart by the new server `boot_id`; `--timeout` (default 180 s) covers restart and load together.

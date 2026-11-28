@@ -1,7 +1,8 @@
-export const currentDocsVersion = '1.5.5'
+export const currentDocsVersion = '1.6.1'
 
 // Frozen documentation commits, each built with its own package.json and lockfile.
 export const archivedDocs = [
+  { version: '1.5.5', ref: '0f24731f3166a63c3fb8c93f7dcf032a8c07af19' },
   { version: '1.4.3', ref: 'f35b5f7db4f0e0a6169a907573af6965243822ef' },
   { version: '1.3.0', ref: '4ef01239a12ed29793808e35a11397609d83582b' },
   { version: '1.2.9', ref: '796bbf2938f99fc6df909136a71ae42417ce6f76' },

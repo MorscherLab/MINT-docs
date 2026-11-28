@@ -16,44 +16,62 @@ See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PluginWorkspaceView.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/PluginWorkspaceView.vue">Source</a>
 </div>
 
-<demo vue="./demos/PluginWorkspaceView.vue" title="PluginWorkspaceView" description="A plugin workspace with a top bar and sidebar. Select a pill to change the sidebar panels." />
+<demo vue="./demos/PluginWorkspaceView.vue" title="PluginWorkspaceView" description="A workspace with two sidebar views and a main card. Select a pill to change the sidebar sections." />
 
 ## Import
 
 ```ts
-import { PluginWorkspaceView } from "@morscherlab/mint-sdk"
+import { PluginWorkspaceView, definePluginWorkspaceView } from "@morscherlab/mint-sdk"
 ```
 
 ## Basic Usage
 
 ```vue
-<PluginWorkspaceView
-  title="My plugin"
-  subtitle="Dashboard"
-  :page-selector="pluginPageSelectorItems"
-  current-page-selector-id="dashboard"
->
-  <AppContainer scrollable>
+<script setup lang="ts">
+import { PluginWorkspaceView, definePluginWorkspaceView } from '@morscherlab/mint-sdk'
+import { analysisControls } from './stores/analysis'
+
+const workspace = definePluginWorkspaceView({
+  floating: true,
+  main: 'plain',
+  sidebar: { title: 'Parameters', collapsible: true, controls: analysisControls },
+})
+</script>
+
+<template>
+  <PluginWorkspaceView :spec="workspace" @form-submit="(_section, values) => run(values)">
     <router-view />
-  </AppContainer>
-</PluginWorkspaceView>
+  </PluginWorkspaceView>
+</template>
 ```
 
-## Sidebar compatibility in 1.2.1
+Put `<router-view />` straight into the default slot. Do not wrap it in an `AppContainer`: a card `AppContainer` is a second card, and `mint doctor` warns on it.
 
-`sidebarVariant` is still declared by this workspace API for compatibility, but
-AppSidebar no longer has visual variants, so that option no longer changes its
-appearance; it is removed in MINT 1.4. Use the workspace's sidebar slot with AppSidebar when you need to
-control its new `density` prop directly. The generated table below preserves
-the SDK's declarations and source comments.
+## Main pane
+
+`spec.main` sets the surface of the main pane:
+
+| Value | Result |
+|-------|--------|
+| `'plain'` (default) | The slot renders as it is. Use it for a full-bleed view, or for one `SectionCard` with `fill` |
+| `'card'` | One scrolling card that stacks the children of the slot with the gutter. Put `SectionCard`s straight into the slot |
+
+## View pills
+
+A control model in `spec.sidebar.controls` with two or more `views` gives one top-bar pill for each view. A control model with one view shows no pill, because there is nothing to switch to. `spec.topBar.pills` sets the pills by hand; then the workspace shows them as given. Bind the active pill with `v-model:pill` and the active view with `v-model:view`.
+
+## Experiment and jobs
+
+- `spec.experiment: true` shows the experiment chip in the top bar: the popover, the selector and the save action (`spec.save`). A plugin type that writes experiments uses it.
+- `spec.jobs` shows the job of the viewer in the top bar and opens a [JobsStatusTray](/sdk/components/jobs-status-tray).
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PluginWorkspaceView.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/PluginWorkspaceView.vue) · [Shared props definition](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/PluginWorkspaceView.props.ts).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -72,7 +90,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` PluginWorkspaceViewSpec `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L320) | See the linked SDK type definition. |
+| [` PluginWorkspaceViewSpec `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L318) | See the linked SDK type definition. |
 
 ### Events
 

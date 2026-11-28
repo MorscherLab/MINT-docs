@@ -31,6 +31,7 @@ const groups: Record<ComponentCategory, string[]> = {
   ],
   Forms: [
     'BaseButton',
+    'SplitButton',
     'BaseInput',
     'BaseSelect',
     'BaseCheckbox',
@@ -82,6 +83,7 @@ const groups: Record<ComponentCategory, string[]> = {
     'ExperimentCodeBadge',
     'InstrumentStateBadge',
     'InstrumentStatusPanels',
+    'PanelSections',
     'PresenceAvatars',
     'BasePill',
   ],
@@ -91,6 +93,7 @@ const groups: Record<ComponentCategory, string[]> = {
     'SampleSelector',
     'MetadataSheet',
     'MoleculeInput',
+    'MoleculeView',
     'DoseCalculator',
     'SampleHierarchyTree',
     'ProtocolStepEditor',
@@ -99,6 +102,7 @@ const groups: Record<ComponentCategory, string[]> = {
     'ComponentBindingRenderer',
     'StepWizard',
     'FormBuilder',
+    'LiveDesignForm',
     'ScheduleCalendar',
     'ExperimentSelectorModal',
     'ExperimentPopover',
@@ -114,7 +118,7 @@ const groups: Record<ComponentCategory, string[]> = {
 
 const descriptions: Record<string, string> = {
   AlertBox: 'Inline status, warning, error, and success messages for plugin screens.',
-  AppContainer: 'Lightweight content shell for standalone plugin screens and routed views.',
+  AppContainer: 'Lightweight content shell for standalone screens; not needed around router-view in PluginWorkspaceView.',
   AppLayout: 'Layout primitive used inside workspace shells; compose your own topbar and sidebar.',
   AppSidebar: 'Sectioned sidebar for plugin-specific navigation and grouped tools.',
   AppTopBar: 'Platform-style top bar for shells that need custom navigation chrome.',
@@ -158,6 +162,10 @@ const descriptions: Record<string, string> = {
   PresenceAvatars: 'Avatar stack of the other people on a presence topic, with a list of each activity.',
   InstrumentStatusPanels: 'Card with one tab for each typed panel of an instrument live status.',
   VersionConflictDialog: 'Dialog for a save refused with a 412 version conflict; reload or overwrite.',
+  SplitButton: 'Button that runs a default action, with a chevron menu that runs any action and makes it the new default.',
+  MoleculeView: 'Read-only SMILES structure drawing, bare or as a tile with the SMILES and a copy button.',
+  PanelSections: 'Draws the sections of a plugin panel: key/value, table, text, JSON, bar, link, status and plate.',
+  LiveDesignForm: 'Self-saving form of a live design, driven by a useLiveDesign() result, with field locks and save state.',
   StaleFormBanner: 'Strip above a form that someone else changed while it held unsaved edits.',
 }
 
@@ -176,7 +184,7 @@ const examples: Record<string, string> = {
   BaseModal: `<BaseModal v-model:open="showModal" title="Edit panel">
   <p>Modal body content.</p>
   <template #footer>
-    <BaseButton variant="ghost" @click="showModal = false">Cancel</BaseButton>
+    <BaseButton variant="secondary" @click="showModal = false">Cancel</BaseButton>
     <BaseButton variant="primary" @click="save">Save</BaseButton>
   </template>
 </BaseModal>`,
@@ -198,9 +206,7 @@ const examples: Record<string, string> = {
 />`,
   FormBuilder: `<FormBuilder :spec="designModel" v-model="designData" />`,
   PluginWorkspaceView: `<PluginWorkspaceView :spec="workspace" v-model:pill="tab">
-  <AppContainer scrollable>
-    <router-view />
-  </AppContainer>
+  <router-view />
 </PluginWorkspaceView>`,
   StepWizard: `<StepWizard v-model="currentStep" :steps="steps">
   <template #step-basics>

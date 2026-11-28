@@ -12,7 +12,7 @@ Schema-driven form renderer for experiment-design and plugin settings UIs.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/FormBuilder.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/FormBuilder.vue">Source</a>
 </div>
 
 <demo vue="./demos/FormBuilder.vue" title="FormBuilder" description="Form built from a schema. Edit the fields and watch the JSON values change." />
@@ -32,7 +32,7 @@ import { FormBuilder } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/FormBuilder.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/FormBuilder.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -49,7 +49,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L156) | See the linked SDK type definition. |
+| [` ControlModelBinding `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/composables/controlSchemaTypes.ts#L153) | See the linked SDK type definition. |
 
 ### Events
 

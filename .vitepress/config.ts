@@ -95,6 +95,7 @@ export default defineConfig({
         items: [
           { text: 'Permissions', link: '/reference/permissions' },
           { text: 'Troubleshooting', link: '/reference/troubleshooting' },
+          { text: 'Error codes', link: '/reference/error-codes' },
           { text: 'FAQ', link: '/reference/faq' },
           { text: 'Glossary', link: '/reference/glossary' },
           { text: 'Changelog', link: '/changelog' },
@@ -204,6 +205,9 @@ export default defineConfig({
             { text: 'Querying plugin data', link: '/sdk/recipes/querying-plugin-data' },
             { text: 'Route permissions', link: '/sdk/recipes/route-permissions' },
             { text: 'MCP tools', link: '/sdk/recipes/mcp-tools' },
+            { text: 'MCP skills', link: '/sdk/recipes/mcp-skills' },
+            { text: 'Plugin panels', link: '/sdk/recipes/panels' },
+            { text: 'Live design forms', link: '/sdk/recipes/live-design' },
             { text: 'Instrument status', link: '/sdk/recipes/instrument-status' },
             { text: 'Reference libraries', link: '/sdk/recipes/libraries' },
             { text: 'Error handling', link: '/sdk/recipes/error-handling' },
@@ -234,6 +238,7 @@ export default defineConfig({
             { text: 'Versioning', link: '/sdk/operations/versioning' },
             { text: 'Deploying', link: '/sdk/operations/deploying' },
             { text: 'Upgrading the SDK', link: '/sdk/operations/upgrading' },
+            { text: 'Migrate from 1.5 to 1.6', link: '/sdk/operations/migrate-1.5-to-1.6' },
             { text: 'Migrate from 1.4 to 1.5', link: '/sdk/operations/migrate-1.4-to-1.5' },
             { text: 'Migrate from 1.3 to 1.4', link: '/sdk/operations/migrate-1.3-to-1.4' },
             { text: 'Migrate from 1.2 to 1.3', link: '/sdk/operations/migrate-1.2-to-1.3' },
@@ -259,6 +264,7 @@ export default defineConfig({
           items: [
             { text: 'Permissions', link: '/reference/permissions' },
             { text: 'Troubleshooting', link: '/reference/troubleshooting' },
+            { text: 'Error codes', link: '/reference/error-codes' },
             { text: 'FAQ', link: '/reference/faq' },
             { text: 'Glossary', link: '/reference/glossary' },
             { text: 'Changelog', link: '/changelog' },

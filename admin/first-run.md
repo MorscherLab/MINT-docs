@@ -15,6 +15,6 @@ The wizard keeps the admin password in `config.json` only while setup is in prog
 After setup:
 
 1. Decide whether people may create their own accounts. Self-registration is on by default (`auth.allowRegistration`); new accounts get the default role, Member, and stay inactive until an administrator activates them. See [Authentication](/admin/authentication#accounts-and-registration).
-2. Create experiment types and configure notifications from **Admin -> Platform** (see [Platform settings](/admin/platform-settings)). The marketplace registry URL is set with `marketplace.registryUrl` in `config.json`.
+2. Create experiment types in **Admin -> Lab content** and configure notifications in **Admin -> System** (see [Platform settings](/admin/platform-settings)). The marketplace registry URL is set with `marketplace.registryUrl` in `config.json`.
 3. Create accounts with `mint platform admin user create`, or let people register, then assign system roles (see [Users & roles](/admin/users-roles)).
 4. Create your first **Project** (see [Projects](/guide/projects)).

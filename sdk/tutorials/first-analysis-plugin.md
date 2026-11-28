@@ -260,9 +260,12 @@ Run the release checks you should expect in CI:
 
 ```bash
 mint doctor --strict
+uv run mint lint
 uv run pytest -q
 mint build
 ```
+
+`mint lint` runs ruff with the SDK preset and the MINT design rules. A new plugin passes with no finding; see [`mint lint`](/sdk/api/cli-reference#mint-lint).
 
 The bundle lands in:
 
@@ -286,7 +289,7 @@ Then deploy to a test platform you administer:
 
 ```bash
 mint platform auth login --url https://mint-test.example.org
-mint deploy --to https://mint-test.example.org
+mint deploy --url https://mint-test.example.org
 ```
 
 `mint deploy` builds the same bundle, uploads it, restarts the platform, and confirms the restart by the new server `boot_id`. The restart requires the `platform.configure` permission; `--timeout` (default 180 s) covers the restart and the plugin load together. Use a test platform, not production.
