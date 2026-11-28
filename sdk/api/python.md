@@ -31,7 +31,7 @@ The identity of the plugin (name, version, description, authors, license) comes 
 | `plugin(Meta)` | Class decorator. Joins the `Plugin` subclass to its `Metadata` |
 | `Plugin` | Base class of every plugin. `Plugin[SettingsModel]` types `self.settings` |
 | `Page` | One page of the plugin: `Page(title, path="/", *, icon="", description="", id="", auth=None, access="use", flag=None)` |
-| `Design` | `Design(version="1.0", schema=None)`: the design-data schema version and an optional schema |
+| `Design` | `Design(version="1.0", schema=None, live=False)`: the design-data schema version, an optional schema and the live-form switch |
 | `Access` | The literal type `"use" \| "configure" \| "admin"` |
 
 Source: [`mint_sdk/plugin_decorators.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/plugin_decorators.py), [`mint_sdk/plugin_base.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/plugin_base.py).
@@ -55,6 +55,7 @@ Source: [`mint_sdk/plugin_decorators.py`](https://github.com/MorscherLab/MINT/bl
 | `database` | `MigrationSpec \| None` | `None` | Alembic revisions and models of the tables that the plugin owns. See [Migrations](/sdk/api/migrations) |
 | `features` | set of `"instrument_status"`, `"instrument_alerts"`, `"realtime"` | `set()` | Optional platform features |
 | `ui` | `"generated" \| None` | `None` | Serve the SDK-generated workspace |
+| `analysis_offer` | `bool` | `True` | The Analysis artifacts card of the experiment page offers to start the plugin. Set `False` for a plugin that only shows [panels](#panels) (SDK 1.6) |
 | `reads_from` | `frozenset[str]` | `frozenset()` | Plugin IDs whose artifacts, exports, bus events, tools and jobs this plugin may use. `{"*"}` needs administrator consent. See [Plugin communication](/sdk/concepts/plugin-communication#reads-from-is-the-gate) |
 | `writes_to` | `frozenset[str]` | `frozenset()` | Plugin IDs whose object store this plugin may write to, create-only, with `context.objects(experiment_id, plugin=...)`. It does not replace their artifacts |
 | `experiment_types` | `frozenset[str] \| None` | `None` | Experiment types that the plugin supports. Platform policy can narrow the set |
@@ -67,6 +68,8 @@ Source: [`mint_sdk/plugin_decorators.py`](https://github.com/MorscherLab/MINT/bl
 ### Design schema
 
 `Metadata.design = Design(version="1.0", schema=...)` makes the platform validate every `design.save` write. The schema is a JSON Schema (draft 2020-12) `dict` or a pydantic model class. The platform checks the in-process, plugin-process and user (REST and MCP) write paths. A failed check raises `ValidationException` with the field paths. A plugin that declares no schema keeps unvalidated writes. `mint_sdk.design_validation` has `validate_design_data`, `ensure_valid_design_data`, `design_schema_from_model` and `FieldError`. The platform shows the schema at `GET /api/plugins/{name}/design-schema`.
+
+`Design(live=True)` makes the platform draw a design form from the schema on the experiment page; each field saves by itself as a patch. It needs a `schema` (else `TypeError` when the class is defined) whose root is `"type": "object"` with `properties` (`mint doctor` checks it). The design-schema route returns the flag as `live`. A patch does not enforce the root `required` list. See [Live design forms](/sdk/recipes/live-design).
 
 ### `Plugin` members
 
@@ -83,7 +86,7 @@ Source: [`mint_sdk/plugin_decorators.py`](https://github.com/MorscherLab/MINT/bl
 | `design`, `artifacts` | Shortcuts to `context.design` and `context.artifacts` |
 | `routers()` | Native routers for WebSockets, dynamic nesting or custom route classes. Returns a list of `(router, sub_prefix)` tuples or `RouterMount` objects |
 
-Declare behavior with decorators on plugin methods: `@endpoint` (HTTP), `@job` and `@finalize` (jobs), `@health`, `@on` (events and settings changes), `@notify` and `@calendar_event` (integrations), and `@tool`, `@prompt` and `@resource` (MCP).
+Declare behavior with decorators on plugin methods: `@endpoint` (HTTP), `@job` and `@finalize` (jobs), `@health`, `@on` (events and settings changes), `@notify` and `@calendar_event` (integrations), `@tool`, `@prompt` and `@resource` (MCP), and `@panel` (experiment page tabs, from `mint_sdk.panels`).
 
 ## Endpoints and request dependencies
 
@@ -248,8 +251,8 @@ class QcPlugin(Plugin):
 
 | Event | Payload class | Notes |
 |-------|--------------|-------|
-| `experiment.before_save` | `BeforeExperimentSave` | Runs in sequence and fails closed. Return `None` to allow; raise `EventVetoException` to refuse (422). Any other exception or return value also stops the save |
-| `experiment.after_save` | `AfterExperimentSave` | Observer. `data` is the design stored at delivery, with its `version` |
+| `experiment.before_save` | `BeforeExperimentSave` | Runs in sequence and fails closed. Return `None` to allow; raise `EventVetoException` to refuse (422). Any other exception or return value also stops the save. Also runs for each live-design patch, with `data` = `{"plugin_id", "data", "ops"}` |
+| `experiment.after_save` | `AfterExperimentSave` | Observer. `data` is the design stored at delivery, with its `version`. For live-design patches it comes 30 s after the last patch of a user, and at least every 5 min |
 | `experiment.status_changed` | `ExperimentStatusChanged` | Observer |
 | `experiment.created` | `ExperimentCreated` | After the write commits |
 | `experiment.updated` | `ExperimentUpdated` | `changed_fields` lists the changed fields |
@@ -297,6 +300,7 @@ class QcPlugin(Plugin):
 | `id` | method name in kebab-case | Job definition id |
 | `title`, `description` | | Text for the UI |
 | `access` | `"use"` | Level needed to submit the job |
+| `effect` | `"write"` | What the job changes: `"read"`, `"write"` or `"destructive"`. A `"destructive"` job asks the user for confirmation before it starts from a panel action or MCP `mint_start_job` (SDK 1.6) |
 | `name`, `folders` | `None` | Callables that take the inputs and return the display name and folder list |
 | `cpu` | `1` | CPU slots (sync handler) |
 | `parts`, `min_parts`, `max_parts`, `max_bytes` | `None`, 1, 256, 8 GiB | Staged job: multipart inputs |
@@ -342,6 +346,39 @@ class QcPlugin(Plugin):
 
 `call_tool(plugin, name, arguments, *, actor, platform, progress=None, read_only=False)`, `render_prompt(plugin, name, arguments, *, actor, platform)`, `read_resource(plugin, name, params, *, actor, platform)`, `mcp_manifest(plugin)` and `mcp_problems(plugin)` run and describe declarations for tests and tooling. From SDK 1.6, `mcp_manifest(plugin)` also lists each skill of `Metadata.skills` with the path, size and SHA-256 of every file; `mint_sdk.mcp_skills.skill_problems(plugin_name, name, files)` returns the reasons why the platform does not serve a skill ([MCP skills](/sdk/recipes/mcp-skills)). A tool with `effect = "destructive"` makes the platform ask the user to confirm before the call runs.
 
+## Panels
+
+`mint_sdk.panels` (SDK 1.6) shows plugin data as tabs of the experiment page. The handler returns sections, and the platform draws them. How-to: [Plugin panels](/sdk/recipes/panels).
+
+```python
+from mint_sdk.panels import Action, KeyValuePanel, PanelSection, StatePanel, panel
+
+
+class QcPlugin(Plugin):
+    @panel("summary", slot="experiment.analysis", title="Summary",
+           actions=[Action("Re-run QC", job="rerun-qc")])
+    async def summary(self, experiment_id: int) -> list[PanelSection]:
+        return [KeyValuePanel(title="Summary", items=[("Features", 9100)])]
+```
+
+| Symbol | Description |
+|--------|-------------|
+| `panel(panel_id, *, slot, title, access="use", experiment_types=None, actions=())` | Declares `async def name(self, experiment_id: int) -> list[PanelSection]` as a tab. `slot` is `"experiment.design"` or `"experiment.analysis"`. `panel_id` matches `^[a-z][a-z0-9_-]{0,39}$` |
+| `Action(title, job, inputs={})` | A button that starts a `@job` of the same plugin. The job takes one `ExperimentRef` input; `inputs` gives fixed JSON scalars. Raises `TypeError` for a missing or staged job |
+| `PanelSection` | The union of the section models, selected by `kind` |
+| `KeyValuePanel`, `TablePanel`, `TextPanel`, `JsonPanel`, `BarPanel` | The instrument status kinds `kv`, `table`, `text`, `json`, `bar`, with `width` |
+| `LinkPanel` | `link`: `label`, `href` (`http(s)://` or `/plugin/<prefix>[/...]`), optional `title` |
+| `StatePanel` | `status`: `state` (`success`, `warning`, `error`, `info`, `neutral`), `label`, optional `title`, `detail`, `at` |
+| `PlatePanel`, `PlateGroup`, `PlateWell` | `plate`: `format` (`54`, `96`, `384`), `color_by` (`"group"`, `"value"`), up to 9 `groups` (`role` `sample`, `blank`, `qc`), `wells`, `highlight`, `value_label` |
+| `Width`, `WIDTHS` | `"full"` (default), `"half"`, `"third"`, `"two-thirds"` |
+| `call_panel(plugin, panel_id, experiment_id, *, actor, platform)` | Runs a panel as `actor` and checks the answer, as the platform does |
+| `validate_section(value, *, routes_prefix)` | Validates one section |
+| `panel_manifest(plugin)` | The panel entries of the plugin manifest |
+
+Limits: `MAX_PANEL_SECTIONS` (20), `MAX_PANEL_BYTES` (128 KiB), `MAX_TABLE_ROWS` (200), `MAX_TABLE_COLUMNS` (20), `MAX_TEXT_CHARS` (20,000) and `PANEL_TIMEOUT_SECONDS` (10). The platform serves a panel at `GET /api/experiments/{id}/panels/{plugin}/{panel_id}` and over MCP as `mint://plugins/<plugin>/panels/<panel_id>/experiments/{experiment_id}`.
+
+Source: [`mint_sdk/panels.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/panels.py).
+
 ## Instrument status
 
 A plugin reports the live status of an instrument with `context.instruments.report(status, *, alerts="none")`. It needs `features = {"instrument_status"}` and an administrator grant that names the instrument. `alerts` is `"none"`, `"open"` or `"critical"`. The call returns an `InstrumentLiveStatus`. Errors:
@@ -352,7 +389,7 @@ A plugin reports the live status of an instrument with `context.instruments.repo
 | `NotFoundException` | The instrument does not exist |
 | `ConflictException` | The instrument is deactivated |
 
-`InstrumentStatus` (`mint_sdk.instruments`) has `instrument_id`, `state` (`InstrumentState`), `active_method`, `current_sample` (`SampleInfo`), `sequence_progress` (`SequenceProgress`, built with `build_sequence_progress`), `timestamp`, `sequence_file`, `sequence_row_index`, `current_raw_file`, `method_elapsed_pct`, `panels`, `completed_sample` and `sequence_completed`. `panels` holds up to 8 typed panels (`KeyValuePanel`, `TablePanel`, `TextPanel`, `JsonPanel`, `BarPanel`). The panels of one report, `completed_sample.panels` included, may not exceed 16 KiB. `CompletedSample` adds `position`, `experiment_id`, `metrics` (up to 4 `InjectionMetric`), `panels` and `completed_at`. A sample sent again with the same `file_name`, `position` and `started_at` replaces its metrics and adds no history row.
+`InstrumentStatus` (`mint_sdk.instruments`) has `instrument_id`, `state` (`InstrumentState`), `active_method`, `current_sample` (`SampleInfo`), `sequence_progress` (`SequenceProgress`, built with `build_sequence_progress`), `timestamp`, `sequence_file`, `sequence_row_index`, `current_raw_file`, `method_elapsed_pct`, `panels`, `completed_sample` and `sequence_completed`. `panels` holds up to 8 typed panels (`KeyValuePanel`, `TablePanel`, `TextPanel`, `JsonPanel`, `BarPanel`). `TablePanel.column_types` sets a column to `"text"`, `"number"` or `"mono"`; a platform before 1.6 refuses a report that sets it. The panels of one report, `completed_sample.panels` included, may not exceed 16 KiB. `CompletedSample` adds `position`, `experiment_id`, `metrics` (up to 4 `InjectionMetric`), `panels` and `completed_at`. A sample sent again with the same `file_name`, `position` and `started_at` replaces its metrics and adds no history row.
 
 `InstrumentLiveStatus` fields: `instrument_id`, `state`, `active_method`, `current_sample`, `sequence_progress`, `has_unacknowledged_alerts`, `has_unacknowledged_critical`, `last_seen`, `state_since`, `reported_by`, `reporter` and `panels`. The platform keeps the latest snapshot in memory. A read shows `disconnected` when the last report is older than 60 seconds. A platform restart empties the snapshots. A report can also add rows to the instrument history that the platform stores in its database: a state change, a finished sample, a finished sequence or a disconnect.
 
@@ -372,7 +409,7 @@ A daemon authenticates with a platform **service token** (`mint_svc_...`). A ser
 | `mint_sdk.app.SPAStaticFiles` | `StaticFiles` that falls back to `index.html` |
 | `mint_sdk.client.MINTClient` | Typed REST client. See [REST client](/sdk/api/client) |
 
-Run a plugin with `mint dev`, or with `uv run uvicorn mint_sdk.app:create_app --factory`. A plugin does not write an ASGI factory. The app also serves routes only for the platform, at the root and with the internal token: `GET /__mint/health`, `POST /__mint/events`, `GET /__mint/jobs/manifest`, `GET /__mint/mcp/manifest` and `POST /__mint/mcp/{tools,prompts,resources}/{name}`. A plugin process that starts before the platform accepts connections waits for the platform. `MINT_PLATFORM_STARTUP_WAIT` sets the wait in seconds (default 120; `0` turns the wait off).
+Run a plugin with `mint dev`, or with `uv run uvicorn mint_sdk.app:create_app --factory`. A plugin does not write an ASGI factory. The app also serves routes only for the platform, at the root and with the internal token: `GET /__mint/health`, `POST /__mint/events`, `GET /__mint/jobs/manifest`, `GET /__mint/mcp/manifest`, `POST /__mint/mcp/{tools,prompts,resources}/{name}` and `POST /__mint/panels/{id}`. A plugin process that starts before the platform accepts connections waits for the platform. `MINT_PLATFORM_STARTUP_WAIT` sets the wait in seconds (default 120; `0` turns the wait off).
 
 ### Runtime version negotiation
 
@@ -388,6 +425,7 @@ Run a plugin with `mint dev`, or with `uv run uvicorn mint_sdk.app:create_app --
 | `RecordingContext(actor=, plugin_id=, reads_from=, reads_from_any_plugin=True, writes_to=, experiment_types=, experiments=, users=, instruments=, design=, instrument_status_grant=)` | In-memory `PlatformContext` with working namespaces. It applies the access rules and design validation. It keeps `published`, `emitted`, `streamed`, `reads`, `calls`, `started_jobs`, `subscriptions` and `instruments.reports`. `stub_export`, `stub_call` and `stub_job` set the answers of `context.plugins` |
 | `job_context(*, settings=None, cancelled=False, actor=None)` | A `JobContext` for a direct handler call. It keeps `reports` and `warnings` |
 | `Harness.deliver(name, payload, /, *, experiment_id=None)` | Deliver a bus event of another plugin to the `@on(name)` handlers |
+| `Harness.panel(panel_id, experiment_id, /, *, as_user=None)` | Call a `@panel` and return its sections as the platform gets them. Runs as `as_user` (default: the standalone actor) |
 
 See [Testing plugins](/sdk/recipes/testing-plugins).
 
@@ -413,6 +451,9 @@ See [Exceptions](/sdk/api/exceptions) for the full list. These are exported from
 | `mint_sdk.integrations` | `notify`, `calendar_event`, `NotificationEvent`, `CalendarEvent` and related types |
 | `mint_sdk.jobs` | `JobState`, `JobManager`, `JobEventStream`, `JobVisibility`, `CurrentJobVisibility` and related types |
 | `mint_sdk.migrations` | `MigrationSpec`, `LegacyBaseline`, `run_migrations` |
+| `mint_sdk.panels` | `panel`, `Action`, `PanelSection` and the section models. See [Panels](#panels) |
+| `mint_sdk.event_names` | `job_finished_event(plugin_name)` and the wire rules of plugin event names and payloads |
+| `mint_sdk.api_errors` | `exception_from_envelope(status_code, payload)`: the SDK exception for a platform error answer, or `None` |
 | `mint_sdk.protocol` | `JobStatus`, `MAX_EVENT_PAYLOAD_BYTES` and wire constants |
 | `mint_sdk.r` | `RAnalysisBridge`, `RScriptSpec`, `RBridgeError`, `RRunProvenance` |
 | `mint_sdk.settings` | `settings_form_fields`, `settings_schema`, `SettingsConflictError` |

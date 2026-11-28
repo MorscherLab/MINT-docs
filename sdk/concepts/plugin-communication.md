@@ -123,9 +123,9 @@ To subscribe at run time, call `await self.context.plugins.subscribe(name, handl
 - **No ordering.** Events can arrive in any order. `id` increases, so compare it when the order matters.
 - **Retries.** A failed delivery is retried after `min(3600, 5 · 2^(n-1))` seconds, where `n` is the failed attempt (5 s, 10 s, 20 s, 40 s). The fifth failure makes the delivery **dead**. A delivery times out after 30 seconds.
 - **Plugin state.** The worker keeps a delivery pending, without an attempt, while the plugin process starts. A delivery to a disabled or uninstalled plugin is skipped. One slow plugin does not hold the deliveries of other plugins.
-- **Handler failure.** With SDK 1.5, the first handler failure fails the delivery, so the platform delivers the event again. A plugin process answers 500 on `/__mint/events`. A plugin on SDK 1.4 logs the failure, and the platform counts the delivery as done.
+- **Handler failure.** From SDK 1.5, the first handler failure fails the delivery, so the platform delivers the event again. A plugin process answers 500 on `/__mint/events`. A plugin on SDK 1.4 logs the failure, and the platform counts the delivery as done.
 
-Administrators see recent and dead deliveries, and retry a dead one, in [Admin → Plugins → Event deliveries](/admin/plugins#event-deliveries).
+Administrators see recent and dead deliveries, and retry a dead one, in the [Event deliveries](/admin/plugins#event-deliveries) action of each plugin card in Admin → Plugins → Installed.
 
 ### Handler actor
 
@@ -139,9 +139,10 @@ The `experiment.created`, `experiment.updated`, `experiment.status_changed`, `ex
 - The [delivery rules](#delivery-rules) and the [handler actor](#handler-actor) apply. Make these handlers idempotent too.
 - The plugin that made the write does not get the events of its own write.
 - `experiment.after_save` carries the design that is stored at delivery and its `version`, not the design of the save. A later save can be in the event already.
+- For the field patches of a [live design](/sdk/recipes/live-design), `experiment.after_save` comes once, 30 s after the last patch of a user, and at least every 5 min while the user keeps editing. A full save sends it at once.
 - `experiment.deleted` carries the last `experiment_code` and `experiment_type`. The row is gone.
 
-`experiment.before_save` does not use the bus. It stays synchronous and can still veto the save.
+`experiment.before_save` does not use the bus. It stays synchronous and can still veto the save. It also runs for each live-design patch: `event.data` is then `{"plugin_id", "data", "ops"}`, where `data` is the whole design with the patch applied. A live design can lack the fields of the schema's root `required` list.
 
 ## Exports
 
@@ -296,6 +297,8 @@ class JobFinished(BaseModel):
 async def sequence_exported(self, event: PluginEvent[JobFinished]) -> None:
     ...
 ```
+
+`mint_sdk.event_names.job_finished_event(target)` returns this event name for a target plugin name.
 
 `lost` means that the target lost the job, or that the `on_behalf_of` user may no longer use the target. The platform checks this at each poll and polls a job for at most 24 hours.
 

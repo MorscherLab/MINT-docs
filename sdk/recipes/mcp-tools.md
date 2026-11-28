@@ -117,7 +117,11 @@ The platform treats plugin output as untrusted:
 
 The platform picks up an enabled plugin's declarations when the MCP endpoint starts and rechecks every 15 seconds, so a plugin process that starts late or changes its declarations is published without a platform restart. The platform reads `effect` and `idempotent` from the plugin MCP manifest, so a plugin process needs SDK 1.4.
 
-`@job` methods need no MCP declaration: the platform's job tools (`mint_start_job` and the related tools) offer every job the plugin declares. From MINT 1.6, a client that supports MCP tasks runs a job as a [background task](/guide/ai-and-api#jobs-as-background-tasks).
+## Panels and jobs over MCP
+
+`@job` methods need no MCP declaration: the platform's job tools (`mint_start_job` and the related tools) offer every job the plugin declares. From MINT 1.6, a client that supports MCP tasks runs a job as a [background task](/guide/ai-and-api#jobs-as-background-tasks). Before `mint_start_job` starts a job with `effect = "destructive"` on its `Job` spec, the platform asks the user for confirmation, as for a destructive tool. A decline starts nothing.
+
+`@panel` methods need no MCP declaration either. The platform publishes each [panel](/sdk/recipes/panels) as the resource template `mint://plugins/<plugin>/panels/<panel_id>/experiments/{experiment_id}`. A read returns the panel answer JSON `{plugin, panel, experiment_id, sections, built_at}`, built for the caller, with the checks of the REST route. A read-only token can read it. `mint://experiments/{id}` lists the panels that apply to the experiment and that the caller may open, as `panels: [{plugin, id, title, uri}]`. The export and panel templates are published before the plugin's own resources, so a `@resource` path cannot take their addresses.
 
 To tell the assistant how to use your tools and jobs, ship a skill: see [MCP skills](/sdk/recipes/mcp-skills).
 
@@ -157,5 +161,6 @@ Verified against [v@MINT_VERSION@ `mcp.py`](https://github.com/MorscherLab/MINT/
 
 - [AI Assistants and API Access](/guide/ai-and-api)
 - [MCP skills](/sdk/recipes/mcp-skills)
+- [Plugin panels](/sdk/recipes/panels)
 - [Route permissions](/sdk/recipes/route-permissions)
 - [Python SDK reference](/sdk/api/python#mcp-declarations)

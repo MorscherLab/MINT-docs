@@ -72,14 +72,15 @@ Every tool runs as you and respects your role, project access, and plugin visibi
 | **Jobs** | `mint_start_job`, `mint_get_job`, `mint_get_job_result`, `mint_cancel_job` | Status and results only |
 | **Plugin tools** | Tools, prompts, and resources that installed plugins publish, named `<plugin>_<name>` | Read tools only |
 
-The assistant can also read `mint://` resources: an experiment with its design data, a single analysis artifact, or a stored file of up to 5 MiB. Larger files must be downloaded from MINT directly. A plugin can also offer its exports and its recent events as `mint://plugins/...` resources; see [Plugin communication](/sdk/concepts/plugin-communication#read-an-export-over-mcp).
+The assistant can also read `mint://` resources: an experiment with its design data, a single analysis artifact, or a stored file of up to 5 MiB. Larger files must be downloaded from MINT directly. A plugin can also offer its exports and its recent events as `mint://plugins/...` resources; see [Plugin communication](/sdk/concepts/plugin-communication#read-an-export-over-mcp). The tabs that plugins add to the experiment page are resources too: `mint://experiments/{id}` lists them as `panels`, each with its `mint://plugins/<plugin>/panels/<panel>/experiments/<id>` address. A read-only token can read them.
 
 Things to know:
 
 - **Confirmation questions.** Before a destructive call, MINT asks you in the AI client. If you decline or cancel, the call stops before it runs. MINT asks for these calls:
   - `mint_save_design` without `expected_version`, when a design is already stored.
   - `mint_save_artifact` with `replace=true`, over an artifact that an assistant saved.
-  - `mint_cancel_job`, for a queued or running job.
+  - `mint_start_job`, for a job that the plugin marks destructive. The question shows the job title.
+  - `mint_cancel_job`, unless MINT knows that the job has already ended.
   - A plugin tool that the plugin marks destructive. The question shows the tool title and the argument values, shortened.
 
   A client that cannot ask questions runs the call without a question. Some clients say that they can ask, but they cannot show a dialog, for example in a headless run. These clients cancel the question, so the call fails. Answer the question with a client hook. In Claude Code, use an `Elicitation` hook. The question is not a permission check. A hook can answer it, and your role limits stay the same.

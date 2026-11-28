@@ -11,7 +11,7 @@ Ship a skill with your plugin. A skill tells an AI assistant how to do a task wi
 3. Write `skills/<name>/SKILL.md`. Start it with YAML frontmatter that has `name` and `description`.
 4. Put more files (references, examples) in the same directory if the skill needs them.
 
-The reference plugin [`examples/backend-only-generated-ui`](https://github.com/MorscherLab/MINT/tree/1.6-dev/examples/backend-only-generated-ui) has the entry point `backend-only-charts` and one skill:
+The reference plugin [`examples/backend-only-generated-ui`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/examples/backend-only-generated-ui) has the entry point `backend-only-charts` and one skill:
 
 ```text
 src/backend_only_analysis/
@@ -95,7 +95,7 @@ The **MCP declarations** line also counts the skills.
 
 The platform skills `mint-experiments` and `mint-jobs` already describe the platform tools. A plugin skill names them and adds only what is special to the plugin.
 
-Verified against [`mcp_skills.py`](https://github.com/MorscherLab/MINT/blob/1.6-dev/packages/sdk-python/src/mint_sdk/mcp_skills.py), [`doctor_skill_checks.py`](https://github.com/MorscherLab/MINT/blob/1.6-dev/packages/sdk-python/src/mint_sdk/doctor_skill_checks.py) and [platform publishing](https://github.com/MorscherLab/MINT/blob/1.6-dev/api/mcp/plugin_tools.py) on `1.6-dev`.
+Verified against [`mcp_skills.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/mcp_skills.py), [`doctor_skill_checks.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/doctor_skill_checks.py) and [platform publishing](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/mcp/plugin_tools.py) at v@MINT_VERSION@.
 
 - [MCP tools](/sdk/recipes/mcp-tools)
 - [AI Assistants and API Access](/guide/ai-and-api#skills)
