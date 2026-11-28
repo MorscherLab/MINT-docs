@@ -34,18 +34,23 @@ jobs:
             echo "HAS_FRONTEND=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Setup Bun
+      - name: Setup Vite+
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        uses: oven-sh/setup-bun@v2
+        uses: voidzero-dev/setup-vp@v1.22.0
+        with:
+          working-directory: frontend
+          run-install: false
+          cache: true
 
       - name: Frontend install and build
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
+        working-directory: frontend
         run: |
-          cd frontend
-          bun install
-          bun run type-check
-          bun run test
-          bun run build
+          vp install --frozen-lockfile
+          vp run type-check
+          vp run fmt:check
+          vp run test
+          vp run build
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -64,24 +69,39 @@ jobs:
         run: uv run mint sdk generate --check
 
       - name: Lint
-        run: uv run ruff check .
+        run: uv run mint lint
 
       - name: Test
         run: uv run pytest -v
+
+      - name: Build .mint bundle
+        run: uv run mint build --output-dir dist/
 ```
 
 The frontend is built before `uv sync` because the standard plugin wheel
 force-includes `frontend/dist`, and runtime tests then see real assets.
 `mint doctor --strict` fails on warnings as well as errors;
 `mint sdk generate --check` catches a generated client that no longer matches
-the backend routes and schemas. Backend-only plugins skip the Bun steps.
+the backend routes and schemas. `mint lint` runs the design rules, ruff and
+oxlint, and fails only on findings that `mint-lint-baseline.json` does not
+accept. The build step checks packaging on every PR; it runs `pytest` again
+before packaging. Backend-only plugins skip the Vite+ steps.
 
-The scaffold git-ignores `uv.lock` and `frontend/bun.lock`. After you
-[commit lockfiles](/sdk/operations/versioning#commit-lockfiles), change the
-install steps to `uv sync --locked` and `bun install --frozen-lockfile`.
+`voidzero-dev/setup-vp` installs the global `vp` and also sets up Node.js and
+pnpm. Every `mint` command that touches the frontend needs `vp`, and the
+"Global vp" check of `mint doctor` fails without it. Put the step before the
+first `vp`, `mint build` or `mint doctor` command.
 
-Optional addition: a build step (`uv run mint build --output-dir _ci_build`)
-checks packaging on every PR. It runs `pytest` again before packaging.
+`vp install --frozen-lockfile` needs a committed `frontend/pnpm-lock.yaml`.
+The scaffold does not ignore `uv.lock` or the frontend lockfile: commit both
+(see [Commit lockfiles](/sdk/operations/versioning#commit-lockfiles)). After
+that, you can change `uv sync` to `uv sync --locked`.
+
+A workflow from a plugin made before 1.6 has a `Setup Bun` step and `bun`
+commands. [`mint migrate`](/sdk/operations/migrate-1.5-to-1.6#run-mint-migrate)
+rewrites the steps that `mint init` generated and replaces
+`uv run ruff check .` with `uv run mint lint`. It lists other setup steps
+(pnpm, Node.js) and hand-written workflows for you to edit.
 
 ## Publish on tag
 
@@ -93,8 +113,8 @@ builds and publishes in a `build` job that depends on it:
     runs-on: ubuntu-latest
     needs: [test]
     steps:
-      # checkout (fetch-depth: 0), frontend detection, Bun, frontend
-      # install/type-check/test/build, uv, Python 3.14, uv sync
+      # checkout (fetch-depth: 0), frontend detection, Vite+, frontend
+      # install/type-check/fmt:check/test/build, uv, Python 3.14, uv sync
       - name: Verify generated frontend contract
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
         run: uv run mint sdk generate --check
@@ -198,28 +218,36 @@ jobs:
             echo "HAS_FRONTEND=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Setup Bun
+      - name: Setup Vite+
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        uses: oven-sh/setup-bun@v2
+        uses: voidzero-dev/setup-vp@v1.22.0
+        with:
+          working-directory: frontend
+          run-install: false
+          cache: true
 
       - name: Install frontend dependencies
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: cd frontend && bun install
+        working-directory: frontend
+        run: vp install --frozen-lockfile
 
       - name: Build initial frontend assets
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: cd frontend && bun run build
+        working-directory: frontend
+        run: vp run build
 
       - name: Update aligned SDKs on the supported minor line
         run: uv run mint sdk update --scope patch
 
       - name: Frontend type check
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: cd frontend && bun run type-check
+        working-directory: frontend
+        run: vp run type-check
 
       - name: Frontend build
         if: steps.frontend.outputs.HAS_FRONTEND == 'true'
-        run: cd frontend && bun run build
+        working-directory: frontend
+        run: vp run build
 
       - name: Run tests
         run: uv run pytest -v
@@ -244,24 +272,22 @@ jobs:
           content-filepath: sdk-compat-failure.md
 ```
 
-`mint sdk update` defaults to stable patch updates; `--channel beta` opts into prerelease testing. Use `--scope patch` for a fixed minor support line. The updater selects the newest candidate before checking bounds; `--scope minor` fails if that candidate is excluded. Review wider bounds on a separate upgrade branch. The command runs `uv sync` and, when a frontend SDK update is needed, the detected JS package manager's install command; set up Bun before the command in Bun-based projects. For new SDK majors, edit dependency ranges deliberately and run a separate migration branch.
+`mint sdk update` defaults to stable patch updates; `--channel beta` opts into prerelease testing. Use `--scope patch` for a fixed minor support line. The updater selects the newest candidate before checking bounds; `--scope minor` fails if that candidate is excluded. Review wider bounds on a separate upgrade branch. The command runs `uv sync` and, when a frontend SDK update is needed, `vp install`; set up Vite+ before the command. For new SDK majors, edit dependency ranges deliberately and run a separate migration branch.
 
 ## Caching
 
-Both `uv` and `bun` caches speed up CI:
+`voidzero-dev/setup-vp` with `cache: true` caches the frontend packages. Add a `uv` cache:
 
 ```yaml
 - uses: actions/cache@v4
   with:
-    path: |
-      ~/.cache/uv
-      ~/.bun/install/cache
-    key: ${{ runner.os }}-mint-${{ hashFiles('**/uv.lock', '**/bun.lock', '**/bun.lockb') }}
+    path: ~/.cache/uv
+    key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}
     restore-keys: |
-      ${{ runner.os }}-mint-
+      ${{ runner.os }}-uv-
 ```
 
-If your project does not [commit lockfiles](/sdk/operations/versioning#commit-lockfiles), key the cache on `pyproject.toml` and `frontend/package.json` instead.
+If your project does not [commit lockfiles](/sdk/operations/versioning#commit-lockfiles), key the cache on `pyproject.toml` instead.
 
 ## Pre-commit hooks
 
@@ -270,14 +296,14 @@ For local pre-commit checks (run locally; CI is the authority):
 ```yaml
 # .pre-commit-config.yaml
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.0
-    hooks:
-      - id: ruff
-      - id: ruff-format
-
   - repo: local
     hooks:
+      - id: mint-lint
+        name: mint lint
+        entry: uv run mint lint
+        language: system
+        pass_filenames: false
+
       - id: mint-doctor
         name: mint doctor
         entry: uv run mint doctor

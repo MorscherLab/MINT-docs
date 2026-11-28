@@ -10,8 +10,8 @@ one does not automatically change or migrate the others.
 |---|---|---|---|
 | Plugin release | Git tag → wheel metadata → `Plugin.metadata.version` and bundle manifest | `v0.2.0` | Identifies installed code and frontend assets |
 | Python SDK requirement | `[project].dependencies` | `mint-sdk>=@MINT_VERSION@,<2.0` | Declares supported SDK runtime versions |
-| Frontend SDK requirement | `frontend/package.json` | `^@MINT_VERSION@` | Declares the frontend dependency range |
-| Resolved SDK release | `uv.lock`, `frontend/bun.lock` | `@MINT_VERSION@` in both | Records the actual build dependencies |
+| Frontend SDK requirement | `frontend/package.json` | `@MINT_VERSION@` | Pins the frontend SDK release (exact) |
+| Resolved SDK release | `uv.lock`, `frontend/pnpm-lock.yaml` | `@MINT_VERSION@` in both | Records the actual build dependencies |
 | Platform requirement | `[tool.mint].requires_mint` | `>=@MINT_VERSION@,<2.0` | Constrains `.mint` installation |
 | Marketplace floor | Registry `min_platform_version` | `@MINT_VERSION@` | Informs catalog compatibility |
 | Design-data schema | `Metadata.design = Design(version=...)` and stored `DesignData` | `"2.0"` | Labels the JSON design format |
@@ -91,7 +91,7 @@ versions in result provenance as well as the plugin release.
 
 ## Declare compatibility deliberately
 
-From 1.4, the plugin SDK contract has no breaking change within 1.x, and deprecations are removed in 2.0. A plugin declares `mint-sdk>=@MINT_VERSION@,<2.0` and `[tool.mint].requires_mint` with the same range. `mint init`, `mint doctor --fix` and `mint sdk update --version` write a `<2.0` ceiling for a 1.4 or later floor, and keep the next-minor ceiling (`<1.5`) for a floor before 1.4. `mint doctor` accepts a ceiling at the next major or at the next minor, so a release with `<1.5` still passes. The scaffold renders the compatibility baseline `>=1.4.0b1,<2.0`; raise the floor to `@MINT_VERSION@` when your support policy requires the stable release. The npm pin of `@morscherlab/mint-sdk` stays exact.
+From 1.4, the plugin SDK contract has no breaking change within 1.x, and deprecations are removed in 2.0. A plugin declares `mint-sdk>=@MINT_VERSION@,<2.0` and `[tool.mint].requires_mint` with the same range. `mint init`, `mint doctor --fix` and `mint sdk update --version` write a `<2.0` ceiling for a 1.4 or later floor, and keep the next-minor ceiling (`<1.5`) for a floor before 1.4. `mint doctor` accepts a ceiling at the next major or at the next minor, so a release with `<1.5` still passes. `mint init` sets the floor to the release that it pins: the newer of the latest stable SDK and the SDK of the running CLI (`>=@MINT_VERSION@,<2.0` for a @MINT_VERSION@ CLI). A release with that floor installs only on a platform of that release or later. Lower the floor when the plugin must also install on an older 1.x platform and uses no newer API. `mint sdk update --version X` raises a floor below `X` to `X`. The npm pin of `@morscherlab/mint-sdk` stays exact.
 
 The bundle installer checks `requires_mint` and the wheel's SDK requirement.
 The platform compiles the plugin requirements against its own lock with `mint-sdk` as the installed distribution, so a plugin cannot silently replace the SDK. A plugin built for an older minor is disabled at the first start of a newer platform (for example a `mint-sdk<1.4` plugin on 1.4). Keep the marketplace floor consistent with the
@@ -143,7 +143,12 @@ when a design is too old for the current editor.
 | `1.0.0` | Previous revisions plus `p003_convert_values` |
 
 Alembic revisions chain by `revision` / `down_revision` ids. Never reset the chain or
-rewrite an already applied revision. Update the
+rewrite an already applied revision. The platform stores a checksum of each
+applied revision and disables a plugin whose released revision file changed
+("Migration checksum or owner mismatch"). The "Released revisions" check of
+`mint doctor` reports each file of the migration package that the latest git
+tag has and the working tree changed or removed. Keep formatters off the
+revision package. Update the
 SQLModel definition and add the corresponding migration together. Test both
 fresh table creation and upgrade from the last deployed schema: they take
 different paths. See [migrations](/sdk/concepts/migrations) and the
@@ -161,25 +166,29 @@ and development data. Do not edit generated clients by hand.
 
 ### Commit lockfiles
 
-The `mint init` scaffold's `.gitignore` excludes `uv.lock`,
-`frontend/bun.lock` and `frontend/bun.lockb`. To record the resolved SDK
-release and build reproducibly, delete those three lines from `.gitignore`,
-then commit both lockfiles:
+The `mint init` scaffold's `.gitignore` does not exclude `uv.lock` or
+`frontend/pnpm-lock.yaml`. Commit both lockfiles to record the resolved SDK
+release and build reproducibly:
 
 ```bash
 uv lock
-(cd frontend && bun install)
-git add .gitignore uv.lock frontend/bun.lock
+(cd frontend && vp install)
+git add uv.lock frontend/pnpm-lock.yaml
 ```
 
-After that, CI can use `uv sync --locked` and `bun install --frozen-lockfile`,
-which fail when a lockfile is out of date.
+The generated CI runs `vp install --frozen-lockfile`, which fails without a
+committed and current `pnpm-lock.yaml`. You can also change `uv sync` to
+`uv sync --locked`. A plugin made before 1.6 ignores `uv.lock` and its bun
+lockfile in `.gitignore`: delete those lines. `mint migrate` reports a
+`.gitignore` line that ignores `uv.lock`, and the "Lockfile tracking" check
+of `mint doctor` warns about it. Commit `mint-lint-baseline.json` as well.
 
 A release sequence after the review and checks pass:
 
 ```bash
 uv run mint doctor --strict
 uv run mint sdk generate --check
+uv run mint lint
 uv run pytest
 # Run frontend checks too, when present.
 git tag v0.2.0

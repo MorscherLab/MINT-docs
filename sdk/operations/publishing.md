@@ -28,10 +28,11 @@ that serve its assets:
 
 ```bash
 cd frontend
-bun install
-bun run type-check
-bun run test
-bun run build
+vp install --frozen-lockfile
+vp run type-check
+vp run fmt:check
+vp run test
+vp run build
 cd ..
 ```
 
@@ -41,6 +42,7 @@ plugin root:
 ```bash
 uv sync
 uv run mint doctor --strict
+uv run mint lint
 uv run mint build --output-dir dist
 ```
 
@@ -177,7 +179,7 @@ when that catalog is intended for testing.
 - [ ] Release notes explain changes and any migration/recovery steps.
 - [ ] The GitHub Release contains the `.mint` file and any optional checksum.
 
-Source: [bundle builder](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/cli_build_cmd.py),
+Source: [bundle builder](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/cli_build.py),
 [scaffolded release workflow](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/init_workflow_templates.py).
 
 ## Related

@@ -80,6 +80,8 @@ For Alembic opt-in plugins, **revisions create the tables on both fresh SQLite a
 
 Runtime startup comparison rejects missing model tables/columns and incompatible column types. It deliberately tolerates other declarative differences at startup; `mint doctor --only db` performs the fuller Alembic comparison, including defaults, nullability, and other supported schema differences. Neither is a proof of correct historical data or every backend-specific object. Verify data transformations and constraints in tests.
 
+Plugin database code runs on the SQLAlchemy release of the platform. From MINT 1.6 that is SQLAlchemy 2.1: a session flushes before each statement, also before a `text()` or Core statement, so pending objects from `session.add()` are written earlier than with 2.0. A plugin that caps `sqlalchemy<2.1` cannot install on 1.6.
+
 The platform disables a plugin when migration startup fails, before `initialize()` or route mounting. Standalone sessions also refuse access before migration readiness. Inspect `migration_error` and fix the migration/database problem; do not erase history to make startup pass.
 
 ## Author and inspect
@@ -122,7 +124,7 @@ Keep these values separate:
 | `Design.version` | Persisted experiment design payload format |
 | `schema_revision` + `target_revision` | Alembic current and packaged string revisions. The integer `schema_version` of the legacy counter is removed |
 
-Update models and append a revision when changing SQL. Increment the plugin release through its normal Git/version workflow. A package rollback is not a database downgrade; restore a tested backup or ship a forward repair compatible with the stored schema. The runtime does not automatically execute `downgrade()`.
+Update models and append a revision when changing SQL. Never edit a revision that a release shipped: the platform stores a checksum of each applied revision and disables a plugin whose released revision changed ("Migration checksum or owner mismatch"). The "Released revisions" check of `mint doctor` compares the revision files with the latest git tag and reports each changed or removed file. Keep formatters and `mint lint` fixes off the revision package. Increment the plugin release through its normal Git/version workflow. A package rollback is not a database downgrade; restore a tested backup or ship a forward repair compatible with the stored schema. The runtime does not automatically execute `downgrade()`.
 
 Standard Alembic drop-table/column/index/constraint operations require module-level `destructive = True` under the managed runtime. This is an explicit author opt-in, not a guarantee that other operations or raw SQL cannot lose data. Review generated DDL and data transformations before applying them.
 

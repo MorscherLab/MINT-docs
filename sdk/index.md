@@ -51,7 +51,9 @@ Then scaffold a plugin, check it and run it:
 dependencies. Run `uv sync` and use `uv run mint` inside that project. The
 plain `mint-sdk` dependency is for the runtime library; see [CLI setup](/sdk/api/cli-reference#install-and-choose-the-environment).
 
-Standard plugins also need Bun for the scaffolded Vue frontend. Platform
+Standard plugins also need the Vite+ CLI `vp` 1.5.1 or later for the
+scaffolded Vue frontend: the `mint` CLI runs every frontend command through
+`vp`, and new frontends use pnpm. Platform
 integration needs a configured MINT server; MINT requires PostgreSQL.
 Standalone plugin SQLite is still available for local development.
 
@@ -61,7 +63,7 @@ external or Docker). In v@MINT_VERSION@, generated mode supports analysis plugin
 choose standard mode for design, workflow, static or full plugins.
 
 This track follows the released @MINT_VERSION@ API. A plugin declares itself with a `Metadata` subclass and `@plugin`, and declares its tables with `Metadata.database` ([Alembic migrations](/sdk/concepts/migrations)); `mint db current` inspects development
-databases and `mint add migration` authors revisions without applying them. A plugin built for SDK 1.3 or earlier does not load on a 1.4 platform: see the [migration guide](/sdk/operations/migrate-1.3-to-1.4). Plugins declare `mint-sdk>=1.4.0,<2.0`; the plugin SDK contract has no breaking change within 1.x. See the [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md)
+databases and `mint add migration` authors revisions without applying them. A plugin built for SDK 1.3 or earlier does not load on a 1.4 platform: see the [migration guide](/sdk/operations/migrate-1.3-to-1.4). Plugins declare `mint-sdk>=<floor>,<2.0`; the plugin SDK contract has no breaking change within 1.x, and `mint init` sets the floor to the release it pins. See the [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md)
 and [platform changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md)
 for the release history.
 
@@ -100,9 +102,11 @@ The tutorials are written so you can follow them in order without reading the fu
 | Inspect SDK APIs | `mint docs python`, `mint docs frontend components`, `mint docs contract` |
 | Regenerate frontend client | `mint sdk generate` |
 | Validate project | `mint doctor --strict` |
+| Lint (design rules, ruff, oxlint) | `mint lint` |
 | Package | `mint build` |
 | Verify real install path | `mint verify` |
-| Deploy to a test platform | `mint deploy --to http://127.0.0.1:18020` |
+| Deploy to a test platform | `mint deploy --url http://127.0.0.1:18020` |
+| Upgrade a 1.5 plugin | `mint migrate`, then see [Migrate from 1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6) |
 | Upgrade a 1.4 plugin | `mint doctor`, then see [Migrate from 1.4 to 1.5](/sdk/operations/migrate-1.4-to-1.5) |
 | Upgrade a 1.3 plugin | `mint doctor --fix`, then see the [migration guide](/sdk/operations/migrate-1.3-to-1.4) |
 

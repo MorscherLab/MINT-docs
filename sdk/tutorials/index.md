@@ -12,7 +12,7 @@ You'll need:
 |---|---|
 | **Python** | 3.14 or newer |
 | **uv** | Used by generated plugin projects |
-| **Bun** | latest (for frontend tutorials) |
+| **Vite+** | The global `vp` CLI, 1.5.1 or later (for frontend tutorials). It sets up Node.js and pnpm; see [Install and choose the environment](/sdk/api/cli-reference#install-and-choose-the-environment) |
 | **`mint` CLI** | Installed from `mint-sdk[cli]==@MINT_VERSION@`; see [CLI overview](/admin/cli) |
 | **A running platform** | Optional for local code; real integration needs an installed plugin on a configured PostgreSQL-backed MINT platform |
 

@@ -25,6 +25,19 @@ plugins also need `[local-db]`.
 | `mint-sdk[cli]` | The `mint` commands, including `mint init` scaffolding; adds Typer and `httpx2` |
 | `mint-sdk[cli,server]` | Plugin development with the CLI and Uvicorn; generated projects include this in their `dev` dependency group |
 
+The CLI runs every frontend command through the global Vite+ CLI `vp`: `vp install`, `vp install --frozen-lockfile`, `vp run <script>` and `vp add -E <package>`. `mint init`, `mint dev`, `mint build`, `mint sdk update` and `mint migrate` need `vp` 1.5.1 or later on `PATH` when the plugin has a frontend. Without it, they stop with exit 1 and print the install commands:
+
+```bash
+curl -fsSL https://vite.plus | bash              # macOS, Linux
+brew install voidzero-dev/vite-plus/vp           # Homebrew
+irm https://vite.plus/ps1 | iex                  # Windows PowerShell
+vp --version
+```
+
+`vp` picks the package manager of the frontend in this order: the `packageManager` field of `frontend/package.json` (or of the workspace root that contains it), else its `devEngines.packageManager` field; then `pnpm-workspace.yaml`; then the lockfile (`pnpm-lock.yaml`, `package-lock.json`, `bun.lock` or `bun.lockb`); else pnpm. A plugin made before 1.6 with nothing that decides keeps bun. Set `VP_LOG` to print the output of each `vp` command that the CLI otherwise captures.
+
+`mint sdk update`, `mint init --force`, `mint build` and `mint dev` stop with exit 1 when `uv.lock` locks a `mint-sdk` of a newer minor than the running `mint`. Run `uv run mint <command>` in the plugin to use its own `mint`.
+
 
 ## A complete development loop
 
@@ -37,6 +50,7 @@ uv run mint docs contract
 uv run mint sdk generate
 uv run mint sdk generate --check
 uv run mint doctor --strict
+uv run mint lint
 uv run pytest
 uv run mint build
 uv run mint verify
@@ -144,7 +158,9 @@ Published plugins are `.mint` bundles. Install them with `mint platform plugin u
 
 | Command | Purpose |
 |---------|---------|
-| `mint platform plugin list [--json]` | List loaded plugins and installed plugin packages |
+| `mint platform plugin list [--json]` | List loaded plugins with their state (`enabled`, `disabled`, or `error` with the migration error under the row), the plugins that the dependency lock disabled with the reason, and installed plugin packages |
+| `mint platform plugin snapshots [--json]` | List the plugin lock history (rollback points), newest first |
+| `mint platform plugin rollback <snapshot-id> [--yes\|-y] [--json]` | Apply a previous plugin lock: reinstall its plugin versions and uninstall the plugins it does not hold. Restart the platform afterwards (`mint platform restart`) |
 | `mint platform plugin install <source> [--force] [--json]` | Install a package name, Git URL, or server-visible local path |
 | `mint platform plugin upload <bundle.mint> [--force] [--json]` | Upload and install a `.mint` bundle from the local machine |
 | `mint platform plugin upgrade <package-name> [--force] [--json]` | Upgrade through the platform plugin manager |
@@ -199,7 +215,9 @@ Read-only diagnostics.
 | Command | Purpose |
 |---------|---------|
 | `mint platform update check [--json]` | Check platform and plugin update sources |
-| `mint platform update apply [--yes\|-y] [--json]` | Apply the latest platform update (admin) |
+| `mint platform update apply [--yes\|-y] [--pair-all] [--disable PACKAGE ...] [--json]` | Apply the latest platform update (admin) |
+
+When installed plugins do not support the new platform SDK, the platform answers 409 `update.pairing_required`. It names the plugin releases to install with the update and the plugins it must disable. `update apply` shows them, with the reason, and asks. With `--yes` or `--json`, confirm them with flags: `--pair-all` accepts every paired plugin release (installed in the same restart), and one `--disable PACKAGE` accepts each plugin that has no compatible release. A plugin that is not named is never disabled: the command exits 1 and names the missing flags.
 
 ### `mint libraries`
 
@@ -255,7 +273,7 @@ mint init [DIRECTORY] [flags]
 | `--description`, `-d` | One-line description |
 | `--type`, `-t` | Plugin type: `analysis`, `experiment-design`, `workflow`, `static`, or `full` (`writes` of the generated `Metadata`) |
 | `--mode` | Plugin mode: `generated` (SDK-managed UI + `@job`) or `standard` (FastAPI-style `@endpoint` + Vue workspace) |
-| `--no-install` | Skip `uv sync` and `bun install` |
+| `--no-install` | Skip `uv sync` and the frontend package install (`vp install`) |
 | `--no-git` | Skip `git init` |
 | `--force` | Allow non-empty target directory |
 | `--ai-assistant` | Comma-separated AI-assistant config files to scaffold (`claude,codex,cursor,windsurf,none`) |
@@ -265,7 +283,17 @@ mint init [DIRECTORY] [flags]
 
 Without `--yes`, missing fields are prompted interactively. With `--yes`, the AI-assistant file defaults to `claude`, which creates `CLAUDE.md`. If `mint doctor` says that file is missing current SDK guidance, run `mint doctor --fix` once to refresh it. `--ai-assistant none` skips assistant files, but the current `mint doctor` check still expects one of those files; run `mint doctor --fix` if you later want a passing doctor report.
 
-The standard scaffold includes a read-only `@tool` example (`double_value`) with a test; see [MCP tools](/sdk/recipes/mcp-tools). The scaffolded CI workflow builds the `.mint` bundle (`uv run mint build --output-dir dist/`) on every push and pull request to `main`, after `mint doctor --strict` and the tests. The scaffold declares a `Metadata` subclass with `@plugin` and sets `title` from the plugin name. It sets `requires-python = ">=3.14"` and ruff `target-version = "py314"` (with `UP037` ignored). The generated CI and release workflows use Python 3.14. Frontend templates pin vue `^3.5.43`, pinia `^4.0.3`, vue-router `^5.3.1`, vite `^8.3.5`, `@tailwindcss/vite` and tailwindcss `^4.3.3`, typescript `^6.0.3`, vitest `^5.0.5`, vue-tsc `^3.3.14` and jsdom `^30.1.1`. Tailwind runs through `@tailwindcss/vite`, Vitest reads the `test` block of `vite.config.ts`, and the build script is `vue-tsc --noEmit && vite build`. The scaffold has no `postcss.config.js`, `vitest.config.ts` or `tsconfig.node.json`, and its `index.html` loads the Geist fonts. The `mint-sdk` range follows the running SDK's minor: a @MINT_VERSION@ CLI writes `>=1.4.0b1,<2.0`. From 1.4 the ceiling is the next major, because the plugin SDK contract has no breaking change within 1.x. A floor before 1.4 keeps the next-minor ceiling.
+The standard scaffold includes a read-only `@tool` example (`double_value`) and an `experiment.analysis` panel "Summary" (a `kv` section and a link to the plugin page), each with a test; see [MCP tools](/sdk/recipes/mcp-tools). The scaffold declares a `Metadata` subclass with `@plugin` and sets `title` from the plugin name. It sets `requires-python = ">=3.14"`, and `[tool.ruff]` keeps only `target-version = "py314"` and `line-length = 100`: `mint lint` applies the SDK ruff preset. Ruff is in the dev group. There is no `[tool.mint.lint]` table, because every default applies. A new plugin passes `mint lint` with no finding and no baseline.
+
+SDK pin: `mint init` pins the newer of the latest stable SDK and the SDK of the running CLI. The `mint-sdk` floor of the dependencies and of the dev group is that release, with the ceiling `<2.0`; a @MINT_VERSION@ CLI writes `mint-sdk>=@MINT_VERSION@,<2.0`. The frontend pin of `@morscherlab/mint-sdk` is the same release, exact.
+
+Standard frontend: the frontend uses pnpm and Vite+. `frontend/package.json` has `"packageManager": "pnpm@12.21.0"`, the `vite-plus` dependency, and the scripts `dev` (`vp dev`), `build` (`vue-tsc --noEmit && vp build`), `type-check`, `test` (`vp test run`), `fmt` (`vp fmt`), `fmt:check` and `lint` (`uv run mint -C .. lint`). `frontend/pnpm-workspace.yaml` exempts `@morscherlab/*` from the pnpm `minimumReleaseAge`, so pnpm locks a new frontend SDK on the day that uv locks the new `mint-sdk`. `vite.config.ts` imports `defineConfig` from `vite-plus`, holds the `test`, `fmt` and `lint` blocks, and proxies `/api` to `MINT_DEV_BACKEND_URL`. Tailwind runs through `@tailwindcss/vite`. The scaffold has no `postcss.config.js`, `vitest.config.ts` or `tsconfig.node.json`, and its `index.html` loads the Geist fonts. `.gitignore` ignores neither `uv.lock` nor the frontend lockfile: commit both.
+
+The standard frontend is a sidebar workspace. `App.vue` renders `PluginWorkspaceView` with the inputs in `sidebar.controls` and the result in the main area (`main: 'plain'`). The state and the run action are in the Pinia store `src/stores/analysis.ts`, and `src/views/WorkspaceView.vue` shows the result. A plugin type that writes experiments (`experiment-design`, `full`, `workflow`) gets `experiment: true` in the workspace spec, which shows the experiment chip in the top bar. `main.ts` installs Pinia and Vue Router and imports each SDK component by name; it does not call `app.use(MINTSdk)`. See [Adding a frontend](/sdk/tutorials/adding-a-frontend).
+
+CI: the generated CI and release workflows use Python 3.14. They set up Vite+ with `voidzero-dev/setup-vp@v1.22.0` (`working-directory: frontend`, `run-install: false`, `cache: true`), which also sets up Node.js and pnpm. The frontend step runs `vp install --frozen-lockfile`, then `vp run` type-check, fmt:check, test and build. Then the workflows run `uv sync`, `mint doctor --strict`, `mint sdk generate --check`, `mint lint` (step `Lint`) and the tests. CI also builds the `.mint` bundle (`uv run mint build --output-dir dist/`) on every push and pull request to `main`.
+
+`mint init --force` stops with exit 1 and writes nothing when the directory has a frontend with a bun or npm lockfile, or a frontend made before 1.6. Run [`mint migrate`](#mint-migrate) there.
 
 The parser accepts `workflow`, although `init --help` omits it from its type description. Generated mode accepts only `analysis`; use standard mode for the other types.
 
@@ -288,6 +316,8 @@ mint dev <subcommand>     # see logs, below
 | `--platform` | Also start a local platform process and configure dev proxy |
 | `--platform-dir` | Path to platform directory (otherwise auto-detected) |
 | `--prefix` | Override the routes prefix for the dev proxy |
+
+`mint dev` runs the frontend dev server with `vp run dev` and gives it `MINT_DEV_BACKEND_URL`, the backend URL in use. The scaffold proxies `/api` to that URL; a plugin made before 1.6 proxies to `:8003` until you change its `vite.config.ts`. The printed frontend URL includes the Vite `base` path.
 
 `mint dev` passes the plugin `title` to the platform dev proxy, and refreshes it in an existing `config.dev.toml` entry. On startup `mint dev` lists the plugin's MCP tools under their published names and prints a `mint mcp call` command to try one.
 
@@ -326,6 +356,8 @@ mint build [flags]
 
 Output: `dist/<name>-<version>.mint`. Note the `.mint` extension.
 
+`mint build` installs the frontend with `vp install --frozen-lockfile` when the frontend, or the workspace root that contains it, has a lockfile of the selected manager, else with `vp install`. Then it runs `vp run build`.
+
 From SDK 1.6, `mint build` stops when the wheel leaves out a file under the `skills/` directory next to a `mint.plugins` module. See [MCP skills](/sdk/recipes/mcp-skills).
 
 ### `mint doctor`
@@ -360,11 +392,105 @@ The default run checks the project structure: `pyproject.toml`, the `mint.plugin
 - reports a 1.3 author API as `SDK 1.4 manual changes` (an error breaks the plugin on SDK 1.4; a warning matches a removed method by name only) and the mechanical rewrites as `SDK 1.4 rewrites`. `--fix` applies the rewrites: `@mint_plugin` to `Metadata` and `@plugin`, the persistence helpers to `self.design` and `self.artifacts`, `@mcp_tool` to `@tool`, the old job, event, health and test names, and the renamed modules. The [migration guide](/sdk/operations/migrate-1.3-to-1.4) has the full table;
 - checks the frontend toolchain ("Frontend toolchain") against the `mint init` template and warns about these points: a `vite.config.js` or `vite.config.d.ts` next to `vite.config.ts` (Vite loads the `.js` file first, so edits to the `.ts` file have no effect), a `*.tsbuildinfo` file, a PostCSS config, the `postcss`, `@tailwindcss/postcss` or `autoprefixer` package, a `tsconfig.node.json` (it makes `vue-tsc -b` emit `vite.config.js`), and a `vite`, `vitest`, `vue-tsc`, `typescript` or `@vitejs/plugin-vue` major version below the template. `--fix` deletes the build outputs. It deletes the PostCSS config only when `vite.config.ts` imports and calls `@tailwindcss/vite` and the config names no plugin other than Tailwind and `autoprefixer`. Delete `tsconfig.node.json` yourself and build with `vue-tsc --noEmit && vite build`;
 - reports removed and deprecated frontend APIs with their replacements, including removed subpath imports, merged components and unified props. `mint docs deprecated-apis` lists them all;
+- "Deprecated SDK APIs": a warning for each import of a deprecated frontend SDK export (such as `useApi`), with the replacement. A plugin's own name or a property access is not matched;
+- "Frontend chart dependency": a warning when the plugin renders `PlotlyChart`, `GeneratedPlotlyResult`, `GeneratedResultRenderer`, `GeneratedPluginView`, `InstrumentStatusPanels` or `PanelSections` and does not declare `plotly.js-dist-min`. Fix it with `vp add plotly.js-dist-min` in `frontend/`;
+- "Frontend SDK registration": a warning for `app.use(MINTSdk)`, and an error for an SDK component that a template uses without an import when no global install exists;
+- "Released revisions": an error for each file of the `Metadata.database` migration package that the latest git tag has and the working tree changed or removed. The platform disables such a plugin on upgrade ("Migration checksum or owner mismatch"). New files pass. Without a tag, the check is skipped;
+- "Panels": a warning for a panel id of the latest git tag that is gone, panel `experiment_types` outside `Metadata.experiment_types`, and an `experiment.design` panel of a plugin without `"design"` in `writes`. The hint "Analysis launch offer" suggests `analysis_offer = False` for an analysis plugin with no page, no frontend and no `@job`;
+- "Global vp": an error when `vp` is not on `PATH`, prints no version or is older than 1.5.1; a warning when the global `vp` and the locked `vite-plus` of the frontend differ (names `vp upgrade <version>`);
+- "Package manager": shows the manager that `vp` runs and the evidence (field, workspace file or lockfile). A plugin that is not on pnpm and Vite+ gets the warning "not migrated: run `mint migrate`". A conflict is a warning: the declared `packageManager` or `devEngines.packageManager` disagrees with the lockfile, the frontend has two lockfiles, or the field names a manager other than bun, pnpm or npm;
+- "Lockfile tracking": a warning when `.gitignore` ignores `uv.lock` while `pnpm-lock.yaml` is tracked;
+- "SDK version alignment": names the lockfile in use (`bun.lock`, `pnpm-lock.yaml` or `package-lock.json`). A missing lockfile that `.gitignore` ignores is a warning, a missing tracked lockfile an error;
+- "Design rules": runs the design rules of [`mint lint`](#mint-lint) and warns with the count of new findings. It also names a missing `mint lint` setup (ruff not a dev dependency, no frontend `lint` script that runs `mint lint`, no workflow that runs it) and points to `mint migrate`;
+- "MCP skills" (see above) and a `Design(live=True)` whose schema root is not `"type": "object"` with `properties` (error);
+- fails a `[project.entry-points."mld.plugins"]` table: the platform discovers only `mint.plugins`;
 - does not report names removed before 1.2. Upgrade such a plugin to 1.2 first.
+
+`--strict` counts every warning except these: "not migrated" of "Package manager", the version warning of "Global vp", "Lockfile tracking", a missing lockfile that `.gitignore` ignores, a missing `mint lint` setup without findings, and the "Analysis launch offer" hint. Such a warning has `"strict": false` in `mint doctor --json`.
 
 `mint sdk update` and `mint doctor --fix` also remove the packages that `mint-sdk` supplies: a `typer`, `uvicorn` or `httpx2` in a dev group becomes `mint-sdk[cli,server]`. Run `mint doctor --strict` in CI.
 
 The deprecated-API check flags deprecated Python and frontend APIs in plugin sources and in agent docs such as `CLAUDE.md` and `AGENTS.md`.
+
+### `mint lint`
+
+The one lint command for a plugin. It runs three parts and exits 1 when one of them has a new finding or fails.
+
+```bash
+mint lint [PATHS...] [flags]
+```
+
+| Flag | Effect |
+|------|--------|
+| `PATHS` (positional) | Files or directories to lint (default: the project) |
+| `--only design\|python\|js` | Run only this part (repeatable): design rules, python (ruff), js (oxlint) |
+| `--format text\|json\|github` | Report format (default `text`) |
+| `--write-baseline` | Write the current findings of the selected parts to `mint-lint-baseline.json` |
+| `--no-baseline` | Report every finding, also those that the baseline accepts. Cannot be combined with `--write-baseline` (exit 2) |
+| `--explain RULE` | Print why a design rule exists and exit |
+
+The three parts:
+
+- **Design rules** over `.css` files, the `<style>`, `<template>` and `<script>` blocks of `.vue` files, UI text in `.ts` files and pytest names.
+- **ruff** with the SDK preset, under the project's own `[tool.ruff]`. A project `select` and `per-file-ignores` add to the preset. `mint lint` runs the ruff of the project `.venv` first, then the one next to the running `mint`, then the one on `PATH`.
+- **oxlint** through the project's `vp lint`, with only the SDK preset rules (`no-explicit-any`, `ban-ts-comment`, `no-debugger`, `no-console`, `no-warning-comments`, and `vitest/valid-title` with titles that start with "should").
+
+A missing tool, a tool that crashes and output that cannot be read are errors, never a pass.
+
+Design rules, all on by default except `raw-control`:
+
+| Group | Rules |
+|---|---|
+| Tokens and style | `literal-colour`, `colour-fallback`, `undefined-var`, `hover-motion`, `gradient`, `blur`, `uppercase`, `font-family`, `transition-duration`, `transition-all`, `radius-token`, `min-font-size`, `font-size-token`, `z-index-token`, `shadow-token`, `important`, `static-style`, `retired-token` |
+| Layout | `workspace-sidebar` (a plugin workspace with `sidebar: false`), `experiment-field` (an experiment picked with a select instead of the top-bar chip), `nested-card` (a card inside a card), `one-primary-action` (two primary buttons in one action area), `wizard-in-modal` (a `StepWizard` in a `BaseModal` that has its own footer) |
+| Design system | `button-order`, `destructive-variant`, `confirm-label`, `toggle-in-form`, `status-pill-marker`, `icon-button-label`, `glyph-icon`, `icon-library`, `sentence-case`, `ellipsis` |
+| Controls and code | `tabindex-native`, `raw-control` (off), `script-setup-ts`, `no-match-text`, `test-name` |
+
+A file that cannot be parsed, and a `<style>` or `<template>` block in a language other than CSS or HTML, is a `parse-error` finding. Run `mint lint --explain <rule>` for the reason of a rule.
+
+**Exceptions.** Put a comment with the rule and a reason above the line: `/* mint-lint-ignore <rule>: <reason> */` in CSS and script, `<!-- mint-lint-ignore <rule>: <reason> -->` in a template. A CSS ignore directly above a declaration covers all lines of that declaration. An ignore without a reason, with an unknown rule or that suppresses nothing is a finding.
+
+**Baseline.** `--write-baseline` writes the current findings to `mint-lint-baseline.json`. Later runs fail only on new findings and report entries that no longer match as stale. Commit the baseline. After you fix accepted findings, run `mint lint --write-baseline` again. A run on paths judges and writes only the entries of those paths.
+
+**Configuration** in `pyproject.toml`:
+
+```toml
+[tool.mint.lint]
+tokens = ["frontend/src/styles/tokens.css"]   # token files besides the SDK variables.css
+include = ["frontend/src/**"]                  # default: the whole project
+exclude = ["frontend/src/legacy/**"]           # added to the default excludes
+js-root = "frontend"                           # where oxlint runs (default: the plugin frontend)
+
+[tool.mint.lint.rules]
+raw-control = true
+font-size-token = { exclude = ["frontend/src/legacy/**"] }
+
+[tool.mint.lint.oxlint]
+plugins = ["vue"]
+rules = { "no-alert" = "error" }
+ignore = ["src/legacy/**"]
+```
+
+Without a token file (none in `[tool.mint.lint]` and no installed `@morscherlab/mint-sdk`), `undefined-var` reports one finding on `pyproject.toml` when a stylesheet uses a `var()`. Install the frontend dependencies first.
+
+The frontend `lint` script of the scaffold runs `uv run mint -C .. lint`, and the `Lint` step of the generated workflows runs `uv run mint lint`. Both need mint-sdk 1.6 or later in `uv.lock`.
+
+### `mint migrate`
+
+Move a standard plugin frontend from bun or npm to pnpm and Vite+, and add the `mint lint` setup and baseline.
+
+```bash
+mint migrate [--dry-run] [--force]
+```
+
+| Flag | Effect |
+|------|--------|
+| `--dry-run` | Show the changes without writing files. Does not need `vp` |
+| `--force` | Migrate even when the git tree has uncommitted or untracked changes |
+
+The command writes the `packageManager` field, changes the `vite` and `vitest` commands of the scripts to `vp`, adds the `lint`, `fmt` and `fmt:check` scripts and the Vite+ dependencies, writes `frontend/pnpm-workspace.yaml`, imports `defineConfig` from `vite-plus`, removes `bun.lock` or `package-lock.json` and rewrites the CI steps that `mint init` generated. It adds the `mint lint` setup where it is absent: ruff in the dev group, the frontend `lint` script, `uv run mint lint` in place of each `uv run ruff check .` line of the workflows, and a `## Lint` section in the agent instructions. After `vp install`, it locks the frontend SDK release that `uv.lock` holds and runs the "SDK version alignment" check. Then it formats the sources with `vp fmt`, runs type-check, test, lint, fmt:check and build with `vp run`, and runs `mint lint`. When `mint lint` reports findings, it writes `mint-lint-baseline.json`.
+
+A failed step other than lint restores every file and the old `node_modules`, which wait in `.frontend-before-mint-migrate/` until every step passes. A second run changes nothing. A plugin that already uses pnpm and Vite+ gets only the lint setup and the baseline. The command reports, and does not edit, Dockerfiles, shell scripts, hand-written workflows and other files that still name bun, and a `.gitignore` line that ignores `uv.lock`. When `uv.lock` locks a `mint-sdk` older than 1.6, it does not run the frontend `lint` script and names `mint sdk update --version 1.6.0`. Commit `frontend/pnpm-lock.yaml` and `mint-lint-baseline.json`. The steps for a whole plugin are in [Migrate from 1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6#run-mint-migrate).
 
 ### `mint info`
 
@@ -401,6 +527,8 @@ Add common plugin pieces to an existing project.
 | `mint add frontend-page <name>` | Add and register a Vue view |
 | `mint add frontend-composable <name> [--endpoint PATH]` | Add a Vue composable wrapper around the generated plugin client |
 | `mint add r-analysis <name> [--script PATH] [--generate] [--page]` | Add an R-backed analysis endpoint scaffold |
+
+`mint add migration` checks for SQLAlchemy and Alembic before it writes a file, and names `uv add "mint-sdk[local-db]..."` when they are missing.
 
 There is no `mint add job` command. Use `mint init --mode generated` for the current job scaffold, or add `@job` methods by hand.
 
@@ -442,15 +570,15 @@ mint verify [flags]
 
 ### `mint deploy`
 
-Build and deploy the plugin to a running platform.
+Build and deploy the plugin to a running platform, then check that it loaded and is enabled.
 
 ```bash
-mint deploy [--to URL] [flags]
+mint deploy [--url URL] [flags]
 ```
 
 | Flag | Effect |
 |------|--------|
-| `--to` | Target platform URL (default: the host stored by `mint platform auth login`) |
+| `--url`, `--to` | Platform to deploy to: a URL, or part of a host name from `mint platform auth hosts`. Same as `mint --url`. The command uses that host's stored credential before `MINT_TOKEN`. Default: `MINT_URL`, then the default host. `--to` is the older name |
 | `--force` | Override dependency/compatibility conflicts |
 | `--restart` / `--no-restart` | Restart the platform after upload (default `--restart`) |
 | `--no-frontend` | Skip frontend build |
@@ -459,8 +587,11 @@ mint deploy [--to URL] [flags]
 | `--bundle` | Upload an existing `.mint` bundle without rebuilding |
 | `--timeout` | Seconds for the restart and the plugin load together (default 180); one budget, not per phase |
 | `--json` | Output machine-readable results |
+| `--allow-dirty` | Build even when the git tree has uncommitted or untracked changes |
 
 With `--restart`, deploy confirms the restart by the platform's `boot_id` from `GET /api/health`: it waits for a new `boot_id`, then for the plugin to load. Any loaded version counts; if it differs from the version in the bundle's `manifest.json`, deploy prints a warning with both versions and still succeeds. Against a platform older than 1.2.9, which reports no `boot_id`, it waits for health and then for the bundle's version to load.
+
+After the load, deploy reads the plugin entry. It exits 1 when the platform disabled the plugin: `enabled` is false, a `migration_error` is set, or the dependency lock disabled it. The message gives the error text and the reason of the dependency lock.
 
 Upload and restart failures print `Error: ...` (or a JSON failure with `--json`) and exit non-zero. If the platform refuses the restart, for example with 403 for an account without `platform.configure`, the message says the plugin is installed but not running.
 
@@ -475,6 +606,8 @@ Link to a local SDK checkout for editable development.
 ```bash
 mint sdk link [--sdk-path PATH]
 ```
+
+`mint sdk link` and `mint sdk unlink` call `bun link` or `pnpm link`, not `vp`. On a pnpm plugin, `link` saves `package.json`, `pnpm-workspace.yaml` and `pnpm-lock.yaml`, and `unlink` writes back each file that did not change after the link. From a `pnpm-workspace.yaml` that changed after the link, it removes only the SDK `link:` override and names the other changed files. When an SDK override is left, `unlink` stops with exit 1 and names the file that holds the saved copies. Run `mint sdk unlink` from the platform checkout that ran `mint sdk link`.
 
 ### `mint sdk unlink`
 
@@ -495,14 +628,13 @@ mint sdk update [--scope patch|minor|major] [--channel stable|beta]
 
 The default is the stable patch channel. `--version @MINT_VERSION@` selects one exact
 release; Python and frontend lockfiles resolve to the same release. The command selects the newest candidate first. Then it checks the candidate against Python upper
-bounds, exclusions and `requires_mint`. An excluded candidate fails; the command does not fall back to an older allowed release. A valid Python
-compatibility floor is preserved, so raise it explicitly for newly required
-APIs. An explicit `--version` on a newer supported minor is the exception. It
-moves every `mint-sdk` requirement, dependency groups included, to
-`>=VERSION,<2.0` (the next major; `<next-minor` for a target before 1.4). It also widens a `requires_mint` that excludes the target.
+bounds, exclusions and `requires_mint`. An excluded candidate fails; the command does not fall back to an older allowed release. An update without `--version` keeps the Python
+compatibility floor, so raise it explicitly for newly required
+APIs. `--version X` raises every `mint-sdk` requirement whose floor is below `X` to `>=X`: the dependencies, the optional dependencies and the dependency groups. The derived `requires_mint` of the bundle follows. On a newer supported minor, it also moves the ceiling to `<2.0` (the next major; `<next-minor` for a target before 1.4) and widens a `requires_mint` that excludes the target.
 `--scope minor` alone still fails on a lower minor cap.
 `--dry-run` previews changes, `--no-sync` skips installs/lock validation,
 and `--verify` chains Docker verification against the stable/beta channel.
+The frontend install runs through `vp`. When pnpm refuses the target release because of its `minimumReleaseAge`, the command stops with exit 1 and names the `minimumReleaseAgeExclude` entry of `frontend/pnpm-workspace.yaml`. The command prints the AI instructions notice only when `mint doctor --fix` would change the file.
 When the target is a 1.3 or later release, the command raises `[project].requires-python` to `>=3.14`. It only raises: upper bounds, exclusions, `~=` and `==` clauses, and a stricter floor stay. A missing value is added. The command refuses when the result would exclude 3.14, as with `<3.14` or `==3.12.*`. The command never rewrites an AI instructions file (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules`). It leaves the file unchanged and points to `mint doctor` and `mint doctor --fix`. It creates no missing file.
 See [upgrading the SDK](/sdk/operations/upgrading).
 
@@ -541,7 +673,9 @@ The TypeScript file exports `useClient()`, `useSettings()` (when `Metadata.setti
 | Path | Purpose |
 |------|---------|
 | `~/.config/mint/credentials.json` | Per-user token storage (written by `mint platform auth login`; honors `XDG_CONFIG_HOME`) |
-| `<plugin>/pyproject.toml` | Plugin dependencies, entry points, build config |
+| `<plugin>/pyproject.toml` | Plugin dependencies, entry points, build config, `[tool.mint.lint]` |
+| `<plugin>/mint-lint-baseline.json` | Accepted `mint lint` findings (written by `mint lint --write-baseline` and `mint migrate`; commit it) |
+| `<plugin>/frontend/pnpm-workspace.yaml` | pnpm settings of the frontend, with the `minimumReleaseAgeExclude` entry for `@morscherlab/*` |
 | `<workspace>/MINT/config.dev.toml` | Dev proxy mapping (created by `mint dev --platform`) |
 
 ## Notes

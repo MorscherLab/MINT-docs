@@ -150,93 +150,112 @@ mint sdk generate
 mint doctor --strict
 ```
 
-The generated contract changes when the routes change. Replace `frontend/src/views/WorkspaceView.vue` with this page:
+The generated contract changes when the routes change. The scaffold `App.vue` shows the controls of `analysisControls` in the sidebar, calls `run(values)` of the store on submit and sets `experiment: true`, so the top bar shows the experiment chip. Keep `App.vue` and the export names, and replace `frontend/src/stores/analysis.ts`. The sidebar form now creates an experiment:
 
-```vue
-<script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import {
-  useClient,
-  type ExperimentSummary,
-} from '../generated/mint-plugin'
+```ts
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+import { defineControlModel, useRequest } from '@morscherlab/mint-sdk'
 
-const client = useClient()
-const experiments = ref<ExperimentSummary[]>([])
-const name = ref('')
-const experimentType = ref('')
-const busy = ref(false)
-const error = ref('')
+import { useClient, type ExperimentSummary } from '../generated/mint-plugin'
 
-async function refresh(): Promise<void> {
-  const page = await client.listExperiments()
-  experiments.value = page.items
-}
+export const analysisControls = defineControlModel({
+  actions: { submitLabel: 'Create experiment' },
+  initialValues: { name: '', experimentType: '' },
+  controls: {
+    name: { type: 'text', label: 'Name', required: true, maxLength: 200 },
+    experimentType: { type: 'text', label: 'Configured experiment type', required: true },
+  },
+})
 
-async function load(): Promise<void> {
-  busy.value = true
-  error.value = ''
-  try {
-    await refresh()
-  } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : 'Could not load experiments'
-  } finally {
-    busy.value = false
+export const useAnalysisStore = defineStore('analysis', () => {
+  const client = useClient()
+  const request = useRequest('Could not load experiments')
+  const experiments = ref<ExperimentSummary[]>([])
+  const running = computed(() => request.isLoading.value)
+  const error = computed(() => request.error.value)
+
+  async function refresh(): Promise<void> {
+    await request
+      .run(
+        async () => {
+          experiments.value = (await client.listExperiments()).items
+          return experiments.value
+        },
+        { kind: 'load' },
+      )
+      .catch(() => undefined)
   }
-}
 
-async function create(): Promise<void> {
-  busy.value = true
-  error.value = ''
-  try {
-    await client.createExperiment({
-      name: name.value.trim(),
-      experiment_type: experimentType.value.trim(),
-    })
-    name.value = ''
-    await refresh()
-  } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : 'Could not create experiment'
-  } finally {
-    busy.value = false
+  async function run(values: Record<string, unknown>): Promise<void> {
+    await request
+      .run(
+        async () => {
+          await client.createExperiment({
+            name: String(values.name ?? '').trim(),
+            experiment_type: String(values.experimentType ?? '').trim(),
+          })
+          experiments.value = (await client.listExperiments()).items
+          return experiments.value
+        },
+        { kind: 'save', errorMessage: 'Could not create experiment' },
+      )
+      .catch(() => undefined)
   }
-}
 
-onMounted(load)
-</script>
-
-<template>
-  <section aria-labelledby="coordinator-title">
-    <h2 id="coordinator-title">Batch coordinator</h2>
-    <p>Create an experiment, then open its design and analysis plugins in MINT.</p>
-    <p v-if="error" role="alert">{{ error }}</p>
-    <form @submit.prevent="create">
-      <fieldset :disabled="busy">
-        <legend>New experiment</legend>
-        <label for="experiment-name">Name</label>
-        <input id="experiment-name" v-model="name" required maxlength="200" />
-        <label for="experiment-type">Configured experiment type</label>
-        <input id="experiment-type" v-model="experimentType" required />
-        <button type="submit">Create experiment</button>
-      </fieldset>
-    </form>
-    <button type="button" :disabled="busy" @click="load">Refresh</button>
-    <p aria-live="polite">{{ experiments.length }} visible experiments</p>
-    <ul>
-      <li v-for="experiment in experiments" :key="experiment.id">
-        {{ experiment.name }} — {{ experiment.experiment_type }} — {{ experiment.status }}
-      </li>
-    </ul>
-  </section>
-</template>
+  return { experiments, running, error, refresh, run }
+})
 ```
 
 The generated methods here are `listExperiments()` and `createExperiment(body)`. The client supplies the configured route prefix and authentication integration. The frontend displays HTTP errors, including the standalone 503; the backend remains responsible for permission checks.
+
+Replace `frontend/src/views/WorkspaceView.vue`. The main area lists the visible experiments:
+
+```vue
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { AlertBox, BaseButton, EmptyState, SectionCard } from '@morscherlab/mint-sdk'
+
+import { useAnalysisStore } from '../stores/analysis'
+
+const batch = useAnalysisStore()
+
+onMounted(batch.refresh)
+</script>
+
+<template>
+  <SectionCard title="Visible experiments" :count="batch.experiments.length" fill>
+    <template #actions>
+      <BaseButton variant="secondary" size="sm" :disabled="batch.running" @click="batch.refresh">Refresh</BaseButton>
+    </template>
+    <div class="mint-section-card__content">
+      <AlertBox v-if="batch.error" tone="error">
+        {{ batch.error }}
+      </AlertBox>
+      <ul v-if="batch.experiments.length">
+        <li v-for="experiment in batch.experiments" :key="experiment.id">
+          {{ experiment.name }} — {{ experiment.experiment_type }} — {{ experiment.status }}
+        </li>
+      </ul>
+      <EmptyState
+        v-else
+        title="No experiments yet"
+        description="Create an experiment in the sidebar, then open its design and analysis plugins in MINT."
+        size="sm"
+      />
+    </div>
+  </SectionCard>
+</template>
+```
 
 Replace the scaffold's `WorkspaceView.test.ts` with a check of the actual request contract:
 
 ```typescript
 import { flushPromises, mount } from '@vue/test-utils'
-import { expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, expect, it, vi } from 'vitest'
+
+import { useAnalysisStore } from '../stores/analysis'
 import WorkspaceView from './WorkspaceView.vue'
 
 const client = vi.hoisted(() => ({
@@ -247,7 +266,11 @@ vi.mock('../generated/mint-plugin', () => ({
   useClient: () => client,
 }))
 
-it('creates an experiment and refreshes the visible list', async () => {
+beforeEach(() => {
+  setActivePinia(createPinia())
+})
+
+it('should create an experiment and refresh the visible list when the sidebar form is submitted', async () => {
   const experiment = { id: 7, name: 'QC batch', experiment_type: 'custom', status: 'planned' }
   client.listExperiments.mockResolvedValueOnce({ items: [] })
   client.listExperiments.mockResolvedValueOnce({ items: [experiment] })
@@ -255,20 +278,18 @@ it('creates an experiment and refreshes the visible list', async () => {
   const wrapper = mount(WorkspaceView)
   await flushPromises()
 
-  await wrapper.get('#experiment-name').setValue('QC batch')
-  await wrapper.get('#experiment-type').setValue('custom')
-  await wrapper.get('form').trigger('submit')
+  await useAnalysisStore().run({ name: 'QC batch', experimentType: 'custom' })
   await flushPromises()
 
   expect(client.createExperiment).toHaveBeenCalledWith({
-    name: 'QC batch', experiment_type: 'custom',
+    name: 'QC batch',
+    experiment_type: 'custom',
   })
-  expect(wrapper.text()).toContain('1 visible experiments')
   expect(wrapper.get('li').text()).toContain('QC batch')
 })
 ```
 
-See [adding a frontend](/sdk/tutorials/adding-a-frontend) to replace the plain form with SDK controls or build a richer experiment workspace.
+See [adding a frontend](/sdk/tutorials/adding-a-frontend) to add views to the workspace or build a richer experiment workspace.
 
 ## 4. Test the installed integration
 
@@ -276,8 +297,8 @@ After updating the frontend, run its checks and package the plugin:
 
 ```bash
 cd frontend
-bun run type-check
-bun run test
+vp run type-check
+vp run test
 cd ..
 mint sdk generate --check
 mint build
@@ -288,7 +309,7 @@ Check that the bundle installs and loads, then deploy it to a test platform you 
 ```bash
 mint verify
 mint platform auth login --url https://mint-test.example.org
-mint deploy --to https://mint-test.example.org
+mint deploy --url https://mint-test.example.org
 ```
 
 `mint verify` boots the MINT platform image in Docker, installs the bundle through the normal upload path, restarts, and waits until the plugin loads. `mint deploy` uploads the same bundle, restarts the platform (requires `platform.configure`), and confirms the restart by the new server `boot_id`; `--timeout` (default 180 s) covers restart and load together.
