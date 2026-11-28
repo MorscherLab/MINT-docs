@@ -1,15 +1,3 @@
-# MINT plugin developer toolchain installer (Windows PowerShell).
-#
-#   irm https://mint-docs.morscherlab.org/install.ps1 | iex
-#
-# With options, download the script first:
-#   irm https://mint-docs.morscherlab.org/install.ps1 -OutFile install.ps1
-#   .\install.ps1 -CliOnly
-#
-# Installs, for the current user and without administrator rights:
-#   uv, Python 3.14 (managed by uv), the mint CLI (mint-sdk[cli,server]) with ruff,
-#   and Vite+ (vp), which manages Node and pnpm.
-
 [CmdletBinding()]
 param(
     [switch]$CliOnly,
@@ -17,8 +5,6 @@ param(
     [switch]$DryRun,
     [string]$Version = $env:MINT_VERSION
 )
-
-$ErrorActionPreference = 'Stop'
 
 $PythonVersion = '3.14'
 $MinVpVersion = [version]'1.5.1'
@@ -58,8 +44,15 @@ function Invoke-Installer([string]$Url) {
 }
 
 function Get-VpVersion {
-    $text = (& vp --version 2>$null | Out-String)
-    if ($text -match '(\d+\.\d+\.\d+)') { return [version]$Matches[1] }
+    $neutral = New-Item -ItemType Directory -Path (Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName()))
+    Push-Location $neutral
+    try {
+        $text = (& vp --version | Out-String)
+    } finally {
+        Pop-Location
+        Remove-Item $neutral -Recurse -Force
+    }
+    if ($text -match '(?m)^vp\s+v?(\d+\.\d+\.\d+)') { return [version]$Matches[1] }
     return $null
 }
 
@@ -107,15 +100,19 @@ function Install-Vp {
             Write-Ok "vp $found (found)"
             return
         }
-        Write-Note "vp $found is older than $MinVpVersion; installing a current one"
+        Write-Note "vp $(if ($found) { $found } else { 'of an unknown version' }) is older than $MinVpVersion; installing a current one"
     }
     Invoke-Installer $VpInstaller
     if (-not $DryRun) {
-        if (Test-Command 'vp') {
-            Write-Ok "vp $(Get-VpVersion) (installed)"
-        } else {
+        if (-not (Test-Command 'vp')) {
             Write-Note 'vp was installed but is not on PATH in this session. Open a new terminal, then run: vp --version'
+            return
         }
+        $found = Get-VpVersion
+        if (-not $found -or $found -lt $MinVpVersion) {
+            throw "The vp at $((Get-Command vp).Source) is $(if ($found) { $found } else { 'of an unknown version' }); mint needs $MinVpVersion or later. Upgrade or remove it, then run this script again."
+        }
+        Write-Ok "vp $found (installed)"
     }
 }
 
@@ -133,12 +130,19 @@ Write-Host 'MINT installer' -ForegroundColor White -NoNewline
 Write-Host '  plugin developer toolchain' -ForegroundColor DarkGray
 if ($DryRun) { Write-Host 'dry run: nothing is changed' -ForegroundColor DarkGray }
 
-Install-Uv
-Install-Python
-Install-Mint
-if (-not $CliOnly) { Install-Vp }
-Test-Git
+$callerErrorAction = $ErrorActionPreference
+$ErrorActionPreference = 'Stop'
+try {
+    Install-Uv
+    Install-Python
+    Install-Mint
+    if (-not $CliOnly) { Install-Vp }
+    Test-Git
+} finally {
+    $ErrorActionPreference = $callerErrorAction
+}
 
+# Windows PowerShell 5.1 turns redirected stderr of a native command into errors, which 'Stop' makes fatal.
 if (-not $DryRun) { & uv tool update-shell *> $null }
 
 Write-Host ''

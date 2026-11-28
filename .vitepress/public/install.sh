@@ -1,12 +1,4 @@
 #!/bin/sh
-# MINT plugin developer toolchain installer (macOS, Linux, WSL).
-#
-#   curl -fsSL https://mint-docs.morscherlab.org/install.sh | bash
-#   curl -fsSL https://mint-docs.morscherlab.org/install.sh | bash -s -- --cli-only
-#
-# Installs, for the current user and without sudo:
-#   uv, Python 3.14 (managed by uv), the mint CLI (mint-sdk[cli,server]) with ruff,
-#   and Vite+ (vp), which manages Node and pnpm.
 
 set -eu
 
@@ -143,7 +135,14 @@ install_mint() {
 }
 
 vp_version() {
-  vp --version 2>/dev/null | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 || true
+  neutral=$(mktemp -d)
+  (cd "$neutral" && vp --version 2>/dev/null) | sed -n 's/^vp v\{0,1\}\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p' | head -n 1 || true
+  rm -rf "$neutral"
+}
+
+vp_current() {
+  found=$(vp_version)
+  [ -n "$found" ] && version_at_least "$found" "$MIN_VP_VERSION"
 }
 
 install_vp() {
@@ -151,9 +150,9 @@ install_vp() {
   prepend_path "$HOME/.vite-plus/bin"
   prepend_path "$HOME/.local/share/vite-plus/bin"
   if has vp; then
-    found=$(vp_version)
-    if [ -n "$found" ] && version_at_least "$found" "$MIN_VP_VERSION"; then
+    if vp_current; then
       ok "vp $found (found)"
+      [ "$dry_run" -eq 1 ] || check_node
       return 0
     fi
     warn "vp ${found:-of an unknown version} is older than $MIN_VP_VERSION; installing a current one"
@@ -163,11 +162,21 @@ install_vp() {
   prepend_path "$HOME/.local/share/vite-plus/bin"
   prepend_path "$HOME/.local/bin"
   if [ "$dry_run" -eq 0 ]; then
-    if has vp; then
-      ok "vp $(vp_version) (installed)"
-    else
+    if ! has vp; then
       warn "vp was installed but is not on PATH in this shell. Open a new terminal, then run: vp --version"
+    elif vp_current; then
+      ok "vp $found (installed)"
+      check_node
+    else
+      die "the vp at $(command -v vp) is ${found:-of an unknown version}; mint needs $MIN_VP_VERSION or later. Upgrade it (Homebrew: brew upgrade voidzero-dev/vite-plus/vp) or remove it, then run this script again."
     fi
+  fi
+}
+
+check_node() {
+  if ! error=$(node --version 2>&1); then
+    warn "Node.js from Vite+ does not start: $(printf '%s\n' "$error" | tail -n 1)"
+    warn "Install the missing system library, for example: sudo apt install libatomic1"
   fi
 }
 
@@ -206,6 +215,7 @@ main() {
   done
 
   check_platform
+  [ "$cli_only" -eq 1 ] || has curl || die "the Vite+ installer needs curl. Install curl, or use --cli-only"
   say "${bold}MINT installer${reset}  ${dim}plugin developer toolchain${reset}"
   [ "$dry_run" -eq 0 ] || say "${dim}dry run: nothing is changed${reset}"
 

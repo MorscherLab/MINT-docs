@@ -23,12 +23,17 @@ Open a new terminal afterwards, so that `PATH` is up to date.
 |---|---|---|
 | [uv](https://docs.astral.sh/uv/) | Python and package management | The official uv installer, when `uv` is not found |
 | Python 3.14 | The SDK needs 3.14 or later | `uv python install 3.14` |
-| `mint` | The plugin CLI: `init`, `dev`, `lint`, `doctor`, `build` | `uv tool install 'mint-sdk[cli,server]'`, in its own environment |
+| `mint` | The plugin CLI: `init`, `dev`, `lint`, `doctor`, `migrate`, `build` | `uv tool install 'mint-sdk[cli,server]'`, in its own environment |
 | ruff | The Python section of `mint lint` | Inside the environment of `mint`; a ruff of your own stays untouched |
 | [Vite+](https://viteplus.dev/) (`vp`) | Every frontend command of the CLI; it manages Node and pnpm | The official Vite+ installer, when `vp` is missing or older than 1.5.1 |
 
 The script only checks for git. `mint init` creates a repository, so install git
 when the script says it is missing.
+
+The Vite+ installer needs `curl`. On a system with only `wget`, install `curl`
+or use `--cli-only`. On a minimal Linux system, the Node.js of Vite+ can need
+the system library `libatomic1`; the script tells you when Node.js does not
+start.
 
 A tool that is already installed is kept. Run the same command again to update
 `mint`.
