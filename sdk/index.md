@@ -5,6 +5,26 @@ data permissions, connect it to experiments, add storage and a frontend, then
 test and version the bundle. The examples in this track are checked against
 the released `v@MINT_VERSION@` source.
 
+## Install the toolchain
+
+Run one command. It installs uv, Python 3.14, the `mint` CLI and Vite+ for the
+current user.
+
+::: code-group
+
+```bash [macOS, Linux, WSL]
+curl -fsSL https://mint-docs.morscherlab.org/install.sh | bash
+```
+
+```powershell [Windows PowerShell]
+irm https://mint-docs.morscherlab.org/install.ps1 | iex
+```
+
+:::
+
+Open a new terminal afterwards. For the options and a manual install, see
+[Install the toolchain](/sdk/install).
+
 ## What to learn
 
 | Your goal | Start here | What you will implement |
@@ -19,7 +39,7 @@ the released `v@MINT_VERSION@` source.
 
 ### The baseline
 
-Install the toolchain with [one command](/sdk/install), or install only the CLI yourself with Python 3.14+:
+Without the installer, install only the CLI yourself with Python 3.14+:
 
 ```bash
 uv tool install 'mint-sdk[cli]==@MINT_VERSION@'

@@ -10,7 +10,7 @@ By the end you will have:
 - A `.mint` bundle ready to install
 
 **Time:** 20-30 minutes
-**Prereqs:** Python 3.14+, `uv`, and the MINT SDK 1.4. Install the CLI with `uv tool install "mint-sdk[cli]==@MINT_VERSION@"`; the generated project has its own environment.
+**Prereqs:** the toolchain from `curl -fsSL https://mint-docs.morscherlab.org/install.sh | bash` (Windows: `irm https://mint-docs.morscherlab.org/install.ps1 | iex`). It installs Python 3.14, `uv` and the `mint` CLI. See [Install the toolchain](/sdk/install); the generated project has its own environment.
 
 ::: info Current CLI shape
 MINT v@MINT_VERSION@ does not have `mint add job`. Start a job-based plugin with `mint init --mode generated`, or add `@job` methods directly to an existing plugin class.

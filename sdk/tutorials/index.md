@@ -6,7 +6,22 @@ For the full Plugin Development chapter map, start at [Plugin Development Guide]
 
 ## Before you start
 
-You'll need:
+Install the toolchain once. The command installs Python, uv, Vite+ and the
+`mint` CLI from the table below.
+
+::: code-group
+
+```bash [macOS, Linux, WSL]
+curl -fsSL https://mint-docs.morscherlab.org/install.sh | bash
+```
+
+```powershell [Windows PowerShell]
+irm https://mint-docs.morscherlab.org/install.ps1 | iex
+```
+
+:::
+
+See [Install the toolchain](/sdk/install) for the options. You'll need:
 
 | | |
 |---|---|
