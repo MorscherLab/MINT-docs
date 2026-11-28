@@ -1,6 +1,6 @@
 # Live design forms
 
-Let users edit the design data of your plugin directly on the experiment page. With `Design(live=True)`, the platform draws a form from the design schema. Each field saves by itself, and the form shows who else edits a field. The plugin needs no frontend.
+Let users edit the design data of your plugin on the experiment page. With `Design(live=True)`, the platform draws a form from the design schema and saves each field by itself. The plugin needs no frontend.
 
 Live design forms need MINT 1.6 and `mint-sdk` 1.6 or later.
 
@@ -12,7 +12,7 @@ Live design forms need MINT 1.6 and `mint-sdk` 1.6 or later.
 | Two people may fill in different fields at the same time | One person fills in the design and saves it at once |
 | The plugin has no frontend | The plugin has a frontend |
 
-A plugin can do both. When it has a page and a live design, the experiment page shows the form in the **Design data** card and the **Open in &lt;plugin&gt;** button to the page.
+A plugin can do both. The experiment page then shows the form in the **Design data** card and an **Open in &lt;plugin&gt;** button to the page.
 
 ## Declare a live design
 
@@ -74,36 +74,26 @@ Rules for the declaration:
 
 ## What the form shows
 
-The form edits the top-level properties of the schema:
+The form edits the top-level properties of the schema. String, number, integer, boolean and enum properties become fields. Array and object properties show as read-only JSON; another plugin or a full save can still write them. `title` becomes the label and `description` the hint.
 
-| Schema type | Control |
-|-------------|---------|
-| `string` | Text field |
-| `string` with `enum` | Selection |
-| `integer`, `number` | Number field |
-| `boolean` | Switch. A field without a value shows "Not set" |
-| `array`, `object` | Read-only JSON. Another plugin or a full save can still write it |
+For the save state, the field locks and the required count, see [Fill in the design](/guide/experiments#fill-in-the-design) (users) and [LiveDesignForm → Behavior](/sdk/components/live-design-form#behavior) (component). These rules change what the stored data looks like:
 
-`title` becomes the label and `description` the hint. The header of the card shows the save state (`Saved`, `Unsaved`, `Saving…`, `Offline · retry in N s`, `N changes not saved`, `View only`) and `N required left` for the empty fields of the root `required` list.
-
-- A field saves 1 s after the last edit, or when it loses the focus. There is no Save button.
-- A field that another user edits is read-only for all other users until that user's value is stored. The field shows the avatar of that user.
-- Edits of different fields by two users both stay. For one field, the last write wins. A list is one field: a later save replaces the whole list.
-- A refused value stays in its field with the message and a **Discard** action. The form never sends a refused value again by itself.
-- There is no operation that removes a field. To clear a field, the form sends `null` or `''`.
-
-A user who cannot change the design data, or who does not have `plugins.use`, sees the form read-only. On the experiment page, the owner of the experiment with `experiments.edit`, or an administrator, can change it.
+- Each field saves by itself, 1 s after the last edit or on blur.
+- Edits of different fields by two users both stay. For one field, the last write wins.
+- A list is one field. A later save replaces the whole list.
+- No operation removes a field. To clear a field, the form sends `null` or `''`.
+- The form never sends a refused value again by itself.
 
 ## Handle saves in the plugin
 
-Each field save is a patch. A live design can be incomplete: a patch does not enforce the root `required` list of the schema. Every reader of the design data must accept a document without those fields. Read the design data with that in mind, also in [panels](/sdk/recipes/panels) and jobs.
+Each field save is a patch. A patch does not enforce the root `required` list of the schema, so a live design can be incomplete. Every reader of the design data, also [panels](/sdk/recipes/panels) and jobs, must accept a document without those fields.
 
 | Event | What the plugin gets for a patch |
 |-------|-----------------------------------|
-| `experiment.before_save` | Runs for each patch and can veto it with `EventVetoException`. `event.data` is `{"plugin_id", "data", "ops"}`: `data` is the whole design with the patch applied, `ops` is the list of `{"field", "value"}`. The handler gets a copy: a change to it changes nothing. When another write changes the experiment during the check, the handler gets the patch again with the new `data` |
+| `experiment.before_save` | Runs for each patch and can veto it with `EventVetoException`. `event.data` is `{"plugin_id", "data", "ops"}`: `data` is the whole design with the patch applied, `ops` is the list of `{"field", "value"}`. The handler gets a copy, so a change to it changes nothing. When another write changes the experiment during the check, the handler gets the patch again with the new `data` |
 | `experiment.after_save` | Comes once, 30 s after the last patch of a user, and at least every 5 min while the user keeps editing. `data` and `version` are the design stored at delivery |
 
-A full save (`PUT /api/experiments/{id}/data`, `design.save`, MCP `mint_save_design`) validates the full schema and keeps the immediate `experiment.after_save`. Each handler also gets the events of other design plugins: check `event.data["plugin_id"]`.
+A full save (`PUT /api/experiments/{id}/data`, `design.save`, MCP `mint_save_design`) validates the full schema and sends `experiment.after_save` at once. Each handler also gets the events of other design plugins, so check `event.data["plugin_id"]`. For the fail-closed rule of `before_save`, see [Typed events and their limits](/sdk/concepts/lifecycle#typed-events-and-their-limits).
 
 The audit row `experiment.design_data_save` of patches is also combined: one row with the names of the changed fields and the number of patches.
 
@@ -125,39 +115,30 @@ PATCH /api/experiments/{id}/data/{plugin_id}
 | `base_version` | The design version that the client shows |
 | `ops` | 1 to 64 operations `{field, value}` on top-level fields |
 
-The answer is `{version, missing_required}`. `missing_required` names the root required fields that are still absent. Each patch increments the version. The route uses no `If-Match`: the server sets each field on the current design data. The permission checks are those of `PUT /api/experiments/{id}/data`.
+The answer is `{version, missing_required}`. `missing_required` names the root required fields that are still absent. Each patch increments the version.
 
-| Status | Code | Cause |
-|--------|------|-------|
-| 409 | `design.not_live` | The plugin has no live design or no schema |
-| 409 | `design.concurrent_edit` | Other writes changed the experiment three times during the check. Send the patch again |
-| 422 | `design.unknown_field` | The field is not a property of the schema |
-| 422 | `design.value_too_large` | A value is larger than 256 KiB as JSON |
-| 422 | `design.value_not_finite` | A value holds NaN or an infinite number |
-| 422 | `design.invalid` | The merged document fails the schema (without its root `required` list) |
-| 422 | `design.vetoed` | An `experiment.before_save` handler refused the patch |
+- The route uses no `If-Match`. The server sets each field on the current design data.
+- The permission checks are those of `PUT /api/experiments/{id}/data`.
+- One value can be at most 256 KiB as JSON. NaN and infinite numbers are refused.
+- The merged document must pass the schema without its root `required` list.
+- When other writes change the experiment three times during the check, the route answers 409 `design.concurrent_edit`. Send the patch again.
+
+For all error codes of the route, see [Error codes → Experiments, design data and artifacts](/reference/error-codes#experiments-design-data-and-artifacts).
 
 ## Realtime events and presence
 
-Live editing needs the platform `realtime` flag. Without it, the form saves each field but shows no other editors.
+Live editing needs the platform `realtime` flag. Without it, the form saves each field but shows no other editors. For the stream and presence composables, see [`useRealtime` and `usePresence`](/sdk/frontend/composables#userealtime-and-usepresence).
 
-Each stored patch publishes `experiment.design_patch` on the topic `experiment:{id}`. The event has `plugin_id`, the new `version`, `client_id`, `actor_id` and `ops`. `ops` is left out when it is larger than 16 KiB as JSON. The event carries design data, so a stream gets it only when its role sees the plugin. A refused patch publishes nothing.
-
-Presence on an experiment topic accepts the label `editing:<field>`, where `<field>` has 1 to 64 letters, digits or underscores. The form sends it for the focused field. A stream whose role cannot see the design plugin gets the label as `editing`.
-
-Presence labels are kept per browser tab. `GET /api/events` takes `client` (the tab id) and `POST /api/presence/activity` takes the same id as `client_id`. The label applies only to the streams of that tab and ends with them. A user with several tabs shows the strongest label: `editing:<field>`, then `editing`, then another label, then `viewing`. Tabs of the same user never lock each other.
+- Each stored patch publishes `experiment.design_patch` on the topic `experiment:{id}`. The event has `plugin_id`, the new `version`, `client_id`, `actor_id` and `ops`. `ops` is left out when it is larger than 16 KiB as JSON.
+- The event carries design data. A stream gets it only when its role sees the plugin. A refused patch publishes nothing.
+- The form sends the presence label `editing:<field>` for the focused field. `<field>` has 1 to 64 letters, digits or underscores.
+- Presence labels are kept per browser tab. `GET /api/events` takes `client` (the tab id), and `POST /api/presence/activity` takes the same id as `client_id`. The label applies only to the streams of that tab and ends with them.
+- Tabs of the same user never lock each other.
 
 ## Build the form on a plugin page
 
-A plugin page can show the same form. `useLiveDesign(experimentId, pluginId, options?)` and `LiveDesignForm` are on `@morscherlab/mint-sdk/data`. `useLiveDesign` keeps the field states, sends the patches, follows `experiment.design_patch` and sends the presence label. `LiveDesignForm` draws its result in a `SectionCard`. See [LiveDesignForm](/sdk/components/live-design-form) and [Composables](/sdk/frontend/composables).
+A plugin page can show the same form with `useLiveDesign(experimentId, pluginId, options?)` and `LiveDesignForm` from `@morscherlab/mint-sdk/data`. See [`useLiveDesign`](/sdk/frontend/composables#uselivedesign) and [LiveDesignForm](/sdk/components/live-design-form).
 
 ## Two design plugins for one type
 
-When two or more design plugins admit the type of an experiment without design data, the experiment page lets the user choose the plugin. The first save makes the chosen plugin the design owner. See [Experiments → Choose a design plugin](/guide/experiments#choose-a-design-plugin).
-
-## Related
-
-- [Plugin panels](/sdk/recipes/panels)
-- [Data model → `DesignData`](/sdk/concepts/data-model#designdata)
-- [Python SDK reference → Design schema](/sdk/api/python#design-schema)
-- [Plugin communication → Experiment events](/sdk/concepts/plugin-communication#experiment-events)
+When two or more design plugins admit the type of an experiment, the user chooses one. See [Choose a design plugin](/guide/experiments#choose-a-design-plugin).

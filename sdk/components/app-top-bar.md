@@ -8,7 +8,7 @@ description: "Platform-style top bar for shells that need custom navigation chro
 
 # AppTopBar
 
-Platform-style top bar for shells that need custom navigation chrome.
+Use `AppTopBar` when you build your own shell with [AppLayout](/sdk/components/app-layout). `PluginWorkspaceView` renders the top bar for you.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,19 +25,21 @@ import { AppTopBar } from "@morscherlab/mint-sdk/shell"
 
 ## Plugin identity
 
-Inside the platform, `AppTopBar` shows an integrated plugin's icon and name as a static identity. The name is `PluginInfo.display_name`; it falls back to `name` when the platform sends no display name. It takes the place of `title` / `subtitle` when no page selector is present. It is not a control. Users switch plugins from the platform home. Standalone plugins show `title` / `subtitle`. In a standalone plugin with a router and two or more pages, `AppTopBar` without `pageSelector` shows a page selector from the `navItems` of the generated contract (seeded by `providePluginIdentity(contract)`). The current page follows the route, and the selector takes the place of the title and subtitle. Every control is 32px high, so the bar stays 52px.
+- Inside the platform, the bar shows the icon and name of the plugin in place of `title` and `subtitle`, when no page selector is present. The name is `PluginInfo.display_name`, or `name` when the platform sends no display name. The identity is not a control: users switch plugins from the platform home.
+- A standalone plugin shows `title` and `subtitle`.
+- A standalone plugin with a router and two or more pages gets a page selector in place of the title, when you do not set `pageSelector`. The selector lists the `navItems` of the generated contract (seeded by `providePluginIdentity(contract)`) and follows the route.
+- Every control is 32px high, so the bar stays 52px high.
 
 ## Pill navigation
 
-`pillNav` items take an optional `dot`. A `dot` shows a small error-colored dot after the label (for example, an unacknowledged critical alert). A pill with `children` opens a dropdown. When a child is the current item (`currentPillId`), the pill shows the label of that child.
+Set the pills in `spec.pills` and bind the current pill with `v-model:pill`.
+
+- `dot: true` shows a small error-colored dot after the label, for example for an unacknowledged critical alert.
+- A pill with `children` opens a dropdown. When a child is the current pill, the pill shows the label of that child.
 
 ## Toast positioning
 
-A mounted `AppTopBar` publishes `--mint-toast-offset-top` on `<html>`, measured from the
-top-most bar and refreshed on resize and scroll. [AppToastContainer](/sdk/components/app-toast-container)
-reads this variable so toasts render 1rem below the top bar instead of covering its
-right-hand controls. Without a mounted `AppTopBar`, the toast container stays 1rem from
-the top of the viewport.
+A mounted `AppTopBar` moves the toasts below itself; see [Toast positioning](/sdk/components/app-toast-container#toast-positioning).
 
 <!-- sdk-props:start -->
 ## Props

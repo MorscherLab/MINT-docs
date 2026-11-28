@@ -1,52 +1,28 @@
 # Plugin development tutorials
 
-This is the hands-on path for building a MINT plugin. Start with the SDK-managed generated UI path, then move to a custom Vue workspace when you need full control.
-
-For the full Plugin Development chapter map, start at [Plugin Development Guide](/sdk/).
+Follow these tutorials in order to build MINT plugins step by step. Tutorial 1 uses the generated UI. Tutorial 2 adds a custom Vue workspace.
 
 ## Before you start
 
-Install the toolchain once. The command installs Python, uv, Vite+ and the
-`mint` CLI from the table below.
+- Install the toolchain from [Install the toolchain](/sdk/install). The frontend tutorials need the Vite+ CLI `vp` 1.5.1 or later.
+- For the final steps, get access to a test MINT platform where you can install plugins. Local code runs without a platform.
 
-::: code-group
-
-```bash [macOS, Linux, WSL]
-curl -fsSL https://mint-docs.morscherlab.org/install.sh | bash
-```
-
-```powershell [Windows PowerShell]
-irm https://mint-docs.morscherlab.org/install.ps1 | iex
-```
-
-:::
-
-See [Install the toolchain](/sdk/install) for the options. You'll need:
-
-| | |
-|---|---|
-| **Python** | 3.14 or newer |
-| **uv** | Used by generated plugin projects |
-| **Vite+** | The global `vp` CLI, 1.5.1 or later (for frontend tutorials). It sets up Node.js and pnpm; see [Install and choose the environment](/sdk/api/cli-reference#install-and-choose-the-environment) |
-| **`mint` CLI** | Installed from `mint-sdk[cli]==@MINT_VERSION@`; see [CLI overview](/admin/cli) |
-| **A running platform** | Optional for local code; real integration needs an installed plugin on a configured PostgreSQL-backed MINT platform |
-
-You do not need to read the whole SDK reference first. When a tutorial introduces a concept, it links to the deeper page.
+You do not need to read the SDK reference first. Each tutorial links to the concept page when it introduces a term.
 
 ## Recommended path
 
-| Step | Tutorial | Project | What you will have afterward |
-|------|----------|---------|------------------------------|
-| 1 | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | `hello-mint` | `generated` mode analysis plugin with `ui = "generated"`, one typed `@job`, a job test, and a `.mint` bundle |
-| 2 | [Adding a frontend](/sdk/tutorials/adding-a-frontend) | `hello-standard` | `standard` mode plugin with `@endpoint` handlers, a Vue 3 workspace, and the generated typed client |
-| 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | `panel-designer` | Design plugin (`writes = {"experiments", "design"}`) with SQLModel tables, CRUD endpoints, local SQLite, and installed-mode migrations |
-| 4 | [Access levels](/sdk/tutorials/access-levels) | `panel-designer` | `use` / `configure` / `admin` access levels on endpoints and pages, enforced by the backend and reflected in the UI |
-| 5 | [Types and workflow plugin](/sdk/tutorials/plugin-types-workflow) | `batch-coordinator` | Workflow plugin (`writes = {"experiments"}`) that manages experiments without taking design ownership |
-| 6 | [Analyze an experiment](/sdk/tutorials/analyze-an-experiment) | `panel-summary` | Analysis plugin that reads an experiment's design and saves a named analysis artifact |
+| Step | Tutorial | Project | Result |
+|------|----------|---------|--------|
+| 1 | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | `hello-mint` | A `generated` mode analysis plugin with one typed `@job`, a job test and a `.mint` bundle |
+| 2 | [Adding a frontend](/sdk/tutorials/adding-a-frontend) | `hello-standard` | A `standard` mode plugin with `@endpoint` handlers, a Vue 3 workspace and the generated typed client |
+| 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | `panel-designer` | A design plugin (`writes = {"experiments", "design"}`) with SQLModel tables, CRUD endpoints and migrations |
+| 4 | [Access levels](/sdk/tutorials/access-levels) | `panel-designer` | `use`, `configure` and `admin` access levels on endpoints and pages |
+| 5 | [Types and workflow plugin](/sdk/tutorials/plugin-types-workflow) | `batch-coordinator` | A workflow plugin (`writes = {"experiments"}`) that manages experiments without design ownership |
+| 6 | [Analyze an experiment](/sdk/tutorials/analyze-an-experiment) | `panel-summary` | An analysis plugin that reads an experiment design and saves a named artifact |
 
-The first two tutorials are intentionally separate projects. `generated` mode is the fastest first plugin; `standard` mode is the custom UI path. Tutorials 3 and 4 build a design plugin, which mirrors real MINT deployments: design plugins usually define experiment structure, while analysis plugins read experiments and attach results.
+Tutorials 1 and 2 are separate projects. Tutorials 3 and 4 build one design plugin. In a typical MINT deployment, a design plugin defines the experiment structure, and an analysis plugin reads experiments and attaches results.
 
-## What to learn before each step
+## What to read before each step
 
 | Before | Read this if the term is new |
 |--------|------------------------------|
@@ -56,20 +32,15 @@ The first two tutorials are intentionally separate projects. `generated` mode is
 | Tutorial 4 | [Route permissions](/sdk/recipes/route-permissions), [Permissions](/reference/permissions) |
 | Tutorial 6 | [PlatformContext](/sdk/concepts/platform-context), [Writing results](/sdk/recipes/writing-results) |
 
-## How tutorials are structured
+## Conventions
 
-- Command blocks are **runnable** as written. Code blocks are either full replacements or explicitly marked as partial snippets.
-- File paths are **relative to the plugin project root** unless noted.
-- When directory matters, the surrounding text tells you where to run the command.
-- Each tutorial ends by verifying the bundle in a disposable platform with `mint verify` and deploying it with `mint deploy`.
+- You can run each command block as written. A code block is a full replacement unless the text calls it a partial snippet.
+- File paths are relative to the plugin project root, unless the text says otherwise.
+- Each tutorial ends with a test of the bundle in a disposable platform (`mint verify`) and a deploy (`mint deploy`). [Deploying and verifying](/sdk/operations/deploying) explains both commands.
 
 ## After the tutorials
 
-When your plugin works locally:
-
-- Run [Packaging](/sdk/operations/packaging) to produce a `.mint` bundle.
-- Use [Publishing](/sdk/operations/publishing) to release a `.mint` bundle and optionally list it in a marketplace.
-- Add CI from [CI patterns](/sdk/operations/ci-patterns).
-- Use [Recipes](/sdk/recipes/) for specific tasks such as reading experiments, writing results, route permissions, testing, and R integration.
-- Use [API Reference](/sdk/api/) only when you need exact signatures.
-
+- Package the plugin: [Packaging](/sdk/operations/packaging).
+- Release the bundle and list it in a marketplace: [Publishing](/sdk/operations/publishing).
+- Add CI: [CI patterns](/sdk/operations/ci-patterns).
+- Do one specific task, such as reading experiments or testing: [Recipes](/sdk/recipes/).

@@ -1,14 +1,14 @@
 ---
 aside: false
 title: SettingsModal
-description: "SettingsModal is a feedback component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Tabbed settings dialog for plugin settings and the personal Appearance tab."
 ---
 
 <p class="mint-component-library__eyebrow">Feedback</p>
 
 # SettingsModal
 
-SettingsModal is a feedback component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `SettingsModal` to show plugin settings and the personal Appearance settings in one dialog.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,7 +25,11 @@ import { SettingsModal } from "@morscherlab/mint-sdk"
 
 ## Layout
 
-With `layout` omitted, the modal puts the tabs in a sidebar rail when there is more than one tab. The Appearance tab counts. A single tab is a plain page without navigation. `layout="vertical"` is the same rail. `layout="horizontal"` puts the tabs in a strip above the pane (a plain page for a single tab). The rail separates plugin groups from personal (Appearance) settings. Schema-driven settings get a search across groups, a modified-from-default marker with a per-row reset, and "Restore group defaults". Changes apply immediately; the default footer closes with "Done", and a `#footer` slot replaces it.
+- Without `layout`, the modal puts the tabs in a sidebar rail when there is more than one tab. The Appearance tab counts. A single tab is a plain page without navigation.
+- `layout="vertical"` is the same rail. The rail separates the plugin groups from the personal Appearance settings.
+- `layout="horizontal"` puts the tabs in a strip above the pane. A single tab is a plain page.
+- Schema-driven settings get a search across groups, a marker on values changed from the default with a reset for each row, and "Restore group defaults".
+- Changes apply at once. The default footer has a Done button. The `#footer` slot replaces it.
 
 <!-- sdk-props:start -->
 ## Props

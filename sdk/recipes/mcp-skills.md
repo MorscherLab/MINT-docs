@@ -1,8 +1,8 @@
 # MCP skills
 
-Ship a skill with your plugin. A skill tells an AI assistant how to do a task with your plugin: the order of tool and job calls, the values that the user must choose, and the rules of the plugin. The platform serves plugin skills on its `/mcp` endpoint (MCP extension `io.modelcontextprotocol/skills`) from MINT 1.6. Claude Code shows a skill as `<server>:<skill name>` and loads it only when a task needs it. Which clients support skills: [Client support](/guide/ai-and-api#client-support).
+Ship a skill with your plugin. A skill tells an AI assistant how to do a task with your plugin: the order of tool and job calls, the values that the user must choose, and the rules of the plugin. The platform serves plugin skills on its `/mcp` endpoint (MCP extension `io.modelcontextprotocol/skills`). For what users see, see [Skills](/guide/ai-and-api#skills). For the clients that support skills, see [Client support](/guide/ai-and-api#client-support).
 
-`Metadata.skills` needs `mint-sdk` 1.6 or later.
+Skills need MINT 1.6 and `mint-sdk` 1.6 or later.
 
 ## Declare a skill
 
@@ -11,7 +11,7 @@ Ship a skill with your plugin. A skill tells an AI assistant how to do a task wi
 3. Write `skills/<name>/SKILL.md`. Start it with YAML frontmatter that has `name` and `description`.
 4. Put more files (references, examples) in the same directory if the skill needs them.
 
-The reference plugin [`examples/backend-only-generated-ui`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/examples/backend-only-generated-ui) has the entry point `backend-only-charts` and one skill:
+The example plugin [`examples/backend-only-generated-ui`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/examples/backend-only-generated-ui) has the entry point `backend-only-charts` and one skill:
 
 ```text
 src/backend_only_analysis/
@@ -48,11 +48,11 @@ The plugin `backend-only-charts` has three jobs: "Summary table", "Matplotlib ch
 4. To keep the result in an experiment, send `experiment_id` and a new `save_to` key with `mint_start_job`.
 ```
 
-The platform serves the file as `skill://plugins/backend-only-charts/backend-only-charts-summary/SKILL.md`. Claude Code shows the skill as `mint:backend-only-charts-summary` when the user named the server `mint`.
+The platform serves the file as `skill://plugins/backend-only-charts/backend-only-charts-summary/SKILL.md`. When the user named the server `mint`, Claude Code shows the skill as `mint:backend-only-charts-summary`.
 
 ## Rules
 
-The platform and `mint doctor` use the same rules (`mint_sdk.mcp_skills.skill_problems`). The platform does not serve a skill that breaks one, and logs the reason.
+The platform and `mint doctor` apply the same rules (`mint_sdk.mcp_skills.skill_problems`). The platform does not serve a skill that breaks a rule, and logs the reason.
 
 | Rule | Limit |
 |------|-------|
@@ -63,13 +63,13 @@ The platform and `mint doctor` use the same rules (`mint_sdk.mcp_skills.skill_pr
 | Paths | Hidden files (a name that starts with `.`) are left out. Each other file and directory name uses only `A-Z`, `a-z`, `0-9`, `.`, `_` and `-`: a name such as `Lab notes.md` makes the platform refuse the skill. A link that leads out of the skill directory is refused |
 | Secrets | No access token (`mint_pat_…`, `mint_svc_…`) and no private key. Every caller who sees the plugin can read the skill |
 
-All MINT skills, from the platform and from every plugin, share one server label in the client. The prefix keeps the skills of two plugins apart. The skill prefix uses `-`; the [tool prefix](/sdk/recipes/mcp-tools#names) uses `_`.
+All MINT skills share one server label in the client. The prefix keeps the skills of two plugins apart. The skill prefix uses `-`; the [tool prefix](/sdk/recipes/mcp-tools#names) uses `_`.
 
-The `Metadata` class checks the form of each name and the count of 20 when Python defines the class.
+The `Metadata` class checks the form of each name and the limit of 20 when Python defines the class.
 
 ## Checks before you ship
 
-`mint doctor` adds the check **MCP skills**. It reports an error for each rule above. It reports a warning when:
+The `mint doctor` check **MCP skills** reports an error for each rule above. It reports a warning when:
 
 - Claude may not load the skill: a text file over 100 KB, a skill over 400 KB, an archive, a WebP or OTF file, a binary file other than PNG, JPEG, GIF or PDF, a file under `dist/`, or a description over 1024 characters;
 - the frontmatter has `allowed-tools`;
@@ -78,25 +78,22 @@ The `Metadata` class checks the form of each name and the count of 20 when Pytho
 
 The **MCP declarations** line also counts the skills.
 
-`mint build` stops when the wheel leaves out a file under `skills/`, because the platform reads the skills from the installed package. Remove the exclusion of `skills/` from `[tool.hatch.build.targets.wheel]`.
+The platform reads the skills from the installed package. `mint build` therefore stops when the wheel leaves out a file under `skills/`. Remove the exclusion of `skills/` from `[tool.hatch.build.targets.wheel]`.
 
 ## Who sees a skill
 
-- A caller sees a plugin skill only with `plugins.use` and a role that sees the plugin, as for the tools of the plugin. A skill grants nothing: the platform checks each tool that the skill names again when the model calls it.
-- The platform reads the files once per change and serves its own copy, with the digest of the bytes that it serves. A plugin in its own process serves the files at `GET /__mint/mcp/skills/{name}` with its internal token. The platform serves a changed file after the next sync (15 seconds). An in-process plugin needs a reload.
+- A caller sees a plugin skill only with `plugins.use` and a role that sees the plugin, as for the plugin tools.
+- A skill grants nothing. The platform checks each tool call again when the model makes it.
+- The platform reads the files once per change and serves its own copy, with the digest of the served bytes.
+- A plugin in its own process serves the files at `GET /__mint/mcp/skills/{name}` with its internal token. The platform serves a changed file after the next sync (15 seconds). An in-process plugin needs a reload.
 - A disabled or uninstalled plugin loses its skills at once.
 
 ## Write a good skill
 
-- Give the order of calls, the input values that the user must choose and the rules of the plugin (for example "use `save_to` with a new key").
-- Name tools exactly: `mint_*` for the platform, `<plugin>_<tool>` for the tools of the plugin.
-- Keep it short. Put long reference text in a second file and link it.
-- Write the skill for lab users, not for plugin authors.
+- Give the order of calls, the input values that the user must choose and the rules of the plugin, for example "use `save_to` with a new key".
+- Name tools exactly: `mint_*` for the platform, `<plugin>_<tool>` for the plugin tools.
+- Keep it short. Put long reference text in a second file and link to it.
+- Write for lab users, not for plugin authors.
+- Do not describe the platform tools again. The platform skills `mint-experiments` and `mint-jobs` do that. Add only what is special to the plugin.
 
-The platform skills `mint-experiments` and `mint-jobs` already describe the platform tools. A plugin skill names them and adds only what is special to the plugin.
-
-Verified against [`mcp_skills.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/mcp_skills.py), [`doctor_skill_checks.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/doctor_skill_checks.py) and [platform publishing](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/mcp/plugin_tools.py) at v@MINT_VERSION@.
-
-- [MCP tools](/sdk/recipes/mcp-tools)
-- [AI Assistants and API Access](/guide/ai-and-api#skills)
-- [Python SDK reference](/sdk/api/python#metadata-fields)
+Verified against [`mcp_skills.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/mcp_skills.py), [`doctor_skill_checks.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/doctor_skill_checks.py) and [platform publishing](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/mcp/plugin_tools.py) at v@MINT_VERSION@. For the `skills` field, see [Python SDK reference](/sdk/api/python#metadata-fields).

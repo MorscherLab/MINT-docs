@@ -8,7 +8,7 @@ description: "Pre-built confirm-or-cancel dialog for destructive or high-frictio
 
 # ConfirmDialog
 
-Pre-built confirm-or-cancel dialog for destructive or high-friction actions.
+Use `ConfirmDialog` to ask for confirmation before a destructive action.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -27,10 +27,10 @@ import { ConfirmDialog } from "@morscherlab/mint-sdk"
 
 ```vue
 <ConfirmDialog
-  v-model="confirmingDelete"
+  v-model:open="confirmingDelete"
   title="Delete panel?"
   message="This cannot be undone."
-  variant="danger"
+  tone="error"
   confirm-label="Delete"
   @confirm="confirmDelete"
 />

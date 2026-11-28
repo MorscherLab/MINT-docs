@@ -8,7 +8,7 @@ description: "Themed select control with option objects, placeholder, and v-mode
 
 # BaseSelect
 
-Themed select control with option objects, placeholder, and v-model support.
+Use `BaseSelect` to pick one or more values from a list of options.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

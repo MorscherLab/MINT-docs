@@ -8,7 +8,7 @@ description: "Modal for browsing and selecting an analysis artifact of an experi
 
 # ArtifactSelectorModal
 
-Modal for browsing and selecting an analysis artifact of an experiment, with filters and keyboard navigation.
+Use `ArtifactSelectorModal` to let the user pick an analysis artifact of an experiment.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -29,15 +29,11 @@ import { ArtifactSelectorModal } from "@morscherlab/mint-sdk/data"
 
 ```vue
 <ArtifactSelectorModal
-  v-model="open"
+  v-model:open="open"
   :experiment-id="experimentId"
   @select="selectArtifact"
 />
 ```
-
-## Selected row
-
-A selected row shows the soft accent fill, the teal title and a trailing check. It has no coloured left bar.
 
 <!-- sdk-props:start -->
 ## Props

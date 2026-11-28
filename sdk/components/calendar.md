@@ -1,14 +1,14 @@
 ---
 aside: false
 title: Calendar
-description: "Calendar is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Month calendar for a single date, several dates or a range, with markers."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # Calendar
 
-Calendar is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `Calendar` to pick a date, several dates or a date range on a month grid.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,7 +23,7 @@ Calendar is a forms component exported by @morscherlab/mint-sdk for plugin front
 import { Calendar } from "@morscherlab/mint-sdk"
 ```
 
-The component has no border, radius or background of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. In the card it keeps the text inset of the card.
+The component has no frame of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card).
 
 <!-- sdk-props:start -->
 ## Props

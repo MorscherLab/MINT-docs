@@ -1,31 +1,22 @@
 # CLI reference
 
-Install `mint-sdk[cli]` for the `mint` CLI. This page documents the released **v@MINT_VERSION@** command surface. Run `mint <command> --help` for the complete options on your installed version. For tutorials and getting-started usage, see [`/sdk/tutorials/`](/sdk/tutorials/).
+All commands and flags of the `mint` CLI in v@MINT_VERSION@. Run `mint <command> --help` for the options of your installed version.
 
 Source: [`mint_sdk/cli/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/cli) and the `*_command.py` modules in [`mint_sdk/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk).
 
 ## Install and choose the environment
 
-```bash
-uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
-mint --version
-mint --help
-```
+To install the CLI, see [Install the toolchain](/sdk/install). The CLI needs Python 3.14 or later and the `[cli]` extra.
 
-Python 3.14 or later is required. The `[cli]` extra supplies Typer; the bare runtime
-package does not guarantee a usable CLI. `mint init` creates a project dev
-group with `[cli,server]`; after `uv sync`, prefer `uv run mint ...` inside the
-project to use its selected SDK. The scaffold's runtime dependency stays plain
-`mint-sdk`; CLI/server extras belong to its development environment. Database
-plugins also need `[local-db]`.
+In a plugin project, run `uv run mint ...` to use the SDK of the project. `mint init` puts `mint-sdk[cli,server]` in the dev group and keeps plain `mint-sdk` as the runtime dependency. A plugin with database tables also needs `[local-db]`.
 
 | Requirement | Use it for |
 |---|---|
 | `mint-sdk` | Python SDK/runtime imports, such as `Plugin` and `MINTClient` |
-| `mint-sdk[cli]` | The `mint` commands, including `mint init` scaffolding; adds Typer and `httpx2` |
-| `mint-sdk[cli,server]` | Plugin development with the CLI and Uvicorn; generated projects include this in their `dev` dependency group |
+| `mint-sdk[cli]` | The `mint` commands; adds Typer and `httpx2` |
+| `mint-sdk[cli,server]` | Plugin development with the CLI and Uvicorn |
 
-The CLI runs every frontend command through the global Vite+ CLI `vp`: `vp install`, `vp install --frozen-lockfile`, `vp run <script>` and `vp add -E <package>`. `mint init`, `mint dev`, `mint build`, `mint sdk update` and `mint migrate` need `vp` 1.5.1 or later on `PATH` when the plugin has a frontend. Without it, they stop with exit 1 and print the install commands:
+The CLI runs every frontend command through the global Vite+ CLI `vp`: `vp install`, `vp install --frozen-lockfile`, `vp run <script>` and `vp add -E <package>`. For a plugin with a frontend, `mint init`, `mint dev`, `mint build`, `mint sdk update` and `mint migrate` need `vp` 1.5.1 or later on `PATH`. Without it, they stop with exit 1 and print the install commands:
 
 ```bash
 curl -fsSL https://vite.plus | bash              # macOS, Linux
@@ -34,7 +25,14 @@ irm https://vite.plus/ps1 | iex                  # Windows PowerShell
 vp --version
 ```
 
-`vp` picks the package manager of the frontend in this order: the `packageManager` field of `frontend/package.json` (or of the workspace root that contains it), else its `devEngines.packageManager` field; then `pnpm-workspace.yaml`; then the lockfile (`pnpm-lock.yaml`, `package-lock.json`, `bun.lock` or `bun.lockb`); else pnpm. A plugin made before 1.6 with nothing that decides keeps bun. Set `VP_LOG` to print the output of each `vp` command that the CLI otherwise captures.
+`vp` selects the package manager of the frontend from the first of these that exists:
+
+1. The `packageManager` field of `frontend/package.json` (or of the workspace root that contains it), else its `devEngines.packageManager` field.
+2. `pnpm-workspace.yaml`.
+3. The lockfile: `pnpm-lock.yaml`, `package-lock.json`, `bun.lock` or `bun.lockb`.
+4. None: pnpm. A plugin made before 1.6 keeps bun.
+
+Set `VP_LOG` to print the output of each `vp` command. Otherwise the CLI captures it.
 
 `mint sdk update`, `mint init --force`, `mint build` and `mint dev` stop with exit 1 when `uv.lock` locks a `mint-sdk` of a newer minor than the running `mint`. Run `uv run mint <command>` in the plugin to use its own `mint`.
 
@@ -56,11 +54,7 @@ uv run mint build
 uv run mint verify
 ```
 
-`verify` requires Docker and exercises installation/restart/plugin loading in a
-disposable platform. `deploy` and `mint platform plugin upload` instead change a running
-platform. Use [the deployment guide](/sdk/operations/deploying) for that step.
-For generated UI choose `--mode generated --type analysis`. Other types require
-standard mode.
+`mint verify` needs Docker. To install on a running platform, see [Deploying](/sdk/operations/deploying).
 
 ## Top-level
 
@@ -79,7 +73,7 @@ mint [-C DIR] [--url URL] [--version] [--help] <command>
 
 ## Platform commands
 
-These talk to a running platform. Authenticate first with `mint platform auth login`. Every command in this section lives under `mint platform`. The top-level aliases `mint auth`, `mint plugin`, `mint update`, `mint status`, `mint instruments` and the other server commands are removed in 1.4: change scripts and CI steps to `mint platform ...`.
+These commands talk to a running platform. Sign in first with `mint platform auth login`.
 
 ### `mint platform status`
 
@@ -87,7 +81,11 @@ These talk to a running platform. Authenticate first with `mint platform auth lo
 mint platform status
 ```
 
-Prints the configured host (`MINT_URL`, or the stored default) and the stored username (or "Not logged in"). It also shows whether the platform is reachable and lists the loaded plugins with their versions. Then it shows whether the token is valid and the credential in use: type (session or access token), read-only state, expiry and source (`MINT_TOKEN` or the stored credential).
+Prints:
+
+- The configured host (`MINT_URL`, or the stored default) and the stored username, or "Not logged in".
+- Whether the platform is reachable, and the loaded plugins with their versions.
+- Whether the token is valid, and the credential in use: type (session or access token), read-only state, expiry and source (`MINT_TOKEN` or the stored credential).
 
 ### `mint platform restart`
 
@@ -95,7 +93,7 @@ Prints the configured host (`MINT_URL`, or the stored default) and the stored us
 mint platform restart [--yes|-y] [--json]
 ```
 
-Asks the configured platform to restart its server process (`POST /api/admin/restart`). Prompts for confirmation unless `--yes`. Exits non-zero when the platform reports failure.
+Asks the platform to restart its server process (`POST /api/admin/restart`). Without `--yes`, it asks for confirmation. It exits non-zero when the platform reports a failure.
 
 ### `mint platform auth`
 
@@ -103,7 +101,7 @@ Tokens are stored per host in `~/.config/mint/credentials.json`, or `$XDG_CONFIG
 
 | Command | Purpose |
 |---------|---------|
-| `mint platform auth login [--url URL] [--name NAME] [--read-only]` | Sign in with a device code: prints a code to type at `<externalUrl>/device` in a signed-in browser, where you approve the request and pick the token lifetime; the CLI then stores the personal access token it is granted. `--read-only` asks for a read-only token. `--name` gives the host a short name (asked on the first login when omitted). A host without a scheme gets `https://` |
+| `mint platform auth login [--url URL] [--name NAME] [--read-only]` | Sign in with a device code and store the personal access token; see [Sign in the mint CLI](/guide/ai-and-api#sign-in-the-mint-cli). `--read-only` asks for a read-only token. `--name` gives the host a short name (asked on the first login when omitted). A host without a scheme gets `https://` |
 | `mint platform auth login --token [--url URL]` | Store an existing personal access token instead (prompted, or read from stdin) |
 | `mint platform auth logout [--url URL]` | Revoke the stored personal access token on the platform and discard it (default: the current host). If the platform cannot be reached, the command says so and still discards the local copy; revoke the token in Profile |
 | `mint platform auth hosts` | List the hosts with a stored credential and their names. `*` marks the default |
@@ -114,9 +112,9 @@ Tokens are stored per host in `~/.config/mint/credentials.json`, or `$XDG_CONFIG
 | `mint platform auth token list [--json]` | List your personal access tokens by prefix, access, expiry and last use |
 | `mint platform auth token revoke <token-id>` | Revoke one of your tokens (ID from `token list`) |
 
-`mint platform auth token create` refuses to run under a personal access token, because a token cannot issue tokens. Run `mint platform auth login` again, or create the token in Profile. `--read-only` and `--token` do not combine. The browser opens only on a local terminal, not over SSH or without a display.
+`mint platform auth token create` refuses to run under a personal access token: a token cannot issue tokens. Sign in again with `mint platform auth login`, or create the token in Profile. `--read-only` and `--token` do not combine. The browser opens only on a local terminal, not over SSH or without a display.
 
-A personal access token works as `MINT_TOKEN` for the CLI and `MINTClient`, and as the Bearer token for MCP clients. `--read-only` limits the token to reads. See [AI Assistants and API Access](/guide/ai-and-api).
+A personal access token works as `MINT_TOKEN` for the CLI and `MINTClient`, and as the Bearer token for MCP clients. See [AI Assistants and API Access](/guide/ai-and-api).
 
 ### `mint platform instruments`
 
@@ -124,7 +122,11 @@ A personal access token works as `MINT_TOKEN` for the CLI and `MINTClient`, and 
 mint platform instruments [NAME_OR_ID] [--all] [--json]
 ```
 
-Without an argument, lists instruments with their live status: state, sample, progress, ETA, unacknowledged alerts and time since the last report. An instrument without a report shows `(no report)`. With `NAME_OR_ID`, shows one instrument with its details and status. The name is matched first (case-insensitive, deactivated instruments included), then the ID. A name that matches more than one instrument is an error. `--all` includes deactivated instruments in the list. `--json` prints JSON. The command needs the `instruments.view` permission. Programmatic access: `MINTClient.instruments` ([REST client](/sdk/api/client#instruments)).
+Without an argument, lists the instruments with their live status: state, sample, progress, ETA, unacknowledged alerts and time since the last report. An instrument without a report shows `(no report)`.
+
+With `NAME_OR_ID`, shows the details and status of one instrument. The command matches the name first (case-insensitive, deactivated instruments included), then the ID. A name that matches more than one instrument is an error.
+
+`--all` adds deactivated instruments to the list. `--json` prints JSON. The command needs the `instruments.view` permission. From Python, use [`MINTClient.instruments`](/sdk/api/client#instruments).
 
 ### `mint platform experiment`
 
@@ -154,7 +156,7 @@ Without an argument, lists instruments with their live status: state, sample, pr
 
 ### `mint platform plugin`
 
-Published plugins are `.mint` bundles. Install them with `mint platform plugin upload` or `mint platform plugin github install`. These commands call the running platform, which performs dependency checks, bundle extraction, settings writes, and restart reporting; they require the matching server-side plugin permissions. `--force` skips dependency conflict checks.
+A published plugin is a `.mint` bundle. Install it with `mint platform plugin upload` or `mint platform plugin github install`. The platform does the dependency checks, bundle extraction and settings writes. The signed-in user needs the matching plugin permissions. `--force` skips the dependency conflict checks.
 
 | Command | Purpose |
 |---------|---------|
@@ -176,11 +178,11 @@ Published plugins are `.mint` bundles. Install them with `mint platform plugin u
 | `mint platform plugin runtime external <name> <target-url> [--prefix PATH] [--version LABEL] [--frontend-dir DIR] [--base-path PATH] [--rewrite\|--pass-through] [--json]` | Register an already running plugin server (prefix defaults to `/NAME`) |
 | `mint platform plugin runtime docker <name> <image> [--prefix PATH] [--container-port N] [--host-port N] [--container-name NAME] [--platform-url URL] [--network NAME] [--json]` | Register a container for the platform to run (container port defaults to 8000) |
 
-`config get` returns the opaque revision required by `config set`. Copy it unchanged; a stale revision fails with a conflict. Preserve managed secret references returned by the platform instead of substituting masked values. See [platform settings](/sdk/concepts/platform-context). Runtime paths and URLs must be reachable from the platform host; see [isolation](/sdk/concepts/isolation).
+`config get` returns the revision that `config set` needs. Copy it unchanged; a stale revision fails with a conflict. Keep the secret references that the platform returns; do not replace them with masked values. Runtime paths and URLs must be reachable from the platform host; see [Isolation](/sdk/concepts/isolation).
 
 ### `mint platform admin`
 
-Requires the matching server-side permissions. Plugin roles are removed in 1.4, so there is no `plugin-role` group; give a user the `plugins.configure` permission through a role.
+The signed-in user needs the matching permissions. There are no plugin roles: give a user the `plugins.configure` permission through a role.
 
 | Command | Purpose |
 |---------|---------|
@@ -217,11 +219,21 @@ Read-only diagnostics.
 | `mint platform update check [--json]` | Check platform and plugin update sources |
 | `mint platform update apply [--yes\|-y] [--pair-all] [--disable PACKAGE ...] [--json]` | Apply the latest platform update (admin) |
 
-When installed plugins do not support the new platform SDK, the platform answers 409 `update.pairing_required`. It names the plugin releases to install with the update and the plugins it must disable. `update apply` shows them, with the reason, and asks. With `--yes` or `--json`, confirm them with flags: `--pair-all` accepts every paired plugin release (installed in the same restart), and one `--disable PACKAGE` accepts each plugin that has no compatible release. A plugin that is not named is never disabled: the command exits 1 and names the missing flags.
+When installed plugins do not support the new platform SDK, the platform answers 409 `update.pairing_required`, and `update apply` asks you to confirm the plugin changes. With `--yes` or `--json`, confirm them with flags:
+
+- `--pair-all` accepts every plugin release that the platform pairs with the update.
+- `--disable PACKAGE` accepts that the update disables this plugin. Give one flag for each plugin.
+
+A plugin that you do not name is never disabled: the command exits 1 and names the missing flags. See [Plugins that exclude the new platform version](/admin/updates#plugins-that-exclude-the-new-platform-version).
 
 ### `mint libraries`
 
-Manages the [library store](/admin/libraries) of read-only reference files. It is a top-level command. Without `--local` it talks to the platform that `--url` or the default host names, and the signed-in user needs `platform.configure`. With `--local` it uses the standalone store in `~/.mint/libraries`, for plugin development. A library reference is `publisher/name`. Today the only publisher is `platform`.
+Manages the [library store](/admin/libraries) of read-only reference files. It is a top-level command.
+
+- Without `--local`, it talks to the platform of `--url` or the default host. The signed-in user needs `platform.configure`.
+- With `--local`, it uses the standalone store in `~/.mint/libraries`, for plugin development.
+
+A library reference is `publisher/name`. The only publisher is `platform`.
 
 | Command | Purpose |
 |---------|---------|
@@ -252,7 +264,7 @@ mint -C DIR daemon     # serve another project directory
 | `--cpu-slots` | Global CPU concurrency slots (sets `MINT_JOB_CPU_SLOTS`) |
 | `--max-concurrent-per-user` | Concurrent jobs per user across sessions (sets `MINT_JOB_MAX_CONCURRENT_PER_USER`) |
 
-It needs `mint-sdk[server]`. A hand-written command, Dockerfile or process unit that names `mint_sdk.runtime:create_plugin_app` or a plugin-written factory must change to `mint_sdk.app:create_app --factory`.
+It needs `mint-sdk[server]`. In a hand-written command, Dockerfile or process unit, use `mint_sdk.app:create_app --factory`. `mint_sdk.runtime:create_plugin_app` and plugin-written factories do not work.
 
 ## Develop commands
 
@@ -295,9 +307,7 @@ CI: the generated CI and release workflows use Python 3.14. They set up Vite+ wi
 
 `mint init --force` stops with exit 1 and writes nothing when the directory has a frontend with a bun or npm lockfile, or a frontend made before 1.6. Run [`mint migrate`](#mint-migrate) there.
 
-The parser accepts `workflow`, although `init --help` omits it from its type description. Generated mode accepts only `analysis`; use standard mode for the other types.
-
-Use `generated` mode for the first plugin unless you know you need a custom Vue workspace. Use `standard` mode when the UI needs custom layout, custom controls, or multiple interactive views.
+`--mode generated` accepts only `--type analysis`. To choose a mode, see [Plugin types](/sdk/concepts/plugin-types#_1-choose-a-development-mode).
 
 ### `mint dev`
 
@@ -354,7 +364,7 @@ mint build [flags]
 | `--output-dir` | Output directory (default `dist`) |
 | `--include-wheel PATH` | Vendor an existing extra `.whl`; repeat for multiple wheels |
 
-Output: `dist/<name>-<version>.mint`. Note the `.mint` extension.
+Output: `dist/<name>-<version>.mint`.
 
 `mint build` installs the frontend with `vp install --frozen-lockfile` when the frontend, or the workspace root that contains it, has a lockfile of the selected manager, else with `vp install`. Then it runs `vp run build`.
 
@@ -378,24 +388,24 @@ mint -C DIR doctor
 | `--strict` | Exit non-zero when doctor reports warnings |
 | `--json` | Output machine-readable check results |
 
-`mint doctor --deps` and `--r` no longer exist. `mint doctor --only db --database-url URL` replaces `mint db check`.
+There is no `--deps`, `--r` or `mint db check`. Use `--only deps`, `--only r` and `mint doctor --only db --database-url URL`.
 
 The default run checks the project structure: `pyproject.toml`, the `mint.plugins` entry point, the source module, the `Plugin` class, the routes prefix, tests, AI instruction files, the generated contract and the project layout. It boots the plugin once (lifespan and safe GET probes). It also does these checks:
 
-- checks the SDK dependency. The Python range must be `>=<floor>,<ceiling>` with the ceiling at the next major (from 1.4) or the next minor (before 1.4). A ceiling at the next minor still passes for 1.4 plugins, so `<1.5` releases of the 1.4 plugins keep passing. `mint doctor --fix` writes `<2.0`;
+- checks the SDK dependency range `>=<floor>,<ceiling>`. A `<1.5` ceiling of a 1.4 plugin still passes. `mint doctor --fix` writes `<2.0`. See [Declare compatibility deliberately](/sdk/operations/versioning#declare-compatibility-deliberately);
 - checks the SDK version alignment: the Python and frontend SDK pins and their lockfiles must name the same release (`mint sdk update` aligns them);
 - checks `@tool` / `@prompt` / `@resource` names, docstrings, signatures and schemas (the platform publishes none of a plugin's declarations while any is invalid);
 - from SDK 1.6, checks each skill in `Metadata.skills` ("MCP skills") with the rules of the platform, and warns about files that Claude does not load and tool names that nobody publishes. See [MCP skills](/sdk/recipes/mcp-skills#checks-before-you-ship);
-- fails a plugin that still defines `get_migrations_package()`, because the platform loader keeps such a plugin disabled and standalone database setup raises `ConfigurationException`. Declare `Metadata.database` and adopt the history with `LegacyBaseline.from_plugin_history()`;
+- fails a plugin that still defines `get_migrations_package()`. See [Migrations](/sdk/api/migrations#migrationspec-and-legacybaseline);
 - checks the page metadata (icons, stable page IDs and coverage of the frontend routes) and the platform-owned dependency constraints;
 - reports an error when a plugin on `mint-sdk>=1.3` has a `requires-python` that admits Python older than 3.14 or excludes 3.14 (a `mint-sdk` dependency limited by a `python_version >= '3.14'` marker is exempt);
 - reports a 1.3 author API as `SDK 1.4 manual changes` (an error breaks the plugin on SDK 1.4; a warning matches a removed method by name only) and the mechanical rewrites as `SDK 1.4 rewrites`. `--fix` applies the rewrites: `@mint_plugin` to `Metadata` and `@plugin`, the persistence helpers to `self.design` and `self.artifacts`, `@mcp_tool` to `@tool`, the old job, event, health and test names, and the renamed modules. The [migration guide](/sdk/operations/migrate-1.3-to-1.4) has the full table;
 - checks the frontend toolchain ("Frontend toolchain") against the `mint init` template and warns about these points: a `vite.config.js` or `vite.config.d.ts` next to `vite.config.ts` (Vite loads the `.js` file first, so edits to the `.ts` file have no effect), a `*.tsbuildinfo` file, a PostCSS config, the `postcss`, `@tailwindcss/postcss` or `autoprefixer` package, a `tsconfig.node.json` (it makes `vue-tsc -b` emit `vite.config.js`), and a `vite`, `vitest`, `vue-tsc`, `typescript` or `@vitejs/plugin-vue` major version below the template. `--fix` deletes the build outputs. It deletes the PostCSS config only when `vite.config.ts` imports and calls `@tailwindcss/vite` and the config names no plugin other than Tailwind and `autoprefixer`. Delete `tsconfig.node.json` yourself and build with `vue-tsc --noEmit && vite build`;
 - reports removed and deprecated frontend APIs with their replacements, including removed subpath imports, merged components and unified props. `mint docs deprecated-apis` lists them all;
 - "Deprecated SDK APIs": a warning for each import of a deprecated frontend SDK export (such as `useApi`), with the replacement. A plugin's own name or a property access is not matched;
-- "Frontend chart dependency": a warning when the plugin renders `PlotlyChart`, `GeneratedPlotlyResult`, `GeneratedResultRenderer`, `GeneratedPluginView`, `InstrumentStatusPanels` or `PanelSections` and does not declare `plotly.js-dist-min`. Fix it with `vp add plotly.js-dist-min` in `frontend/`;
+- "Frontend chart dependency": a warning when the plugin renders `PlotlyChart`, `GeneratedPlotlyResult`, `GeneratedResultRenderer`, `GeneratedPluginView`, `InstrumentStatusPanels` or `PanelSections` and does not declare `plotly.js-dist-min`. See [Charts need Plotly](/sdk/frontend/#charts-need-plotly);
 - "Frontend SDK registration": a warning for `app.use(MINTSdk)`, and an error for an SDK component that a template uses without an import when no global install exists;
-- "Released revisions": an error for each file of the `Metadata.database` migration package that the latest git tag has and the working tree changed or removed. The platform disables such a plugin on upgrade ("Migration checksum or owner mismatch"). New files pass. Without a tag, the check is skipped;
+- "Released revisions": an error for each file of the `Metadata.database` migration package that the latest git tag has and the working tree changed or removed. New files pass. Without a tag, the check is skipped. See [Database revisions are append-only](/sdk/operations/versioning#database-revisions-are-append-only);
 - "Panels": a warning for a panel id of the latest git tag that is gone, panel `experiment_types` outside `Metadata.experiment_types`, and an `experiment.design` panel of a plugin without `"design"` in `writes`. The hint "Analysis launch offer" suggests `analysis_offer = False` for an analysis plugin with no page, no frontend and no `@job`;
 - "Global vp": an error when `vp` is not on `PATH`, prints no version or is older than 1.5.1; a warning when the global `vp` and the locked `vite-plus` of the frontend differ (names `vp upgrade <version>`);
 - "Package manager": shows the manager that `vp` runs and the evidence (field, workspace file or lockfile). A plugin that is not on pnpm and Vite+ gets the warning "not migrated: run `mint migrate`". A conflict is a warning: the declared `packageManager` or `devEngines.packageManager` disagrees with the lockfile, the frontend has two lockfiles, or the field names a manager other than bun, pnpm or npm;
@@ -414,7 +424,7 @@ The deprecated-API check flags deprecated Python and frontend APIs in plugin sou
 
 ### `mint lint`
 
-The one lint command for a plugin. It runs three parts and exits 1 when one of them has a new finding or fails.
+The lint command of a plugin. It runs design rules, ruff and oxlint, and exits 1 when one of them has a new finding or fails.
 
 ```bash
 mint lint [PATHS...] [flags]
@@ -429,7 +439,7 @@ mint lint [PATHS...] [flags]
 | `--no-baseline` | Report every finding, also those that the baseline accepts. Cannot be combined with `--write-baseline` (exit 2) |
 | `--explain RULE` | Print why a design rule exists and exit |
 
-The three parts:
+What each part checks:
 
 - **Design rules** over `.css` files, the `<style>`, `<template>` and `<script>` blocks of `.vue` files, UI text in `.ts` files and pytest names.
 - **ruff** with the SDK preset, under the project's own `[tool.ruff]`. A project `select` and `per-file-ignores` add to the preset. `mint lint` runs the ruff of the project `.venv` first, then the one next to the running `mint`, then the one on `PATH`.
@@ -626,17 +636,32 @@ mint sdk update [--scope patch|minor|major] [--channel stable|beta]
                 [--version VERSION] [--dry-run] [--no-sync] [--verify]
 ```
 
-The default is the stable patch channel. `--version @MINT_VERSION@` selects one exact
-release; Python and frontend lockfiles resolve to the same release. The command selects the newest candidate first. Then it checks the candidate against Python upper
-bounds, exclusions and `requires_mint`. An excluded candidate fails; the command does not fall back to an older allowed release. An update without `--version` keeps the Python
-compatibility floor, so raise it explicitly for newly required
-APIs. `--version X` raises every `mint-sdk` requirement whose floor is below `X` to `>=X`: the dependencies, the optional dependencies and the dependency groups. The derived `requires_mint` of the bundle follows. On a newer supported minor, it also moves the ceiling to `<2.0` (the next major; `<next-minor` for a target before 1.4) and widens a `requires_mint` that excludes the target.
-`--scope minor` alone still fails on a lower minor cap.
-`--dry-run` previews changes, `--no-sync` skips installs/lock validation,
-and `--verify` chains Docker verification against the stable/beta channel.
-The frontend install runs through `vp`. When pnpm refuses the target release because of its `minimumReleaseAge`, the command stops with exit 1 and names the `minimumReleaseAgeExclude` entry of `frontend/pnpm-workspace.yaml`. The command prints the AI instructions notice only when `mint doctor --fix` would change the file.
-When the target is a 1.3 or later release, the command raises `[project].requires-python` to `>=3.14`. It only raises: upper bounds, exclusions, `~=` and `==` clauses, and a stricter floor stay. A missing value is added. The command refuses when the result would exclude 3.14, as with `<3.14` or `==3.12.*`. The command never rewrites an AI instructions file (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules`). It leaves the file unchanged and points to `mint doctor` and `mint doctor --fix`. It creates no missing file.
-See [upgrading the SDK](/sdk/operations/upgrading).
+| Flag | Effect |
+|------|--------|
+| `--scope patch\|minor\|major` | How far to update (default `patch`). `--scope minor` alone still fails on a lower minor cap |
+| `--channel stable\|beta` | Release channel (default `stable`) |
+| `--version X` | Select one exact release. The Python and frontend lockfiles resolve to the same release |
+| `--dry-run` | Show the changes without writing files |
+| `--no-sync` | Skip the installs and the lock check |
+| `--verify` | Run Docker verification against the stable or beta channel afterwards |
+
+Selection:
+
+- The command takes the newest candidate, then checks it against the Python upper bounds, the exclusions and `requires_mint`. An excluded candidate fails: the command does not fall back to an older release.
+- Without `--version`, the Python floor stays. When new code needs newer APIs, raise the floor yourself.
+
+Changes to `pyproject.toml`:
+
+- `--version X` raises every `mint-sdk` floor below `X` to `>=X`: dependencies, optional dependencies and dependency groups. The `requires_mint` of the bundle follows.
+- On a newer supported minor, the command moves the ceiling to `<2.0` (`<next-minor` for a target before 1.4) and widens a `requires_mint` that excludes the target.
+- For a target of 1.3 or later, the command raises `[project].requires-python` to `>=3.14`. It only raises: upper bounds, exclusions, `~=` and `==` clauses and a stricter floor stay. It adds a missing value. It refuses when the result would exclude 3.14, as with `<3.14` or `==3.12.*`.
+
+Other behavior:
+
+- The frontend install runs through `vp`. When pnpm refuses the target release because of `minimumReleaseAge`, the command stops with exit 1 and names the `minimumReleaseAgeExclude` entry of `frontend/pnpm-workspace.yaml`.
+- The command never changes or creates an AI instructions file (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules`). It prints a notice only when `mint doctor --fix` would change the file.
+
+See [Upgrading the SDK](/sdk/operations/upgrading).
 
 ### `mint sdk generate`
 
@@ -646,24 +671,24 @@ Generate the frontend plugin contract and typed client from backend routes and P
 mint sdk generate [--check] [--json] [--output DIR]
 ```
 
-`--check` reports drift without writing files, useful in CI. `--output` is relative to the plugin root.
+`--check` reports drift and writes no file; use it in CI. `--output` is relative to the plugin root.
 
 Generated frontend plugins get:
 
 - `frontend/src/generated/mint-plugin.contract.json`
 - `frontend/src/generated/mint-plugin.ts`
 
-The TypeScript file exports `useClient()`, `useSettings()` (when `Metadata.settings` is set), `useJobs(name, options)`, `upload`, `download(name, payload, { filename })`, `endpointUrl`, `useStream`, `contract`, `contractHash` and `apiPrefix`. The job methods are `wait`, `result`, `get`, `cancel`, `delete`, `clear` and `refresh`. An `@endpoint` without `operation_id` gets the method name in lowerCamel case (`get_layout` becomes `getLayout`). After you upgrade from 1.3, run `mint sdk generate` and update the callers.
+For the exports of the TypeScript file, see [Generated plugin clients](/sdk/frontend/composables#generated-plugin-clients). `useSettings()` is present only when `Metadata.settings` is set. An `@endpoint` without `operation_id` gets the method name in lowerCamel case (`get_layout` becomes `getLayout`).
 
 ## Developer database commands
 
-`mint db current` reads the migration state of an explicit development database. It does not apply, stamp or downgrade migrations. The other database tasks moved:
+`mint db current` reads the migration state of an explicit development database. It does not apply, stamp or downgrade migrations. Other commands do the other database tasks:
 
 | Command | Behavior |
 |---|---|
 | `mint db current --database-url URL` | Report migration history and status without applying changes |
-| `mint doctor --only db --database-url URL` | Compare the database to the declared models; non-zero exit on differences (was `mint db check`) |
-| `mint add migration NAME --autogenerate --database-url URL` | Draft a revision from model differences in editable source (was `mint db revision`) |
+| `mint doctor --only db --database-url URL` | Compare the database to the declared models; non-zero exit on differences |
+| `mint add migration NAME --autogenerate --database-url URL` | Draft a revision from the model differences in editable source |
 | `mint add migration NAME` | Create a blank Alembic revision |
 
 `mint add migration NAME` without `--autogenerate` follows the plugin's declaration. A plugin with `Metadata.database` gets a blank Alembic revision. A plugin with no `database` gets `database = MigrationSpec(package="<package>.db_revisions")` in its `Metadata`, an empty `db_revisions` package and a first revision; no database is needed. Revision generation needs the database at the current migration head and a source migration package inside the project. SQLite inspection needs an existing file. Review every generated revision before release. The platform has its own commands for its revisions: `mint-platform db current|check|revision` in the platform checkout. See [migrations](/sdk/concepts/migrations).
@@ -672,7 +697,7 @@ The TypeScript file exports `useClient()`, `useSettings()` (when `Metadata.setti
 
 | Path | Purpose |
 |------|---------|
-| `~/.config/mint/credentials.json` | Per-user token storage (written by `mint platform auth login`; honors `XDG_CONFIG_HOME`) |
+| `~/.config/mint/credentials.json` | Stored tokens; see [`mint platform auth`](#mint-platform-auth) |
 | `<plugin>/pyproject.toml` | Plugin dependencies, entry points, build config, `[tool.mint.lint]` |
 | `<plugin>/mint-lint-baseline.json` | Accepted `mint lint` findings (written by `mint lint --write-baseline` and `mint migrate`; commit it) |
 | `<plugin>/frontend/pnpm-workspace.yaml` | pnpm settings of the frontend, with the `minimumReleaseAgeExclude` entry for `@morscherlab/*` |
@@ -680,12 +705,5 @@ The TypeScript file exports `useClient()`, `useSettings()` (when `Metadata.setti
 
 ## Notes
 
-- The `mint` CLI is the user-facing binary; `mint_sdk.cli_entry:main` is the console entry point. Don't import the CLI module from your plugin code.
-- For programmatic platform access, use `MINTClient` — the CLI itself uses it under the hood.
-- Plugin discovery uses the `mint.plugins` entry-point group.
-
-## Related
-
-- [User Manual → CLI overview](/admin/cli) — high-level CLI tour for non-developers
-- [Tutorials → First analysis plugin](/sdk/tutorials/first-analysis-plugin) — `mint init`, `mint dev`, `mint build` in context
-- [Operations → CI patterns](/sdk/operations/ci-patterns) — using the CLI in GitHub Actions
+- The console entry point is `mint_sdk.cli_entry:main`. Do not import the CLI module in plugin code.
+- For platform access from Python, use [`MINTClient`](/sdk/api/client). The CLI uses it too.

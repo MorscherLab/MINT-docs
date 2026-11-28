@@ -1,27 +1,21 @@
 # Concepts
 
-Learn how MINT plugins declare their access levels, receive platform services,
-and own data. Start with the type guide, then read the pages relevant to your
-plugin before following the [tutorials](/sdk/tutorials/).
+These pages explain what a plugin declares, which platform services it gets and which data it owns. Read the type guide first. Then read the pages that apply to your plugin before you follow the [tutorials](/sdk/tutorials/).
 
-| Page | What you will learn |
+| Page | Read it when |
 |---|---|
-| [Plugin types](/sdk/concepts/plugin-types) | Static, analysis, design, workflow and full plugins; `Metadata.writes` |
-| [Lifecycle](/sdk/concepts/lifecycle) | Discovery, startup, settings, events, shutdown and uninstall |
-| [Isolation](/sdk/concepts/isolation) | In-process, subprocess, external and container runtime boundaries |
-| [PlatformContext](/sdk/concepts/platform-context) | Context namespaces, authenticated actors, files and settings |
-| [Plugin communication](/sdk/concepts/plugin-communication) | Event bus, exports, and calls between plugins |
-| [Data model](/sdk/concepts/data-model) | Experiments, design ownership, artifacts and projects |
-| [Migrations](/sdk/concepts/migrations) | Creating and upgrading plugin-owned SQL tables |
+| [Plugin types](/sdk/concepts/plugin-types) | You choose the UI mode, the plugin type and `Metadata.writes` |
+| [Lifecycle](/sdk/concepts/lifecycle) | You need to know what runs at install, startup, settings changes, events and shutdown |
+| [Isolation](/sdk/concepts/isolation) | You choose a runtime: in-process, subprocess, external or Docker |
+| [PlatformContext](/sdk/concepts/platform-context) | Your plugin reads experiments, users, files, settings or its own storage |
+| [Plugin communication](/sdk/concepts/plugin-communication) | Your plugin uses events, exports or calls of other plugins |
+| [Data model](/sdk/concepts/data-model) | You work with experiments, design data, artifacts and projects |
+| [Migrations](/sdk/concepts/migrations) | Your plugin owns SQL tables |
 
 ## Standalone and integrated execution
 
-Standalone development runs with a `StandaloneContext` (`self.is_standalone` is `True`); an installed plugin runs in-process or in a subprocess with a scoped context. See [Isolation](/sdk/concepts/isolation#runtime-comparison) for the runtime table.
+Under `mint dev`, a plugin runs standalone with a `StandaloneContext`, and `self.is_standalone` is `True`. An installed plugin gets a scoped platform context. [Isolation](/sdk/concepts/isolation#runtime-comparison) compares the runtimes.
 
-Code must handle its actual environment. A local SQL session can use SQLite,
-but saving a platform analysis artifact requires integration. Authentication
-and resource visibility need installed-platform checks as well as local tests.
+Write code for both environments. A local SQL session can use SQLite, but an analysis artifact needs the platform. Test authentication and resource visibility on an installed platform, not only in local tests.
 
-These execution modes are separate from the `generated`/`standard` UI choice
-and the write set (`Metadata.writes`). Follow the [development guide](/sdk/) for a learning path or
-use the [recipes](/sdk/recipes/) for one concrete task.
+The execution mode does not depend on the UI mode (`generated` or `standard`) or on `Metadata.writes`.

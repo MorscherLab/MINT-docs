@@ -1,68 +1,21 @@
 # Recipes
 
-Goal-oriented patterns for the operations plugin authors do most often. Each recipe is short: a goal, working code, the pitfalls, and links to related material. If the recipe doesn't fit, the [Tutorials](/sdk/tutorials/) cover end-to-end builds and the [API Reference](/sdk/api/) covers exact symbol surfaces.
+Each recipe shows one plugin task with working code and its pitfalls. For a full build, use the [Tutorials](/sdk/tutorials/). For exact signatures, use the [API Reference](/sdk/api/).
 
-## Reading experiments
-
-| Recipe | When |
-|--------|------|
-| [Reading experiments](/sdk/recipes/reading-experiments) | Look up one experiment, paginate, filter by status / project |
-| [Querying plugin data](/sdk/recipes/querying-plugin-data) | SQLAlchemy patterns on plugin-owned tables |
-
-## Writing results
-
-| Recipe | When |
-|--------|------|
-| [Writing results](/sdk/recipes/writing-results) | Save named `Artifact` outputs, preserve visible run history, and publish file-backed artifacts |
-
-## Experiment page
-
-| Recipe | When |
-|--------|------|
-| [Plugin panels](/sdk/recipes/panels) | Show plugin data as a tab in the Design data or Analysis artifacts card, without a frontend |
-| [Live design forms](/sdk/recipes/live-design) | Let the platform draw the design form from the schema and save each field by itself |
-
-## Permissions and identity
-
-| Recipe | When |
-|--------|------|
-| [Route permissions](/sdk/recipes/route-permissions) | Typed actors, `access` levels and experiment visibility |
-
-## AI assistants
-
-| Recipe | When |
-|--------|------|
-| [MCP tools](/sdk/recipes/mcp-tools) | Publish plugin tools, prompts and resources on the platform's `/mcp` endpoint |
+| Recipe | Use it to |
+|--------|-----------|
+| [Reading experiments](/sdk/recipes/reading-experiments) | Read one experiment, list experiments with filters, create and update experiments |
+| [Writing results](/sdk/recipes/writing-results) | Save named `Artifact` outputs, keep run history, save file-backed artifacts |
+| [Querying plugin data](/sdk/recipes/querying-plugin-data) | Read and write plugin-owned tables with SQLAlchemy |
+| [Route permissions](/sdk/recipes/route-permissions) | Check the caller, the `access` level and experiment visibility |
+| [MCP tools](/sdk/recipes/mcp-tools) | Publish tools, prompts and resources on the platform `/mcp` endpoint |
 | [MCP skills](/sdk/recipes/mcp-skills) | Ship a skill that tells an AI assistant how to use the plugin |
-
-## Instruments
-
-| Recipe | When |
-|--------|------|
-| [Report instrument status](/sdk/recipes/instrument-status) | Send live instrument state from a daemon through your plugin to the platform |
-
-## Reference data
-
-| Recipe | When |
-|--------|------|
-| [Use a reference library](/sdk/recipes/libraries) | Read a large read-only file from the platform's library store |
-
-## Reliability
-
-| Recipe | When |
-|--------|------|
-| [Error handling](/sdk/recipes/error-handling) | Typed SDK errors, HTTP envelopes and request IDs |
-| [Logging & tracing](/sdk/recipes/logging-tracing) | Stdlib `logging` in the platform formatter; request IDs and spans |
-| [Testing plugins](/sdk/recipes/testing-plugins) | `RecordingContext`, `Harness` route, job and panel tests, frontend tests, migrations |
-
-## Schema evolution
-
-| Recipe | When |
-|--------|------|
-| [Backfill migrations](/sdk/recipes/backfill-migration) | Schema changes plus chunked data backfill, idempotent on retry |
-
-## Domain-specific
-
-| Recipe | When |
-|--------|------|
-| [R integration](/sdk/recipes/r-integration) | Calling R through the SDK `RAnalysisBridge` and `mint add r-analysis` |
+| [Plugin panels](/sdk/recipes/panels) | Show plugin data as a tab on the experiment page, without a frontend |
+| [Live design forms](/sdk/recipes/live-design) | Let the platform draw the design form and save each field |
+| [Report instrument status](/sdk/recipes/instrument-status) | Send live instrument state from a daemon through the plugin to the platform |
+| [Use a reference library](/sdk/recipes/libraries) | Read a large read-only file from the platform library store |
+| [Error handling](/sdk/recipes/error-handling) | Raise typed SDK errors and read the error envelope |
+| [Logging & tracing](/sdk/recipes/logging-tracing) | Write logs and spans that carry the request ID |
+| [Testing plugins](/sdk/recipes/testing-plugins) | Test routes, jobs, panels, frontends and migrations with `Harness` and `RecordingContext` |
+| [Backfill migrations](/sdk/recipes/backfill-migration) | Add a column and fill historical rows, safe on retry |
+| [R integration](/sdk/recipes/r-integration) | Run R through `RAnalysisBridge` and `mint add r-analysis` |

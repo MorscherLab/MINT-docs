@@ -2,91 +2,82 @@
 
 ## What does MINT do?
 
-MINT is a modular laboratory platform. It manages **projects**, **experiments**, and **users**, and hosts a marketplace of **plugins** that add domain-specific capabilities — LC-MS sequence design, drug-response prediction, chemical drawing, plate-map editing, and so on. The platform itself is intentionally small; the lab-specific value lives in plugins.
+MINT is a lab platform for projects, experiments and users. Plugins add the domain tools, such as LC-MS sequence design, drug-response prediction, chemical drawing and plate maps. The platform is small; the lab-specific functions are in plugins.
 
 ## Who is MINT for?
 
-- **Researchers and lab scientists** running and reviewing experiments
-- **Lab admins** managing users, plugins, and platform settings
-- **Plugin developers** extending the platform with new domain-specific tools
+- Lab scientists who run and review experiments.
+- Lab admins who manage users, plugins and platform settings.
+- Plugin developers who add tools to the platform.
 
-It's especially well-suited to wet-lab teams that want a single browser-based home for project tracking, experiment metadata, and analysis workflows — without each tool living on a different server with a different login.
+MINT gives a lab one browser-based place, with one sign-in, for projects, experiment metadata and analysis.
 
 ## Coming from MLD?
 
-MLD (Morscher Laboratory Database) was the platform's original name. It was renamed **MINT** — Mass-spec Infrastructure for Next-generation Toolkits — with `v1.0.0`, and the rename is complete:
+MLD (Morscher Laboratory Database) was the original name of the platform. It became MINT (Mass-spec Infrastructure for Next-generation Toolkits) with `v1.0.0`. The rename is complete:
 
-- Packages are `mint-sdk` (PyPI) and `@morscherlab/mint-sdk` (npm). The `mld-sdk` packages are frozen and receive no releases.
-- Plugins are discovered only through the `mint.plugins` entry-point group. A plugin that still declares `mld.plugins` is not loaded, and no error is shown.
-- Settings use the `MINT_` environment prefix. General `MLD_*` variables are ignored. Since MINT 1.4 only the `MLD_*` JWT-secret aliases remain, because dropping one would sign every user out. `MLD_CONFIG_PATH`, the `MLD_*` GitHub-token names and the Docker Compose names `MLD_PORT` and `MLD_VERSION` no longer work; use `MINT_CONFIG_PATH`, `MINT_UPDATES__GITHUB_TOKEN`, `MINT_PORT` and `MINT_VERSION`.
+- The packages are `mint-sdk` (PyPI) and `@morscherlab/mint-sdk` (npm). The `mld-sdk` packages get no more releases.
+- MINT finds plugins only through the `mint.plugins` entry-point group. A plugin that still declares `mld.plugins` does not load, and MINT shows no error.
+- Settings use the `MINT_` environment prefix. MINT ignores general `MLD_*` variables. Only the `MLD_*` JWT-secret aliases remain, because removing them would sign out all users. `MLD_CONFIG_PATH`, the `MLD_*` GitHub-token names, and the Docker Compose names `MLD_PORT` and `MLD_VERSION` do not work. Use `MINT_CONFIG_PATH`, `MINT_UPDATES__GITHUB_TOKEN`, `MINT_PORT` and `MINT_VERSION`.
 - The CLI is `mint`.
 
-Rebuild old plugins against `mint-sdk` and rename any `MLD_*` variables in your deployment. Background: [rebrand decision](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-04-30-mld-to-mint-rebrand.md).
+Rebuild old plugins against `mint-sdk`, and rename the `MLD_*` variables of your deployment. Background: [rebrand decision](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-04-30-mld-to-mint-rebrand.md).
 
 ## How does MINT relate to LEAF?
 
-[LEAF](https://leaf-docs.morscherlab.org) is one of the analysis tools that runs as a plugin under MINT (in addition to running as a standalone desktop app). MINT provides the project / experiment / user / marketplace layer; LEAF provides LC-MS metabolomics extraction, peak picking, and visualization. Many other plugins exist alongside LEAF.
+[LEAF](https://leaf-docs.morscherlab.org) is an LC-MS metabolomics tool for extraction, peak picking and visualization. It runs as a MINT plugin and as a standalone desktop app. MINT gives the project, experiment, user and marketplace layer.
 
 ## Where does my data go?
 
-**Self-managed install (direct or Docker, on a Linux server):** Data lives on your server — relational data in PostgreSQL, files under the configured `server.dataPath`. MINT itself makes outbound network requests only to the marketplace registry and (optionally) the GitHub release feed for updates.
+- Self-managed server (direct or Docker, on Linux): the data stays on your server. Records are in PostgreSQL. Files are under `server.dataPath`. MINT connects out only to the marketplace registry and, optionally, to GitHub for updates.
+- Lab server (`mint.morscherlab.org`): the data stays on the lab server, with the same access controls.
 
-**Hosted (`mint.morscherlab.org`):** Data resides on the lab server. Access is governed by the same RBAC controls as any other deployment.
-
-There is intentionally no desktop / single-user install path: MINT is a multi-user platform and assumes a server context.
+MINT is a multi-user server platform. There is no desktop or single-user installation.
 
 ## Do plugins isolate from each other?
 
-Partly. In-process plugins share the platform's environment under a hashed [dependency lock](/admin/plugins#plugin-dependency-lock): an install that clashes with the platform or another plugin is blocked or reported as a conflict before anything changes. Subprocess plugins run in their own `uv`-managed venv, in a separate process that the platform proxies HTTP to. Either way, plugin crashes don't take down the platform: middleware wraps every plugin call with error isolation.
+Partly. In-process plugins share the platform environment under a [dependency lock](/admin/plugins#plugin-dependency-lock) that blocks conflicting installs. Other runtimes run in their own process. A plugin crash does not stop the platform. See [Isolation](/sdk/concepts/isolation).
 
 ## What database backends are supported?
 
-PostgreSQL is the only supported MINT platform database. The SDK's local-db extra still uses SQLite when a plugin runs standalone; that is separate from the installed platform.
+PostgreSQL only. See [Install directly -> Requirements](/admin/install-direct#requirements).
 
 ## How big a deployment can MINT handle?
 
-MINT runs as a single server process. Rate limits, presence, the realtime event streams, in-flight plugin operations and update caches live in that process, so the platform refuses to start with more than one worker (the `MINT_ALLOW_MULTI_WORKER=1` override accepts the resulting misbehavior). Scale by giving the host more CPU and memory; heavy analyses run in separate job worker processes.
+MINT runs as one server process and refuses to start with more than one worker. To scale, give the host more CPU and memory. Heavy analyses run in separate job worker processes. See [Install directly](/admin/install-direct).
 
 ## How do I back up MINT?
 
-Two layers (plus the configuration file):
-
-1. **Database** — standard `pg_dump` / `pg_dumpall` for PostgreSQL.
-2. **Filesystem** — `server.dataPath` for plugin registry state, uploaded `.mint` bundles, the plugin dependency lock, object storage, and plugin-owned files.
-
-The plugin lock history under `<server.dataPath>/plugins/locks/history/` holds rollback points for plugin package changes, but it isn't a backup substitute — it's a local rollback aid.
+Back up the PostgreSQL database (`pg_dump`), the `server.dataPath` directory, and `config.json`. The plugin lock history is not a backup. See [Install with Docker -> Backups](/admin/install-docker#backups).
 
 ## Which plugin permissions exist?
 
-MINT has no plugin roles. A plugin tags its endpoints, jobs, tools and pages with an access level: `use`, `configure` or `admin`. `use` needs `plugins.use` and **Plugin access** to the plugin, `configure` also needs `plugins.configure`, and `admin` needs the `admin` role. See [Plugin access levels](/admin/users-roles#plugin-access-levels).
+MINT has no plugin roles. A plugin tags its endpoints, jobs, tools and pages with the access level `use`, `configure` or `admin`. See [Plugin access levels](/admin/users-roles#plugin-access-levels).
 
 ## Does MINT support push notifications?
 
-Yes, to the MINT iOS app, through Apple Push. An administrator sets up the relay or a direct `.p8` key under **Admin -> System -> Configuration -> Notifications**. See [Push notifications](/admin/platform-settings#push-notifications).
+Yes, to the MINT iOS app through Apple Push. An admin sets it up in **Admin -> System -> Configuration**. See [Push notifications](/admin/platform-settings#push-notifications).
 
 ## Does MINT support SSO?
 
-Yes. Current MINT releases include built-in SWITCH edu-ID sign-in through OpenID Connect. Enable it under `sso.eduid` and set `server.externalUrl` to the public HTTPS URL. User accounts are stored in the platform's required PostgreSQL database.
-
-Other identity providers can still sit in front of MINT through an organization-managed reverse proxy or access gateway, but SWITCH edu-ID is the supported in-platform SSO path today. See [Authentication](/admin/authentication).
+Yes. MINT has built-in SWITCH edu-ID sign-in through OpenID Connect. Turn it on under `sso.eduid`, and set `server.externalUrl` to the public HTTPS URL. For other identity providers, put a reverse proxy or access gateway of your organization in front of MINT. See [Authentication](/admin/authentication#switch-edu-id-sso).
 
 ## Can I write a plugin in something other than Python?
 
-The plugin contract is a FastAPI app + entry point in the `mint.plugins` group, so the plugin process itself must be Python. The plugin can shell out to native binaries, call other languages over IPC, or do anything else inside that process — but the platform-facing surface is Python + FastAPI.
+The plugin process must be Python: a FastAPI app with an entry point in the `mint.plugins` group. Inside that process, the plugin can call native binaries or other languages.
 
-For UI, choose the plugin mode that matches the job:
-
-- `generated` uses Python decorators and schemas to produce a MINT-native UI without a custom frontend build.
-- `standard` gives you a Vue 3 workspace when the plugin needs a custom interactive view.
-- Backend-only plugins can skip frontend code entirely.
+For the UI, a plugin can generate it from Python, use a Vue 3 frontend, or have no frontend. See [Plugin types](/sdk/concepts/plugin-types).
 
 ## How do I update MINT?
 
-Update the platform from the admin page or with the CLI. This works for the [direct install](/admin/install-direct) and for [Docker](/admin/install-docker). Click **Update platform** in the platform row of **Available updates** in **Admin -> System -> Updates**, or run `mint platform update check` and `mint platform update apply --yes`. Then restart MINT. See [Updates](/admin/updates). A minor update can need new plugin releases: the platform pairs them for you when you confirm the update. For the step from MINT 1.5 to 1.6, read [Upgrading from MINT 1.5](/admin/updates#upgrading-from-mint-1-5) first: back up the database, because there is no way back to 1.5 without the backup.
+1. Take a backup of the database and the data directory.
+2. Open **Admin -> System -> Updates**.
+3. Click **Update platform** in the platform row of **Available updates**. Or run `mint platform update check` and `mint platform update apply --yes`.
+4. Restart MINT.
 
-The `uv tool upgrade mint-sdk` and `pipx upgrade mint-sdk` commands only update the `mint` CLI in an admin shell. They do not upgrade the running platform service.
+This works for the [direct install](/admin/install-direct) and for [Docker](/admin/install-docker). A minor update can need new plugin releases; see [Updates](/admin/updates). Before you update from MINT 1.5 to 1.6, read [Upgrading from MINT 1.5](/admin/updates#upgrading-from-mint-1-5). Without a backup, you cannot go back to 1.5.
 
-To check available platform and plugin releases, open **Admin -> System -> Updates**. Take a normal deployment/database backup before upgrading.
+`uv tool upgrade mint-sdk` and `pipx upgrade mint-sdk` update only the `mint` CLI. They do not update the running platform.
 
 ## Which browsers does MINT support?
 
@@ -94,12 +85,12 @@ Chrome 116, Edge 116, Firefox 124 and Safari 17.4, or newer, on a desktop comput
 
 ## Is MINT open source?
 
-Yes. The source lives at [github.com/MorscherLab/MINT](https://github.com/MorscherLab/MINT). Issues, pull requests, and questions are welcome.
+Yes. The source is at [github.com/MorscherLab/MINT](https://github.com/MorscherLab/MINT).
 
 ## How do I cite MINT in a paper?
 
-A citable preprint / DOI is forthcoming. For now, please cite the GitHub repository and the MINT version you used.
+There is no preprint or DOI yet. Cite the GitHub repository and the MINT version that you used.
 
 ## Where can I report bugs or request features?
 
-[GitHub issues](https://github.com/MorscherLab/MINT/issues) — include your MINT version, OS, the affected plugin (if any), and steps to reproduce. The structured-log request ID from the failing response, if available, is especially helpful.
+Open a [GitHub issue](https://github.com/MorscherLab/MINT/issues). Include your MINT version, operating system, the plugin (if any), and the steps to reproduce. If the failing response has a request ID, include it.

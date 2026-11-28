@@ -1,10 +1,6 @@
 # CI patterns
 
-`mint init` writes two GitHub Actions workflows: `.github/workflows/ci.yml`
-(pull requests and pushes to `main`) and `.github/workflows/release.yml` (`v*`
-tags). Start from those files. This page shows them and the additions that are
-worth making: a checksum and prerelease flag on releases, a registry PR, and a
-scheduled SDK-compatibility check.
+`mint init` writes two GitHub Actions workflows: `.github/workflows/ci.yml` runs on pull requests and pushes to `main`, and `.github/workflows/release.yml` runs on `v*` tags. Start from these files. This page shows them and some optional additions.
 
 ## Build on PR
 
@@ -78,30 +74,21 @@ jobs:
         run: uv run mint build --output-dir dist/
 ```
 
-The frontend is built before `uv sync` because the standard plugin wheel
-force-includes `frontend/dist`, and runtime tests then see real assets.
-`mint doctor --strict` fails on warnings as well as errors;
-`mint sdk generate --check` catches a generated client that no longer matches
-the backend routes and schemas. `mint lint` runs the design rules, ruff and
-oxlint, and fails only on findings that `mint-lint-baseline.json` does not
-accept. The build step checks packaging on every PR; it runs `pytest` again
-before packaging. Backend-only plugins skip the Vite+ steps.
+The steps do these checks:
 
-`voidzero-dev/setup-vp` installs the global `vp` and also sets up Node.js and
-pnpm. Every `mint` command that touches the frontend needs `vp`, and the
-"Global vp" check of `mint doctor` fails without it. Put the step before the
-first `vp`, `mint build` or `mint doctor` command.
+- The frontend builds before `uv sync`. The standard plugin wheel force-includes `frontend/dist`, so the runtime tests use the real assets.
+- `mint doctor --strict` fails on warnings and on errors.
+- `mint sdk generate --check` fails when the generated client does not match the backend routes and schemas.
+- `mint lint` runs the design rules, ruff and oxlint. It fails only on findings that `mint-lint-baseline.json` does not accept.
+- The build step checks the packaging on each PR. It runs `pytest` again.
 
-`vp install --frozen-lockfile` needs a committed `frontend/pnpm-lock.yaml`.
-The scaffold does not ignore `uv.lock` or the frontend lockfile: commit both
-(see [Commit lockfiles](/sdk/operations/versioning#commit-lockfiles)). After
-that, you can change `uv sync` to `uv sync --locked`.
+A backend-only plugin skips the Vite+ steps.
 
-A workflow from a plugin made before 1.6 has a `Setup Bun` step and `bun`
-commands. [`mint migrate`](/sdk/operations/migrate-1.5-to-1.6#run-mint-migrate)
-rewrites the steps that `mint init` generated and replaces
-`uv run ruff check .` with `uv run mint lint`. It lists other setup steps
-(pnpm, Node.js) and hand-written workflows for you to edit.
+`voidzero-dev/setup-vp` installs the global `vp`, Node.js and pnpm. Each `mint` command that touches the frontend needs `vp`, and the "Global vp" check of `mint doctor` fails without it. Put this step before the first `vp`, `mint build` or `mint doctor` command.
+
+`vp install --frozen-lockfile` needs a committed `frontend/pnpm-lock.yaml`. See [Commit lockfiles](/sdk/operations/versioning#commit-lockfiles).
+
+The workflow of a plugin made before 1.6 has a `Setup Bun` step and `bun` commands. [`mint migrate`](/sdk/operations/migrate-1.5-to-1.6#run-mint-migrate) rewrites the steps that `mint init` generated and replaces `uv run ruff check .` with `uv run mint lint`. It lists the other setup steps (pnpm, Node.js) and the hand-written workflows for you to edit.
 
 ## Publish on tag
 
@@ -133,8 +120,7 @@ The workflow sets `permissions: contents: write` so the repository's
 `GITHUB_TOKEN` can attach the release asset. `fetch-depth: 0` lets `hatch-vcs`
 read the tag.
 
-Two optional additions to the `build` job: a SHA-256 checksum, and marking
-`-beta`/`-rc` tags as GitHub prereleases:
+To add a SHA-256 checksum and to mark `-beta` and `-rc` tags as GitHub prereleases, change the end of the `build` job:
 
 ```yaml
       - name: Compute checksum
@@ -151,14 +137,11 @@ Two optional additions to the `build` job: a SHA-256 checksum, and marking
           fail_on_unmatched_files: true
 ```
 
-Keep release assets limited to the `.mint` file and the optional checksum; the
-wheel and frontend files are inside the bundle. The workflow does not run
-`mint verify`. Run it on the exact bundle before tagging; see
-[Deploying and verifying](/sdk/operations/deploying).
+Attach only the `.mint` file and the optional checksum. The wheel and the frontend files are in the bundle. The workflow does not run `mint verify`. Run it on the bundle before you push the tag. See [Deploying and verifying](/sdk/operations/deploying).
 
 ## Submit to a registry on release
 
-Extend the release workflow to PR a registry update:
+To open a registry pull request for each stable release, add this job to the release workflow:
 
 ```yaml
   submit-to-registry:
@@ -184,11 +167,11 @@ Extend the release workflow to PR a registry update:
           title: "Add my-plugin ${{ github.ref_name }}"
 ```
 
-Skip registry updates for pre-release tags such as `v1.0.0-beta.1` unless the registry is explicitly for testing.
+The `if:` line skips prerelease tags such as `v1.0.0-beta.1`. Remove it only for a registry that is for testing.
 
 ## SDK-compatibility check
 
-Daily or weekly, verify that your plugin still builds against the newest stable SDK version you are willing to adopt:
+This scheduled workflow builds and tests the plugin against the newest stable SDK patch:
 
 ```yaml
 # .github/workflows/sdk-compat.yml
@@ -272,7 +255,9 @@ jobs:
           content-filepath: sdk-compat-failure.md
 ```
 
-`mint sdk update` defaults to stable patch updates; `--channel beta` opts into prerelease testing. Use `--scope patch` for a fixed minor support line. The updater selects the newest candidate before checking bounds; `--scope minor` fails if that candidate is excluded. Review wider bounds on a separate upgrade branch. The command runs `uv sync` and, when a frontend SDK update is needed, `vp install`; set up Vite+ before the command. For new SDK majors, edit dependency ranges deliberately and run a separate migration branch.
+`mint sdk update` runs `uv sync` and, for a frontend SDK update, `vp install`. Thus set up Vite+ before the command. `--scope patch` stays on one minor line. A wider scope can fail on declared bounds; see [Select one SDK release](/sdk/operations/upgrading#select-one-sdk-release). Do minor and major moves on a separate upgrade branch.
+
+Do not test SDK beta releases in normal PR CI. To test them, use `--channel beta` in a separate workflow or branch.
 
 ## Caching
 
@@ -291,7 +276,7 @@ If your project does not [commit lockfiles](/sdk/operations/versioning#commit-lo
 
 ## Pre-commit hooks
 
-For local pre-commit checks (run locally; CI is the authority):
+To run the checks before each local commit, add a pre-commit configuration. CI stays the final check.
 
 ```yaml
 # .pre-commit-config.yaml
@@ -312,16 +297,8 @@ repos:
         types_or: [python, toml]
 ```
 
-`pre-commit install` once per clone. Teams can opt in or out per developer; CI is the source of truth.
+Run `pre-commit install` once in each clone.
 
-## Notes
+## Secrets in forks
 
-- Do not gate normal PR CI on SDK beta releases. Beta checks belong in an opt-in workflow or branch.
-- For plugins that ship to a private registry, a registry webhook can trigger your release workflow when the SDK ships a patch.
-- Keep secrets out of forks: gate publish jobs on `if: github.repository_owner == '<your-org>'`.
-
-## Related
-
-- [Packaging](/sdk/operations/packaging) — what `mint build` produces
-- [Publishing](/sdk/operations/publishing) — where to push the artifact
-- [Versioning](/sdk/operations/versioning) — release and compatibility policy
+To keep secrets out of forks, add `if: github.repository_owner == '<your-org>'` to each publish job.

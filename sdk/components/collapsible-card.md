@@ -1,14 +1,14 @@
 ---
 aside: false
 title: CollapsibleCard
-description: "CollapsibleCard is a layout component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Card whose body collapses, with an optional toggle switch in the header."
 ---
 
 <p class="mint-component-library__eyebrow">Layout</p>
 
 # CollapsibleCard
 
-CollapsibleCard is a layout component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `CollapsibleCard` for a card that the user can fold. The optional toggle switch in the header does not change the fold state.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

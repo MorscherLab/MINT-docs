@@ -1,105 +1,47 @@
 # Packaging
 
-`mint build` produces the plugin's release artifact: a single `.mint` bundle containing its Python wheel, frontend assets, and a manifest. The bundle is what the marketplace serves and what the platform's admin/API install flow consumes.
+`mint build` makes the release artifact of a plugin: one `.mint` bundle with a manifest, the Python wheel and the frontend assets. Administrators install this bundle, and the marketplace serves it.
 
 ## Build
 
+Run the command in the plugin root, or use `mint -C DIR build`:
+
 ```bash
-# In your plugin project root
 mint build
 # → dist/my-plugin-1.0.0.mint
 ```
 
-Run it in the plugin directory, or use `mint -C DIR build`. `mint build` stops with exit 1 when `uv.lock` locks a `mint-sdk` of a newer minor than the running `mint`; run `uv run mint build` then.
+`mint build` needs `uv`, Python and, for a frontend, the global Vite+ CLI `vp` 1.5.1 or later. It needs network access unless the dependencies are in the cache. When `uv.lock` locks a newer `mint-sdk` minor than the running `mint`, use `uv run mint build`. See [`mint build`](/sdk/api/cli-reference#mint-build) for the flags.
 
-What happens:
+The command does these steps:
 
-1. Read `[project]` and `[tool.mint]` from `pyproject.toml`. If `requires_mint` is omitted, derive a floor from the `mint-sdk` dependency; without one, the manifest uses `>=` the build SDK version
-2. Run `uv run pytest`; packaging stops if the test suite fails
-3. If the frontend directory exists (`frontend/`, or `[tool.mint].frontend_dir`) and `--no-frontend` isn't set: run `vp install` (`--frozen-lockfile` when the frontend has a lockfile of its manager) and `vp run build`, require Python and frontend SDKs to resolve to the same release, validate the build output and record its content revision
-4. When a frontend was built, warn if `pyproject.toml` does not force-include `frontend/dist` in the wheel
-5. Build the Python wheel via `uv build --wheel`; the version comes from `[project].version` or the wheel filename
-6. (If `--vendor-deps`) Export runtime requirements with `uv export --no-dev` and download binary-only wheels
-7. Add any `--include-wheel` files
-8. Write `manifest.json`, the main wheel and dependency wheels directly into `dist/<name>-<version>.mint`
+1. Read `[project]` and `[tool.mint]` from `pyproject.toml`. Without `requires_mint`, derive a floor from the `mint-sdk` dependency. Without that dependency, the manifest uses `>=` the SDK version of the build.
+2. Run `uv run pytest`. Stop when a test fails.
+3. Build the frontend when `frontend/` (or `[tool.mint].frontend_dir`) exists and `--no-frontend` is not set. Run `vp install` (with `--frozen-lockfile` when a lockfile exists) and `vp run build`.
+4. Make sure that the Python and frontend SDKs resolve to the same release. Validate the build output and record its content revision.
+5. Warn when `pyproject.toml` does not force-include `frontend/dist` in the wheel.
+6. Build the wheel with `uv build --wheel`. The version comes from `[project].version` or the wheel filename.
+7. Stop when the wheel leaves out a file of the `skills/` directory. See [MCP skills](/sdk/recipes/mcp-skills).
+8. With `--vendor-deps`, export the runtime requirements (`uv export --no-dev`) and download binary wheels.
+9. Add each `--include-wheel` file.
+10. Write the manifest and the wheels into `dist/<name>-<version>.mint`.
 
-## Flags
+To align the two SDKs, run `mint sdk update --version @MINT_VERSION@`. Then [commit both lockfiles](/sdk/operations/versioning#commit-lockfiles). `--no-frontend` marks the bundle as a bundle without a frontend. Do not use it for a plugin that ships a UI.
 
-| Flag | Effect |
-|------|--------|
-| `--no-frontend` | Skip the frontend build step. Use for backend-only plugins or fast iteration on the Python side. |
-| `--include-wheel PATH` | Vendor an existing extra wheel; repeat for multiple files. This does not export the main wheel separately. |
-| `--output-dir` | Override the default `dist/` directory. |
-| `--vendor-deps` | Include dependency wheels in the bundle (opt-in). Without it, the platform resolves dependencies from its configured package indexes. A failed export or download prints a warning and continues with **no** vendored wheels; check the build output before calling a bundle offline-ready. |
+## Bundle contents
 
-The frontend build verifies that Python `mint-sdk` and frontend
-`@morscherlab/mint-sdk` resolve to the same release. Use `mint sdk update
---version @MINT_VERSION@` and [commit both lockfiles](/sdk/operations/versioning#commit-lockfiles) before packaging. `--no-frontend`
-skips building and marks the bundle without a frontend; do not use it as a
-substitute for building the UI you intend to ship.
-
-For an offline target, build/download wheels compatible with that target's
-Linux architecture and Python ABI. Host-native vendoring from another OS does
-not guarantee an installable Linux bundle.
-
-## Bundle structure
-
-A `.mint` is a renamed ZIP:
+A `.mint` file is a ZIP file:
 
 ```
 my-plugin-1.0.0.mint
-├── manifest.json                            # name, version, has_frontend, wheels
-├── my_plugin-1.0.0-py3-none-any.whl         # the main wheel (frontend assets are inside it via force-include)
-└── <dep-wheels>...                          # only present if --vendor-deps
+├── manifest.json                     # name, version, has_frontend, wheels
+├── my_plugin-1.0.0-py3-none-any.whl  # the main wheel, with the frontend assets inside
+└── <dependency wheels>               # only with --vendor-deps
 ```
 
-Inspect contents:
+The frontend is not a separate directory in the bundle. The scaffold's `pyproject.toml` maps `frontend/dist` into the wheel with `tool.hatch.build.targets.wheel.force-include`. In the wheel, the assets are at `<plugin_module>/frontend`.
 
-```bash
-unzip -l dist/my-plugin-1.0.0.mint
-```
-
-The frontend's `dist/` is *not* a separate top-level directory in the bundle — instead, `pyproject.toml` declares `tool.hatch.build.targets.wheel.force-include` for `frontend/dist/` so the assets travel inside the wheel. `mint build` warns if that force-include is missing.
-
-## Manifest
-
-`manifest.json` is what the platform reads first when installing:
-
-```json
-{
-  "format_version": 1,
-  "plugin": {
-    "name": "my-plugin",
-    "version": "1.0.0",
-    "description": "Drug-response panel design",
-    "requires_mint": ">=@MINT_VERSION@,<2.0",
-    "has_frontend": true,
-    "frontend_revision": "sha256:…"
-  },
-  "wheels": {
-    "main": "my_plugin-1.0.0-py3-none-any.whl",
-    "dependencies": []
-  }
-}
-```
-
-The schema is owned by the SDK builder and consumed by the platform bundle installer. `mint build` generates it from `pyproject.toml`, the built wheel filename, optional vendored wheels, and the frontend build. `frontend_revision` is present only when a frontend was built.
-
-The platform checks `plugin.requires_mint` before installing the bundle, then
-checks the wheel's `mint-sdk` requirement against its own SDK. How to choose
-that range is covered in [Versioning](/sdk/operations/versioning#declare-compatibility-deliberately).
-
-## What gets included
-
-By default:
-
-- Whatever your wheel build includes from `pyproject.toml`
-- The frontend's `dist/` directory, if `tool.hatch.build.targets.wheel.force-include` maps it into the wheel
-- Your migrations package, if it lives under the packaged Python module such as `src/<plugin>/migrations/`
-
-The generated `mint init` project packages `src/<plugin>/` as the wheel. Tests, `.git/`, local virtualenvs, and frontend build caches are not part of that package unless you explicitly add them to the wheel config.
-
-To include extra files:
+The wheel contains what the wheel configuration selects. The `mint init` scaffold packages `src/<plugin>/`, which includes a migrations package below the module. Tests, `.git/`, virtual environments and frontend caches stay out. To add other files:
 
 ```toml
 # pyproject.toml
@@ -114,52 +56,67 @@ include = [
 packages = ["src/my_plugin"]
 ```
 
-## Reproducible builds
+Bundles are public artifacts. Do not put secrets in them. Declare credentials as secret fields in `Metadata.settings` and read them through `@on("settings")`.
 
-Build from a clean tagged checkout with committed lockfiles; see
-[Commit lockfiles](/sdk/operations/versioning#commit-lockfiles). For exact
-reproducibility, also pin the build-backend versions your release CI has
-verified.
+## Manifest
 
-## Inspect a built bundle
+The platform reads `manifest.json` first when it installs a bundle:
+
+```json
+{
+  "format_version": 1,
+  "plugin": {
+    "name": "my-plugin",
+    "version": "1.0.0",
+    "description": "Drug-response panel design",
+    "requires_mint": ">=@MINT_VERSION@,<2.0",
+    "has_frontend": true,
+    "frontend_revision": "sha256:…",
+    "git_commit": "3f2a…",
+    "git_dirty": false
+  },
+  "wheels": {
+    "main": "my_plugin-1.0.0-py3-none-any.whl",
+    "dependencies": []
+  }
+}
+```
+
+`mint build` writes the manifest from `pyproject.toml`, the wheel filename, the vendored wheels and the frontend build. `frontend_revision` is present only when a frontend was built. `git_commit` and `git_dirty` are present only when the project is in a git repository.
+
+The manifest sets the installed version. A new filename does not change it. Before installation, the platform checks `plugin.requires_mint`, then the `mint-sdk` requirement of the wheel. [Versioning](/sdk/operations/versioning#declare-compatibility-deliberately) tells you how to choose these ranges.
+
+## Inspect a bundle
 
 ```bash
 unzip -l dist/my-plugin-1.0.0.mint
 unzip -p dist/my-plugin-1.0.0.mint manifest.json
 ```
 
-`mint info` and `mint doctor` inspect a plugin project directory, not a `.mint` bundle. Run them before packaging (use `mint -C DIR` for another directory):
+`mint info` and `mint doctor` inspect a project directory, not a bundle. Run them before you package:
 
 ```bash
 uv run mint info
 uv run mint doctor
 ```
 
-To validate an install end-to-end, use `mint verify --bundle`; see [Deploying and verifying](/sdk/operations/deploying).
+To test the installation of the bundle, use `mint verify --bundle`. See [Deploying and verifying](/sdk/operations/deploying).
 
-## Sizes
+## Offline installs
+
+`--vendor-deps` puts the dependency wheels into the bundle. Without it, the platform resolves the dependencies from its package indexes. When the export or the download fails, the build prints a warning and continues with no vendored wheels. Read the build output before you call a bundle ready for offline use.
+
+Vendored wheels must match the Linux architecture and the Python ABI of the target. Vendoring on macOS or Windows does not give an installable Linux bundle.
+
+## Bundle size
 
 | Plugin | Typical size |
 |--------|-------------|
-| Backend-only, minimal | 50–500 KB |
-| Backend with migrations and a few deps | 1–5 MB |
-| Backend + frontend | 3–15 MB |
-| Backend + frontend + heavy deps (numpy, scipy) | 30–100+ MB |
+| Backend only | 50–500 KB |
+| Backend with migrations and a few dependencies | 1–5 MB |
+| Backend and frontend | 3–15 MB |
+| Backend, frontend and large dependencies (numpy, scipy) | 30–100+ MB |
 
-For very large plugins, consider:
+To make a large bundle smaller, leave out `--vendor-deps`, load frontend chunks with dynamic imports, or split the plugin into smaller plugins.
 
-- Splitting into multiple smaller plugins
-- Skipping `--vendor-deps` (the default) so the platform resolves dependencies from its configured package indexes
-- Lazy-loading frontend chunks via Vite's dynamic imports
-
-## Notes
-
-- `mint build` is self-contained enough for CI, but it still needs the local toolchain (`uv`, Python, and the global Vite+ CLI `vp` 1.5.1 or later for frontends) and network access unless dependencies are already cached.
-- Bundles are versioned by their internal manifest, not by filename. Renaming a `.mint` doesn't change what's installed.
-- Don't ship secrets in bundles. They're public artifacts. Use platform plugin settings declared with `Metadata.settings` and applied through `@on("settings")` for runtime credentials (mark a credential field as a secret).
-
-## Related
-
-- [Publishing](/sdk/operations/publishing) — publishing the `.mint` asset and registering it in a marketplace
-- [CI patterns](/sdk/operations/ci-patterns) — automating the build
-- [Versioning](/sdk/operations/versioning) — choosing the next version number
+For a reproducible build, build from a clean tagged checkout with [committed lockfiles](/sdk/operations/versioning#commit-lockfiles). Also pin the build-backend versions that your release CI uses.

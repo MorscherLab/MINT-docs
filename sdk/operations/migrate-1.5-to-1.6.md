@@ -91,11 +91,7 @@ uv run mint sdk update --version @MINT_VERSION@
 
 `mint sdk update --version X` raises each `mint-sdk` floor below `X` to `X`, in the dependencies, the optional dependencies and the dependency groups. The `requires_mint` of the bundle follows. A release with a 1.6 floor installs only on a 1.6 platform. Keep a 1.5 floor when the plugin must also install on 1.5 and uses no 1.6 API. Details: [Upgrading the SDK](/sdk/operations/upgrading).
 
-`mint sdk update`, `mint init --force`, `mint build` and `mint dev` stop with exit 1 when `uv.lock` locks a `mint-sdk` of a newer minor than the running `mint`. Run the command through the plugin environment:
-
-```bash
-uv run mint build
-```
+After the update, run `mint` through the plugin environment (`uv run mint build`). The global CLI stops when `uv.lock` locks a newer minor; see [Install and choose the environment](/sdk/api/cli-reference#install-and-choose-the-environment).
 
 The frontend `lint` script and the `Lint` step of the workflows need mint-sdk 1.6 in `uv.lock`. With an older SDK, `mint lint` is not a command.
 
@@ -120,9 +116,9 @@ The rule list, the flags and the configuration are in [`mint lint`](/sdk/api/cli
 
 ## Released revisions
 
-The platform stores a checksum of each applied migration revision. When a released revision file changes, the platform disables the plugin on upgrade ("Migration checksum or owner mismatch"). The "Released revisions" check of `mint doctor` compares the files of the `Metadata.database` package with the latest git tag. It names each file that the working tree changed or removed. New files pass. Without a tag, the check is skipped.
+The platform disables a plugin whose released revision file changed. See [Database revisions are append-only](/sdk/operations/versioning#database-revisions-are-append-only). The "Released revisions" check of `mint doctor` compares the `Metadata.database` package with the latest git tag. New files pass. Without a tag, the check is skipped.
 
-Restore the released file and put the change in a new revision. Keep formatters off the revision package, for example with an `exclude` in `[tool.ruff]`. See [Migrations](/sdk/concepts/migrations).
+For each file that the check names, restore the released file and put the change in a new revision. Keep formatters off the revision package, for example with an `exclude` in `[tool.ruff]`.
 
 ## Frontend changes
 

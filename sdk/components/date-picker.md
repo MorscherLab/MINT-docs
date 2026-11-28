@@ -1,14 +1,14 @@
 ---
 aside: false
 title: DatePicker
-description: "DatePicker is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Date, time or date-and-time field with a picker."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # DatePicker
 
-DatePicker is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `DatePicker` to enter a date (`YYYY-MM-DD`), a time (`type="time"`, `HH:mm`) or both (`type="datetime"`, `YYYY-MM-DDTHH:mm`).
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

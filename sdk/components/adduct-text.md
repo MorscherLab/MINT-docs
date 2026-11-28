@@ -8,7 +8,7 @@ description: "Compact, overflow-safe mass-spectrometry adduct notation."
 
 # AdductText
 
-`AdductText` displays a supplied mass-spectrometry adduct with consistent typography and optional badge styling. The full trimmed value is available as the element's title when compact layouts truncate the text.
+Use `AdductText` to show a mass-spectrometry adduct, such as `[M+H]+`, as text or as a badge. When the layout cuts the text, the element title holds the full value.
 
 <demo vue="./demos/AdductText.vue" title="AdductText" description="Three adduct labels in plain, badge and muted styles. Compare how each variant and tone looks." />
 
@@ -16,7 +16,7 @@ description: "Compact, overflow-safe mass-spectrometry adduct notation."
 
 ```vue
 <script setup lang="ts">
-import { AdductText } from '@morscherlab/mint-sdk'
+import { AdductText } from '@morscherlab/mint-sdk/lab'
 </script>
 
 <template>
@@ -27,11 +27,11 @@ import { AdductText } from '@morscherlab/mint-sdk'
 </template>
 ```
 
-The defaults are `variant="inline"`, `tone="default"`, `size="xs"`, and `font="mono"`. Use `tone="on-primary"` on an appropriate primary-colored surface. Null, empty, and whitespace-only values use `emptyText` (default `-`).
+- The defaults are `variant="inline"`, `tone="default"`, `size="xs"` and `font="mono"`.
+- Use `tone="on-primary"` on a primary-colored surface.
+- A null, empty or whitespace-only value shows `emptyText` (default `-`).
 
-This is a text display component, not an adduct parser or m/z calculator. Pair it with [ChemicalFormula](/sdk/components/chemical-formula), or use that component's `adduct` prop to show formula and ion notation together.
-
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/AdductText.vue)
+The component only shows text. It does not parse an adduct or calculate an m/z. To show a formula and its adduct together, use the `adduct` prop of [ChemicalFormula](/sdk/components/chemical-formula).
 
 <!-- sdk-props:start -->
 ## Props

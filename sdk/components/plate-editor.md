@@ -8,7 +8,7 @@ description: "Controlled multi-plate editor over WellPlate: plate tabs, format a
 
 # PlateEditor
 
-Controlled multi-plate editor over [WellPlate](/sdk/components/well-plate): plate tabs, format and slot controls, group assignment, well drag, sample drop, and a single-well inspector.
+Use `PlateEditor` to edit one or more plates on top of [WellPlate](/sdk/components/well-plate): plate tabs, format and slot, group assignment, well drag, sample drop and a single-well inspector.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,15 +23,16 @@ Controlled multi-plate editor over [WellPlate](/sdk/components/well-plate): plat
 import { PlateEditor } from "@morscherlab/mint-sdk/lab"
 ```
 
-The component has no border, radius or background of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. In the card it runs to the card edges.
+The component has no frame of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card).
 
 ## Basic Usage
 
-`PlateEditor` never changes its `modelValue` (`Rack[]`). Every action is emitted as an intent for the caller to apply. The shortest setup lets [`useRackEditor()`](/sdk/frontend/composables#userackeditor) hold the plates and apply the intents:
+`PlateEditor` never changes its `modelValue` (`Rack[]`). It emits each action as an intent, and the caller applies it. In the shortest setup, [`useRackEditor()`](/sdk/frontend/composables#userackeditor) holds the plates and applies the intents. Set the features once with `definePlateEditor()` and pass them as `spec`.
 
 ```vue
 <script setup lang="ts">
-import { PlateEditor, useRackEditor, type Rack } from '@morscherlab/mint-sdk'
+import { PlateEditor, definePlateEditor, useRackEditor } from '@morscherlab/mint-sdk/lab'
+import type { Rack } from '@morscherlab/mint-sdk'
 
 const initial: Rack[] = [
   { id: 'rack-1', name: 'Rack 1', format: 54, slot: 'R', injectionVolume: 5, wells: {} },
@@ -39,15 +40,14 @@ const initial: Rack[] = [
 ]
 
 const { racks, activeRackId, plateEditorListeners, canUndo, canRedo } = useRackEditor(initial)
+const editor = definePlateEditor({ slots: true, fillSeries: true, history: true })
 </script>
 
 <template>
   <PlateEditor
     :model-value="racks"
-    :active-rack-id="activeRackId"
-    slots
-    fill-series
-    history
+    v-model:active-rack="activeRackId"
+    :spec="editor"
     :can-undo="canUndo"
     :can-redo="canRedo"
     v-on="plateEditorListeners"
@@ -55,13 +55,11 @@ const { racks, activeRackId, plateEditorListeners, canUndo, canRedo } = useRackE
 </template>
 ```
 
-`useRackEditor()` copies the initial racks, so your objects are not mutated. Its undo history holds 50 steps.
-
 ## Intents
 
 | Event | Payload | Handled by `plateEditorListeners` |
 |---|---|---|
-| `update:activeRackId` | `rackId` | Yes |
+| `update:activeRack` | `rackId` | Yes |
 | `rack-add`, `rack-remove`, `rack-reorder` | —, `rackId`, `rackIds[]` | Yes |
 | `update:format`, `update:slot` | `rackId`, format / slot | Yes |
 | `well-edit`, `well-clear`, `well-move` | `rackId`, well ids, edit data | Yes |
@@ -76,7 +74,7 @@ const { racks, activeRackId, plateEditorListeners, canUndo, canRedo } = useRackE
 | `group-add` | — | No |
 | `selection-change` | `wellIds[]` | No |
 
-Bind the events in the last six rows yourself, for example `@group-add="addGroup"`. A `v-on` object shadows an `@listener` of the same name; to add behavior to a handled intent, wrap the listener in your own object:
+Bind the events in the last six rows yourself, for example `@group-add="addGroup"`. A `v-on` object hides an `@listener` of the same name. To add behavior to a handled intent, wrap the listener in your own object:
 
 ```ts
 const listeners = {
@@ -88,21 +86,21 @@ const listeners = {
 }
 ```
 
-If you handle `assign` yourself, set `well.group = groupId` and keep `well.sampleType` (`'sample'` for an empty well). The group colors the well; `sampleType` (sample / blank / qc / iqc) sets its marker.
+If you handle `assign` yourself, set `well.group = groupId` and keep `well.sampleType` (`'sample'` for an empty well). The group sets the color of the well. `sampleType` (sample, blank, qc, iqc) sets its marker.
 
 ## Capabilities
 
-Features are opt-in props: `formats`, `slots`, `reorder`, `wellDrag`, `groups`, `wellFields`, `sampleDrop`, `import` / `importAccept`, `export`, `clear`, `fillSeries`, `history`, `maxRacks` / `minRacks`, `readonly`, and `size` (default `xs`: compact square wells, names in the tooltip only).
+Turn features on in the `spec`: `formats`, `slots`, `reorder`, `wellDrag`, `groups`, `wellFields`, `sampleDrop`, `import` / `importAccept`, `export`, `clear`, `fillSeries`, `history`, `maxRacks` / `minRacks` and `size`. The default `size` is `xs`: compact square wells, with the names in the tooltip only. `readonly` stays a prop.
 
-- **Groups rail and inspector.** At an editor width of 720px and wider, a right rail lists the groups (swatch, name, well count, and a "New group" row that emits `group-add`); without `groups` it lists the sample types. With one well selected, the rail holds the single-well inspector. Narrower, the rail collapses and the inspector opens as a popover. The `#well-editor` slot replaces the inspector in both places.
-- **Selection.** A plain click selects one well. Ctrl/Cmd-click toggles a well. Shift-click (or Shift+Enter, Shift+Space) selects the rectangle from the anchor well to the clicked well. The anchor is the last well that got a plain click or a Ctrl/Cmd-click, or the start of a dragged rectangle. Ctrl/Cmd+Shift-click adds the rectangle to the current selection. Escape, an empty selection, or a switch to another plate drops the anchor. Without an anchor, Shift-click toggles a well like Ctrl/Cmd-click. A floating selection bar assigns groups.
-- **History.** `history` shows Undo / Redo buttons, which follow `canUndo` / `canRedo`. Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, and Ctrl/Cmd+Y work while focus is inside the editor; text fields keep their own undo.
-- **Import / Export.** `import` shows an Import button. `importMode` sets what it offers: `'file'` (default) opens a file picker, filtered by `importAccept`, and emits the `File`; `'paste'` opens a Paste dialog and emits the confirmed text, unparsed, on `import-text`; `'both'` offers both in a menu. The Paste dialog opens empty each time and does not emit blank text. `export` takes a list of formats and emits `export` with the chosen one. With `import` and `export`, one "Import / Export" menu holds all the items. Parsing and writing files is up to the plugin.
-- **Clear.** `clear="confirm"` asks first; `clearConfirm` sets the dialog's `title`, `message`, `confirmLabel`, and `variant`. `clear="undo"` clears at once and relies on Undo. `false` hides the button.
-- **Fill Series.** `fillSeriesWhenFull="disable"` (default) disables the button on a full plate; `"emit"` keeps it enabled and still emits `fill-series`, so the plugin can show its own message.
-- **Read-only.** `readonly` removes the editing controls; `well-click` still fires.
+- Groups rail and inspector: at an editor width of 720px and more, a right rail lists the groups (swatch, name, well count and a "New group" row that emits `group-add`). Without `groups`, it lists the sample types. With one well selected, the rail holds the single-well inspector. On a narrower editor, the rail collapses and the inspector opens as a popover. The `#well-editor` slot replaces the inspector in both places.
+- Selection: the keys are the same as in [WellPlate](/sdk/components/well-plate#selection). A switch to another plate also drops the anchor. A floating selection bar assigns groups.
+- History: `history` shows Undo and Redo buttons, which follow `canUndo` and `canRedo`. Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z and Ctrl/Cmd+Y work while the focus is in the editor. Text fields keep their own undo.
+- Import and export: `import` shows an Import button. With `importMode: 'file'` (default), it opens a file picker filtered by `importAccept` and emits the `File`. With `'paste'`, it opens a Paste dialog and emits the confirmed text, unparsed, on `import-text`. The dialog opens empty and does not emit blank text. `'both'` offers both in a menu. `export` takes a list of formats and emits `export` with the chosen one. With `import` and `export`, one "Import / Export" menu holds all the items. The plugin parses and writes the files.
+- Clear: `clear: 'confirm'` (default) asks first. `clearConfirm` sets the `title`, `message`, `confirmLabel` and `tone` of the dialog. `clear: 'undo'` clears at once and shows Undo. `false` hides the button.
+- Fill series: on a full plate, `fillSeriesWhenFull: 'disable'` (default) disables the button. `'emit'` keeps it enabled and emits `fill-series`, so the plugin can show its own message.
+- Read-only: `readonly` removes the editing controls. `well-click` still fires.
 
-Slots: `#well-editor`, `#tab-extra` (tab bar), `#toolbar-extra` (toolbar). Keyboard shortcuts listen on the component, never on the document.
+The slots are `#well-editor`, `#tab-extra` (tab bar) and `#toolbar-extra` (toolbar). Keyboard shortcuts listen on the component, never on the document.
 
 <!-- sdk-props:start -->
 ## Props
@@ -163,10 +161,5 @@ Defaults are the values that vue-component-meta resolves from the source; object
 | ` toolbar-extra ` | — | Extra controls at the right end of the toolbar. |
 
 <!-- sdk-props:end -->
-
-## Related
-
-- [WellPlate](/sdk/components/well-plate)
-- [Composables: `useRackEditor`](/sdk/frontend/composables#userackeditor)
 
 [Back to component library](/sdk/components/)

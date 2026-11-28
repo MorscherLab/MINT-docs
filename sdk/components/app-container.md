@@ -8,9 +8,9 @@ description: "Lightweight content shell for standalone screens; not needed aroun
 
 # AppContainer
 
-Lightweight content shell for standalone screens; not needed around router-view in PluginWorkspaceView.
+Use `AppContainer` to lay out the content of a standalone screen.
 
-Do not wrap `<router-view />` in an `AppContainer` inside [PluginWorkspaceView](/sdk/components/plugin-workspace-view). A card `AppContainer` (`scrollable`, or no `direction`) is then a second card, and `mint doctor` warns on it. A transparent `direction="column"` one does nothing there. Use `spec.main` of the workspace instead.
+Inside [PluginWorkspaceView](/sdk/components/plugin-workspace-view), do not wrap `<router-view />` in an `AppContainer`. A card `AppContainer` (`scrollable`, or no `direction`) makes a second card, and `mint doctor` warns on it. A transparent `direction="column"` container has no effect there. Use [`spec.main`](/sdk/components/plugin-workspace-view#main-pane) of the workspace instead.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

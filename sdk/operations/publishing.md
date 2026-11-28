@@ -1,30 +1,20 @@
 # Publishing
 
-MINT plugins are published as **`.mint` bundles**. Publish the file produced by
-`mint build`: it contains the manifest, the plugin's Python wheel, bundled
-frontend assets and any vendored dependencies. The wheel is an internal part
-of the bundle, not a separate plugin release artifact.
-
-The standard release flow is:
+Publish the `.mint` bundle that `mint build` makes. The bundle holds the manifest, the Python wheel, the frontend assets and the vendored dependencies. Do not publish the wheel as a separate artifact.
 
 ```text
 version tag → build .mint → verify bundle → GitHub Release asset
                                                 ↓
-                                   optional Marketplace registry entry
+                                   optional marketplace registry entry
 ```
 
-Generated and standard plugins use the same release format. A plugin does not
-need to be listed in a marketplace before an administrator can install its
-`.mint` file directly.
+Generated and standard plugins use the same release format. An administrator can install a `.mint` file directly. A marketplace entry is not necessary.
 
 ## Build and verify the release
 
-Use the plugin's own version tag and build from a clean checkout. The
-`mint init` scaffold uses `hatch-vcs` to derive the package version from Git;
-see [versioning](/sdk/operations/versioning).
+Build from a clean checkout of the version tag. The `mint init` scaffold gets the package version from git through `hatch-vcs`. See [Versioning](/sdk/operations/versioning).
 
-For a standard plugin, build the frontend before running backend runtime tests
-that serve its assets:
+For a standard plugin, build the frontend first, because backend tests serve its assets:
 
 ```bash
 cd frontend
@@ -36,94 +26,73 @@ vp run build
 cd ..
 ```
 
-Generated plugins with no `frontend/` directory skip that step. Then, from the
-plugin root:
+A generated plugin has no `frontend/` directory and skips this step. Then, in the plugin root:
 
 ```bash
 uv sync
 uv run mint doctor --strict
+uv run mint sdk generate --check   # only with a generated frontend client
 uv run mint lint
 uv run mint build --output-dir dist
 ```
 
-If the project has a generated frontend client, also run
-`uv run mint sdk generate --check` before building. Review warnings and test
-failures before proceeding.
-
-Verify the exact bundle that will be published with `mint verify --bundle`
-(Docker required); see [Deploying and verifying](/sdk/operations/deploying).
-The bundle filename prefix comes from `[project].name`.
+Fix the warnings and the test failures before you continue. Then verify the exact bundle that you publish with `mint verify --bundle` (Docker is necessary). See [Deploying and verifying](/sdk/operations/deploying). The bundle filename starts with `[project].name`.
 
 ## Publish the `.mint` asset
 
-The scaffold's release workflow runs when a `v*` tag is pushed and attaches
-`dist/*.mint` to the corresponding GitHub Release. Use the
-[CI example](/sdk/operations/ci-patterns#publish-on-tag) to configure that flow.
+The scaffold's release workflow runs on a `v*` tag and attaches `dist/*.mint` to the GitHub Release. See [Publish on tag](/sdk/operations/ci-patterns#publish-on-tag).
 
-For a manual release, open **Releases → Draft a new release** in the plugin's
-GitHub repository, select the version tag, attach the verified `.mint` file,
-write the release notes and publish it. A SHA-256 checksum may accompany the
-bundle to let administrators verify their download.
+To publish by hand:
 
-Include these details in the release notes:
+1. In the GitHub repository of the plugin, open **Releases → Draft a new release**.
+2. Select the version tag.
+3. Attach the verified `.mint` file. Optionally, attach a SHA-256 checksum file.
+4. Write the release notes.
+5. Publish the release.
 
-- Supported MINT versions and runtime requirements.
-- New features, fixes and changed analysis behavior.
-- Database migrations, upgrade steps and recovery requirements.
+Put these items in the release notes:
 
-Keep the artifact for a published version immutable. If a release needs a fix,
-build and publish a new version rather than replacing an existing asset under
-the same tag.
+- Supported MINT versions and runtime requirements
+- New features, fixes and changes to analysis behavior
+- Database migrations, upgrade steps and recovery requirements
+
+Do not replace the asset of a published version. To fix a release, publish a new version.
 
 ## Install the published bundle
 
-Administrators can download the `.mint` asset and upload it through the
-platform's plugin administration UI or CLI:
+An administrator downloads the `.mint` asset and uploads it in the plugin administration page or with the CLI:
 
 ```bash
 mint platform auth login --url https://mint.example.org
 mint platform plugin upload ./my-plugin-0.2.0.mint
 ```
 
-For a GitHub-hosted release, the platform can fetch the matching asset:
+The platform can also download the asset of a GitHub release:
 
 ```bash
 mint platform plugin github install your-org/my-plugin --tag v0.2.0 --asset-pattern '*.mint'
 ```
 
-Installation requires the matching platform permissions and may require a
-restart before the plugin loads. GitHub-hosted downloads must be reachable by
-the platform; use a local `.mint` upload when that is not possible.
+Installation needs the plugin permissions of the platform. A restart can be necessary before the plugin loads. The platform must be able to reach GitHub for the second command. If it cannot, upload the local `.mint` file.
 
 ## Marketplace registry
 
-A marketplace registry is a catalog of plugins and their GitHub release sources.
-The **catalog** can be hosted on GitHub Pages or another HTTPS host. The
-**plugin artifact** remains the `.mint` asset attached to its GitHub Release.
+A marketplace registry is a catalog of plugins and their GitHub release sources. Host the catalog on GitHub Pages or another HTTPS host. The plugin artifact stays the `.mint` asset of the GitHub Release.
 
-The platform reads `marketplace.registryUrl`. A plugin entry supplies
-`source.github_repo` and `source.asset_pattern`, allowing the platform to locate
-the release bundle. Listing a plugin in the catalog adds discovery and update
-information; it does not create another package format.
+The platform reads one catalog from `marketplace.registryUrl`. To show entries from several catalogs, host one catalog that combines them. In each entry, `source.github_repo` and `source.asset_pattern` tell the platform where to find the bundle.
 
-An entry's `min_platform_version` must agree with the bundle's
-`requires_mint`; see [Versioning](/sdk/operations/versioning#declare-compatibility-deliberately)
-for both declarations.
+The `min_platform_version` of an entry must agree with the `requires_mint` of the bundle. See [Versioning](/sdk/operations/versioning#declare-compatibility-deliberately).
 
 ### Register a release
 
 1. Publish the verified `.mint` asset on GitHub.
-2. Add or update the plugin entry in your marketplace's registry.
-3. Check that its repository, asset pattern, version and compatibility floor
-   match the published release.
-4. Test discovery and installation from that registry on a disposable platform.
+2. Add or update the plugin entry in the registry.
+3. Make sure that the repository, asset pattern, version and compatibility floor match the release.
+4. On a disposable platform, find and install the plugin from that registry.
 
-For the Morscher Lab catalog, submit the entry to
-[`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry).
+For the Morscher Lab catalog, submit the entry to [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry).
 
-### Registry example
-
-A `registry.json` file can contain:
+### Registry format
 
 ```json
 {
@@ -148,42 +117,22 @@ A `registry.json` file can contain:
 }
 ```
 
-Optional entry fields are `license`, `homepage`, `documentation_url`,
-`icon_url`, `auto_update`, `source.private` and
-`capabilities` (`requires_auth`, `requires_database`, `has_frontend`).
-`asset_pattern` defaults to `*.mint`.
+Optional entry fields are `license`, `homepage`, `documentation_url`, `icon_url`, `auto_update`, `source.private` and `capabilities` (`requires_auth`, `requires_database`, `has_frontend`). `asset_pattern` defaults to `*.mint`.
 
-The platform reads one registry URL. Host an aggregate catalog if a deployment
-needs entries from several catalogs.
+## Prereleases
 
-## Versions and prereleases
+The git tag sets the package version, and the package version sets the manifest version. [Versioning](/sdk/operations/versioning#git-lockfiles-and-release-artifacts) shows how prerelease tags map to package versions.
 
-`mint build` uses the plugin's package version for the bundle manifest. With
-the scaffold's Git-based versioning, the tag determines that version. A file
-rename does not change the manifest or installed version.
+Mark a beta or RC GitHub Release as a prerelease. GitHub update checks include prereleases only with `includePrereleases`. Show a prerelease as the latest version of a catalog only when that catalog is for testing.
 
-See [Versioning](/sdk/operations/versioning#git-lockfiles-and-release-artifacts)
-for how prerelease tags map to package versions.
+## Checklist
 
-Mark beta/RC GitHub Releases as prereleases. GitHub-source update checks use
-`includePrereleases`; only advertise a prerelease as a catalog's latest version
-when that catalog is intended for testing.
-
-## Before publishing
-
-- [ ] Tests, `mint doctor` and generated-client checks pass.
+- [ ] Tests, `mint doctor` and the generated-client check pass.
 - [ ] The exact `.mint` bundle installs and loads on a supported MINT platform.
-- [ ] Schema changes work on both fresh and previously installed databases.
-- [ ] The package version, manifest and release tag correspond.
-- [ ] Compatibility declarations and runtime requirements are accurate.
-- [ ] Release notes explain changes and any migration/recovery steps.
-- [ ] The GitHub Release contains the `.mint` file and any optional checksum.
+- [ ] Schema changes work on a new database and on a database of the previous release.
+- [ ] The package version, the manifest and the release tag agree.
+- [ ] Compatibility declarations and runtime requirements are correct.
+- [ ] The release notes give the changes and the migration and recovery steps.
+- [ ] The GitHub Release contains the `.mint` file and the optional checksum.
 
-Source: [bundle builder](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/cli_build.py),
-[scaffolded release workflow](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/init_workflow_templates.py).
-
-## Related
-
-- [Packaging](/sdk/operations/packaging) — build and inspect the bundle
-- [CI patterns](/sdk/operations/ci-patterns) — publish `.mint` assets on tags
-- [Versioning](/sdk/operations/versioning) — versions, compatibility and schema changes
+Source: [bundle builder](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/cli_build.py), [scaffolded release workflow](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/init_workflow_templates.py).

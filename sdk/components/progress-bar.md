@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ProgressBar
-description: "ProgressBar is a feedback component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Progress rail with a percent value or an indeterminate mode."
 ---
 
 <p class="mint-component-library__eyebrow">Feedback</p>
 
 # ProgressBar
 
-ProgressBar is a feedback component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `ProgressBar` to show progress as a percent (`value`) or as an `indeterminate` bar. For step-by-step progress, use [StepWizard](/sdk/components/step-wizard).
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -22,8 +22,6 @@ ProgressBar is a feedback component exported by @morscherlab/mint-sdk for plugin
 ```ts
 import { ProgressBar } from "@morscherlab/mint-sdk"
 ```
-
-`ProgressBar` shows a percentage rail (`value`) or an `indeterminate` bar. For step-by-step progress, use [StepWizard](/sdk/components/step-wizard).
 
 <!-- sdk-props:start -->
 ## Props

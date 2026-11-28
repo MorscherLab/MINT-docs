@@ -8,7 +8,7 @@ description: "Formula renderer with scientific typography and element-aware form
 
 # ChemicalFormula
 
-Formula renderer with scientific typography, optional MS adduct notation, and compact pill styling. Use [AdductText](/sdk/components/adduct-text) when only the adduct should be displayed.
+Use `ChemicalFormula` to show a formula with subscripts and charges, as text or as a pill. To show only an adduct, use [AdductText](/sdk/components/adduct-text).
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -31,9 +31,13 @@ import { ChemicalFormula } from "@morscherlab/mint-sdk/lab"
 <ChemicalFormula :formula="null" empty-text="Not assigned" tone="muted" />
 ```
 
-Pass a plain formula string; the component renders subscripts/charges without requiring HTML. `inline` defaults to `true`; `:inline="false"` uses a block element. `pill`, `size`, and `tone` control presentation. Empty/null/whitespace-only formulas show `emptyText`; an adduct on its own is not rendered when the formula is empty.
+- Pass a plain formula string. The component renders the subscripts and charges; no HTML is necessary.
+- `inline` defaults to `true`. `:inline="false"` uses a block element.
+- `pill`, `size` and `tone` set the appearance.
+- An empty, null or whitespace-only formula shows `emptyText`. The adduct does not show without a formula.
 
-The default slot appends content after a nonempty formula and its adduct. This component displays notation; it does not infer an adduct or calculate an ion's m/z.
+- The default slot adds content after a formula and its adduct.
+- The component only shows notation. It does not find an adduct or calculate the m/z of an ion.
 
 <!-- sdk-props:start -->
 ## Props

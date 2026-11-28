@@ -1,14 +1,14 @@
 ---
 aside: false
 title: SampleSelector
-description: "SampleSelector is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Sample list with drag-and-drop group assignment, colors and smart groups."
 ---
 
 <p class="mint-component-library__eyebrow">Lab widgets</p>
 
 # SampleSelector
 
-SampleSelector is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `SampleSelector` to select samples and sort them into colored groups.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,11 +23,11 @@ SampleSelector is a lab widgets component exported by @morscherlab/mint-sdk for 
 import { SampleSelector } from "@morscherlab/mint-sdk/lab"
 ```
 
-The component has no border, radius or background of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. In the card it runs to the card edges.
+The component has no frame of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card).
 
 ## Group separator
 
-`SampleSelector` splits a group name into nested levels. Without `groupSeparator`, it splits at `/` when a name contains one, and at `_` otherwise. A name such as `B13_7` then shows as the subgroup `7` of `B13`. If your group names carry data values, pass a character that the names never contain. The selector then shows each group flat.
+`SampleSelector` splits a group name into nested levels. Without `groupSeparator`, it splits at `/` when a name contains one, and at `_` if not. A name such as `B13_7` then shows as the subgroup `7` of `B13`. When your group names hold data values, pass a character that the names never contain. The selector then shows each group flat.
 
 ```vue
 <SampleSelector v-model="selected" :samples="samples" group-separator="|" />

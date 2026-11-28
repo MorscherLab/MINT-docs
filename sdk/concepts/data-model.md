@@ -1,6 +1,6 @@
 # Data model
 
-The `mint-sdk` data classes mirror the platform's core entities. Context namespaces return these dataclasses; the platform owns the underlying SQLAlchemy models. Field definitions are in [Python SDK → Data models](/sdk/api/python#data-models).
+The `mint-sdk` data classes mirror the core entities of the platform. Context namespaces return these dataclasses; the platform owns the SQLAlchemy models behind them. The field definitions are in [Python SDK → Data models](/sdk/api/python#data-models).
 
 ## Entities
 
@@ -9,23 +9,23 @@ The `mint-sdk` data classes mirror the platform's core entities. Context namespa
 | Field | Notes |
 |-------|-------|
 | `id` | Numeric primary key |
-| `experiment_code` | The user-facing number (`LCM-EXP-001`, `DR-EXP-001`, …). It is `None` until the experiment leaves `planned` or someone assigns it |
-| `version` | Counter that rises on every write. Pass it as `design.save(..., expected_version=)` for optimistic concurrency |
-| `experiment_type` | The string registered by an `EXPERIMENT_DESIGN` plugin |
-| `status` | `planned`, `ongoing`, `completed`, or `cancelled`. The platform refuses an unknown status or a transition it does not allow |
-| `tags`, `custom_metadata` | Free-form JSON columns plugins can read but generally should not mutate unless their plugin type owns the experiment update path |
-| `parent_experiment_id` | For nested experiments / sub-runs |
-| `design_owner_plugin_id` | Existing design owner; `None` before a design payload establishes ownership. The REST experiment answers also give `None` when the caller's role cannot see the design plugin |
+| `experiment_code` | The user-facing number, such as `LCM-EXP-001`. It is `None` until the experiment gets a number; see [Experiment numbers](/guide/experiments#experiment-numbers) |
+| `version` | Counter that increases on every write. Pass it as `design.save(..., expected_version=)` to refuse a stale write; see [Writing results](/sdk/recipes/writing-results#design-data-belongs-to-its-design-plugin) |
+| `experiment_type` | The type string that a design plugin registers |
+| `status` | `planned`, `ongoing`, `completed` or `cancelled`. The platform refuses an unknown status and a transition that it does not allow |
+| `tags`, `custom_metadata` | Free-form JSON. Plugins can read them. Change them only when your plugin type owns the experiment update path |
+| `parent_experiment_id` | For nested experiments and sub-runs |
+| `design_owner_plugin_id` | The design owner, or `None` before the first design save. The REST answers also give `None` when the role of the caller cannot see the design plugin |
 
 ### `DesignData`
 
-The design-plugin payload for one experiment.
+The design payload of one experiment.
 
-`data` is the JSON your design plugin defines. MINT keeps **one design owner per experiment**. The first save establishes the owner; another plugin's replacement or deletion fails with `DesignDataOwnershipConflictException` (409), even if that plugin can write designs. Workflow CRUD does not establish design ownership.
+`data` is the JSON that your design plugin defines. MINT keeps one design owner per experiment. The first save sets the owner. When another plugin replaces or deletes the design, the platform raises `DesignDataOwnershipConflictException` (409), also when that plugin can write designs. Workflow CRUD does not set design ownership.
 
-`design.save()` defaults to `Design.version` of the plugin `Metadata`; an explicit non-default `version` wins. Version labels describe stored payloads and do not transform older data automatically.
+`design.save()` uses `Design.version` of the plugin `Metadata` by default; an explicit non-default `version` wins. A version label describes the stored payload. It does not convert older data.
 
-Declare a schema for platform-enforced validation:
+To make the platform validate the design, declare a schema:
 
 ```python
 from pydantic import BaseModel, Field
@@ -48,30 +48,19 @@ class BatchDesigner(Plugin):
     pass
 ```
 
-`schema` is a JSON Schema (draft 2020-12) `dict` or a pydantic model class that the SDK converts. The platform validates every `design.save` write against it: in-process, from a plugin process, and from the user paths (`PUT /api/experiments/{id}/data` and the MCP tool `mint_save_design`). A mismatch raises `ValidationException` with the field paths. The contract is opt-in; a plugin without `Metadata.design` keeps free-form JSON. Schema validation is separate from SQL migrations and typed administrator settings. The schema is readable at `GET /api/plugins/{name}/design-schema`, with `live` for a live design.
+`schema` is a JSON Schema (draft 2020-12) `dict` or a pydantic model class, which the SDK converts. The platform validates every `design.save` write against it: from an in-process plugin, from a plugin process, and from the user paths (`PUT /api/experiments/{id}/data` and the MCP tool `mint_save_design`). A mismatch raises `ValidationException` with the field paths. The schema is optional; a plugin without `Metadata.design` keeps free-form JSON. Schema validation does not depend on SQL migrations or on typed settings. `GET /api/plugins/{name}/design-schema` returns the schema, with `live` for a live design.
 
-`Design(live=True)` makes the platform draw a form from the schema on the experiment page. Each field saves by itself as a patch (`PATCH /api/experiments/{id}/data/{plugin_id}`). A patch checks the schema without its root `required` list, so the stored `data` of a live design can lack required fields. Every reader of the design data must accept such a document. See [Live design forms](/sdk/recipes/live-design).
+`Design(live=True)` makes the platform draw a form from the schema on the experiment page, and each field saves as a separate patch. The stored `data` of a live design can lack required fields, so every reader of the design must accept such a document. See [Live design forms](/sdk/recipes/live-design).
 
-Before the first save, the experiment has no design owner. The platform then uses the first design plugin by display name that admits the type. On the experiment page, a user who may manage the design data chooses among two or more such plugins; the first save makes the chosen plugin the owner. See [Choose a design plugin](/guide/experiments#choose-a-design-plugin).
+Before the first save, an experiment has no design owner. To learn how the platform and the user choose the design plugin, see [Choose a design plugin](/guide/experiments#choose-a-design-plugin).
 
 ### `Artifact`
 
-The first-class result object shown on experiment pages. An artifact has a `key` (default `"default"`), a display name, a `result` payload and a status (active or archived). `ArtifactInfo` has the same metadata fields without `result`. `ArtifactInput` is the batch-save input shape for `artifacts.save_all`: `key`, `data`, optional `name`, and optional `note`.
-
-```python
-await self.artifacts.save(
-    experiment_id,
-    {"summary": {"n_peaks": 312}, "table": rows},
-    "peak-table",
-    name="Peak table",
-)
-```
-
-The 1.3 compatibility result (`PluginAnalysisResult`, `save_analysis()`) is removed. Save a result as an artifact; the `default` key replaces the single result of a plugin.
+An artifact is a named result of a plugin on an experiment page. It has a `key` (default `"default"`), a display name, a `result` payload and a status (active or archived). `ArtifactInfo` has the same metadata without `result`. To save, replace and archive artifacts, see [Writing results](/sdk/recipes/writing-results).
 
 ### `User`
 
-`role` is the platform role slug — `admin`, `member`, `viewer`, or a custom-role slug. Only the exact slug `admin` is the administrator. Plugin roles do not exist; the access levels `use`, `configure` and `admin` replace them (see [Route permissions](/sdk/recipes/route-permissions)).
+`role` is the slug of the platform role: `admin`, `member`, `viewer` or a custom-role slug. Only the exact slug `admin` is the administrator. Plugins have no roles of their own; they use the access levels `use`, `configure` and `admin` (see [Route permissions](/sdk/recipes/route-permissions#access-levels)).
 
 ## Relationships
 
@@ -83,41 +72,29 @@ Project ────< Experiment ──────── DesignData          (o
                   └────────────────< (plugin-owned tables, via context.db())
 ```
 
-The platform owns `Project`, `Experiment`, `User`, `DesignData` and `Artifact`. Design data and artifact payloads are JSON-backed; plugin-owned tables live in the plugin's own Postgres schema (integrated mode) or its own SQLite database (standalone mode).
+The platform owns `Project`, `Experiment`, `User`, `DesignData` and `Artifact`. Plugin-owned tables live in the PostgreSQL schema of the plugin (integrated) or in its own SQLite database (standalone).
 
-## File objects and ownership
+## File objects
 
-An artifact is a discoverable result record; an `ObjectRef` identifies bytes in object storage. File-backed artifacts link the two with the `mint.analysis_file.v1` payload (`mint_sdk.analysis_file.ANALYSIS_FILE_ARTIFACT_SCHEMA`). Store large CSVs, images, and binary results as objects rather than embedding them in JSON.
+An artifact is a result record. An `ObjectRef` identifies bytes in object storage. A file-backed artifact links the two with the `mint.analysis_file.v1` payload (`mint_sdk.analysis_file.ANALYSIS_FILE_ARTIFACT_SCHEMA`). Store large CSVs, images and binary results as objects, not inside JSON.
 
-Use `self.context.objects(experiment_id)` for raw object operations (`put(key, source)`, `get`, `stream`, `download`, `exists`, `list`, `delete`). An integrated store is scoped to experiment and plugin; another plugin's read scope requires a `reads_from` declaration and does not allow mutation. Standalone object storage is local; it does not create platform artifact records.
+`self.context.objects(experiment_id)` gives raw object operations: `put(key, source)`, `get`, `stream`, `download`, `exists`, `list` and `delete`. An integrated store is scoped to one experiment and one plugin. To read the store of another plugin, declare it in `reads_from`; that read scope does not allow changes. Standalone object storage is local and creates no artifact records.
 
-`artifacts.save(experiment_id, path, key)` uploads a file and creates or replaces its artifact record. `replace=False` rejects a reused key. Replacing a file artifact is a compare-and-swap on its object key (`expect=`), and the platform removes the old object after the replacement commits. JSON artifact saves replace by default. See [Writing results](/sdk/recipes/writing-results).
+To upload a file as an artifact and replace it safely, see [Writing results](/sdk/recipes/writing-results#create-a-file-backed-artifact). When a user deletes an experiment, the platform also removes its stored objects; see [Deleting experiments](/guide/experiments#deleting-experiments).
 
-An experiment delete also removes the stored objects of the experiment. The delete transaction writes one cleanup job per object, and the object cleanup worker deletes each object by key after the commit. An object that another experiment still references stays. The delete does not wait for the storage. Administrators see the cleanup jobs at `GET /api/admin/object-cleanup`.
+## JSON payloads
 
-## JSONB portability
-
-`DesignData.data` and `Artifact.result` are JSON-typed payloads. Postgres uses native `jsonb` (queryable, indexable); SQLite uses serialized JSON in a TEXT column. The repository layer abstracts the difference. Code that just reads / writes whole dicts works in both backends.
-
-For complex queries (e.g., "find experiments where `result.method == 'v4'`"), prefer a real column inside a plugin-owned table over JSON-key indexing — JSON expression indexes work but reduce portability.
+The platform stores `DesignData.data` and `Artifact.result` as PostgreSQL `jsonb`. Code that reads and writes whole dicts needs nothing more. For a query such as "find experiments where `result.method == 'v4'`", use a real column in a plugin-owned table, not a JSON-key index.
 
 ## Context namespaces
 
-`context.experiments`, `context.design`, `context.artifacts` and `context.users` hold the data methods. See [Python SDK → Context namespaces](/sdk/api/python#context-namespaces) for the method and return-type map.
+`context.experiments`, `context.design`, `context.artifacts` and `context.users` hold the data methods. See [Python SDK → Context namespaces](/sdk/api/python#context-namespaces) for the methods and return types.
 
-## Extending the model
+## Extend the model
 
-Plugins extend the data model in two complementary ways:
+A plugin can add data in two ways:
 
-1. **Within `DesignData.data` / `Artifact.result`** — JSON. Quick and schema-flexible. Best for plugin-specific configuration and outputs.
-2. **Plugin-owned tables** — declare with `Metadata.database` (a `MigrationSpec`). Best for queryable, relational data the plugin owns end-to-end.
-
-Pick (1) when the data is tightly coupled to one experiment and never queried across experiments by anyone else. Pick (2) when you need indexes, cross-experiment queries, or relational integrity.
+1. JSON inside `DesignData.data` or `Artifact.result`. Use it for data that belongs to one experiment and that nobody queries across experiments.
+2. Plugin-owned tables, declared with `Metadata.database` (a `MigrationSpec`). Use them when you need indexes, queries across experiments or relational integrity. See [Migrations](/sdk/concepts/migrations).
 
 Verified against [v@MINT_VERSION@ data models and protocols](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/repositories.py) and [design ownership enforcement](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/repositories/sql_experiment_repository.py).
-
-## Next
-
-→ [Migrations](/sdk/concepts/migrations) — evolving plugin-owned tables safely
-→ [PlatformContext](/sdk/concepts/platform-context) — accessing repositories
-→ [Recipes → Querying plugin data](/sdk/recipes/querying-plugin-data) — patterns for plugin-owned tables

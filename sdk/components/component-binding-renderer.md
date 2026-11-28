@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ComponentBindingRenderer
-description: "ComponentBindingRenderer is a workflow component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Renders generated SDK component bindings such as WellPlate, DoseCalculator, DataFrame and PlateEditor."
 ---
 
 <p class="mint-component-library__eyebrow">Workflow</p>
 
 # ComponentBindingRenderer
 
-ComponentBindingRenderer is a workflow component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `ComponentBindingRenderer` to render generated SDK component bindings, such as `WellPlate`, `DoseCalculator`, `DataFrame` and `PlateEditor`.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

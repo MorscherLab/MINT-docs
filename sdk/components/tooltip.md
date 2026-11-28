@@ -8,7 +8,7 @@ description: "Hover/focus tooltip with smart positioning for compact explanation
 
 # Tooltip
 
-Hover/focus tooltip with smart positioning for compact explanations.
+Use `Tooltip` to explain a control on hover and focus. It positions itself to stay in view.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,9 +25,11 @@ import { Tooltip } from "@morscherlab/mint-sdk"
 
 ## Screen readers
 
-The tooltip element has `role="tooltip"` and stays in the page while it is hidden. The first focusable control in the slot (a link, a button, an input or an element with `tabindex`) gets the tooltip id in its `aria-describedby`. A screen reader then reads the tooltip text when that control takes focus. When the slot has no focusable control, the wrapper gets the id. Existing `aria-describedby` ids of the control stay.
+- The tooltip element has `role="tooltip"` and stays in the page while it is hidden.
+- The first focusable control in the slot (a link, a button, an input or an element with `tabindex`) gets the tooltip id in its `aria-describedby`, next to its own ids. A screen reader reads the tooltip text when that control takes focus.
+- When the slot has no focusable control, the wrapper gets the id.
 
-Set `contentId` to give the tooltip element a fixed id, for a control outside the slot that it describes.
+To describe a control outside the slot, set `contentId`. The tooltip element then has that fixed id.
 
 ```vue
 <Tooltip text="Removes the selected runs" shortcut="⌫">

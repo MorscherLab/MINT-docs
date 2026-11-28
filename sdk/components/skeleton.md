@@ -1,14 +1,14 @@
 ---
 aside: false
 title: Skeleton
-description: "Skeleton is a feedback component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Loading placeholder in text, circular, rectangular or rounded shape."
 ---
 
 <p class="mint-component-library__eyebrow">Feedback</p>
 
 # Skeleton
 
-Skeleton is a feedback component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `Skeleton` to hold the place of content that is loading.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

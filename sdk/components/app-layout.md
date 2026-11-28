@@ -8,11 +8,7 @@ description: "Lower-level application shell with topbar, sidebar, and content sl
 
 # AppLayout
 
-Lower-level application shell with topbar, sidebar, and content slots.
-
-AppLayout is the layout primitive used inside `PluginWorkspaceView`. Use it directly when you need to assemble your own top bar, sidebar, and their behavior. A workspace already owns this layout, so do not wrap it in another AppLayout.
-
-See [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace) for the selection guide and normal component nesting.
+Use `AppLayout` only when you build your own top bar and sidebar. It is the layout inside `PluginWorkspaceView`, so do not wrap a workspace in another `AppLayout`. To choose between the two, see [AppLayout or a workspace](/sdk/frontend/#applayout-or-a-workspace).
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

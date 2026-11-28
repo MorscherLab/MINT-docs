@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ProtocolStepEditor
-description: "ProtocolStepEditor is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Form to create or edit one protocol step, with templates, typed parameters and duration."
 ---
 
 <p class="mint-component-library__eyebrow">Lab widgets</p>
 
 # ProtocolStepEditor
 
-ProtocolStepEditor is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `ProtocolStepEditor` to create or edit one protocol step, such as an incubation, a wash or a centrifugation.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,7 +23,7 @@ ProtocolStepEditor is a lab widgets component exported by @morscherlab/mint-sdk 
 import { ProtocolStepEditor } from "@morscherlab/mint-sdk/lab"
 ```
 
-The component has no border, radius or background of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. In the card it runs to the card edges.
+The component has no frame of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card).
 
 <!-- sdk-props:start -->
 ## Props

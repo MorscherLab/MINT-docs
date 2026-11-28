@@ -8,7 +8,7 @@ description: "Self-saving form of a live design, driven by a useLiveDesign() res
 
 # LiveDesignForm
 
-Self-saving form of a live design, driven by a `useLiveDesign()` result, with field locks and save state.
+Use `LiveDesignForm` on a plugin page to edit the design data of a live design. Each edit saves itself.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -27,9 +27,7 @@ import { LiveDesignForm, useLiveDesign } from "@morscherlab/mint-sdk/data"
 
 ## When to use it
 
-A plugin that declares `Design(live=True)` with a design schema gets a form on the experiment page. The platform draws that form with this component. You do not need to add it there.
-
-Use `LiveDesignForm` on your own plugin page when users must edit the same design data there. Each edit saves itself; the form has no Save button.
+A plugin that declares `Design(live=True)` with a design schema gets this form on the experiment page; the platform draws it. Add `LiveDesignForm` only to your own plugin page, when users must edit the same design data there. The form has no Save button.
 
 ## Basic Usage
 
@@ -54,11 +52,11 @@ const design = useLiveDesign(() => experiment.id.value ?? 0, 'cell-culture')
 ## Behavior
 
 - The form shows string, number, integer, boolean and enum properties of the design schema as fields. It shows other values (objects, arrays) as read-only JSON.
-- The header shows the save state: "Saved", "Unsaved", "Saving…", "Offline · retry in N s" with **Retry now**, "N changes not saved" or "View only".
+- The header shows the save state: "Saved", "Unsaved", "Saving…", "Offline · retry in N s" with Retry now, "N changes not saved" or "View only".
 - Empty required root fields get a dashed border and the word "Required". The header shows "N required left".
 - Another editor shows as an avatar in the field. A field that another user edits is disabled with "X is editing this field".
 - A field that another user changed flashes one time. With reduced motion, it shows "Updated by …" instead.
-- A refused value stays in its field with the message and a **Discard** action. **Try again** shows only when the server could not be reached and for a failed load.
+- A refused value stays in its field with the message and a Discard action. Try again shows only when the server could not be reached, and for a failed load.
 - A boolean without a value shows a switch that is off, with "Not set".
 - When the design is not live or the schema cannot be read, the values show as text with a notice.
 - A polite live region announces only a change to offline or to not saved, and the return to saved after it.

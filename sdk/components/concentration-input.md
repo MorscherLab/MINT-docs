@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ConcentrationInput
-description: "ConcentrationInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Number and unit input for reagent concentrations, with an optional molar-mass conversion."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # ConcentrationInput
 
-ConcentrationInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `ConcentrationInput` to enter a concentration with its unit (pM to M, mg/mL). With `molecularWeight`, it shows the value in the other unit system.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

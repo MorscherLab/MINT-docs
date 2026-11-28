@@ -171,12 +171,4 @@ Follow [Regenerate, test and install](/sdk/operations/upgrading#regenerate-test-
 
 The platform, `mint-sdk`, and `@morscherlab/mint-sdk` now share one `v*` release tag. Legacy `sdk-v*` tags remain in Git history but receive no new releases. Plugin repositories still keep their own independent version tags.
 
-## Related
-
-- [Upgrading the SDK](/sdk/operations/upgrading)
-- [Configuration](/admin/configuration)
-- [Platform updates](/admin/updates)
-- [Python SDK reference](/sdk/api/python)
-- [Frontend SDK reference](/sdk/api/frontend)
-
 Release sources: [platform loader](https://github.com/MorscherLab/MINT/blob/v1.2.9/api/plugins/loader.py), [context adapters](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-python/src/mint_sdk/context.py), [frontend exports](https://github.com/MorscherLab/MINT/blob/v1.2.9/packages/sdk-frontend/src/composables/index.ts).

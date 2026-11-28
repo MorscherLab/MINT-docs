@@ -1,13 +1,13 @@
 # Frontend platform integration
 
-This guide targets MINT **@MINT_VERSION@**. Start with the [standard frontend tutorial](/sdk/tutorials/adding-a-frontend); it already installs Vue, Pinia, the SDK, styles, and a generated API client.
+This page shows how a plugin frontend reads the platform context, selects and saves an experiment, and browses server files. Do the [standard frontend tutorial](/sdk/tutorials/adding-a-frontend) first: it installs Vue, Pinia, the SDK, the styles and a generated API client.
 
 ## Choose the right source of state
 
 | Need | Public API | Important boundary |
 |------|------------|--------------------|
-| Embedded/standalone mode, platform user, features, access level | `usePlatform()` | Describes the host; it does not own login or the experiment picker |
-| Session token and signed-in user (read-only) | `useAuthStore()` | `token`, `userInfo`, `authRequired`, `isAuthenticated`; the platform writes them |
+| Embedded or standalone mode, platform user, features, access level | `usePlatform()` | Describes the host. It does not own login or the experiment picker |
+| Session token and signed-in user | `useAuthStore()` | Read-only. The platform writes it |
 | Experiment selected by the workspace picker | `useExperimentStore()` | Shared selection for the plugin's Pinia instance |
 | Read the current experiment | `useExperiment()` | Read-only view of the store: `id`, `current`, `status`, `error`, `refresh()` |
 | Top-bar experiment selector/save/detach UX | `PluginWorkspaceView` with `spec.experiment: true`, or `useAppExperiment()` | Reads the shared experiment store |
@@ -15,11 +15,11 @@ This guide targets MINT **@MINT_VERSION@**. Start with the [standard frontend tu
 | Read/write experiment design JSON | A plugin endpoint through the generated `useClient()`; the backend uses `context.design` | Subject to backend permissions |
 | Call plugin routes | Generated `useClient()` | Uses the plugin contract and typed HTTP errors |
 
-Do not keep a second `{ id, name }` experiment object in local storage. `ExperimentSelectorModal` commits its selection to `useExperimentStore()` directly; it binds `v-model:open` and emits no `select` event. Display the resolved platform record so a renamed experiment cannot retain a stale local name.
+Do not keep a second `{ id, name }` experiment object in local storage. Show the platform record, so that a renamed experiment does not keep an old name. `ExperimentSelectorModal` writes its selection to `useExperimentStore()`. It binds `v-model:open` and emits no `select` event.
 
 ## Read platform context
 
-Call composables inside `<script setup lang="ts">` so Vue can register their lifecycle hooks:
+Call composables inside `<script setup lang="ts">`, so that Vue can register their lifecycle hooks:
 
 ```vue
 <script setup lang="ts">
@@ -35,25 +35,9 @@ const { integrated, user, can } = usePlatform()
 </template>
 ```
 
-`usePlatform()` reads the injected `window.__MINT_PLATFORM__` context (or the `mint-plugin` URL parameter) each time you call it. It also exposes `plugin`, `theme`, `features`, `isAdmin`, and `can(access)`. The platform sends no theme, so `theme` holds the SDK theme setting.
+`usePlatform()` and `useAuthStore()` are read-only context, not authorization. The platform signs the user in and writes the session; a plugin never does. The server checks identity, plugin access, experiment compatibility and project scope on each request. For the return values and the rules of `can()`, see [`usePlatform`](/sdk/frontend/composables#useplatform) and [`useAuthStore`](/sdk/frontend/composables#useauthstore). For the access levels, see [Route permissions → Access levels](/sdk/recipes/route-permissions#access-levels).
 
-`integrated` is a UI mode indicator, not proof that a request is authorized or that a standalone development backend has a `PlatformContext`. The server still enforces identity, plugin access, experiment compatibility, and project scope.
-
-With auth disabled on the platform, `window.__MINT_PLATFORM__` has `authRequired: false` and no `user`, also when the browser holds a session cookie. The platform gives the plugin backend no identity in this mode either, so a page that shows the viewer name from `usePlatform().user` shows no name. `can()` treats an integrated page with no `user` as the implicit administrator only when `authRequired` is `false`.
-
-## Authentication
-
-The SDK's API helpers use the auth store's bearer token. The platform owns sign-in, token refresh and passkeys, and writes the session into the SDK. A plugin reads identity and permissions. It never signs a user in itself:
-
-```ts
-import { usePlatform } from '@morscherlab/mint-sdk'
-
-const platform = usePlatform()
-const canEdit = platform.can('use')
-const canConfigure = platform.can('configure')
-```
-
-`can(access)` answers the plugin access levels `use`, `configure`, and `admin`, the same levels as the `access` option of Python endpoints, jobs, and pages. For a platform permission, use the helpers of `@morscherlab/mint-sdk/permissions` with `useAuthStore().userInfo`. Hiding a button is only presentation; protect its endpoint on the backend too.
+When an administrator disables authentication on the platform (see [`devMode`](/admin/configuration#devmode)), the page gets no `user`, also when the browser holds a session cookie. The plugin backend gets no identity either. A page that shows the viewer name from `usePlatform().user` then shows no name.
 
 ## Select, load, edit, and save an experiment
 
@@ -72,7 +56,9 @@ async def save_design(self, experiment_id: int, body: DesignBody) -> None:
     await self.design.save(experiment_id, body)
 ```
 
-`DesignRepository.save()` also takes a keyword-only `expected_version`. The save then fails with `VersionConflictException` (HTTP 412) when the experiment changed since you read it. Without it, the last write wins. The frontend:
+`DesignRepository.save()` also takes a keyword-only `expected_version`. With it, the save fails with `VersionConflictException` (HTTP 412) when the experiment changed after you read it. Without it, the last write wins.
+
+The frontend:
 
 ```vue
 <script setup lang="ts">
@@ -149,33 +135,50 @@ async function save(data: Record<string, unknown>): Promise<void> {
 </template>
 ```
 
-The example initializes a blank form only when the resolved experiment record says `has_design_data: false`; it does not reinterpret every failed load as an empty design. `request.run()` rethrows after it records the error, so the watcher catches and keeps the form closed. The watcher discards late responses when selection changes. Show success only after `save` resolves.
+How the example works:
 
-The platform integration script owns the `experiment_id` URL parameter in a platform page: the experiment store takes it when the page loads, and a selection or a detach writes it back. Plugin router navigations keep the parameter. Do not write your own route sync, such as a `watch` on `experimentIdFromRoute(route.query)` that calls `selectById()`, or a `router.replace` that writes `experimentId`: the platform reads `experiment_id` only. Standalone plugins have no script and no URL sync. To bind to an experiment known only by id in a standalone page, call `await selection.selectById(id)`. It fetches the real record, exposes `isResolving`/`error`, and returns `null` on failure or when a newer selection supersedes it. `selection.clear()` detaches the experiment.
+- It shows an empty form only when the experiment record says `has_design_data: false`. A failed load does not become an empty design.
+- `request.run()` records the error and throws it again. The watcher catches it and keeps the form closed.
+- The watcher ignores a late response after the selection changes.
+- Show success only after `save` resolves.
 
-For a form on a versioned entity, [`useVersionedSave`](/sdk/frontend/composables#useversionedsave) adds `If-Match`, the conflict dialog, and the stale-form banner.
+### Experiment in the URL
 
-For standard top-bar UI, set `experiment: true` in the `PluginWorkspaceView` spec; it creates the `useAppExperiment()` binding. Set `save: { handler, disabled, reason }` for the save callback; `disabled` and `reason` take a ref or a getter. Use the store in child pages rather than creating another `useAppExperiment()` shell.
+In a platform page, the platform integration script owns the `experiment_id` URL parameter. The experiment store reads it when the page loads. A selection or a detach writes it back. Plugin router navigations keep the parameter. `useArtifacts()`, `ArtifactSaveDialog`, `GeneratedPathInput` and the `experimentId` path parameter of generated clients read the store, not the URL.
 
-For multiple independently managed outputs, call your plugin endpoint and persist [analysis artifacts](/sdk/recipes/writing-results) on the backend. Neither browser state nor an expiring job result replaces durable storage.
+Do not write your own route sync. For example, do not `watch` `experimentIdFromRoute(route.query)` to call `selectById()`, and do not write `experimentId` with `router.replace`. The platform reads only `experiment_id`.
+
+A standalone plugin has no integration script and no URL sync. To bind to an experiment by id in a standalone page, call `await selection.selectById(id)`. It fetches the record and exposes `isResolving` and `error`. It returns `null` on failure, or when a newer selection replaces it. `selection.clear()` detaches the experiment.
+
+### Top bar, versions and outputs
+
+- For the standard top-bar UI, set `experiment: true` in the `PluginWorkspaceView` spec. It creates the `useAppExperiment()` binding. In child pages, use the store; do not create another `useAppExperiment()` shell.
+- Set `save: { handler, disabled, reason }` in the spec for the save callback. `disabled` and `reason` take a ref or a getter.
+- For a form on a versioned entity, [`useVersionedSave`](/sdk/frontend/composables#useversionedsave) adds `If-Match`, the conflict dialog and the stale-form banner.
+- For several outputs that change independently, save [analysis artifacts](/sdk/recipes/writing-results) on the backend. Browser state and an expiring job result are not durable storage.
 
 ## Browse server files
 
-`FilePicker` with `usePlatformFilePickerAdapter()` (both from `@morscherlab/mint-sdk/data`) browses configured **read-only server mounts**. The selection contains mount-relative references; the picker does not upload or copy files. The platform needs configured mounts and the user needs `filesystem.browse`. See [Adapter-driven FilePicker](#adapter-driven-filepicker) below for the example. `useFileBrowser()` and the `FileSelection` / `ServerMount` types remain for custom server-file UIs.
+`FilePicker` with `usePlatformFilePickerAdapter()` (both from `@morscherlab/mint-sdk/data`) browses the read-only server mounts. The selection holds mount-relative references. The picker does not upload or copy files. The administrator must configure the mounts, and the user needs `filesystem.browse`; see [Server file browser](/admin/platform-settings#server-file-browser). For a custom server-file UI, use `useFileBrowser()` and the `FileSelection` and `ServerMount` types.
 
-Send selected `{ mount_id, path }` references to a plugin endpoint only after defining that endpoint's input model. On the server, resolve paths through the platform filesystem service and validate access; never concatenate an unchecked browser path onto a server directory. `FileUploader` instead returns browser `File[]` for a local-file workflow.
+Send the selected `{ mount_id, path }` references to a plugin endpoint that has an input model for them. On the server, resolve each path through the platform filesystem service and check access. Never join an unchecked browser path to a server directory. For local files, use `FileUploader`: it returns browser `File[]`.
 
 ### Listing cache and refresh
 
-The platform reuses a server-side `FileBrowser` while mount configuration is unchanged. Its default cache retains metadata for up to 300 seconds and 128 directories; each request still resolves the path and checks the directory signature before reuse. After a listing, the server reads up to 32 of the newest subfolders in the background so the next folder opens from the cache. This is metadata caching, not a local copy of the files.
+The platform keeps one server-side `FileBrowser` while the mount configuration does not change. It caches file metadata, not the files.
 
-The picker's refresh action (and `useFileBrowser().refresh()` in a custom UI) sends `refresh=true` for the current location and invalidates cached listings for that mount, including descendants. Listing responses are capped at 2,000 entries by default; a custom `useFileBrowser()` UI should display `truncated` and counts instead of claiming the visible rows are a complete directory inventory. Its `typeRules` classify matching entries rather than hiding other files. The helper cancels superseded requests and starts at a reachable mount when the preferred mount is offline.
+- The default cache keeps metadata for up to 300 seconds and 128 directories. Each request still resolves the path and checks the directory signature before it uses the cache.
+- After a listing, the server reads up to 32 of the newest subfolders in the background. The next folder then opens from the cache.
+- The refresh action of the picker, and `useFileBrowser().refresh()` in a custom UI, send `refresh=true` for the current location. The server then clears the cached listings of that mount, subfolders included.
+- A listing has at most 2,000 entries by default. A custom `useFileBrowser()` UI must show `truncated` and the counts. Do not show the visible rows as the full directory.
+- `typeRules` of `useFileBrowser()` classify matching entries. They do not hide other files.
+- `useFileBrowser()` cancels replaced requests. When the preferred mount is offline, it starts at a mount that it can reach.
 
-Cache size, TTL, and entry limits are Python `FileBrowser` settings; they are not `useFileBrowser()` options. See the [release filesystem implementation](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/filesystem.py) if you own a standalone file browser service.
+Cache size, TTL and entry limits are settings of the Python `FileBrowser`, not `useFileBrowser()` options. If you own a standalone file browser service, see the [release filesystem implementation](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/filesystem.py).
 
 ### Adapter-driven FilePicker
 
-Use `FilePicker` for folder navigation, metadata preview, recursive search, and reviewing resolved file selections. Its open binding is `v-model:open`, its result event is `select`, and it accepts a `PickerAdapter`. The platform adapter lists the mounts as header sources next to Local files.
+Use `FilePicker` for folder navigation, metadata preview, recursive search and a review of the selected files. It binds `v-model:open`, emits `select` with the result and takes a `PickerAdapter`. The platform adapter shows the mounts as sources next to Local files.
 
 ```vue
 <script setup lang="ts">
@@ -215,22 +218,29 @@ function select(selection: PickerSelection): void {
 </template>
 ```
 
-The platform adapter uses opaque picker identities, not filesystem paths. Decode each selected server file with `decodePlatformPickerPath()` before submitting its mount-relative reference. For local selections, `selection.source === 'localFile'` instead yields browser `File[]` with optional `relativePaths`; the picker does not read or upload their bytes.
+- The platform adapter uses opaque picker identities, not file paths. Decode each selected server file with `decodePlatformPickerPath()` before you send its mount-relative reference.
+- A local selection (`selection.source === 'localFile'`) gives browser `File[]` with optional `relativePaths`. The picker does not read or upload the bytes.
+- `usePlatformFilePickerAdapter({ rootLocation: { mount_id, path } })` starts in one directory and blocks navigation above it.
+- `systemFilter` and `capabilities` control what the UI shows and lets the user select. They do not replace backend access checks, file-size checks or path resolution.
 
-`usePlatformFilePickerAdapter({ rootLocation: { mount_id, path } })` can start inside one directory and prevent navigating above it. For a plugin-owned file API, use `createFilePickerAdapter(transport, options)` with `listMounts(request?)` and `browse(location, request?)` transport methods that return `ServerMount[]` and `FileDirectoryListing`, and optionally `tree(location, request?)` and `search(location, query, recursive, request?)`. Forward `request.signal` and `request.refresh` to your generated endpoint calls; the adapter already implements mount identity, navigation, and search.
+For the prefetch, refresh and truncation behavior of the picker, see [FilePicker → Adapter and selection boundaries](/sdk/components/file-picker#adapter-and-selection-boundaries). Search limits: with a `search` transport, the server searches up to 5,000 folders, 1,000 matches or 10 seconds. Without it, the adapter walks the folders and stops at 500 folders or 10,000 matches. A search that reaches a limit returns the matches found so far, and the picker says so.
 
-The backend side of such an API is `mint_sdk.filesystem.file_browser_router(get_browser)`, the same routes the platform serves at `/api/filesystem`: `GET mounts`, `browse`, `tree` (up to three levels in one request) and `search` (server-side name search). Build the `FileBrowser` over the plugin's own directories; `allow_directory` refuses any directory a listing, tree, search or `resolve_picker_path()` would open (HTTP 403), and `hide_unmatched_files`, `files_at_root` and `allow_hidden` fix what the listing may show. `FileBrowser.resolve_picker_path(identity)` turns a selected picker path into the server path for a job. `useFilePicker` itself is internal, not the public extension point.
+### Plugin-owned file API
 
-The picker warms at most 20 immediate folders with two requests at a time and reuses in-flight reads during navigation. Closing, changing source, and refreshing invalidate pending/cached adapter state; reopening re-reads the current location. This bounded prefetch is not a full-tree index. With a `search` transport the server searches (5,000 folders, 1,000 matches, 10 seconds); without it the adapter walks folders itself and stops at 500 folders or 10,000 matches. Either way, a search that reaches a limit returns the matches found so far and the picker says so. Unlike a raw `useFileBrowser()` listing, the adapter rejects a truncated server listing so a partial inventory cannot be confirmed as a complete selection.
+1. On the backend, mount `mint_sdk.filesystem.file_browser_router(get_browser)`. It serves the same routes as the platform at `/api/filesystem`: `GET mounts`, `browse`, `tree` (up to three levels in one request) and `search` (name search on the server).
+2. Build the `FileBrowser` over the plugin's own directories. `allow_directory` refuses (HTTP 403) each directory that a listing, tree, search or `resolve_picker_path()` would open. `hide_unmatched_files`, `files_at_root` and `allow_hidden` set what a listing shows.
+3. In a job, call `FileBrowser.resolve_picker_path(identity)` to get the server path of a selected picker path.
+4. On the frontend, call `createFilePickerAdapter(transport, options)`. The transport has `listMounts(request?)` and `browse(location, request?)`, which return `ServerMount[]` and `FileDirectoryListing`. `tree(location, request?)` and `search(location, query, recursive, request?)` are optional.
+5. Forward `request.signal` and `request.refresh` to the generated endpoint calls. The adapter supplies mount identity, navigation and search.
 
-`systemFilter` and `capabilities` guide visibility/selection in the UI. They never replace backend access checks, file-size validation, or path resolution.
+`useFilePicker` is internal. Do not use it as an extension point.
 
 ## Verify both execution modes
 
-1. Run `mint dev` and verify calculations and explicit missing-platform states in the standalone workspace.
-2. Run `mint dev --platform` for the platform-shell development flow. Verify authentication, API routing, selector filtering, and theme changes; a dev proxy does not by itself turn the plugin backend into an installed platform plugin.
-3. Build with `mint build .`, install on a local/test platform, and verify real platform persistence, permissions, reload, and selection of a second experiment.
-4. Test a failed load and denied save. Existing results must not disappear or be replaced by an empty design after a failed request.
+1. Run `mint dev`. In the standalone workspace, check the calculations and the states without a platform.
+2. Run `mint dev --platform`. Check authentication, API routing, selector filters and theme changes. The dev proxy does not make the plugin backend an installed platform plugin.
+3. Build with `mint build .` and install the bundle on a test platform. Check persistence, permissions, reload and the selection of a second experiment.
+4. Make a load fail and a save be refused. Existing results must stay, and an empty design must not replace them.
 
 ## Release source
 

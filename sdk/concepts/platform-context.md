@@ -1,12 +1,12 @@
 # PlatformContext
 
-An integrated plugin gets one long-lived `PlatformContext` on `self.context`. Use its namespaces for experiments, design data, artifacts, users, instruments, objects, files and the plugin database. User identity is resolved separately for each request; never store the current user on the plugin instance.
+An integrated plugin gets one long-lived `PlatformContext` on `self.context`. Use its namespaces for experiments, design data, artifacts, users, instruments, objects, files and the plugin database. The platform resolves the user identity for each request. Never store the current user on the plugin instance.
 
-## Choose the right integration boundary
+## Choose the integration boundary
 
 See [Isolation](/sdk/concepts/isolation#runtime-comparison) for the context, platform data and SQL-table access of each runtime.
 
-`self.context` is never `None`. Without the platform it is a `StandaloneContext`: a platform-only call raises `UnavailableException` (HTTP 503), and `objects()` and `db()` use local storage. Use `self.is_standalone` to branch. An isolated plugin is still **integrated**. Do not construct a `RemotePlatformContext` or forge forwarded user headers in application code. The platform host establishes its trusted binding and checks the internal API version at startup.
+`self.context` is never `None`. Without the platform, it is a `StandaloneContext`: a platform-only call raises `UnavailableException` (HTTP 503), and `objects()` and `db()` use local storage. Use `self.is_standalone` to branch. An isolated plugin is also integrated. Do not construct a `RemotePlatformContext` or forge forwarded user headers in application code. The platform host sets up the trusted binding and checks the internal API version at startup.
 
 ```python
 from mint_sdk import Plugin
@@ -14,15 +14,14 @@ from mint_sdk import Plugin
 
 class MyPlugin(Plugin):
     async def initialize(self) -> None:
-        # The host attached self.context before this call.
         self.service = make_service(self.context, standalone=self.is_standalone)
 ```
 
-`initialize()` takes no argument and is optional when no extra resources are needed.
+The host attaches `self.context` before it calls `initialize()`. `initialize()` takes no argument. Override it only when the plugin needs extra resources.
 
 ## Request-scoped access
 
-Use `CurrentExperiment` to resolve a route's `experiment_id`, and `CurrentActor` for the trusted caller:
+Use `CurrentExperiment` to resolve the `experiment_id` of a route, and `CurrentActor` for the trusted caller:
 
 ```python
 from mint_sdk import CurrentActor, CurrentExperiment, Metadata, Plugin, endpoint, plugin
@@ -48,20 +47,20 @@ class PeakQcPlugin(Plugin):
         }
 ```
 
-`CurrentExperiment` checks `experiments.view` (403), resolves the actor-visible, type-compatible experiment, and returns 404 when the scoped lookup cannot see it. It returns 503 without the platform. This avoids treating missing platform integration as an empty successful response.
+`CurrentExperiment` checks `experiments.view` (403). It resolves an experiment that the actor can see and whose type the plugin supports, and returns 404 when the scoped lookup cannot see it. Without the platform it returns 503, so a missing integration never looks like an empty successful response.
 
 ## What the platform enforces
 
 Access is the intersection of these rules:
 
-1. **Plugin write policy**: `Metadata.writes`. See [Plugin types](/sdk/concepts/plugin-types#_2-declare-what-the-plugin-writes).
-2. **Experiment compatibility**: the plugin's `experiment_types` plus any tighter platform/admin restriction. `context.experiment_types` is `None` when unrestricted; an empty set blocks all types.
-3. **Actor visibility**: deployment visibility settings, project membership, experiment ownership/collaboration, and platform administrator access.
-4. **Data ownership**: writes use the calling plugin's ID. A plugin cannot overwrite another plugin's design or artifacts.
-5. **Declared readers**: cross-plugin reads (artifacts, exports, bus events, tool and job calls) require exact IDs in `reads_from`. See [Plugin communication](/sdk/concepts/plugin-communication).
-6. **Access level**: the `access` of the endpoint, job, tool or page (`use`, `configure`, `admin`). A role with only `plugins.use` reaches `use` routes.
+1. Plugin write policy: `Metadata.writes`. See [Plugin types](/sdk/concepts/plugin-types#_2-declare-what-the-plugin-writes).
+2. Experiment compatibility: the `experiment_types` of the plugin, plus a tighter platform or admin restriction. `context.experiment_types` is `None` when there is no restriction; an empty set blocks all types.
+3. Actor visibility: the visibility settings of the deployment, project membership, experiment ownership and collaboration, and administrator access.
+4. Data ownership: writes use the ID of the calling plugin. A plugin cannot overwrite the design or artifacts of another plugin.
+5. Declared readers: cross-plugin reads (artifacts, exports, bus events, tool and job calls) need exact IDs in `reads_from`. See [Plugin communication](/sdk/concepts/plugin-communication).
+6. Access level: the `access` of the endpoint, job, tool or page (`use`, `configure`, `admin`). A role with only `plugins.use` reaches `use` routes.
 
-These rules also apply over isolated-plugin internal HTTP. Even `{"experiments", "design", "artifacts"}` receives scoped access. A plugin that creates an experiment makes the calling user its creator, as for one created in the UI; a call without a user creates an experiment without an owner. See [Route permissions](/sdk/recipes/route-permissions).
+These rules also apply over the internal HTTP of an isolated plugin. A `{"experiments", "design", "artifacts"}` plugin also gets scoped access only. When a plugin creates an experiment, the calling user becomes its creator, as in the UI. A call without a user creates an experiment without an owner. See [Route permissions](/sdk/recipes/route-permissions).
 
 ## Context services
 
@@ -71,8 +70,8 @@ These rules also apply over isolated-plugin internal HTTP. Even `{"experiments",
 | `context.design` | The design data of this plugin: `get`, `save`, `delete` |
 | `context.artifacts` | JSON and file artifacts of this plugin: `get`, `list`, `save`, `save_all`, `download`, `archive`, `restore` |
 | `context.users` | Read user records: `get(id)`, `get(username=)`, `list()` |
-| `context.instruments` | Shared platform instrument directory; reads need `instruments.view`, writes `instruments.edit`; `report` sends live status; bookings stay in the plugin |
-| `context.objects(experiment_id, *, plugin=None)` | Experiment/plugin-scoped object storage |
+| `context.instruments` | Shared platform instrument directory. Reads need `instruments.view`, writes need `instruments.edit`. `report` sends live status. Bookings stay in the plugin |
+| `context.objects(experiment_id, *, plugin=None)` | Object storage scoped to an experiment and a plugin |
 | `context.files` | Read-only access to configured server mounts |
 | `context.db()` | In-process SQL session for declared plugin-owned tables |
 | `context.experiment_types` | Effective type restrictions |
@@ -83,19 +82,15 @@ The caller, the job visibility and the service-token identity are handler parame
 
 ## Persistence and standalone behavior
 
-`self.design` and `self.artifacts` are shortcuts to `context.design` and `context.artifacts`. They write for this plugin only. Without the platform, a call raises `UnavailableException`; it does **not** persist to standalone SQLite. Use local tables or files for deliberate standalone persistence (`context.db()` and `context.objects()` use local storage), or require platform integration at the route boundary.
+`self.design` and `self.artifacts` are shortcuts to `context.design` and `context.artifacts`. They write for this plugin only. Without the platform, a call raises `UnavailableException`; it does not write to standalone SQLite. For standalone persistence, use local tables or files (`context.db()` and `context.objects()` use local storage), or require the platform at the route boundary.
 
-```python
-await self.artifacts.save(experiment.id, {"peaks": rows}, "peaks")          # replaces by default
-await self.artifacts.save(experiment.id, report_path, "report")             # a Path uploads a file
-await self.artifacts.save(experiment.id, rows_json, "peaks", replace=False)  # ConflictException if present
-```
+To save, replace and upload artifacts, see [Writing results](/sdk/recipes/writing-results).
 
-`context.db()` cannot provide shared tables in isolated (subprocess) mode.
+`context.db()` cannot give shared tables in an isolated subprocess.
 
 ## Cross-plugin readers
 
-Declare exact, case-sensitive producing plugin IDs:
+Declare the exact, case-sensitive IDs of the producing plugins:
 
 ```python
 class DashboardMeta(Metadata):
@@ -116,12 +111,6 @@ class DashboardPlugin(Plugin):
         ]
 ```
 
-`others=True` includes the calling plugin and declared readers only. It does not grant write access. Archived artifacts are restricted to the owning plugin; do not combine `others=True` and `archived=True`. No plugin can replace the artifact of another plugin. `writes_to` only opens the object store of the named plugin with `context.objects(experiment_id, plugin=...)`, create-only.
+`others=True` includes the calling plugin and the declared readers only. It does not give write access. Only the owning plugin sees its archived artifacts, so do not combine `others=True` and `archived=True`. No plugin can replace the artifact of another plugin. `writes_to` only opens the object store of the named plugin with `context.objects(experiment_id, plugin=...)`, and only to create objects.
 
-## Source and next steps
-
-Verified against [v@MINT_VERSION@ context](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/context.py), [remote context](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/remote/context.py), and [platform scope enforcement](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/services/scoped_experiment_repository.py).
-
-- [Reading and managing experiments](/sdk/recipes/reading-experiments)
-- [Writing results and files](/sdk/recipes/writing-results)
-- [Plugin-owned tables](/sdk/recipes/querying-plugin-data)
+Verified against [v@MINT_VERSION@ context](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/context.py), [remote context](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/remote/context.py) and [platform scope enforcement](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/services/scoped_experiment_repository.py).

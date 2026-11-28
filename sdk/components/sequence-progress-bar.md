@@ -1,14 +1,14 @@
 ---
 aside: false
 title: SequenceProgressBar
-description: "SequenceProgressBar is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Progress of an LC-MS or GC-MS acquisition sequence, with ETA and remaining time."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # SequenceProgressBar
 
-SequenceProgressBar is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `SequenceProgressBar` to show how far an instrument sequence has run, with the time left and the failed injections.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

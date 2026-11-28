@@ -1,14 +1,14 @@
 ---
 aside: false
 title: InstrumentStateBadge
-description: "InstrumentStateBadge is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Status badge for instrument states, including the platform states never and inactive."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # InstrumentStateBadge
 
-InstrumentStateBadge is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `InstrumentStateBadge` to show the state of an instrument as a colored badge.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,7 +25,7 @@ import { InstrumentStateBadge } from "@morscherlab/mint-sdk/lab"
 
 ## States
 
-The `state` prop takes an `InstrumentBadgeState`: the `InstrumentState` values plus `never` and `inactive`. Other strings render as a muted badge with a capitalized label.
+The `state` prop takes an `InstrumentBadgeState`: the `InstrumentState` values plus `never` and `inactive`. Another string shows as a muted badge with a capitalized label.
 
 | State | Label | Tone |
 |-------|-------|------|
@@ -38,7 +38,7 @@ The `state` prop takes an `InstrumentBadgeState`: the `InstrumentState` values p
 | `never` | Never reported | muted |
 | `inactive` | Inactive | muted |
 
-`never` and `inactive` are states that the platform derives. `never` means the instrument has sent no report yet. `label` replaces the default label. `pulseWhenRunning` (default `true`) pulses the badge in the `running` state.
+The platform derives `never` and `inactive`. `never` means that the instrument has sent no report yet. `label` replaces the default label. `pulseWhenRunning` (default `true`) pulses the badge in the `running` state.
 
 <!-- sdk-props:start -->
 ## Props

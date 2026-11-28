@@ -1,14 +1,14 @@
 ---
 aside: false
 title: NumberInput
-description: "NumberInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Number input with steppers, an optional unit, and drag-to-scrub between min and max."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # NumberInput
 
-NumberInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `NumberInput` to enter a number, with an optional unit or unit menu.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,15 +25,11 @@ import { NumberInput } from "@morscherlab/mint-sdk"
 
 ## Interaction
 
-Increment/decrement buttons are always visible. Supplying both `min` and `max`
-adds an in-field range fill that can be dragged to scrub the value. The field
-has one Tab stop, the number input, which takes the label of the field as its
-name. Arrow keys and PageUp/PageDown adjust values. Home and End move the caret.
-Clearing the input emits `undefined`.
-
-With `lazy`, the input writes the value on change (blur, Enter, a stepper or
-arrow key, the end of a drag), as `v-model.lazy`. Use it for a field that saves
-to the server.
+- The stepper buttons always show, with or without bounds.
+- The field has one Tab stop, the number input. It takes the label of the field as its name.
+- Arrow Up and Down change the value by `step`. Page Up and Page Down change it by ten steps. Home and End move the caret.
+- Clearing the input emits `undefined`, so include `undefined` in your model type.
+- With `lazy`, the input writes the value on change (blur, Enter, a stepper or arrow key, the end of a drag), like `v-model.lazy`. Use it for a field that saves to the server.
 
 ## Bounded values and scrubbing
 
@@ -53,9 +49,7 @@ const tolerance = ref<number | undefined>(5)
 </template>
 ```
 
-With both `min` and `max`, the input displays a range fill and supports dragging on the range surface. Dragging the number adjusts relative to its initial value, while ordinary clicks and double-clicks still support text editing. Steppers remain visible with or without bounds.
-
-Arrow Up/Down adjust by `step`; Page Up/Down adjust by ten steps. Home/End move the caret. Clearing the input emits `undefined`, so include it in your model type. Keep `step` positive and validate submitted values on the backend.
+With both `min` and `max`, the field shows a range fill. A drag on the range changes the value from its start value. A click or a double-click still edits the text. Keep `step` positive, and validate the submitted value on the backend.
 
 <!-- sdk-props:start -->
 ## Props

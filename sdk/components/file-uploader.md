@@ -8,7 +8,7 @@ description: "Drag-and-drop file picker with accept, size, multiple, and error h
 
 # FileUploader
 
-Drag-and-drop file picker with accept, size, multiple, and error handling.
+Use `FileUploader` to let the user drop or pick files. It checks the file type and size.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

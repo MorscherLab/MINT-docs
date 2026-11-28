@@ -8,7 +8,7 @@ description: "Dialog for a save refused with a 412 version conflict; reload or o
 
 # VersionConflictDialog
 
-Dialog for a save refused with a 412 version conflict; reload or overwrite.
+Use `VersionConflictDialog` when the server refuses a save with a 412 version conflict. The user reloads or overwrites.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,11 +23,13 @@ Dialog for a save refused with a 412 version conflict; reload or overwrite.
 import { VersionConflictDialog } from "@morscherlab/mint-sdk/data"
 ```
 
-The footer shows **Overwrite** at the far left in error ink, then **Keep editing** and the primary **Reload and discard mine** at the right. **Keep editing** emits `update:open` with `false`, as the close button does.
-
 ## Usage
 
-Show the dialog while `useVersionedSave().conflict` is set. Reload discards the edits and refetches. Overwrite saves the edits on top of the newer version.
+Show the dialog while `useVersionedSave().conflict` is set.
+
+- Reload and discard mine (the primary button) discards the edits and loads the data again.
+- Overwrite (far left, in error color) saves the edits on top of the newer version.
+- Keep editing emits `update:open` with `false`, as the close button does.
 
 <!-- sdk-props:start -->
 ## Props

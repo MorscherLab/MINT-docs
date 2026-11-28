@@ -1,14 +1,14 @@
 ---
 aside: false
 title: SegmentedControl
-description: "SegmentedControl is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Segmented button group for one choice."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # SegmentedControl
 
-SegmentedControl is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `SegmentedControl` to choose one option from a few, shown as joined buttons.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,8 +25,7 @@ import { SegmentedControl } from "@morscherlab/mint-sdk"
 
 ## Sizing
 
-The card variant sizes to its content. Add `full-width` when the choice control
-should fill its container. An option's `color` renders a small swatch before its label.
+The card variant sizes to its content. Add `full-width` to fill the container. The `color` of an option shows a small swatch before its label.
 
 ```vue
 <SegmentedControl v-model="mode" :options="modes" variant="card" full-width />
@@ -34,7 +33,7 @@ should fill its container. An option's `color` renders a small swatch before its
 
 ## Icons
 
-An option's `icon` (SVG path data, as in `BaseTabs`) shows before its label. With `iconOnly`, the segment shows only the icon, and the option label becomes its `aria-label` and `title`. An option without an icon keeps its visible label.
+The `icon` of an option (SVG path data, as in `BaseTabs`) shows before its label. With `iconOnly`, the segment shows only the icon, and the label becomes its `aria-label` and `title`. An option without an icon keeps its label.
 
 ```vue
 <SegmentedControl v-model="layout" :options="layouts" variant="card" size="sm" icon-only />

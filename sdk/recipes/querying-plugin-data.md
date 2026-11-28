@@ -1,6 +1,6 @@
 # Querying plugin-owned tables
 
-Use `context.db()` for your plugin-owned SQLModel tables. Declare the current models in `Metadata.database = MigrationSpec(..., models=...)` and let startup apply revisions before opening a session. This recipe uses the owner-scoped `Panel` model from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables).
+Use `context.db()` for the SQLModel tables that your plugin owns. Declare the current models in `Metadata.database = MigrationSpec(..., models=...)`; startup applies the revisions before a session opens. This recipe uses the `Panel` model from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables).
 
 ## Read within a scoped session
 
@@ -23,11 +23,11 @@ async def recent_panels(self, actor: CurrentActor) -> list[PanelOutput]:
         return [PanelOutput.model_validate(panel) for panel in result.scalars()]
 ```
 
-The session is an SQLAlchemy `AsyncSession`: use `await session.execute(...)`, then `result.scalars()` for ORM rows. Do not assume the SQLModel synchronous `session.exec()` convenience method is available.
+- The session is an SQLAlchemy `AsyncSession`. Use `await session.execute(...)`, then `result.scalars()` for ORM rows. Do not rely on the SQLModel `session.exec()` method.
+- An integrated PostgreSQL session sets the search path to the plugin schema. A standalone session uses SQLite.
+- `context.db()` needs an in-process plugin. In an isolated subprocess, it raises `UnavailableException`. See [Runtime isolation](/sdk/concepts/isolation).
 
-PostgreSQL integrated sessions set the plugin schema search path. Standalone sessions use SQLite. An installed isolated subprocess has no shared database session (`context.db()` raises `UnavailableException`), so this capability requires in-process deployment.
-
-Schema scoping is table ownership, not user authorization. The platform cannot infer ownership rules for arbitrary rows. Filter every read/update/delete by the trusted actor or an explicitly authorized experiment. `Metadata.auth = True` authenticates the caller; it does not add SQL predicates. Build response objects while the session is open to avoid detached objects or lazy-loading surprises.
+The schema scopes the tables to the plugin. It does not authorize users, and the platform does not know who owns a row. Filter every read, update and delete by the trusted actor or an authorized experiment. `Metadata.auth = True` authenticates the caller; it adds no SQL filter. Build the response objects while the session is open, so that no object is detached or lazy-loaded later.
 
 ## Insert, replace JSON, and commit
 
@@ -42,9 +42,11 @@ async with self.context.db() as session:
 return result
 ```
 
-Both standalone and in-process session context managers commit on successful exit and roll back on exception. Use `flush()` to send writes and surface constraint errors before producing the response; use `refresh()` when you need server-generated values. Explicit `commit()` is possible, but commits earlier: a later exception cannot undo work already committed.
-
-For a batch, use one context and `session.add_all(panels)`. Let exceptions propagate out of the context if the batch must roll back. Catch and translate expected database errors **outside** the context; otherwise the context may attempt to commit a failed transaction.
+- The session context commits on a successful exit and rolls back on an exception, standalone and in-process.
+- Use `flush()` to send the writes and get constraint errors before you build the response. Use `refresh()` to read server-generated values.
+- An explicit `commit()` commits earlier. A later exception cannot undo it.
+- For a batch, use one context and `session.add_all(panels)`. To roll back the batch, let the exception leave the context.
+- Catch and translate expected database errors outside the context. Inside it, the context can try to commit a failed transaction.
 
 For JSON columns, assign a replacement value:
 
@@ -52,11 +54,11 @@ For JSON columns, assign a replacement value:
 panel.drugs = body.model_dump(mode="json")["drugs"]
 ```
 
-In-place changes such as `panel.drugs.append(...)` are not automatically tracked by a plain SQLAlchemy JSON column. Use replacement assignment, or explicitly configure/test SQLAlchemy mutable tracking when the application needs it.
+A plain SQLAlchemy JSON column does not track in-place changes such as `panel.drugs.append(...)`. Assign a new value, or configure and test SQLAlchemy mutable tracking.
 
 ## Parameterized raw SQL
 
-Inside an ordinary plugin session, unqualified `panels` resolves through the scoped PostgreSQL search path. Bind user-controlled values:
+In a plugin session, an unqualified `panels` resolves through the scoped PostgreSQL search path. Bind the values that users control:
 
 ```python
 import sqlalchemy as sa
@@ -69,7 +71,7 @@ async with self.context.db() as session:
     rows = [dict(row) for row in result.mappings()]
 ```
 
-Migration code must not rely on the application session search path: Alembic revisions receive `schema` and should use schema-bound SQLAlchemy tables. Do not interpolate user input into table names, column names, sort clauses, or SQL values.
+Migration code must not rely on the session search path. Alembic revisions get `schema`; use schema-bound SQLAlchemy tables there. Never put user input into table names, column names, sort clauses or SQL values.
 
 ## Aggregation and indexes
 
@@ -83,20 +85,25 @@ async with self.context.db() as session:
     panel_count = int(result.scalar_one())
 ```
 
-Use indexes that match actual filters. The tutorial declares `owner_user_id` as indexed in both the model and initial migration. If you add a composite index later, add it to current model metadata as well as the next migration so explicit model checks agree with migration-created fresh databases. Validate the PostgreSQL query plan when optimizing production queries.
-
-Generic `sa.JSON` is useful for portable storage, but JSON containment semantics are not portable. Do not assume `.contains(...)` on that column becomes PostgreSQL `JSONB @>` or works identically on SQLite. For frequent drug-name lookup, consider a normalized child table with an indexed drug-name column. If using PostgreSQL-specific JSONB operators, declare the type deliberately and test the SQLite alternative separately.
+- Index the columns that you filter on. The tutorial indexes `owner_user_id` in the model and in the initial migration.
+- When you add a composite index, add it to the model and to the next migration. Model checks then agree with fresh databases that the migrations create.
+- Check the PostgreSQL query plan when you tune production queries.
+- `sa.JSON` stores portably, but JSON containment does not behave the same everywhere. Do not expect `.contains(...)` on that column to become PostgreSQL `JSONB @>` or to work the same on SQLite.
+- For frequent lookups by drug name, use a child table with an indexed drug-name column. To use JSONB operators, declare the JSONB type and test the SQLite path separately.
 
 ## Relating rows to platform experiments
 
-An `experiment_id` field alone proves nothing about access. Use `CurrentExperiment` on an endpoint with an `{experiment_id}` path parameter, then filter the plugin rows by that resolved experiment ID. It checks view permission and resolves the experiment through the visible/type-scoped repository. Mutating endpoints need the corresponding explicit user permission or `access` level as well as the plugin's allowed write capability.
+An `experiment_id` field alone proves nothing about access. Use [`CurrentExperiment`](/sdk/concepts/platform-context#request-scoped-access) on an endpoint with an `{experiment_id}` path parameter. Then filter the plugin rows by that experiment ID. A write endpoint also needs the matching user permission or `access` level, and the write capability of the plugin.
 
-MINT does not automatically cascade platform experiment deletion into arbitrary plugin tables. Decide whether to retain an audit record, react to the `experiment.deleted` event (`@on("experiment.deleted")`), or delete related rows through an explicit cleanup workflow. Avoid direct cross-schema writes to platform tables.
+MINT does not delete plugin rows when an experiment is deleted. Choose one: keep an audit record, handle `@on("experiment.deleted")`, or delete the rows in an explicit cleanup. Do not write to platform tables across schemas.
 
 ## Sharing with other plugins
 
-Do not query another plugin's SQL schema. Publish supported design data, analysis results/artifacts, or an authorized API contract. Cross-plugin analysis reads require an explicit `reads_from` allowlist on the consuming plugin; published results are not unconditionally visible to all plugins or users.
+Do not query the SQL schema of another plugin. Publish design data, artifacts or an authorized API instead. A plugin reads the results of another plugin only when it names that plugin in `reads_from`.
 
-Use `artifacts.get(experiment_id, "summary", plugin="producer-id")` through the SDK for allowed analysis-result reads, and `context.objects(experiment_id, plugin="producer-id")` for referenced data. Platform services enforce the permitted producer identity and experiment access. See [PlatformContext](/sdk/concepts/platform-context) and [Data model](/sdk/concepts/data-model).
+- Read an allowed result with `artifacts.get(experiment_id, "summary", plugin="producer-id")`.
+- Read referenced files with `context.objects(experiment_id, plugin="producer-id")`.
 
-Use [Migrations](/sdk/concepts/migrations) for schema evolution and [Backfill migrations](/sdk/recipes/backfill-migration) for historical row updates.
+The platform checks the producer and the experiment access. See [Cross-plugin readers](/sdk/concepts/platform-context#cross-plugin-readers).
+
+For schema changes, see [Migrations](/sdk/concepts/migrations) and [Backfill migrations](/sdk/recipes/backfill-migration).

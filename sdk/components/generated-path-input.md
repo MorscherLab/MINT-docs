@@ -8,10 +8,10 @@ description: "File/folder path picker for backend-declared job inputs in generat
 
 # GeneratedPathInput
 
-File/folder path picker for backend-declared job inputs in generated plugin UIs.
+`GeneratedPathInput` is the file or folder field of a job input in a generated plugin UI.
 
-::: info Generated UI (internal)
-This component renders a piece of the SDK's backend-driven **generated UI** system (`@generated_ui` / job manifests). Plugin authors typically don't place it directly; it is composed automatically inside `GeneratedPluginView`. Documented here for completeness and for authors customizing generated-UI rendering.
+::: info Generated UI
+[GeneratedPluginView](/sdk/components/generated-plugin-view) places this component for you. Use it directly only to change how a generated UI renders.
 :::
 
 <div class="mint-component-reference__actions">

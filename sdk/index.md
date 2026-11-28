@@ -1,51 +1,12 @@
 # Plugin Development Guide
 
-Build plugins for **MINT @MINT_VERSION@**: start with an installable scaffold, choose its
-data permissions, connect it to experiments, add storage and a frontend, then
-test and version the bundle. The examples in this track are checked against
-the released `v@MINT_VERSION@` source.
+This track shows how to build, test and ship a plugin for MINT @MINT_VERSION@. The examples are checked against the released `v@MINT_VERSION@` source.
 
 ## Install the toolchain
 
-Run one command. It installs uv, Python 3.14, the `mint` CLI and Vite+ for the
-current user.
+Run the install script from [Install the toolchain](/sdk/install). It installs uv, Python 3.14, the `mint` CLI and Vite+.
 
-::: code-group
-
-```bash [macOS, Linux, WSL]
-curl -fsSL https://mint-docs.morscherlab.org/install.sh | bash
-```
-
-```powershell [Windows PowerShell]
-irm https://mint-docs.morscherlab.org/install.ps1 | iex
-```
-
-:::
-
-Open a new terminal afterwards. For the options and a manual install, see
-[Install the toolchain](/sdk/install).
-
-## What to learn
-
-| Your goal | Start here | What you will implement |
-|---|---|---|
-| Create different plugin types | [Type guide](/sdk/concepts/plugin-types), [type and workflow tutorial](/sdk/tutorials/plugin-types-workflow) | Analysis, design, workflow, static and full plugins; `Metadata.writes` |
-| Create a Python-only analysis tool | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | Typed job inputs, generated UI, result output and tests |
-| Read/write platform data | [PlatformContext](/sdk/concepts/platform-context), [result recipe](/sdk/recipes/writing-results) | Visible experiments, design ownership, artifacts, files, settings, events and access levels |
-| Create your own SQL tables | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | SQLModel models, scoped sessions, CRUD and fresh/upgrade migration paths |
-| Version and upgrade a plugin | [Versioning](/sdk/operations/versioning), [upgrading the SDK](/sdk/operations/upgrading) | Git tags, SDK compatibility, design formats, SQL revisions and rollback planning |
-| Use the CLI through deployment | [CLI reference](/sdk/api/cli-reference), [deployment](/sdk/operations/deploying) | Scaffold, generate, diagnose, build, verify and install |
-| Build a custom frontend | [Frontend tutorial](/sdk/tutorials/adding-a-frontend), [platform integration](/sdk/frontend/platform-integration) | Vue 3, typed clients, experiment selection, authentication, forms, files and charts |
-
-### The baseline
-
-Without the installer, install only the CLI yourself with Python 3.14+:
-
-```bash
-uv tool install 'mint-sdk[cli]==@MINT_VERSION@'
-```
-
-Then scaffold a plugin, check it and run it:
+## Create a first plugin
 
 <Terminal title="~/plugins — zsh" :lines="[
   '$ mint init my-plugin --mode generated --yes',
@@ -67,93 +28,45 @@ Then scaffold a plugin, check it and run it:
   'Press Ctrl+C to stop.',
 ]" />
 
-`mint init` supplies `mint-sdk[cli,server]` in the generated project's dev
-dependencies. Run `uv sync` and use `uv run mint` inside that project. The
-plain `mint-sdk` dependency is for the runtime library; see [CLI setup](/sdk/api/cli-reference#install-and-choose-the-environment).
+`mint init` adds `mint-sdk[cli,server]` to the dev dependencies of the new project. Inside the project, run `uv sync`, then use `uv run mint`. The plain `mint-sdk` dependency is the runtime library; see [CLI setup](/sdk/api/cli-reference#install-and-choose-the-environment).
 
-Standard plugins also need the Vite+ CLI `vp` 1.5.1 or later for the
-scaffolded Vue frontend: the `mint` CLI runs every frontend command through
-`vp`, and new frontends use pnpm. Platform
-integration needs a configured MINT server; MINT requires PostgreSQL.
-Standalone plugin SQLite is still available for local development.
+A plugin has three separate choices: the UI mode, the plugin type and the runtime. Start with `generated` mode for a Python-only first plugin. See [Plugin types](/sdk/concepts/plugin-types) for the modes and types, and [Isolation](/sdk/concepts/isolation) for the runtimes.
 
-Three choices are independent: **UI mode** (`generated` or `standard`),
-**plugin type** (data-access defaults), and **runtime** (in-process, subprocess,
-external or Docker). In v@MINT_VERSION@, generated mode supports analysis plugins only;
-choose standard mode for design, workflow, static or full plugins.
+A standard plugin also needs the Vite+ CLI `vp` 1.5.1 or later. The `mint` CLI runs every frontend command through `vp`, and new frontends use pnpm. Local development uses a standalone SQLite database. Platform integration needs a configured MINT server.
 
-This track follows the released @MINT_VERSION@ API. A plugin declares itself with a `Metadata` subclass and `@plugin`, and declares its tables with `Metadata.database` ([Alembic migrations](/sdk/concepts/migrations)); `mint db current` inspects development
-databases and `mint add migration` authors revisions without applying them. A plugin built for SDK 1.3 or earlier does not load on a 1.4 platform: see the [migration guide](/sdk/operations/migrate-1.3-to-1.4). Plugins declare `mint-sdk>=<floor>,<2.0`; the plugin SDK contract has no breaking change within 1.x, and `mint init` sets the floor to the release it pins. See the [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md)
-and [platform changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md)
-for the release history.
+## Learn the platform
 
-## Choose your starting mode
+- Follow the [tutorials](/sdk/tutorials/) in order for a first plugin.
+- Read the [concepts](/sdk/concepts/) before you design data access or tables.
+- Use the [recipes](/sdk/recipes/) for one task at a time.
+- Use the [frontend guide](/sdk/frontend/) for components, composables and tokens.
+- Use [operations](/sdk/operations/) to package, publish, deploy and version a plugin.
+- Use the [API reference](/sdk/api/) for exact signatures.
 
-`mint init` has two first-class modes. Start with the one that matches the UI
-you need today; both produce installable `.mint` bundles.
+New to MINT itself? Read [Install directly](/admin/install-direct), the [experiment data model](/guide/data-model) and [Plugins](/admin/plugins) first.
 
-| Mode | Use it when | What you write |
-|------|-------------|----------------|
-| `generated` | You need a standard parameter form, job runner, and result display | Python only: `Metadata` with `ui = "generated"`, `@plugin`, `@job` |
-| `standard` | You need custom interaction, custom layout, or rich Vue pages | Python `@endpoint` handlers plus a Vue 3 workspace using `@morscherlab/mint-sdk` |
-
-Default to `generated` for a first plugin. Move to `standard` when the user
-experience cannot be described by typed job inputs and standard result views.
-
-## Core Path
-
-| Step | Page | Outcome |
-|------|------|---------|
-| 1 | [First analysis plugin](/sdk/tutorials/first-analysis-plugin) | Scaffold `hello-mint` in `generated` mode, run a `@job`, test it with `Harness`, and build a `.mint` bundle |
-| 2 | [Adding a frontend](/sdk/tutorials/adding-a-frontend) | Scaffold `hello-standard` in `standard` mode, call `@endpoint` handlers through the generated client, and render an SDK form |
-| 3 | [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) | Build an experiment-design plugin with SQLModel tables, CRUD routes, and migrations |
-| 4 | [Access levels](/sdk/tutorials/access-levels) | Tag endpoints and pages with `use` / `configure` / `admin` access levels and enforce them in the backend |
-| 5 | [Types and workflow plugin](/sdk/tutorials/plugin-types-workflow) | Create a workflow that manages experiments without taking design ownership |
-| 6 | [Analyze an experiment](/sdk/tutorials/analyze-an-experiment) | Read a visible experiment's design, compute a summary, and save it as a named analysis artifact |
-
-The tutorials are written so you can follow them in order without reading the full API reference first. Each step links to the concept page or recipe you need at that moment.
-
-## Daily Development Loop
+## Daily development loop
 
 | Task | Command |
 |------|---------|
-| Scaffold | `mint init my-plugin --mode generated --yes` or `mint init my-plugin --mode standard --yes` |
+| Scaffold | `mint init my-plugin --mode generated --yes` or `--mode standard` |
 | Run locally | `mint dev` |
-| Inspect SDK APIs | `mint docs python`, `mint docs frontend components`, `mint docs contract` |
-| Regenerate frontend client | `mint sdk generate` |
-| Validate project | `mint doctor --strict` |
+| Look up SDK APIs | `mint docs python`, `mint docs frontend components`, `mint docs contract` |
+| Regenerate the frontend client | `mint sdk generate` |
+| Check the project | `mint doctor --strict` |
 | Lint (design rules, ruff, oxlint) | `mint lint` |
 | Package | `mint build` |
-| Verify real install path | `mint verify` |
+| Test the real install path | `mint verify` |
 | Deploy to a test platform | `mint deploy --url http://127.0.0.1:18020` |
-| Upgrade a 1.5 plugin | `mint migrate`, then see [Migrate from 1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6) |
-| Upgrade a 1.4 plugin | `mint doctor`, then see [Migrate from 1.4 to 1.5](/sdk/operations/migrate-1.4-to-1.5) |
-| Upgrade a 1.3 plugin | `mint doctor --fix`, then see the [migration guide](/sdk/operations/migrate-1.3-to-1.4) |
 
+The [CLI reference](/sdk/api/cli-reference) has every command and flag.
 
+## Upgrade a plugin
 
-## Mental Model Before Coding
+A plugin declares `mint-sdk>=<floor>,<2.0`; see [Versioning](/sdk/operations/versioning#declare-compatibility-deliberately). To move a plugin to a newer SDK, follow the matching guide:
 
-| Concept | Read when |
-|---------|-----------|
-| [Plugin types](/sdk/concepts/plugin-types) | You need to choose `Metadata.writes` and a plugin type (static, analysis, design, workflow, or full) |
-| [Plugin lifecycle](/sdk/concepts/lifecycle) | You need to know what happens during install, initialize, upgrade, and uninstall |
-| [PlatformContext](/sdk/concepts/platform-context) | Your plugin needs experiments, users, project data, settings, access levels, or plugin-owned storage |
-| [Migrations](/sdk/concepts/migrations) | Your plugin owns tables or needs production-safe schema changes |
+- From 1.5: run `mint migrate`, then follow [Migrate from 1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6).
+- From 1.4: run `mint doctor`, then follow [Migrate from 1.4 to 1.5](/sdk/operations/migrate-1.4-to-1.5).
+- From 1.3 or earlier: run `mint doctor --fix`, then follow [Migrate from 1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4). A plugin built for SDK 1.3 or earlier does not load on a 1.4 platform.
 
-## What to use after the first plugin works
-
-| Need | Section |
-|------|---------|
-| A copy-paste pattern for one task | [Recipes](/sdk/recipes/) |
-| Frontend components, composables, tokens, or FormBuilder | [Frontend](/sdk/frontend/) |
-| Packaging, publishing, CI, deployment, versioning | [Operations](/sdk/operations/) |
-| Exact Python, frontend, migration, client, or CLI signatures | [API Reference](/sdk/api/) |
-
-## Platform path
-
-New to the platform itself? Read these first, then come back here:
-
-1. [Deploy MINT](/admin/install-direct)
-2. [Experiment data model](/guide/data-model)
-3. [Plugin system](/admin/plugins)
+The release history is in the [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md) and the [platform changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md).

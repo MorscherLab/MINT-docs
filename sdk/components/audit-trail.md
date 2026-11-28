@@ -1,14 +1,14 @@
 ---
 aside: false
 title: AuditTrail
-description: "AuditTrail is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Filterable, sortable timeline of audit entries."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # AuditTrail
 
-AuditTrail is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `AuditTrail` to show the change history of an experiment or a resource as a filterable timeline.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

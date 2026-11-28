@@ -1,14 +1,14 @@
 ---
 aside: false
 title: PluginIcon
-description: "PluginIcon is a layout component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Plugin icon as a sized chip, from MINT icon JSON, SVG path data or an image URL."
 ---
 
 <p class="mint-component-library__eyebrow">Layout</p>
 
 # PluginIcon
 
-PluginIcon is a layout component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `PluginIcon` to show the icon of a plugin. It reads MINT icon JSON, SVG path data, a raster data URL, or an `https://` or root-relative image URL. It refuses `http://`, protocol-relative and `data:image/svg+xml` URLs and shows the MINT placeholder icon instead.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

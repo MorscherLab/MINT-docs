@@ -1,6 +1,6 @@
 # Plugin communication
 
-A plugin can work with other plugins in four ways. The platform checks each one. No plugin reads the SQL tables of another plugin.
+Use this page to let a plugin react to, read from or call other plugins. The platform checks each mechanism. No plugin reads the SQL tables of another plugin.
 
 | Need | Use | Direction |
 |------|-----|-----------|
@@ -9,7 +9,7 @@ A plugin can work with other plugins in four ways. The platform checks each one.
 | Read rows that another plugin owns | [Exports](#exports): `@export`, `context.plugins.read` | Pull, read-only |
 | Run a tool or a job of another plugin | [Calls](#calls-to-tools-and-jobs): `context.plugins.call`, `context.plugins.start_job` | Request |
 
-Do not confuse the event bus with realtime events. A `"realtime"` plugin streams `context.publish` events to the browser (`plugin:<plugin>` topics); see [Python SDK](/sdk/api/python#events-health-and-realtime). The browser stream is not durable and does not reach other plugins. One `context.publish` call can do both, when the event is in `Metadata.emits` and the plugin has the `"realtime"` feature.
+The event bus is not the realtime stream. A `"realtime"` plugin streams `context.publish` events to the browser (`plugin:<plugin>` topics); see [Python SDK](/sdk/api/python#events-health-and-realtime). The browser stream is not durable and does not reach other plugins. One `context.publish` call can do both, when the event is in `Metadata.emits` and the plugin has the `"realtime"` feature.
 
 ## `reads_from` is the gate
 
@@ -118,12 +118,12 @@ To subscribe at run time, call `await self.context.plugins.subscribe(name, handl
 
 ### Delivery rules
 
-- **Targets.** The platform fixes the targets when the event is published: each enabled plugin that declares the event with `@on` (or subscribes at run time), lists the source in `reads_from`, and is not the publisher. For an event with an experiment, the target must also be able to read the experiment (its own experiment-type allowlist). A plugin that subscribes later gets only later events. There is no replay.
-- **At least once.** A plugin can get one event more than once. Make each handler idempotent, for example with `event.id`.
-- **No ordering.** Events can arrive in any order. `id` increases, so compare it when the order matters.
-- **Retries.** A failed delivery is retried after `min(3600, 5 · 2^(n-1))` seconds, where `n` is the failed attempt (5 s, 10 s, 20 s, 40 s). The fifth failure makes the delivery **dead**. A delivery times out after 30 seconds.
-- **Plugin state.** The worker keeps a delivery pending, without an attempt, while the plugin process starts. A delivery to a disabled or uninstalled plugin is skipped. One slow plugin does not hold the deliveries of other plugins.
-- **Handler failure.** From SDK 1.5, the first handler failure fails the delivery, so the platform delivers the event again. A plugin process answers 500 on `/__mint/events`. A plugin on SDK 1.4 logs the failure, and the platform counts the delivery as done.
+- Targets: the platform fixes the targets when the event is published. A target is each enabled plugin that declares the event with `@on` (or subscribes at run time), lists the source in `reads_from`, and is not the publisher. For an event with an experiment, the target must also be able to read the experiment (its own experiment-type allowlist). A plugin that subscribes later gets only later events. There is no replay.
+- At least once: a plugin can get one event more than once. Make each handler idempotent, for example with `event.id`.
+- No ordering: events can arrive in any order. `id` increases, so compare it when the order matters.
+- Retries: a failed delivery is retried after `min(3600, 5 · 2^(n-1))` seconds, where `n` is the failed attempt (5 s, 10 s, 20 s, 40 s). The fifth failure makes the delivery dead. A delivery times out after 30 seconds.
+- Plugin state: the worker keeps a delivery pending, without an attempt, while the plugin process starts. A delivery to a disabled or uninstalled plugin is skipped. One slow plugin does not hold the deliveries of other plugins.
+- Handler failure: from SDK 1.5, the first handler failure fails the delivery, so the platform delivers the event again. A plugin process answers 500 on `/__mint/events`. A plugin on SDK 1.4 logs the failure, and the platform counts the delivery as done.
 
 Administrators see recent and dead deliveries, and retry a dead one, in the [Event deliveries](/admin/plugins#event-deliveries) action of each plugin card in Admin → Plugins → Installed.
 
@@ -142,7 +142,7 @@ The `experiment.created`, `experiment.updated`, `experiment.status_changed`, `ex
 - For the field patches of a [live design](/sdk/recipes/live-design), `experiment.after_save` comes once, 30 s after the last patch of a user, and at least every 5 min while the user keeps editing. A full save sends it at once.
 - `experiment.deleted` carries the last `experiment_code` and `experiment_type`. The row is gone.
 
-`experiment.before_save` does not use the bus. It stays synchronous and can still veto the save. It also runs for each live-design patch: `event.data` is then `{"plugin_id", "data", "ops"}`, where `data` is the whole design with the patch applied. A live design can lack the fields of the schema's root `required` list.
+`experiment.before_save` does not use the bus. It is synchronous and can veto the save; see [Typed events and their limits](/sdk/concepts/lifecycle#typed-events-and-their-limits). It also runs for each live-design patch. `event.data` is then `{"plugin_id", "data", "ops"}`, where `data` is the whole design with the patch applied. A live design can lack the fields of the root `required` list of the schema.
 
 ## Exports
 

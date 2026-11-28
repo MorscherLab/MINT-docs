@@ -1,14 +1,14 @@
 ---
 aside: false
 title: Divider
-description: "Divider is a layout component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Horizontal or vertical rule with an optional label."
 ---
 
 <p class="mint-component-library__eyebrow">Layout</p>
 
 # Divider
 
-Divider is a layout component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `Divider` to separate two blocks of content, with an optional label.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

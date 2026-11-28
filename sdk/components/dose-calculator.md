@@ -1,14 +1,14 @@
 ---
 aside: false
 title: DoseCalculator
-description: "DoseCalculator is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Calculator for single dilution, serial dilution and unit conversion."
 ---
 
 <p class="mint-component-library__eyebrow">Lab widgets</p>
 
 # DoseCalculator
 
-DoseCalculator is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `DoseCalculator` to calculate a dilution, a serial dilution or a unit conversion. It can apply the result to the selected plate wells (`apply-to-wells`).
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,7 +23,7 @@ DoseCalculator is a lab widgets component exported by @morscherlab/mint-sdk for 
 import { DoseCalculator } from "@morscherlab/mint-sdk/lab"
 ```
 
-The component has no border, radius or background of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. In the card it runs to the card edges.
+The component has no frame of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card).
 
 <!-- sdk-props:start -->
 ## Props

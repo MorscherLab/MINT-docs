@@ -1,6 +1,6 @@
 # Error codes
 
-Every error answer of the MINT API has the same envelope. Scripts and clients read the `code` field to find the cause of a refusal. This page lists the codes of the platform routes.
+This page lists the error codes of the MINT platform routes. All error answers have the same envelope. Scripts read the `code` field to find the cause.
 
 ## The error envelope
 
@@ -52,9 +52,7 @@ A route that does not give a specific code answers with the generic code of its 
 
 A request body that fails the request model gets 422 `validation.request`, with the failed fields in `details`.
 
-::: warning Clients from before MINT 1.6
-Before MINT 1.6, most of the refusals below had the generic code of their status. The HTTP status did not change. A script that compares `code` with a generic code, such as `resource.not_found`, must use the specific code or the HTTP status. See [Upgrading from MINT 1.5](/admin/updates#upgrading-from-mint-1-5).
-:::
+A script written for MINT 1.5 or earlier can expect a generic code where MINT now sends a specific one. See [Upgrading from MINT 1.5](/admin/updates#upgrading-from-mint-1-5).
 
 ## Codes by area
 
@@ -266,8 +264,4 @@ The plugin settings routes (`/api/plugins/{name}/config`) answer each error with
 
 Six refusals have a `detail` object without a `code`: `plugin.dependency_conflict`, `update.pairing_required`, `update.dependency_conflict`, `plugin_settings.expected_grant_required`, `plugin_settings.invalid_if_match` and `plugin_settings.patch_required`. For these refusals, `message` holds the text of `detail.message`. Read the other fields of `detail` for the data, for example the pairing plan of `update.pairing_required`.
 
-## Related
-
-- [Exceptions reference](/sdk/api/exceptions) — the SDK exceptions and their codes
-- [Troubleshooting](/reference/troubleshooting) — common problems and fixes
-- Source: [`api/exceptions.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/exceptions.py)
+Source: [`api/exceptions.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/exceptions.py).

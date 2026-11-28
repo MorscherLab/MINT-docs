@@ -1,13 +1,18 @@
 # Configuration
 
-MINT reads configuration from four sources, in increasing order of precedence:
+This page lists the `config.json` keys and the environment variables of the MINT platform.
 
-1. **Built-in defaults** — used when no other source overrides them.
-2. **`config.json`** — `MINT_CONFIG_PATH` wins when set; otherwise, when `MINT_SERVER__DATA_PATH` is set, MINT uses `<MINT_SERVER__DATA_PATH>/config.json` if that file exists or if `./config.json` does not; otherwise it uses `./config.json`.
-3. **`.env`** — `dotenv`-style key/value pairs in the working directory.
-4. **Environment variables** — keys prefixed `MINT_`, with nested fields joined by `__` (e.g., `MINT_DATABASE__HOST=postgres`).
+MINT reads configuration from four sources. A later source overrides an earlier one:
 
-For most installations, editing `config.json` is the only configuration step. Use `MINT_CONFIG_PATH` when the config file lives outside the working directory or data path. Environment variables are useful for containerized deployments where a config file is awkward.
+1. Built-in defaults.
+2. `config.json`. MINT finds the file in this order:
+   - `MINT_CONFIG_PATH`, when it is set.
+   - `<MINT_SERVER__DATA_PATH>/config.json`, when `MINT_SERVER__DATA_PATH` is set and that file exists or `./config.json` does not exist.
+   - `./config.json`.
+3. `.env`: `dotenv` key/value pairs in the working directory.
+4. Environment variables: the prefix `MINT_`, with nested fields joined by `__` (for example `MINT_DATABASE__HOST=postgres`).
+
+Most installations edit only `config.json`. Use environment variables for containers.
 
 ## Top-level schema
 
@@ -49,7 +54,7 @@ For most installations, editing `config.json` is the only configuration step. Us
 }
 ```
 
-The full schema is defined in [`api/config/models.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/config/models.py) using Pydantic — that file is the authoritative reference. The summary below covers the keys most installations touch.
+The Pydantic models in [`api/config/models.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/config/models.py) define the full schema. The sections below cover the keys that most installations change.
 
 ## `devMode`
 
@@ -57,33 +62,33 @@ The full schema is defined in [`api/config/models.py`](https://github.com/Morsch
 { "devMode": false }
 ```
 
-When `true`:
+When `devMode` is `true`:
 
-- Authentication is bypassed on every route; anyone hitting the URL is treated as admin
-- Passkey login is disabled
-- The configured PostgreSQL connection is kept; if `DB_USERNAME` / `DB_PASSWORD` are unset, dev mode falls back to `mint` / `mint`
+- MINT does not check authentication on any route. Every visitor is an administrator.
+- Passkey login is off.
+- MINT keeps the configured PostgreSQL connection. If `DB_USERNAME` and `DB_PASSWORD` are not set, dev mode uses `mint` / `mint`.
 
-Only users with the `admin` role can turn dev mode on through **Admin -> System -> Configuration**; `platform.configure` alone is refused.
+`auth.enableAuth: false` also turns sign-in off and makes every visitor an administrator. Only users with the `admin` role can set either value in **Admin -> System -> Configuration** or the admin config API. `platform.configure` alone is not sufficient.
 
 ::: warning Never expose dev mode
-Dev mode is for local development and evaluation only. Never enable it on a host reachable from the network.
+Use dev mode only for local development and evaluation. Never enable it on a host that the network can reach.
 :::
 
 ## `server`
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `dataPath` | `./data` | Runtime state directory |
+| `dataPath` | `./data` | Runtime state directory. See [Storage path layout](#storage-path-layout) |
 | `instanceId` | generated if empty | Durable deployment namespace for public identifiers |
-| `rpId` | `""` | WebAuthn relying-party ID |
+| `rpId` | `""` | WebAuthn relying-party ID. See [Sign in with a passkey](/admin/authentication#sign-in-with-a-passkey) |
 | `rpName` | `MINT` | WebAuthn relying-party display name |
-| `externalUrl` | `""` | Public platform URL, used for frontend/plugin context, to decide whether auth cookies are `Secure`, and as the only non-local host `/mcp` accepts. Plugin `platformOrigin` and the OAuth URLs use only its origin (scheme, host and non-default port); a path in the value is ignored |
-| `trustedProxyCidrs` | `["127.0.0.1/32", "::1/128"]` | Proxy source networks trusted for `X-Forwarded-For` / `X-Forwarded-Host` / `X-Forwarded-Proto`. An explicit `[]` trusts no proxy |
-| `healthReadyToken` | `""` | Bearer token that lets a monitor read `GET /api/health/ready` without a user login; empty means only users with `platform.view_logs` can read it |
+| `externalUrl` | `""` | Public platform URL. MINT uses only its origin (scheme, host and a non-default port) and ignores a path. See [Public URL](/admin/reverse-proxy#public-url) |
+| `trustedProxyCidrs` | `["127.0.0.1/32", "::1/128"]` | Proxy networks whose `X-Forwarded-*` headers MINT trusts. `[]` trusts no proxy. See [Trusted proxies](/admin/reverse-proxy#trusted-proxies) |
+| `healthReadyToken` | `""` | Bearer token that lets a monitor read `GET /api/health/ready` without a user. Empty: only users with `platform.view_logs` can read it |
 
-The port that MINT binds is not a `config.json` key. `mint-platform serve`, `dev`, `daemon` and `python -m api.main` set `MINT_LISTEN_PORT` (default `8001`) to the port they bind, and MINT passes it to plugin processes so they find the platform. A bare `uvicorn --port` launch must set it. The platform must run as one worker; see [Install directly](/admin/install-direct#run-as-a-systemd-service).
+The port that MINT binds is not a `config.json` key. `mint-platform serve`, `dev`, `daemon` and `python -m api.main` set `MINT_LISTEN_PORT` (default `8001`) to the port that they bind. MINT gives it to plugin processes, so that they find the platform. A bare `uvicorn --port` launch must set it. The platform must run as one worker; see [Install directly](/admin/install-direct#run-as-a-systemd-service).
 
-The `apiMountPath` key was removed; the API is always mounted at `/api`. An old `config.json` that still has it starts with a one-time warning.
+The API is always mounted at `/api`. A `config.json` that still has the removed `apiMountPath` key starts with a one-time warning.
 
 ## `database`
 
@@ -93,7 +98,7 @@ The `apiMountPath` key was removed; the API is always mounted at `/api`. An old 
 | `port` | `5432` | PostgreSQL port |
 | `databaseName` | `mint_db` | PostgreSQL database name |
 
-PostgreSQL is the only MINT platform database. SQLite remains available only to plugins running standalone through the SDK's local-db support.
+The credentials are top-level keys, not keys in `database`: `DB_USERNAME` and `DB_PASSWORD` (env `MINT_DB_USERNAME` and `MINT_DB_PASSWORD`). MINT supports only PostgreSQL; see [Requirements](/admin/install-direct#requirements).
 
 ```json
 {
@@ -107,13 +112,9 @@ PostgreSQL is the only MINT platform database. SQLite remains available only to 
 }
 ```
 
-PostgreSQL credentials are top-level settings named `DB_USERNAME` and `DB_PASSWORD` in `config.json` (or `MINT_DB_USERNAME` / `MINT_DB_PASSWORD` in the environment), not nested under `database`.
-
 ## `storage`
 
-MINT can keep experiment objects on local disk, S3-compatible storage, or
-OpenStack Swift. Local storage is the default and uses `server.dataPath` unless
-`storage.objects.localPath` is set.
+MINT keeps experiment objects on local disk (the default), S3-compatible storage, or OpenStack Swift. Local storage uses `server.dataPath`, unless `storage.objects.localPath` is set.
 
 ```json
 {
@@ -139,65 +140,41 @@ OpenStack Swift. Local storage is the default and uses `server.dataPath` unless
 }
 ```
 
-Set `storage.objects.backend` to `s3` or `swift` only after the matching
-backend section is configured. Secrets may be supplied through environment
-aliases such as `MINT_S3_ACCESS_KEY_ID`, `MINT_S3_SECRET_ACCESS_KEY`,
-`MINT_SWIFT_PASSWORD`, or the nested `MINT_STORAGE__...` names.
+Set `storage.objects.backend` to `s3` or `swift` only after you configure that section. Give secrets through environment variables, such as `MINT_S3_ACCESS_KEY_ID`, `MINT_S3_SECRET_ACCESS_KEY`, `MINT_SWIFT_PASSWORD`, or the nested `MINT_STORAGE__...` names.
 
 ## `auth`
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `enableAuth` | `true` | Require authentication |
+| `enableAuth` | `true` | Require authentication. See [`devMode`](#devmode) |
 | `enablePasskey` | `true` | Enable WebAuthn registration and login |
-| `allowRegistration` | `true` | Allow self-registration on `/register` |
-| `jwtSecretKey` | auto-generated if empty | Secret used to sign JWTs |
-| `tokenExpireMinutes` | `10080` (7 days) | Token lifetime; the admin UI accepts 15–43200 |
-| `failedLoginLimit` | `5` | Failed password logins before the account is locked |
-| `loginLockoutMinutes` | `15` | Lockout duration |
-| `enableTotp` | `false` | Offer a code from an authenticator app (TOTP) as a second factor. It needs no HTTPS, so it also enforces the second factor on a plain-HTTP site. Changing it needs a restart; see [Authenticator app](/admin/authentication#authenticator-app-totp) |
-| `requireSecondFactor` | `true` | Require a second step (a passkey or an authenticator code) after a password or edu-ID sign-in. Enforced only with auth on, dev mode off and at least one method on the site: passkeys with an `https://` `server.externalUrl`, or `enableTotp`; see [Second factor](/admin/authentication#second-factor) |
-| `patMaxLifetimeDays` | `365` | Longest lifetime a [personal access token](/admin/authentication#personal-access-tokens) may be issued for: `30`, `90` or `365` |
-
-See [Security settings](#security-settings) for how these behave.
+| `allowRegistration` | `true` | Allow self-registration on `/register`. See [Accounts and registration](/admin/authentication#accounts-and-registration) |
+| `jwtSecretKey` | generated if empty | Secret that signs JWTs |
+| `tokenExpireMinutes` | `10080` (7 days) | Token lifetime. The admin UI accepts 15–43200 |
+| `failedLoginLimit` | `5` | Failed password logins before MINT locks the account |
+| `loginLockoutMinutes` | `15` | Lockout length |
+| `enableTotp` | `false` | Offer an authenticator app (TOTP) as a second factor. Needs a restart. See [Authenticator app](/admin/authentication#authenticator-app-totp) |
+| `requireSecondFactor` | `true` | Require a second step after a password or edu-ID sign-in. See [Second factor](/admin/authentication#second-factor) for when MINT enforces it |
+| `patMaxLifetimeDays` | `365` | Maximum lifetime of a [personal access token](/admin/authentication#personal-access-tokens): `30`, `90` or `365` |
 
 ## Security settings
 
-- **Self-registration.** With `auth.allowRegistration: false`, `POST /api/users/register` returns 403 and the `/register` page sends visitors to `/login`. Switch it under **Admin -> System -> Configuration -> Authentication -> Registration**, in `config.json`, or with `MINT_AUTH__ALLOW_REGISTRATION=false`.
-- **Passwords.** Every password (registration, self-service change, admin create, update and reset) must be at least 8 characters and at most 72 bytes when UTF-8 encoded. Other lengths are rejected with 422.
-- **Account lockout.** After `auth.failedLoginLimit` failed password logins, the account is locked for `auth.loginLockoutMinutes`.
-- **Rate limit.** `/api/auth` (passkey routes included), `/api/setup`, `/api/users/register` and `PUT /api/users/me` allow 20 requests per 60 seconds per client IP, then return 429. `/mcp` has its own bucket of 240 per 60 seconds, and `/oauth` one of 60.
-- **Secure cookies.** The `mint_access_token` and `passkey_session` cookies carry `Secure` when `server.externalUrl` starts with `https://`, or, if it is unset, when the request arrived over HTTPS. If `externalUrl` is `https://` but users open MINT over plain HTTP, the browser drops the cookie and login fails.
-- **Trusted proxies.** The client IP (rate limit, audit log), the passkey relying-party host, and the `platformOrigin` injected into plugin frontends come from `X-Forwarded-For` / `X-Forwarded-Host` / `X-Forwarded-Proto` only when the direct peer is in `server.trustedProxyCidrs`. An explicit empty list trusts no proxy. Add your reverse proxy's address when it is not on the same host.
-- **MCP host check.** `/mcp` accepts only requests whose `Host` is `localhost`, `127.0.0.1`, `[::1]` or the host (with port, if any) of `server.externalUrl`; any other host gets 421. Set `externalUrl` to the address AI clients use, make the reverse proxy pass the original `Host` header, and restart MINT after changing `externalUrl`.
-- **Disabling auth.** Only users with the `admin` role can set `auth.enableAuth: false` or `devMode: true` through the admin config API.
-- **Setup password.** When initial setup completes, MINT clears the administrator password stored in `ADMIN_PASSWORD` in `config.json`.
+- **MCP host check.** `/mcp` accepts only a request whose `Host` is `localhost`, `127.0.0.1`, `[::1]` or the host (with port, if any) of `server.externalUrl`. Any other host gets 421. Set `externalUrl` to the address that AI clients use. Make the reverse proxy pass the original `Host` header. Restart MINT after you change `externalUrl`.
+- **Setup password.** When the initial setup completes, MINT clears the administrator password in `ADMIN_PASSWORD` in `config.json`.
+- **Sign-in rules.** For passwords, lockout and rate limits, see [Authentication](/admin/authentication). For `Secure` cookies and trusted proxies, see [Reverse proxy](/admin/reverse-proxy).
 
 ## `filesystem`
 
-Read-only server directories that the file browser may list:
-
-```json
-{
-  "filesystem": {
-    "mounts": [
-      { "id": "raw", "path": "/mnt/instruments/raw", "label": "Raw data" }
-    ],
-    "allowUnauthenticated": false
-  }
-}
-```
+Read-only server directories that the file browser can list. For an example and the behavior, see [Server file browser](/admin/platform-settings#server-file-browser).
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `mounts` | `[]` | Each mount needs a unique `id` and an absolute `path`; `label` defaults to the id. The path is never sent to browsers |
-| `allowUnauthenticated` | `false` | When auth is disabled, browsing stays closed unless this is `true` |
-
-Users also need the `filesystem.browse` permission.
+| `mounts` | `[]` | Each mount has a unique `id` and an absolute `path`. `label` defaults to the id |
+| `allowUnauthenticated` | `false` | When authentication is off, browsing stays closed unless this is `true` |
 
 ## `sso`
 
-Built-in SSO currently covers SWITCH edu-ID through OpenID Connect:
+The built-in SSO is SWITCH edu-ID through OpenID Connect. See [SWITCH edu-ID SSO](/admin/authentication#switch-edu-id-sso).
 
 ```json
 {
@@ -219,58 +196,56 @@ Built-in SSO currently covers SWITCH edu-ID through OpenID Connect:
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `enabled` | `false` | Show **Sign in with SWITCH edu-ID** on the login page |
-| `issuer` | `https://login.eduid.ch/` | OIDC issuer; MINT normalizes the trailing slash |
+| `enabled` | `false` | Show the SWITCH edu-ID button on the login page |
+| `issuer` | `https://login.eduid.ch/` | OIDC issuer. MINT normalizes the trailing slash |
 | `clientId` / `clientSecret` | `""` | edu-ID OIDC client credentials |
-| `scopes` | `openid`, `profile`, `email`, edu-ID userinfo | OIDC scopes; env values may be JSON or comma-separated |
-| `autoProvision` | `true` | Create a MINT user on first successful edu-ID login |
-| `activeByDefault` | `true` | Newly provisioned users are active immediately |
-| `usernameClaim` | `email` | Claim used as the MINT username |
-| `identityClaim` | `swissEduIDUniqueID` | Stable edu-ID identity key stored for future logins |
+| `scopes` | `openid`, `profile`, `email`, edu-ID userinfo | OIDC scopes. An env value can be JSON or comma-separated |
+| `autoProvision` | `true` | Create a MINT user at the first edu-ID login |
+| `activeByDefault` | `true` | A new edu-ID user is active at once |
+| `usernameClaim` | `email` | Claim that becomes the MINT username |
+| `identityClaim` | `swissEduIDUniqueID` | Stable identity key for later logins |
 
-edu-ID SSO stores linked users in the platform's required PostgreSQL database and needs a public `server.externalUrl`, because the callback URL is `<externalUrl>/api/auth/sso/eduid/callback`.
+edu-ID needs a public `server.externalUrl`, because the callback URL is `<externalUrl>/api/auth/sso/eduid/callback`.
 
 ## `plugins`
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `loadFromEntryPoints` | `true` | Discover plugins via the `mint.plugins` entry-point group |
-| `extraIndexUrls` | `[]` | Additional Python package indexes for plugin installs. Changing them needs `plugins.install` |
-| `settings` | `{}` | Centralized per-plugin settings resolved for decorator-declared config and exposed through the plugin settings store |
+| `loadFromEntryPoints` | `true` | Discover plugins through the `mint.plugins` entry-point group |
+| `extraIndexUrls` | `[]` | More Python package indexes for plugin installs. A change needs `plugins.install` |
+| `settings` | `{}` | Per-plugin settings, keyed by plugin name. MINT resolves them for decorator-declared config and the plugin settings store |
 
-MINT does not read a `plugins.plugins` list (config-declared plugins) or a `marketplace.autoUpdatePlugins` key. It drops them when it loads `config.json`, and it logs a warning when they are not empty. Install each plugin as a package with a `mint.plugins` entry point. For automatic plugin updates, use the [scheduled updates](/admin/updates#scheduled-updates).
+MINT does not read `plugins.plugins` (config-declared plugins) or `marketplace.autoUpdatePlugins`. It drops them when it loads `config.json` and logs a warning when they are not empty. Install each plugin as a package with a `mint.plugins` entry point. For automatic plugin updates, use [scheduled updates](/admin/updates#scheduled-updates).
 
 ## `marketplace`
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `registryUrl` | `https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json` | Where to fetch the plugin catalog |
+| `registryUrl` | `https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json` | URL of the plugin catalog |
 | `cacheTtlMinutes` | `60` | Registry cache lifetime |
 
 ## `updates`
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `autoCheckEnabled` | `false` | Enable background update checks |
-| `checkIntervalHours` | `24` | Polling interval in hours; at least `1` |
-| `autoApplyEnabled` | `false` | Install updates daily at `autoApplyTime`; needs a restart supervisor |
-| `autoApplyTime` | `03:00` | Daily run time, server-local `HH:MM` |
-| `autoApplyPlatform` | `true` | Scheduled updates include the platform |
-| `autoApplyPlugins` | `true` | Scheduled updates include plugins |
-| `platformRepo` | `MorscherLab/MINT` | Source of platform releases |
-| `githubToken` | `""` | Optional GitHub API token; also read from `MINT_GITHUB_TOKEN` or `GITHUB_TOKEN` |
-| `includePrereleases` | `false` | Include prereleases when checking GitHub releases |
-| `pluginSources` | `{}` | Per-plugin GitHub release sources |
+For what each setting does, see [Updates](/admin/updates#platform-updates).
 
-See [Updates](/admin/updates) for the wider picture.
+| Key | Type | Default |
+|-----|------|---------|
+| `autoCheckEnabled` | boolean | `false` |
+| `checkIntervalHours` | integer, at least `1` | `24` |
+| `autoApplyEnabled` | boolean | `false` |
+| `autoApplyTime` | `HH:MM`, server-local | `03:00` |
+| `autoApplyPlatform` | boolean | `true` |
+| `autoApplyPlugins` | boolean | `true` |
+| `platformRepo` | `owner/repo` | `MorscherLab/MINT` |
+| `githubToken` | string; also read from `MINT_GITHUB_TOKEN` or `GITHUB_TOKEN` | `""` |
+| `includePrereleases` | boolean | `false` |
+| `pluginSources` | object | `{}` |
 
-Docker startup auto-update is controlled by the container entrypoint environment variable `MINT_UPDATES__AUTO_APPLY_ON_STARTUP`, not by `config.json`, and is separate from `autoApplyEnabled`.
+The Docker startup update is not a `config.json` key. The container environment variable `MINT_UPDATES__AUTO_APPLY_ON_STARTUP` controls it. See [Runtime bundles](/admin/updates#runtime-bundles).
 
 ## `notifications`
 
-Platform-owned notification integrations deliver plugin `@notify` events and
-admin messages. Plugins publish typed events; MINT owns SMTP/webhook delivery,
-retry state, and recipient policy.
+Plugins publish typed events and admin messages. MINT does the delivery, the retries and the recipient policy. Configure the channels in the admin panel; see [Notifications](/admin/platform-settings#notifications).
 
 | Section | Main keys |
 |---------|-----------|
@@ -279,7 +254,7 @@ retry state, and recipient policy.
 | `notifications.slack` | `enabled`, `default`, `channels` |
 | `notifications.apns` | `enabled`, `transport` (`relay` or `direct`), `topic` (default `org.morscherlab.mint`), `relayUrl`, `relayKey`, `teamId`, `keyId`, `privateKey` |
 
-`teams` and `slack` hold named channels. `channels` maps a name (`^[a-z0-9][a-z0-9-]*$`) to `{"webhookUrl": "https://..."}`. `default` names the channel that a message to the bare service reaches. It must name one channel, and it is empty only when there are no channels:
+In `teams` and `slack`, `channels` maps a name (`^[a-z0-9][a-z0-9-]*$`) to `{"webhookUrl": "https://..."}`. `default` names one of the channels. It is empty only when there are no channels.
 
 ```json
 {
@@ -296,9 +271,9 @@ retry state, and recipient policy.
 }
 ```
 
-A config with one legacy `webhookUrl` (or `MINT_NOTIFICATIONS__TEAMS__WEBHOOK_URL`) is read as the channel `default`. Manage the channels in **Admin -> System -> Notifications**, not in the file: the panel stores each URL encrypted. See [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels).
+A config with one `webhookUrl` (or `MINT_NOTIFICATIONS__TEAMS__WEBHOOK_URL`) becomes the channel `default`. Manage channels in **Admin -> System -> Notifications**, not in the file, because the panel encrypts each URL. See [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels).
 
-Only enable an integration when its required host/webhook fields are set. For `apns`, the `relay` transport needs `relayUrl` (HTTPS; a URL with no path gets `/v1/push`) and `relayKey`, and the `direct` transport needs `teamId`, `keyId` and the `.p8` key as `privateKey`. MINT stores the keys encrypted, and the admin API shows only whether they are set. Set them in **Admin -> System -> Configuration -> Notifications -> Apple Push**; see [Push notifications](/admin/platform-settings#push-notifications).
+Enable an integration only after you set its host or webhook fields. Set the Apple Push keys in the admin panel, which encrypts them; see [Push notifications](/admin/platform-settings#push-notifications).
 
 ## `audit`
 
@@ -306,18 +281,18 @@ Only enable an integration when its required host/webhook fields are set. For `a
 |-----|---------|-------------|
 | `retentionDays` | `0` | Days to keep audit events (`0`–`36500`). `0` keeps every event |
 
-With `retentionDays` above 0, a daily job deletes older audit events and records each purge as an `audit.purge` event. Edit it under **Admin -> System -> Configuration -> Audit log**, or set `MINT_AUDIT__RETENTION_DAYS`.
+With `retentionDays` above 0, a daily job deletes older events and records each purge as `audit.purge`. Edit it in **Admin -> System -> Configuration -> Audit log**, or set `MINT_AUDIT__RETENTION_DAYS`.
 
 ## `instruments`
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `historyRetentionDays` | `0` | Days to keep rows of the instrument status history (`0`–`36500`). `0` keeps every row |
+| `historyRetentionDays` | `0` | Days to keep instrument status history rows (`0`–`36500`). `0` keeps every row |
 | `alertWindowHours` | `72` | Hours that an unacknowledged critical alert keeps an instrument critical (`0`–`87600`). `0` turns the window off |
 
-With `historyRetentionDays` above 0, a daily job deletes older rows and records each purge as an `instrument_history.purge` event. Edit it under **Admin -> System -> Configuration -> Instruments**, or set `MINT_INSTRUMENTS__HISTORY_RETENTION_DAYS`.
+With `historyRetentionDays` above 0, a daily job deletes older rows and records each purge as `instrument_history.purge`. Edit it in **Admin -> System -> Configuration -> Instruments**, or set `MINT_INSTRUMENTS__HISTORY_RETENTION_DAYS`.
 
-The alert window limits how long an old alert counts. The platform reads an instrument as critical only while its newest unacknowledged critical alert is inside the window. The reporting plugin sends the time of that alert as `latest_critical_at`; a report without it keeps its critical flag. An old alert that nobody acknowledged then no longer lights the **Instruments** badge for ever. The alerts card on the instrument page lists the alerts of the same window. Set the window with `instruments.alertWindowHours` in `config.json` or `MINT_INSTRUMENTS__ALERT_WINDOW_HOURS`. The panel has no field for it. Value `0` turns the window off, and an unacknowledged critical alert then counts until someone acknowledges it.
+The alert window has no field in the panel. Set `instruments.alertWindowHours` in `config.json` or `MINT_INSTRUMENTS__ALERT_WINDOW_HOURS`. The reporting plugin sends the time of the newest critical alert as `latest_critical_at`. A report without it keeps its critical flag. With `0`, an unacknowledged critical alert counts until someone acknowledges it. For what users see, see [Alerts and the alert window](/guide/instruments#alerts-and-the-alert-window).
 
 ## `libraries`
 
@@ -325,11 +300,11 @@ The alert window limits how long an old alert counts. The platform reads an inst
 |-----|---------|-------------|
 | `path` | empty | Absolute directory of the [library store](/admin/libraries). Empty means `<server.dataPath>/libraries` |
 
-Set `MINT_LIBRARIES__PATH` to change it. A relative path fails when MINT loads the config.
+Set `MINT_LIBRARIES__PATH` to change it. A relative path stops MINT when it loads the config.
 
 ## `jobs`
 
-Limits of the job manager that runs plugin jobs. They apply to in-process, subprocess and Docker plugins. An unset key keeps the SDK default.
+These keys limit the job manager that runs plugin jobs. They apply to in-process, subprocess and Docker plugins. An unset key keeps the SDK default.
 
 | Key | Env var | SDK default |
 |-----|---------|-------------|
@@ -350,7 +325,13 @@ Limits of the job manager that runs plugin jobs. They apply to in-process, subpr
 | `maxResultBytesPerUser` | `MINT_JOB_MAX_RESULT_BYTES_PER_USER` | 2 GiB |
 | `resultTtlHours` | `MINT_JOB_RESULT_TTL_HOURS` | `24` (at most `168`) |
 
-Every value must be above 0. The nested name `MINT_JOBS__CPU_SLOTS` (and so on) wins over the `MINT_JOB_*` name. MINT passes the resolved values to each subprocess and Docker plugin process as `MINT_JOB_*` variables. A value in the `runtime.env` of a Docker runtime wins for that container. `mint-platform serve --cpu-slots N --max-concurrent-per-user N` sets both names, and a flag wins over the environment and `.env`. The size of one object upload is separate: `MINT_MAX_OBJECT_UPLOAD_MB` (default 10240).
+Rules:
+
+- Every value must be above 0.
+- The nested name (for example `MINT_JOBS__CPU_SLOTS`) wins over the `MINT_JOB_*` name.
+- MINT gives the resolved values to each subprocess and Docker plugin process as `MINT_JOB_*` variables. A value in the `runtime.env` of a Docker runtime wins for that container.
+- `mint-platform serve --cpu-slots N --max-concurrent-per-user N` sets both names. A flag wins over the environment and `.env`.
+- The size limit of one object upload is separate: `MINT_MAX_OBJECT_UPLOAD_MB` (default 10240).
 
 ## `realtimeEnabled`
 
@@ -358,43 +339,46 @@ Every value must be above 0. The nested name `MINT_JOBS__CPU_SLOTS` (and so on) 
 { "realtimeEnabled": true }
 ```
 
-The realtime event stream is on by default. Set `MINT_REALTIME_ENABLED=false` or this key to `false` to turn it off. When it is off, `GET /api/events`, `POST /api/presence/activity` and `POST /api/internal/events` do not exist, and the public `features` report `realtime: false`.
+The realtime event stream is on by default. To turn it off, set this key or `MINT_REALTIME_ENABLED` to `false`. Then `GET /api/events`, `POST /api/presence/activity` and `POST /api/internal/events` do not exist, and the public `features` report `realtime: false`.
 
-When it is on, signed-in browsers keep one `text/event-stream` connection to `GET /api/events` (a Bearer credential or the session cookie). The experiment and project views refetch when someone else saves, and the experiment page shows who else is viewing. Plugins with the `realtime` feature can publish their own events. Details:
+When the stream is on, each signed-in browser keeps one `text/event-stream` connection to `GET /api/events`, with a Bearer credential or the session cookie. Experiment and project pages refetch when another user saves, and the experiment page shows who else views it. Plugins with the `realtime` feature can publish their own events.
 
-- One stream subscribes to at most 50 topics (400 `realtime.too_many_topics`). A topic that the user cannot read is dropped without an error.
-- Every 20 seconds the stream checks the account and the topics again. A deactivated account, a revoked token or a topic that the user lost ends the stream, and the client reconnects with the topics it can still read.
+- One stream subscribes to at most 50 topics (400 `realtime.too_many_topics`). MINT drops a topic that the user cannot read, without an error.
+- Every 20 seconds, the stream checks the account and the topics again. A deactivated account, a revoked token or a lost topic ends the stream. The client then connects again with the topics that it can still read.
 - Each stream has a queue of 256 events. A full queue becomes one `resync` event, and the client refetches.
 - An open stream counts as a viewer for 90 seconds after its last ping.
-- The streams and the presence state live in the process memory. This is one more reason to run one worker. `mint-platform serve` stops uvicorn with a 5 second graceful shutdown, because an open stream never ends by itself.
+- Streams and presence live in process memory, so the platform must run as one worker. `mint-platform serve` stops uvicorn with a 5-second graceful shutdown, because an open stream never ends by itself.
+
+For proxy settings, see [Streams and WebSockets](/admin/reverse-proxy#streams-and-websockets).
 
 ## `observability`
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `enabled` | `false` | Enable OpenTelemetry tracing |
-| `serviceName` | `mint-platform` | Service name used in traces |
+| `enabled` | `false` | Enable OpenTelemetry tracing for FastAPI, SQLAlchemy and logging. When `false`, instrumentation does nothing |
+| `serviceName` | `mint-platform` | Service name in traces |
 | `otlpEndpoint` | `http://localhost:4317` | OTLP endpoint URL |
 | `otlpProtocol` | `grpc` | OTLP protocol |
 | `traceSampleRate` | `1.0` | Trace sampling rate |
 
-When `observability.enabled` is `false`, instrumentation is a no-op.
+With tracing on, each HTTP request gets a span with `url.path` and `url.query`. These URLs carry a secret and get no span, metric or log record: calendar feeds, `/api/users/me/push-devices/…`, `/api/auth/device/…` and `/api/auth/sso/…`.
 
-With `observability.enabled`, each HTTP request gets a span with `url.path` and `url.query`. These URLs get no span, metric or log record, because they carry a secret: calendar feeds, `/api/users/me/push-devices/…`, `/api/auth/device/…` and `/api/auth/sso/…`. To exclude more URLs, set `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS` or `OTEL_PYTHON_EXCLUDED_URLS` to comma-separated regular expressions. MINT matches them against `scheme://host/path`. An invalid pattern stops the start. `FASTAPI_OTEL_AUTO_CONFIGURE` has no effect: the `observability` section sets the exporter.
+- To exclude more URLs, set `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS` or `OTEL_PYTHON_EXCLUDED_URLS` to comma-separated regular expressions. MINT matches them against `scheme://host/path`. An invalid pattern stops the start.
+- `FASTAPI_OTEL_AUTO_CONFIGURE` has no effect. The `observability` section sets the exporter.
 
 ## `access`
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `experimentVisibilityMode` | `open` | `open` keeps normal project-level experiment visibility; `restricted` limits experiment lists to creators, collaborators, and experiments in projects the user can access |
+| `experimentVisibilityMode` | `open` | `open`: normal project-level experiment visibility. `restricted`: a user sees only experiments that they created or collaborate on, and experiments in projects that they can access. See [Collaborators](/guide/experiments#collaborators) |
 
 ## `adminTerminalEnabled`
 
-```json
-{ "adminTerminalEnabled": false }
-```
+| Key | Env var | Default |
+|-----|---------|---------|
+| `adminTerminalEnabled` | `MINT_ADMIN_TERMINAL_ENABLED` | `false` |
 
-When enabled, users with `platform.configure` can use **Admin -> System -> Terminal** to open a short-lived shell inside the running MINT container/process and maintain a persisted startup script under `server.dataPath/admin-terminal/startup.sh`. Keep this off by default; it is intended for tightly controlled server administration, not routine plugin use.
+Turns on **Admin -> System -> Terminal** for users with `platform.configure`. Keep it off unless you need server maintenance from the web UI. See [Admin terminal](/reference/permissions#admin-terminal).
 
 ## `corsOrigins`
 
@@ -402,7 +386,7 @@ When enabled, users with `platform.configure` can use **Admin -> System -> Termi
 { "corsOrigins": ["https://mint.example.org"] }
 ```
 
-When empty, production CORS allows no cross-origin browser calls. In dev mode, MINT automatically allows the local frontend/backend origins used by the dev server.
+When the list is empty, MINT allows no cross-origin browser calls in production. In dev mode, MINT allows the local origins of the dev server.
 
 ## `logging` and `errorReporting`
 
@@ -411,11 +395,13 @@ When empty, production CORS allows no cross-origin browser calls. In dev mode, M
 | `logging` | `level`, `fileEnabled`, `filePath`, `maxBytes`, `backupCount` |
 | `errorReporting` | `enabled`, `githubRepo`, `githubToken`, `minLevel`, `cooldownSeconds`, `labels` |
 
+For `errorReporting`, see [Auto-issued bug reports](/admin/updates#auto-issued-bug-reports).
+
 ## Environment variable mapping
 
-Nested keys use `__` (double underscore) as the separator, and `MINT_` as the prefix. Names are case-insensitive. In every section, a key binds in snake_case or in camelCase without separators: `MINT_DATABASE__DATABASE_NAME` and `MINT_DATABASE__DATABASENAME` both set `database.databaseName`. Examples: `MINT_SERVER__DATA_PATH`, `MINT_AUTH__ALLOW_REGISTRATION`, `MINT_UPDATES__PLATFORM_REPO`, `MINT_SSO__EDUID__CLIENT_ID`. The `errorReporting` section's prefix is `MINT_ERROR_REPORTING__`, for example `MINT_ERROR_REPORTING__MIN_LEVEL`. Storage keys accept both forms too. Single-word keys work the same everywhere: `MINT_DATABASE__HOST`, `MINT_SSO__EDUID__ENABLED`.
+Environment variables use the prefix `MINT_` and `__` (double underscore) between nested keys. Names are not case-sensitive. A key binds in snake_case or in camelCase without separators: `MINT_DATABASE__DATABASE_NAME` and `MINT_DATABASE__DATABASENAME` both set `database.databaseName`. The `errorReporting` prefix is `MINT_ERROR_REPORTING__`, for example `MINT_ERROR_REPORTING__MIN_LEVEL`.
 
-An environment variable or a `.env` entry outranks `config.json` also for the aliased keys (for example `MINT_DB_PASSWORD` over `DB_PASSWORD`, `MINT_DEV_MODE` over `devMode`).
+An environment variable or a `.env` entry overrides `config.json`, also for the aliased keys (for example `MINT_DB_PASSWORD` over `DB_PASSWORD`, `MINT_DEV_MODE` over `devMode`).
 
 | Config key | Env var |
 |------------|---------|
@@ -426,10 +412,10 @@ An environment variable or a `.env` entry outranks `config.json` also for the al
 | `auth.allowRegistration` | `MINT_AUTH__ALLOW_REGISTRATION` |
 | `auth.requireSecondFactor` | `MINT_AUTH__REQUIRE_SECOND_FACTOR` |
 | `auth.patMaxLifetimeDays` | `MINT_AUTH__PAT_MAX_LIFETIME_DAYS` |
+| `auth.enableTotp` | `MINT_AUTH__ENABLE_TOTP` |
 | `audit.retentionDays` | `MINT_AUDIT__RETENTION_DAYS` |
 | `instruments.historyRetentionDays` | `MINT_INSTRUMENTS__HISTORY_RETENTION_DAYS` |
 | `instruments.alertWindowHours` | `MINT_INSTRUMENTS__ALERT_WINDOW_HOURS` |
-| `auth.enableTotp` | `MINT_AUTH__ENABLE_TOTP` |
 | `libraries.path` | `MINT_LIBRARIES__PATH` |
 | `jobs.cpuSlots` | `MINT_JOBS__CPU_SLOTS` (or `MINT_JOB_CPU_SLOTS`) |
 | `realtimeEnabled` | `MINT_REALTIME_ENABLED` |
@@ -445,31 +431,26 @@ An environment variable or a `.env` entry outranks `config.json` also for the al
 | `adminTerminalEnabled` | `MINT_ADMIN_TERMINAL_ENABLED` |
 | `DB_USERNAME` / `DB_PASSWORD` | `MINT_DB_USERNAME` / `MINT_DB_PASSWORD` |
 
-Booleans accept `true`/`false`/`1`/`0`. JSON values can be embedded literally.
+Booleans accept `true`, `false`, `1` and `0`. You can write JSON values literally.
 
-MINT reads no `MLD_` names except the `MLD_` JWT-secret aliases, which stay supported because dropping one would sign every user out. Use the `MINT_` names, for example `MINT_CONFIG_PATH`, `MINT_UPDATES__GITHUB_TOKEN` and, for Docker Compose, `MINT_PORT` and `MINT_VERSION`.
+MINT reads no `MLD_` names, except the `MLD_` JWT-secret aliases. See [Coming from MLD?](/reference/faq#coming-from-mld).
 
 ## Storage path layout
 
-The configured `server.dataPath` (default `./data`) holds platform runtime state:
+`server.dataPath` (default `./data`) holds the platform runtime state:
 
-| Subdirectory | Contents |
-|--------------|----------|
-| `objects/` | Local experiment object storage when no external object backend is configured |
-| `plugin_registry.json` | Persistent plugin registry metadata |
+| Path | Contents |
+|------|----------|
+| `objects/` | Local experiment objects, when no external object backend is configured |
+| `plugin_registry.json` | Plugin registry metadata |
 | `marketplace/` | Marketplace registry cache |
 | `plugins/uploads/` | Uploaded `.mint` bundles and extracted install payloads |
-| `plugins/manifest.json` | Restore manifest for dynamically installed plugin bundles |
-| `plugins/locks/` | In-process [plugin dependency lock](/admin/plugins#plugin-dependency-lock): `requirements.in`, `plugins.lock`, `state.json` and `history/`. `state.json` is the install record that startup restores from |
-| `plugins/<plugin>/venv/` | Isolated plugin virtual environments when subprocess isolation is used |
+| `plugins/manifest.json` | Restore manifest for installed plugin bundles |
+| `plugins/locks/` | The [plugin dependency lock](/admin/plugins#plugin-dependency-lock): `requirements.in`, `plugins.lock`, `state.json` and `history/`. Startup restores plugins from `state.json` |
+| `plugins/<plugin>/venv/` | Virtual environment of a subprocess plugin |
 | `plugins/<plugin>/config.json` | Legacy per-plugin settings fallback |
 | `logs/mint.log` | Log file when `logging.fileEnabled` is true (default `logging.filePath`) |
-| `admin-terminal/startup.sh` | Optional startup script managed by **Admin -> System -> Terminal** |
-| `cache/uv/` | Docker only: uv wheel cache (`UV_CACHE_DIR=/app/data/cache/uv`), used to restore plugins from their locks after an image rebuild |
+| `admin-terminal/startup.sh` | Optional startup script of **Admin -> System -> Terminal** |
+| `cache/uv/` | Docker only: uv wheel cache (`UV_CACHE_DIR=/app/data/cache/uv`). MINT restores plugins from it after an image rebuild |
 
-Removing `marketplace/` is safe; it regenerates on demand. Removing `plugins/locks/history/` discards plugin rollback points; do not remove the rest of `plugins/locks/`.
-
-## Next
-
-→ [Install on Linux (direct)](/admin/install-direct) — start the platform with a given config
-→ [Platform commands](/admin/cli) — `mint platform experiment`, `mint platform project`, …
+You can remove `marketplace/`; MINT makes it again when necessary. Removing `plugins/locks/history/` deletes the plugin rollback points. Do not remove the rest of `plugins/locks/`.

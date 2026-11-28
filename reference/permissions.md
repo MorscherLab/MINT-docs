@@ -1,12 +1,6 @@
 # Permissions Reference
 
-MINT's RBAC has three pieces:
-
-1. **27 permissions** in 11 resource families
-2. **3 system roles** (Admin / Member / Viewer) plus admin-defined custom roles
-3. **Project membership and experiment collaborators** layered around visibility
-
-The authoritative list lives at [`api/permissions.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/permissions.py); this page mirrors it.
+This page lists the 27 MINT permissions in 11 groups, the system roles, and the rules for custom roles. The source is [`api/permissions.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/permissions.py).
 
 ## Permission catalog
 
@@ -43,7 +37,7 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 |------------|----------------|
 | `plugins.view` | See installed plugins and their metadata |
 | `plugins.use` | Invoke plugin routes (run analyses, fill design forms, etc.), open plugin panels on the experiment page, and edit a live design form |
-| `plugins.configure` | Change plugin settings, call plugin endpoints, jobs and MCP tools with `access="configure"`, and read the plugin lock history. Replaces the former plugin-administrator role |
+| `plugins.configure` | Change plugin settings, call plugin endpoints, jobs and MCP tools with `access="configure"`, and read the plugin lock history |
 | `plugins.install` | Install / uninstall / upgrade plugins, register external and Docker runtimes, roll back the [plugin dependency lock](/admin/plugins#plugin-dependency-lock), and change where plugin code comes from (private package indexes, update sources, the Prereleases toggle) |
 
 ### `jobs.*` (2)
@@ -94,123 +88,69 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 
 ### Admin panel
 
-The **Admin** entry and the admin panel open only for a role that holds one of `users.manage`, `platform.configure`, `plugins.configure`, `plugins.install` or `notices.publish`. `GET /api/auth/config` serves this list. `users.view` and `platform.view_logs` alone do not open the admin panel, so the built-in Member and Viewer roles do not see it. In the panel, each section needs its own permission.
+The **Admin** entry and the admin panel open only for a role that holds one of `users.manage`, `platform.configure`, `plugins.configure`, `plugins.install` or `notices.publish`. `GET /api/auth/config` serves this list. `users.view` and `platform.view_logs` alone do not open the panel, so the built-in Member and Viewer roles do not see it. In the panel, each section needs its own permission.
 
-## System roles → permissions
+## System roles
 
-The platform ships three system roles. Their permission sets are seeded by the platform database baseline:
+MINT has three system roles:
 
-- **Admin** — every permission (all 25)
-- **Member** (without `plugins.configure` since MINT 1.4) — all `projects.*` and `experiments.*` permissions, plus `instruments.view`, `plugins.view`, `plugins.use`, `users.view`, `platform.view_logs` and `filesystem.browse`
-- **Viewer** — `projects.view`, `experiments.view`, `instruments.view`, `plugins.view`, `users.view` and `plugins.use`
-
-Tabular form:
-
-| | Admin | Member | Viewer |
-|---|---|---|---|
-| `projects.view` | ✓ | ✓ | ✓ |
-| `projects.create` | ✓ | ✓ | |
-| `projects.edit` | ✓ | ✓ | |
-| `projects.delete` | ✓ | ✓ | |
-| `projects.manage_members` | ✓ | ✓ | |
-| `experiments.view` | ✓ | ✓ | ✓ |
-| `experiments.create` | ✓ | ✓ | |
-| `experiments.edit` | ✓ | ✓ | |
-| `experiments.delete` | ✓ | ✓ | |
-| `experiments.manage_codes` | ✓ | | |
-| `instruments.view` | ✓ | ✓ | ✓ |
-| `instruments.edit` | ✓ | | |
-| `plugins.view` | ✓ | ✓ | ✓ |
-| `plugins.use` | ✓ | ✓ | ✓ |
-| `plugins.configure` | ✓ | | |
-| `plugins.install` | ✓ | | |
-| `jobs.read_all` | ✓ | | |
-| `jobs.manage_all` | ✓ | | |
-| `notifications.receive_important` | ✓ | | |
-| `notifications.broadcast` | ✓ | | |
-| `calendar.read_all` | ✓ | | |
-| `notices.publish` | ✓ | | |
-| `users.view` | ✓ | ✓ | ✓ |
-| `users.manage` | ✓ | | |
-| `platform.configure` | ✓ | | |
-| `platform.view_logs` | ✓ | ✓ | |
-| `filesystem.browse` | ✓ | ✓ | |
+| Role | Permissions |
+|------|-------------|
+| Admin | All 27 |
+| Member (default for new accounts) | All `projects.*` and `experiments.*` except `experiments.manage_codes`; `instruments.view`, `plugins.view`, `plugins.use`, `users.view`, `platform.view_logs`, `filesystem.browse` |
+| Viewer | `projects.view`, `experiments.view`, `instruments.view`, `plugins.view`, `plugins.use`, `users.view` |
 
 ## Custom roles
 
-Admins can build custom roles by composing any subset of the 27 permissions above.
+An admin can build a custom role from any set of the 27 permissions. A custom role shows next to the system roles when you assign a role to a user.
 
-On upgrade to MINT 1.3, every existing role, custom roles included, received `instruments.view`, and the `admin` role also received `instruments.edit`. Roles created afterwards get neither automatically. On upgrade to MINT 1.4, the Member role lost `plugins.configure`; other roles keep their grants. Custom roles appear alongside the built-in three when assigning a user's system role. A role also has a project scope and a plugin access list (`all` or selected plugins; any other stored value grants no plugin). The slug of a role matches `^[a-z0-9][a-z0-9_-]*$`; only the exact slug `admin` is an administrator.
+- A role also has a project scope and a plugin access list: `all` or selected plugins. Any other stored value gives no plugin.
+- The slug of a role matches `^[a-z0-9][a-z0-9_-]*$`.
+- Only the exact slug `admin` is an administrator.
+
+For the steps, see [Users & roles -> Custom roles](/admin/users-roles#custom-roles).
 
 ### Limits on `users.manage`
 
 A non-admin with `users.manage` cannot:
 
-- assign the `admin` role;
-- create, edit or assign a role with permissions or plugin access it does not hold itself;
-- create a user in a default role that outranks its own;
-- update, activate, deactivate, delete or reset the password of a user whose role outranks its own.
+- Assign the `admin` role.
+- Create, edit or assign a role with permissions or plugin access that it does not hold itself.
+- Create a user in a default role that outranks its own.
+- Update, activate, deactivate, delete or reset the password of a user whose role outranks its own.
 
-These checks apply to the `/api/admin` user routes. MINT 1.4 removed the legacy `/api/users/{id}` write routes (`PUT .../role`, `.../activate`, `.../deactivate`, `.../reset-password`, `DELETE`). Use `PATCH /api/admin/users/{id}`, `POST /api/admin/users/{id}/activate|deactivate`, `PUT /api/admin/users/{id}/reset-password` and `DELETE /api/admin/users/{id}`. Nobody can act on their own account through these routes (400), and nobody can delete, deactivate or demote the last active administrator (409).
+These checks apply to the user routes `PATCH /api/admin/users/{id}`, `POST /api/admin/users/{id}/activate|deactivate`, `PUT /api/admin/users/{id}/reset-password` and `DELETE /api/admin/users/{id}`. Nobody can act on their own account through these routes (400). Nobody can delete, deactivate or demote the last active administrator (409).
 
-Common custom-role recipes:
+Examples of custom roles:
 
 | Role | Permissions |
 |------|-------------|
-| **Read-only auditor** | All `*.view` permissions only |
-| **Plugin operator** | `plugins.view`, `plugins.use`, `plugins.configure` (no install). A non-administrator needs `plugins.configure` for the `configure` access level |
-| **Plugin admin** | The Plugin operator set plus `plugins.install` |
-| **Project lead** | All `projects.*` plus all `experiments.*` |
+| Read-only auditor | All `*.view` permissions only |
+| Plugin operator | `plugins.view`, `plugins.use`, `plugins.configure` (no install). A non-administrator needs `plugins.configure` for the `configure` access level |
+| Plugin admin | The Plugin operator set plus `plugins.install` |
+| Project lead | All `projects.*` plus all `experiments.*` |
 
-The role-design rationale for the original RBAC shape is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-04-10-rbac-roles-design.md). The current authoritative list is `api/permissions.py`.
+The design decision for the roles is in [`decisions/2026-04-10-rbac-roles-design.md`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-04-10-rbac-roles-design.md).
 
 ## Project membership
 
-Route-level write access is checked against the user's system role. Project membership is stored separately and is used for project membership lists and restricted experiment visibility. Each project also has a creator / lead; only the creator, lead, or an Admin can update/delete the project or manage members, and the route still requires the matching system permission.
+The system role controls write access. Project membership controls the member lists and, in restricted visibility mode, which experiments a user can see. See [Users & roles -> Project membership](/admin/users-roles#project-membership).
 
-| Relationship | Current effect |
-|--------------|----------------|
-| Project creator / lead | May administer the project when their system role has the required permission |
-| Project member `editor` | Stored membership label; contributes to restricted experiment visibility |
-| Project member `viewer` | Stored membership label; contributes to restricted experiment visibility |
+## Experiment collaborators
 
-`access.experimentVisibilityMode` controls how broad experiment visibility is. In `open` mode, users with `experiments.view` can list experiments broadly. In `restricted` mode, non-admin visibility is limited to experiments the user created, collaborates on, or can access through project membership.
-
-## Experiment collaborator overrides
-
-Collaborators stored on an experiment grant a third tier of access for that experiment only. The `collaborators` field on `Experiment` records (user_id, role) pairs:
-
-| Collaborator role | Effect |
-|-------------------|--------|
-| **collaborator** | Can read this experiment even if not a project member |
-| **owner** | Can manage collaborators and delete the experiment; MINT keeps at least one owner |
-
-Collaborator entries survive even if the user is later removed from the project — useful for cross-team work where a colleague needs to see one experiment without joining the whole project.
+A collaborator on an experiment can see that one experiment without project membership. See [Experiments -> Collaborators](/guide/experiments#collaborators).
 
 ## Plugin access levels
 
-There are no plugin roles. A plugin tags each endpoint, job, MCP tool and nav page with `access="use" | "configure" | "admin"`. The platform maps the level to the caller:
-
-| Level | Passes when the caller has |
-|-------|---------------------------|
-| `use` | `plugins.use` and the plugin is visible to the role (**Plugin access**) |
-| `configure` | `use`, plus `plugins.configure` |
-| `admin` | The `admin` role (every level passes) |
-
-An unknown level counts as `admin`. See [Users & Roles → Plugin access levels](/admin/users-roles#plugin-access-levels). For plugin authors, see [Plugin Development](/sdk/).
+A plugin tags each endpoint, job, MCP tool and page with the level `use`, `configure` or `admin`. There are no plugin roles. For how the platform maps the levels to roles, see [Users & roles -> Plugin access levels](/admin/users-roles#plugin-access-levels). For plugin authors, see [Route permissions](/sdk/recipes/route-permissions).
 
 ## Admin terminal
 
-**Admin -> System -> Terminal** is not a separate permission. It is available only when both conditions are true:
+**Admin -> System -> Terminal** has no permission of its own. It is available only when both conditions are true:
 
-- `adminTerminalEnabled` is enabled in platform config or via `MINT_ADMIN_TERMINAL_ENABLED=true`
-- The user has `platform.configure`
+- `adminTerminalEnabled` is on in `config.json`, or `MINT_ADMIN_TERMINAL_ENABLED=true` is set.
+- The user has `platform.configure`.
 
-The terminal opens a short-lived shell in the running MINT process/container and can write a startup script under `server.dataPath/admin-terminal/startup.sh`. Treat it as server administration access.
+The terminal opens a short-lived shell in the running MINT process or container. It can write a startup script to `server.dataPath/admin-terminal/startup.sh`. Give it only to people who may administer the server.
 
-During a session, MINT re-checks the caller every 15 seconds. If the account is deactivated, its role loses `platform.configure`, or its session is revoked (for example by a password change), the shell closes with "access revoked". A failed status lookup also closes it.
-
-## Next
-
-→ [Members & roles](/admin/users-roles) — how to assign roles in the UI
-→ [Authentication](/admin/authentication) — how users prove who they are
+During a session, MINT checks the caller again every 15 seconds. The shell closes with "access revoked" when the account is deactivated, its role loses `platform.configure`, or its session is revoked, for example by a password change. A failed status lookup also closes it.

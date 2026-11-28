@@ -1,62 +1,14 @@
 # Composables
 
-This page covers the public **@MINT_VERSION@** composables and helper factories used for generated clients, experiment context, settings, forms, jobs, realtime, onboarding, and platform API calls. For a complete selection-and-save page, see [Platform integration](/sdk/frontend/platform-integration).
+Composables give a plugin frontend typed state for generated clients, the current experiment, settings, forms, jobs, realtime and onboarding. Call them inside `<script setup>` or `setup()`. Most return a `Ref` or `ComputedRef`: keep the references reactive when you destructure them.
 
-## Full list
-
-Each row names the entry that exports the composable. Import from that entry; see [Package entry points](/sdk/frontend/#package-entry-points). The package root no longer exports the names of the 1.3 root that moved. MINT 1.5.0 removed them.
-
-::: details Common composables (click to expand)
-| Composable | Entry | What it returns | When to reach for it |
-|------------|-------|-----------------|----------------------|
-| `useTheme` | root | Theme state + toggle | Light/dark switcher |
-| `useToast` | root | Toast dispatcher | User feedback |
-| `usePlatform` | root | Integration state, plugin, user, theme, feature flags, `isAdmin`, `can(access)` | Plugins mounted inside the platform shell |
-| `useExperiment` | root | Read-only current experiment: `id`, `current`, `status`, `error`, `refresh()` | Integrated plugin pages tied to an experiment |
-| `useRequest` | root | Request loading/error/timestamps and cancellation | Stateful request feedback |
-| `providePluginIdentity` | root | Seeds the standalone name, subtitle, and icon of `AppTopBar` | Once in `main.ts` |
-| `useForm` | `runtime` | Reactive form state with validation rules | Manual form management |
-| `preloadFormFieldTypes` | `runtime` | A promise that loads the `path`, `file`, `molecule`, `formula` and `sequence` field components | Tests that find such a field right after mount |
-| `useFormBuilder` | `runtime` | Schema-driven form runtime | The `FormBuilder` component (rare to use directly) |
-| `defineControlModel` | root | Typed compact control model | Generate `FormBuilder`, `SettingsModal`, `AppSidebar`, and top-bar settings from one model |
-| `defineControls`, `useControlSchema`, `useControlWorkspace` | `runtime` | Derived form/sidebar/topbar/component bindings | Custom generated workspaces |
-| `definePluginWorkspaceView`, `defineDataFrame` | root | Typed `:spec` for the component | Structure of `PluginWorkspaceView` and `DataFrame` |
-| `defineWellPlate`, `definePlateEditor` | `lab` | Typed `:spec` for the component | Structure of `WellPlate` and `PlateEditor` |
-| `useRackEditor` | `lab` | Rack state, undo/redo, and `PlateEditor` listeners | Holding the plates of a [`PlateEditor`](/sdk/components/plate-editor) |
-| `useConcentrationUnits` | `lab` | Concentration parsing / conversion | Anything dealing with µM / mg/mL / % |
-| `dose`, `formula`, `time` | `lab` | Namespaces of pure helpers (`dose.calculateDilution()`, `formula.parseFormula()`, `time.formatTime()`) | Dilution math, formula parsing, and time slots |
-| `useReagentSeries` | `lab` | Dilution series generators | Building dose-response panels |
-| `useSequenceUtils` | `lab` | DNA / protein sequence helpers, including `findSequenceProblems` | Sequence inputs and stats |
-| `useScheduleDrag` | `lab` | Drag-to-reschedule handlers | Calendar / timeline UIs |
-| `useProtocolTemplates` | `lab` | Lab-protocol template engine | Step-by-step protocol UIs |
-| `useExperimentSelector` | `data` | Picker UI + reactive selected experiment | Experiment dropdowns |
-| `useExperimentData` | `data` | Reactive exported experiment data payload | Live experiment view |
-| `useExperimentNumber` | `data` | The experiment number: `code`, `next`, `check(seq)`, `assign()` | Pages that assign or check an experiment code |
-| `useLiveDesign` | `data` | The fields and save state of a live design | Editing a live design; feeds `LiveDesignForm` |
-| `useArtifacts` | `data` | Analysis artifacts of an experiment (list, detail, archive, restore) | Result lists |
-| `useAppExperiment` | `data` | App-level experiment provide/inject | Plugin pages that need the active experiment |
-| `useVersionedSave` | `data` | Optimistic-concurrency save with `If-Match` | Forms on a versioned entity |
-| `useFileBrowser` | `data` | Server mount listing and selection | Custom UIs for read-only server paths (`FilePicker` covers the standard case) |
-| `usePlatformFilePickerAdapter` | `data` | Authenticated platform `PickerAdapter` | `FilePicker` folder trees, preview, and resolved file selection |
-| `createFilePickerAdapter` | `data` | Shared mount navigation/search adapter | Connect a plugin-owned file API through typed transport callbacks |
-| `useJobCenter` | `runtime` | Job list, top-bar job, tray state | `JobsStatusTray` and the top-bar run slot |
-| `useRealtime`, `usePresence` | `runtime` | Realtime stream subscription; viewers of a topic | Live refresh and presence (needs the `realtime` feature) |
-| `createClient`, `buildEndpointUrl`, `uploadEndpoint`, `downloadEndpoint`, `useEventStream`, `useSettingsEndpoint`, `useJobsEndpoint` | `runtime` | Contract-aware plugin client runtime | The generated `useClient()`, `upload`, `download`, `endpointUrl`, `useStream`, `useSettings`, and `useJobs` wrap these |
-| `defineOnboarding`, `provideOnboarding`, `useOnboarding` | `shell` | Tours, checklist, and what's-new coordinator | Help button, "Getting started" chip, and tours in `AppTopBar` |
-| `useManualLayoutResize` | `shell` | Pointer resize lifecycle and current drag state | Pair with `LayoutResizeHandle` for workbench panes |
-| `resizedLeadingPanelWidth`, `resizedTrailingPanelWidth`, `resizedVerticalSplitPercent` | `shell` | Bounded dimension calculations | Apply pointer deltas to widths or vertical splits |
-| `useListSelection`, `useSelectionLimit`, `useExpansionSet`, `useSortedItems` | `shell` | Selection, expansion, and sort state | Tables, lists, trees |
-| `useEventListener`, `useDebouncedWatch`, `useFocusTrap`, `useRovingFocus`, `useListReorder`, `useMenuKeyboard` | `shell` | Headless interaction helpers | Custom menus, dialogs, and reorderable lists |
-| `useApi` | `runtime` | Deprecated request client. MINT 2.0 removes it | Do not use in new code; see [`useApi`](#useapi) |
-:::
-
-The 1.3 composable names that 1.4 renamed or removed are in the [migration guide](/sdk/operations/migrate-1.3-to-1.4). [Removed and renamed composables](/sdk/api/frontend#deprecated-composables) lists them with their replacements.
+[Frontend SDK reference → Composables](/sdk/api/frontend#composables) lists every composable with its entry point. This page describes the composables that need more than one line. For a full selection-and-save page, see [Platform integration](/sdk/frontend/platform-integration).
 
 ## Deep dives
 
 ### `useApi`
 
-`useApi()` is deprecated, and MINT 2.0 removes it. `mint doctor` shows each import as a "Deprecated SDK APIs" warning, and `mint doctor --strict` counts it. Use these in its place:
+`useApi()` is deprecated, and MINT 2.0 removes it. `mint doctor` shows each import as a "Deprecated SDK APIs" warning, and `mint doctor --strict` counts it. Use these instead:
 
 | Call | Use |
 |------|-----|
@@ -65,18 +17,16 @@ The 1.3 composable names that 1.4 renamed or removed are in the [migration guide
 | Other platform data | The SDK composable for that data, for example `useExperiment`, `useArtifacts` or `useExperimentData`. Platform routes without a composable have no public client: open an issue |
 | An external, non-MINT HTTP API | `fetch` |
 
-The SDK sends its requests with `fetch` (and `XMLHttpRequest` only for upload or download progress). It does not depend on `axios`. Query strings, bodies, response data and the `MintApiError` errors are as before. For code that still calls `useApi()`, these points differ from axios:
+The SDK sends its requests with `fetch`. It uses `XMLHttpRequest` only for upload or download progress. It does not depend on `axios`. For code that still calls `useApi()`, query strings, bodies, response data and `MintApiError` errors do not change. These points differ from axios:
 
 1. `axios` is not installed with the SDK. A plugin that imports `axios` declares it in its own `package.json`. A config typed as `AxiosRequestConfig` does not type-check as a `useApi()` config.
 2. `useApi().client` is not an axios instance. It has `request`, `get`, `delete`, `head`, `options`, `post`, `put`, `patch`, `defaults` and `interceptors` (`use`, `eject`, `clear`). It has no `create`, `getUri`, `postForm` or call signature. `defaults.headers` has no `common` or per-method entries. In an interceptor, `config.headers` is a plain object.
 3. A `FormData` body is always sent as `multipart/form-data`.
 4. `cancelToken`, `xsrfCookieName`, `xsrfHeaderName`, `withXSRFToken`, `auth`, `transformRequest` and `transformResponse` have no effect. Use `signal` to cancel. `responseType` `'document'` and `'stream'` give text.
 
-The session token is read-only for the SDK. The platform signs the user in and writes the session; the SDK never writes or removes the stored token.
-
 ### Generated plugin clients
 
-`mint sdk generate` writes `frontend/src/generated/mint-plugin.ts`. Import from that generated file in plugin code; it wraps the lower-level SDK helpers with your plugin's own endpoint names and types.
+`mint sdk generate` writes `frontend/src/generated/mint-plugin.ts`. Import plugin API calls from this file. It wraps the lower-level SDK helpers with the endpoint names and types of your plugin. Do not build plugin URLs by hand.
 
 ```ts
 import { contract, endpointUrl, useClient } from '../generated/mint-plugin'
@@ -99,15 +49,18 @@ Generated signatures depend on the endpoint:
 | Path/query parameters without a body | `client.method({ pathParams: { ... }, query: { ... } })` |
 | No parameters or body | `client.method()` |
 
-Omit unused parameter groups. Use the exact field names and endpoint names from `mint docs contract .`; the frontend parameter names may differ from Python's snake_case names. Mixed endpoints also accept flattened parameters for compatibility. Do not wrap a body-only call in `{ body: ... }`.
-
-`upload(name, payload)` and `download(name, payload, { filename })` take the endpoint name and its payload. `download` resolves with a `Blob`. With `filename`, the browser also saves the file; `save: false` skips the save. Use `useStream(name, payload, options)` for a parameterized stream; parameterless streams also accept `(name, options)`. These helpers only work for routes declared by your plugin.
-
-Use `endpointUrl(name, payload)` when you need diagnostics or a link preview without making the request. `contract` holds the endpoint definitions.
+- Omit the parameter groups that the endpoint does not use.
+- Use the exact endpoint and field names from `mint docs contract .`. A frontend parameter name can differ from the Python snake_case name.
+- Mixed endpoints also accept flat parameters for compatibility.
+- Do not wrap a body-only call in `{ body: ... }`.
+- `upload(name, payload)` and `download(name, payload, { filename })` take the endpoint name and its payload. `download` resolves with a `Blob`. With `filename`, the browser also saves the file; `save: false` skips the save.
+- `useStream(name, payload, options)` opens a stream with parameters. A stream without parameters also accepts `(name, options)`.
+- `endpointUrl(name, payload)` gives the URL without a request, for diagnostics or a link preview. `contract` holds the endpoint definitions.
+- These helpers work only for routes that your plugin declares.
 
 ### Typed HTTP errors {#typed-http-errors-in-1-2}
 
-Generated clients normalize every HTTP failure to `MintApiError`. Read `status`, `code` or `details` of the error. There is no `error.response`. Network failures can still be ordinary errors, so keep a fallback:
+Generated clients turn every HTTP failure into a `MintApiError`. There is no `error.response`. A network failure can still be an ordinary error, so keep a fallback:
 
 ```ts
 import { ref } from 'vue'
@@ -132,13 +85,23 @@ async function run(value: number): Promise<void> {
 }
 ```
 
-Render `errorMessage` in an `AlertBox`. The error exposes `code`, `status`, `requestId`, `details`, legacy `detail`, original `body`, and `cause`. Branch on `code`/`status` for program behavior; use `requestId` to correlate a report with server logs. An expired authenticated request raises `AuthenticationRequiredError`, a `MintApiError` with status 401. Do not blindly retry a state-changing request after a timeout.
+- Show `errorMessage` in an `AlertBox`.
+- Use `code` or `status` to choose what the program does. Use `requestId` to find the request in the server logs. For all members, see [HTTP error types](/sdk/api/frontend#http-error-types).
+- An expired session raises `AuthenticationRequiredError`, a `MintApiError` with status 401.
+- Do not retry a request that changes state after a timeout without a check.
 
-`useRequest(defaultMessage)` supplies `isLoading`, `error`, and success timestamps (`lastLoadedAt`, `lastSavedAt`, `lastRunAt`) when a message is sufficient. `run(operation, { kind })` passes an `AbortSignal` to the operation and rethrows failures after recording them; catch at the UI boundary. A newer `run()` or `cancel()` aborts the older run. Its stale-request guard protects those shared refs, not arbitrary result assignments inside your callback.
+When a message is sufficient, use `useRequest(defaultMessage)`. It gives `isLoading`, `error` and the success timestamps `lastLoadedAt`, `lastSavedAt` and `lastRunAt`.
+
+- `run(operation, { kind })` passes an `AbortSignal` to the operation. It records a failure and throws it again; catch it at the UI boundary.
+- A newer `run()` or `cancel()` aborts the older run. This guard protects the refs of `useRequest`, not the values that your callback writes.
 
 ### `useExperiment`
 
-Reads the experiment that the plugin page works on. It is read-only: the platform selects the experiment. It returns `id` (`number | null`), `current` (the platform record), `status` (`idle`, `loading`, `ready`, or `error`), `error`, and `refresh()`. `refresh()` keeps the loaded record in place while it reads it again. Standalone, no experiment is selected and `id` stays `null`.
+`useExperiment()` reads the experiment of the plugin page. It is read-only: the platform selects the experiment.
+
+- It returns `id` (`number | null`), `current` (the platform record), `status` (`idle`, `loading`, `ready` or `error`), `error` and `refresh()`.
+- `refresh()` keeps the loaded record while it reads the record again.
+- In a standalone page, no experiment is selected and `id` stays `null`.
 
 ```ts
 import { watch } from 'vue'
@@ -148,11 +111,11 @@ const experiment = useExperiment()
 watch(experiment.id, (id) => { if (id !== null) void load(id) }, { immediate: true })
 ```
 
-In a platform page, the integration script sets the experiment store from the `experiment_id` URL parameter when the page loads, and writes the parameter back after a selection or a detach. Plugin router navigations keep the parameter. Do not write your own route sync, such as a `watch` on `experimentIdFromRoute(route.query)` that calls `selectById()`. `useArtifacts()`, `ArtifactSaveDialog`, `GeneratedPathInput`, and the `experimentId` path parameter of generated clients read the same store, not the URL.
+The platform keeps the store and the `experiment_id` URL parameter in step. Do not write your own route sync; see [Experiment in the URL](/sdk/frontend/platform-integration#experiment-in-the-url).
 
 ### Plugin settings: `useSettings`
 
-Use the generated `useSettings()` with backend settings declared in `Metadata.settings`. The generated helper binds the settings schema and plugin identity (`useSettingsEndpoint` in `runtime` is the runtime underneath). Platform context determines whether to use platform config routes or the plugin's managed `/settings` route; standalone uses the plugin route.
+Use the generated `useSettings()` for the backend settings that `Metadata.settings` declares. It binds the settings schema and the plugin identity. `useSettingsEndpoint` in `runtime` is the runtime under it. In a platform page, it uses the platform config routes. In a standalone page, it uses the managed `/settings` route of the plugin.
 
 ```ts
 import { useSettings } from '../generated/mint-plugin'
@@ -167,11 +130,14 @@ const saved = await settings.save()
 const settingsConfig = settings.settingsConfig
 ```
 
-The return shape includes `settings`, `values`, `config`, `settingsConfig`, `isLoading`, `isSaving`, `error`, `lastLoadedAt`, `lastSavedAt`, `isDirty`, `load()`, `save()`, `reset()`, and `setValues()`. Load the saved values before editing. The helper tracks revisions internally, sends changed fields through platform PATCH routes, and uses `If-Match` for managed plugin PUT saves. Surface conflicts; do not discard unsaved edits with an automatic reload.
+- It returns `settings`, `values`, `config`, `settingsConfig`, `isLoading`, `isSaving`, `error`, `lastLoadedAt`, `lastSavedAt`, `isDirty`, `load()`, `save()`, `reset()` and `setValues()`.
+- Load the saved values before the user edits them.
+- The helper tracks revisions. It sends the changed fields through platform PATCH routes, and uses `If-Match` for PUT saves to the managed plugin route.
+- Show a conflict to the user. Do not discard unsaved edits with an automatic reload.
 
 ### `useAuthStore`
 
-A read-only session bridge. The platform signs users in, refreshes the token, handles passkeys, and writes the session through `@morscherlab/mint-sdk/host`; a plugin never writes it. SDK clients read the token from here.
+`useAuthStore()` is the read-only session of the SDK. The platform signs users in, refreshes the token, handles the second factor and writes the session through `@morscherlab/mint-sdk/host`. A plugin never writes it, and the SDK never writes or removes the stored token. SDK clients read the token from this store.
 
 ```ts
 import { storeToRefs } from 'pinia'
@@ -181,11 +147,13 @@ const authStore = useAuthStore()
 const { userInfo, isAuthenticated, authRequired } = storeToRefs(authStore)
 ```
 
-`useAuthStore()` exposes `token`, `tokenExpires`, `userInfo`, `authRequired`, `isInitialized`, and `isAuthenticated`, plus `initialize()` and `clearToken()`. It holds no permission helpers. To gate the UI, use `usePlatform().can(access)` or `usePlatform().isAdmin`; for a platform permission, use the helpers of `@morscherlab/mint-sdk/permissions` with `userInfo`. A hidden button is not authorization: the backend checks every request.
+- It exposes `token`, `tokenExpires`, `userInfo`, `authRequired`, `isInitialized` and `isAuthenticated`, and the methods `initialize()` and `clearToken()`.
+- It has no permission helpers. To show or hide UI, use `usePlatform().can(access)` or `usePlatform().isAdmin`. For a platform permission, pass `userInfo` to the helpers of `@morscherlab/mint-sdk/permissions`.
+- A hidden button is not authorization. The backend checks every request.
 
 ### `useToast`
 
-Programmatic toast notifications using the platform's toast stack.
+`useToast()` shows toast notifications in the toast stack.
 
 ```ts
 import { useToast } from '@morscherlab/mint-sdk'
@@ -202,9 +170,9 @@ toast.success('Panel saved', { duration: 8000 })
 toast.clear()
 ```
 
-The defaults are 3500 ms for `success` and `info`, 4000 ms for `warning`, and 5000 ms for `error`.
+The default durations are 3500 ms for `success` and `info`, 4000 ms for `warning` and 5000 ms for `error`.
 
-`push()` returns the toast ID and accepts structured options:
+`push()` takes structured options and returns the toast id:
 
 ```ts
 const toastId = toast.push({
@@ -218,14 +186,14 @@ const toastId = toast.push({
 toast.dismiss(toastId)
 ```
 
-At most two `actions` are retained; each has `label`, `onClick` and optional
-`primary`. `count` shows a grouped count. `progress: 'indeterminate'` prevents
-auto-dismiss; `progress: 'none'` hides the bar but still uses the normal timeout.
-The default duration is 3500 ms. The toast stack sits 1rem from the top of the viewport; when an `AppTopBar` is mounted, it starts 1rem below the bar (the bar publishes `--mint-toast-offset-top` on `<html>`).
+- A toast keeps at most two `actions`. Each has `label`, `onClick` and an optional `primary`.
+- `count` shows a grouped count.
+- `progress: 'indeterminate'` keeps the toast open. `progress: 'none'` hides the bar and keeps the normal timeout.
+- For the position of the stack, see [Toast positioning](/sdk/components/app-toast-container#toast-positioning).
 
 ### `usePlatform`
 
-When your plugin is mounted inside the platform shell, the platform injects `window.__MINT_PLATFORM__` with the plugin metadata, user, feature flags, and API origin. `usePlatform` reads that context when you call it, so a router guard or a setup-time check sees the signed-in user before any component mounts.
+In the platform shell, the platform injects `window.__MINT_PLATFORM__` with the plugin metadata, the user, the feature flags and the API origin. `usePlatform()` reads this context (or the `mint-plugin` URL parameter) each time you call it. A router guard or a setup-time check thus sees the signed-in user before a component mounts.
 
 ```ts
 import { computed } from 'vue'
@@ -236,15 +204,20 @@ const { integrated, plugin, user, theme, features, isAdmin, can } = usePlatform(
 const canConfigure = computed(() => can('configure'))
 ```
 
-`can(access)` answers the three plugin access levels of the Python `access` option: `use`, `configure`, and `admin` (the `Access` type). A platform administrator meets every level. `use` needs `plugins.use` and plugin visibility for the role; `configure` adds `plugins.configure`. The visibility check accepts the plugin name or its route prefix, as the platform does. With auth disabled, the platform injects `authRequired: false` and no `user`, and every check passes. Standalone also passes every check. An integrated page with no `user` and no `authRequired: false` passes none.
+`usePlatform()` is read-only context, not authorization. `integrated` shows the UI mode. It does not prove that a request is authorized, or that a standalone development backend has a `PlatformContext`. The server checks identity and access on each request.
 
-The return shape is `{ integrated, plugin, user, theme, features, isAdmin, can }`. The platform sends no theme, so `theme` holds the SDK theme setting. `features` is `Record<string, boolean>`. There is no `login()` and no selected experiment. In plugin pages, use `can()` and `isAdmin` for access checks. Use the [state selection guide](/sdk/frontend/platform-integration#choose-the-right-source-of-state) to choose between platform context and shared picker state.
+- It returns `{ integrated, plugin, user, theme, features, isAdmin, can }`. There is no `login()` and no selected experiment.
+- The platform sends no theme, so `theme` holds the SDK theme setting. `features` is `Record<string, boolean>`.
+- `can(access)` takes the plugin access levels of the Python `access` option (the `Access` type). For the rules of each level, see [Route permissions → Access levels](/sdk/recipes/route-permissions#access-levels). The visibility check accepts the plugin name or its route prefix, as the platform does.
+- With authentication disabled, the platform injects `authRequired: false` and no `user`. Every check then passes.
+- In a standalone page, every check passes.
+- In an integrated page with no `user` and without `authRequired: false`, no check passes.
 
-`integrated` is a UI mode indicator, not proof that a request is authorized. The server enforces identity and access.
+To choose between platform context and the shared picker state, see [Choose the right source of state](/sdk/frontend/platform-integration#choose-the-right-source-of-state).
 
 ### `useExperimentSelector`
 
-Inline picker — fetches the user's accessible experiments and surfaces a reactive selected experiment.
+`useExperimentSelector()` fetches the experiments that the user can see and keeps a selected experiment. Use it for a custom picker.
 
 ```ts
 import { useExperimentSelector } from '@morscherlab/mint-sdk/data'
@@ -275,9 +248,11 @@ const {
 filters.search = 'TCA'
 ```
 
-The selected experiment is `selectedExperiment` (not `selected`); the search input is `filters.search`; explicit re-fetch is `fetch()` (not `refresh`). With `{ withStatusCounts: true }`, `statusCounts` stays in step with the other filters through `GET /experiments/stats`, and `fetchStatusCounts()` reads it on demand. `filters.mine` sends `mine=true`. Its `select()` only changes this composable's local selection. For the standard modal, use `ExperimentSelectorModal` directly; it owns its list and commits records to `useExperimentStore()`.
-
-For plugins mounted on an experiment-specific view, use `useExperiment()`. It gives the experiment record, and `id` when you only need the current id.
+- The selection is `selectedExperiment`, not `selected`. The search text is `filters.search`. To fetch again, call `fetch()`; there is no `refresh`.
+- With `{ withStatusCounts: true }`, `statusCounts` follows the other filters through `GET /experiments/stats`. `fetchStatusCounts()` reads the counts on demand.
+- `filters.mine` sends `mine=true`.
+- `select()` changes only the local selection of this composable. For the standard modal, use `ExperimentSelectorModal`: it owns its list and writes the record to `useExperimentStore()`.
+- On a page for one experiment, use `useExperiment()` instead.
 
 ### `useExperimentNumber`
 
@@ -295,8 +270,8 @@ const check = await number.check(15)   // { available, code, experiment } or nul
 const code = await number.assign()     // the next free number; assign({ seq: 15 }) picks one
 ```
 
-- `code` is the assigned code, or `null`. `next` holds the preview of the next free number.
-- The platform never assigns by itself. When the experiment has a code, `assign()` returns it.
+- `code` is the assigned code, or `null`. `next` holds the preview of the next free number. For when an experiment gets a number, see [Experiment numbers](/guide/experiments#experiment-numbers).
+- When the experiment has a code, `assign()` returns it.
 - A failed call resolves to `null` and sets `error` (a `MintApiError`). A call that succeeds clears it.
 - Only the newest preview and the newest check are kept. An answer that arrives after the experiment id or type changed is dropped.
 - `experimentType` must be the stored type of the experiment. Without it, the composable reads the type from the SDK experiment store. While the type is unknown, `check()` sets `error.code` to `experiment.type_unknown`.
@@ -311,7 +286,7 @@ const code = await number.assign()     // the next free number; assign({ seq: 15
 - `status` is `loading`, `clean`, `dirty`, `saving`, `offline`, `rejected`, `readonly`, `not_live` or `error`.
 - Each entry of `fields` has `value`, `state` (`clean`, `dirty`, `saving` or `rejected`), `error`, `lastChange`, `editors`, `lockedBy` and `missingRequired`.
 - A remote change replaces a `clean` field. A `dirty`, `saving` or `rejected` field keeps its value. `discard(field)` drops a local edit and shows the newest server value.
-- A field that another user edits is locked: `lockedBy` names that user, and `setValue` and `focus` do nothing on it.
+- A field that another user edits is locked. `lockedBy` names that user. `setValue` and `focus` do nothing on a locked field.
 - On a network error or a 502, 503 or 504, `status` is `offline`. The composable tries again 5 times after 1, 2, 4, 8 and 16 s; `retryAt` gives the next time.
 - On `pagehide`, it sends the unsaved edits at once with `fetch(..., { keepalive: true })`.
 
@@ -325,7 +300,7 @@ const code = await number.assign()     // the next free number; assign({ seq: 15
 
 ### `useExperimentData`
 
-Reactive view of one experiment's exported design/analysis display payload.
+`useExperimentData()` gives the exported design and analysis data of one experiment as display shapes.
 
 ```ts
 import { useExperimentData } from '@morscherlab/mint-sdk/data'
@@ -340,11 +315,11 @@ await fetch(1)
 // designData, sampleNames, treeData, tableData and summaryData are computed display shapes
 ```
 
-The SDK has no composable that writes design data. To write it, call a plugin endpoint through the generated `useClient()`; the backend saves with `context.design.save()`. See [Platform integration](/sdk/frontend/platform-integration#select-load-edit-and-save-an-experiment).
+`useExperimentData()` does not write. To write design data, see [Platform integration](/sdk/frontend/platform-integration#select-load-edit-and-save-an-experiment).
 
 ### `useFormBuilder`
 
-The form runtime under `FormBuilder`. It takes a raw `FormSchema` and gives the form state. `FormBuilder` takes a control model as `:spec`, so you seldom call `useFormBuilder` directly. Use it for programmatic control, for example custom validation steps.
+`useFormBuilder()` is the form runtime under `FormBuilder`. It takes a raw `FormSchema` and gives the form state. Use it to control a form from code, for example for a custom validation step.
 
 ```ts
 import { useFormBuilder, evaluateCondition } from '@morscherlab/mint-sdk/runtime'
@@ -360,11 +335,11 @@ const showAdvanced = evaluateCondition(
 )
 ```
 
-See [FormBuilder deep dive](/sdk/frontend/form-builder).
+See [FormBuilder](/sdk/frontend/form-builder).
 
 ### `defineControlModel` and `useControlWorkspace`
 
-A control model lets one definition generate forms, settings modals, sidebars, top-bar settings, and initial values. `defineControlModel()` is at the package root. `defineControls()`, `useControlSchema()`, and `useControlWorkspace()` are in `@morscherlab/mint-sdk/runtime`.
+One control model generates forms, settings modals, sidebars, top-bar settings and initial values. `defineControlModel()` is at the package root. `defineControls()`, `useControlSchema()`, and `useControlWorkspace()` are in `@morscherlab/mint-sdk/runtime`.
 
 ```ts
 import { ref } from 'vue'
@@ -400,13 +375,20 @@ const values = ref({})
 </PluginWorkspaceView>
 ```
 
-`PluginWorkspaceView` takes the model in `spec.sidebar.controls` and generates the sidebar sections, their forms, and the view pills. It does not render a main form; put `FormBuilder` in the default slot and set `actions` in the model for the submit and cancel bar. For the settings tab, set `topBar.settings` in the spec. For a docked 320 px sidebar, set `floating: false` and `sidebar.width: '320px'`.
+- `PluginWorkspaceView` takes the model in `spec.sidebar.controls`. It generates the sidebar sections, their forms and the view pills.
+- The workspace does not render a main form. Put `FormBuilder` in the default slot. Set `actions` in the model for the submit and cancel bar.
+- For the settings tab, set `topBar.settings` in the spec.
+- For a docked 320 px sidebar, set `floating: false` and `sidebar.width: '320px'`.
 
-For lower-level layouts, `useControlSchema()` gives you `formSchema`, `settingsSchema`, `topBarSettingsConfig`, `sidebarPanels`, `sectionSchemas`, and `initialValues`. `useControlWorkspace()` wraps those into shared reactive values and ready-to-bind bindings. The bindings fit the spec props: `form` is `{ spec }`, `settings` is `{ spec }`, `topBarSettings` is `{ spec: { settings } }`, `sidebar` is `{ spec: { panels, forms }, activeView }` plus `values`, and `topBar` is `{ spec: { pills, settings }, pill, onPillSelect, onSettingsValuesChange }`. `controlsTo(target, controls, ...)` and `controlBindings` (`.props()`, `.list()`, `.byId()`) in `runtime` convert controls to component props.
+For lower-level layouts:
+
+- `useControlSchema()` gives `formSchema`, `settingsSchema`, `topBarSettingsConfig`, `sidebarPanels`, `sectionSchemas` and `initialValues`.
+- `useControlWorkspace()` wraps these in shared reactive values and bindings that fit the spec props: `form` is `{ spec }`, `settings` is `{ spec }`, `topBarSettings` is `{ spec: { settings } }`, `sidebar` is `{ spec: { panels, forms }, activeView }` plus `values`, and `topBar` is `{ spec: { pills, settings }, pill, onPillSelect, onSettingsValuesChange }`.
+- `controlsTo(target, controls, ...)` and `controlBindings` (`.props()`, `.list()`, `.byId()`) in `runtime` convert controls to component props.
 
 ### `useRealtime` and `usePresence`
 
-The platform streams events over `GET /api/events` when its `realtime` feature is on. The feature is off by default; check `usePlatform().features.realtime` first. Both composables are in `@morscherlab/mint-sdk/runtime`.
+The platform sends events over `GET /api/events` when its `realtime` feature is on. The feature is off by default; check `usePlatform().features.realtime` first. Both composables are in `@morscherlab/mint-sdk/runtime`.
 
 ```ts
 import { useRealtime, usePresence } from '@morscherlab/mint-sdk/runtime'
@@ -428,7 +410,7 @@ const { viewers, count } = usePresence(
 
 ### `useVersionedSave`
 
-`useVersionedSave()` (`@morscherlab/mint-sdk/data`) gives a form on a versioned entity (experiments and projects) optimistic concurrency.
+`useVersionedSave()` (`@morscherlab/mint-sdk/data`) adds a version check to the save of a form on a versioned entity (an experiment or a project).
 
 ```ts
 const versioned = useVersionedSave({
@@ -447,7 +429,7 @@ const versioned = useVersionedSave({
 
 ### Jobs tray
 
-`JobsStatusTray` is a compact, non-modal panel under the top bar. The parent owns the job center.
+`JobsStatusTray` is a small non-modal panel under the top bar. The parent owns the job center.
 
 ```ts
 import { useJobCenter } from '@morscherlab/mint-sdk/runtime'
@@ -466,7 +448,7 @@ const center = useJobCenter({ source: jobs })
 <JobsStatusTray :center="center" @select="openResult" />
 ```
 
-The simpler path is `PluginWorkspaceView` with `spec.jobs`: the workspace creates the job center, passes the job to its top bar, renders the tray, and emits `job-select`.
+For the usual case, set `spec.jobs` on `PluginWorkspaceView`. The workspace then creates the job center, gives the job to its top bar, renders the tray and emits `job-select`.
 
 - The source is a `PluginJobCenterSource`: `jobs` plus the optional `refresh`, `cancel`, `delete`, and `clear`. The generated `useJobs()` runtime is one. `combinePluginJobSources()` joins several; job ids must be unique across them.
 - `topBarJob` is the viewer's own job, picked in this order: an `awaiting_input` job, the first active job, for 6 s a job that just completed, then `'<n> failed'` for failures the viewer has not seen. Own jobs are those whose `owner_user_id` (else `user_id`) is the platform user. Standalone or with auth off, every job is own. The open tray marks failures seen in `localStorage` under `mint.jobs.<plugin id>.seen-failed`.
@@ -477,7 +459,7 @@ The simpler path is `PluginWorkspaceView` with `spec.jobs`: the workspace create
 
 ### Onboarding
 
-`@morscherlab/mint-sdk/shell` has an onboarding framework for the platform and for plugins: tours, a "Getting started" checklist, and what's-new hints. Declare them with `defineOnboarding()`. Call `provideOnboarding()` once in the root component.
+`@morscherlab/mint-sdk/shell` gives tours, a "Getting started" checklist and what's-new hints to the platform and to plugins. Declare them with `defineOnboarding()`. Call `provideOnboarding()` one time in the root component.
 
 ```ts
 import { defineOnboarding, provideOnboarding, useOnboarding } from '@morscherlab/mint-sdk/shell'
@@ -518,23 +500,17 @@ useOnboarding()?.complete('first-run')
 - The "Getting started" chip has a close button with a 24 px target. It hides the checklist from the top bar and moves focus to Help. The Help menu can show the checklist again. `OnboardingState` also has `startTour(id)`, `showNews(id)`, `next()`, `back()`, `dismiss()`, and `setChecklistHidden(hidden)`.
 - A what's-new item puts a dot on its element until the user opens it.
 
-## Other notable composables (one-line each)
+### Lab and data helpers
 
-| Composable | Use it when |
-|------------|-------------|
-| `dose` (`lab`) | Building dose-response calculators or serial dilution helpers (`dose.calculateDilution()`, `dose.calculateSerialDilution()`) |
-| `useConcentrationUnits` (`lab`) | Parsing user input like "5 mM" and converting between unit families |
-| `formula` (`lab`) | Show elemental composition of a formula string (`formula.parseFormula()`, `formula.calculateMW()`) |
-| `useTheme` | Custom theme switcher (the standard `<ThemeToggle>` already uses this) |
-| `time` (`lab`) | Plate-reader scheduling, anything with time slots (`time.generateTimeSlots()`, `time.formatTime()`) |
-| `useRequest` | Loading/error/last-saved state around requests |
-| `useFileImport` (`data`) | Read and validate delimited text imports; `readTableFileAsCsv(file)` reads a `.csv`, `.tsv`, or `.xlsx` upload as comma-delimited text |
-| `useListSelection`, `useSelectionLimit` (`shell`) | Table, list, and plate selection state |
-| `useTextSearch` (`data`), `useSortedItems` (`shell`) | Client-side filtering and sorting |
-| `useExpansionSet` (`shell`) | Expand/collapse state for trees and grouped lists |
-| `useSequenceUtils` (`lab`) | `findSequenceProblems(seq, 'dna' \| 'rna' \| 'protein')` returns `{ ambiguousBases, invalidCharacters }`: the characters `validateSequence` would strip, named instead of dropped |
-| `useFileBrowser` (`data`) | Server mount browsing, refresh, search, sort, path selection, and error state |
-| `experimentStatus`, `pluginSecret` (`data`) | Namespaces for experiment status labels and tones, and for plugin secret references |
+The reference table lists these helpers. Some functions in them:
+
+- `dose` (`lab`): `dose.calculateDilution()` and `dose.calculateSerialDilution()` for dilution and dose-response calculators.
+- `formula` (`lab`): `formula.parseFormula()` and `formula.calculateMW()` for the elemental composition of a formula string.
+- `time` (`lab`): `time.generateTimeSlots()` and `time.formatTime()` for time slots, for example in plate-reader schedules.
+- `useConcentrationUnits` (`lab`): parses input such as "5 mM" and converts between unit families.
+- `useSequenceUtils` (`lab`): `findSequenceProblems(seq, 'dna' | 'rna' | 'protein')` returns `{ ambiguousBases, invalidCharacters }`. These are the characters that `validateSequence` removes.
+- `useFileImport` (`data`): reads and checks delimited text imports. `readTableFileAsCsv(file)` reads a `.csv`, `.tsv` or `.xlsx` upload as comma-delimited text.
+- `useTheme` (root): see [Theming](/sdk/frontend/theming#light-dark-system). `ThemeToggle` uses it.
 
 ### `useRackEditor`
 
@@ -567,51 +543,24 @@ const editorSpec = definePlateEditor({ history: true })
 
 ### Plotly results
 
-Use `PlotlyChart` for native Plotly traces instead of owning the library lifecycle in each plugin:
+Use [PlotlyChart](/sdk/components/plotly-chart) for native Plotly traces. The plugin must declare `plotly.js-dist-min`; see [Charts need Plotly](/sdk/frontend/#charts-need-plotly).
 
-```vue
-<script setup lang="ts">
-import { PlotlyChart } from '@morscherlab/mint-sdk/lab'
-</script>
-
-<template>
-  <PlotlyChart
-    title="QC intensity"
-    aria-label="Peak intensity by injection number"
-    :data="[{ type: 'scatter', mode: 'lines+markers', x: [1, 2, 3], y: [100, 98, 102] }]"
-    :layout="{ xaxis: { title: { text: 'Injection' } }, yaxis: { title: { text: 'Intensity' } } }"
-  />
-</template>
-```
-
-The component lazily imports Plotly, updates with `Plotly.react`, tracks theme and container size, and purges on unmount. It applies `mintPlotlyTemplate()` by default (your `layout` keys still win) and re-reads it on every theme change. Set `empty` explicitly when there is no result, and keep axis labels/units in the supplied layout.
-
-Declare `plotly.js-dist-min` in the plugin frontend; see [Charts need Plotly](/sdk/frontend/#charts-need-plotly). `active` pauses render/resize work for hidden tabs; `height` accepts pixels or a CSS height. Pass `plotly` only when the plugin owns a compatible custom build. Set `clickEvents` to receive `plotly-click` with a `PlotMouseEvent`. Use `variant="frame"` in a bounded workbench panel and the `header`, `toolbar`, `subhead`, `legend`, and `footer` slots for surrounding UI. See [PlotlyChart](/sdk/components/plotly-chart) for the full example; use [ChartContainer](/sdk/components/chart-container) for another rendering library.
-
-For a chart you render with Plotly directly, `mintPlotlyTemplate(element?)` (from `@morscherlab/mint-sdk/lab`) returns a Plotly `Template` resolved from the MINT tokens: the `--mint-sample-1…8` colorway, `--font-sans` body text, `--font-mono` ticks, `--border-light` grid, and a card-style hover label. Pass it as `layout: { template: mintPlotlyTemplate() }`; call it again after a theme change. Also pass `showSendToCloud: false` in the config; see [Plotly 4 builds and types](/sdk/components/plotly-chart#plotly-4-builds-and-types).
+For a chart that you render with Plotly directly, call `mintPlotlyTemplate(element?)` from `@morscherlab/mint-sdk/lab`. It returns a Plotly `Template` made from the MINT tokens: the `--mint-sample-1…8` colorway, `--font-sans` body text, `--font-mono` ticks, the `--border-light` grid and a card-style hover label. Pass it as `layout: { template: mintPlotlyTemplate() }`, and call it again after a theme change. Also pass `showSendToCloud: false` in the config; see [Plotly 4 builds and types](/sdk/components/plotly-chart#plotly-4-builds-and-types).
 
 ### Resizable workbench panes
 
-`LayoutResizeHandle` updates its `v-model` on keyboard actions and emits `resize-start` for pointer actions. `useManualLayoutResize({ enabled, resolveTarget })` supplies `startResize(kind, event)`, `stopResize()`, `isResizing`, `isResizingKind(kind)`, and `activeResize`.
+`LayoutResizeHandle` changes its `v-model` on keyboard actions and emits `resize-start` for pointer actions. `useManualLayoutResize({ enabled, resolveTarget })` gives `startResize(kind, event)`, `stopResize()`, `isResizing`, `isResizingKind(kind)` and `activeResize`.
 
-Each resolved target provides a container element, a starting value, and an `onResize` callback. Use `resizedLeadingPanelWidth()` for a left panel, `resizedTrailingPanelWidth()` for a right panel, or `resizedVerticalSplitPercent()` for a top/bottom split. The helper owns pointer listeners and cleanup; your component owns the value and applies it to its layout. See [the complete resize example](/sdk/components/layout-resize-handle).
+- Each resolved target gives a container element, a start value and an `onResize` callback.
+- Use `resizedLeadingPanelWidth()` for a left panel, `resizedTrailingPanelWidth()` for a right panel and `resizedVerticalSplitPercent()` for a top and bottom split.
+- The helper owns the pointer listeners and their cleanup. Your component owns the value and applies it to its layout.
+
+See [the full resize example](/sdk/components/layout-resize-handle).
 
 ### File picker adapters
 
-`usePlatformFilePickerAdapter()` connects `FilePicker` to authenticated platform mounts. `createFilePickerAdapter()` instead accepts a transport with `listMounts(request?)` and `browse(location, request?)`, plus optional `tree` and `search`, allowing a generated plugin client to reuse the SDK's navigation and search. Both accept `rootLocation` to confine browsing to a mount-relative directory.
+`usePlatformFilePickerAdapter()` connects `FilePicker` to the platform mounts. `createFilePickerAdapter()` connects it to a plugin-owned file API. See [Adapter-driven FilePicker](/sdk/frontend/platform-integration#adapter-driven-filepicker).
 
-Preserve abort signals and explicit refresh flags in custom transports. Decode opaque server selections with `decodePlatformPickerPath()` before calling mount-scoped backend APIs. See [the complete picker example and cache behavior](/sdk/frontend/platform-integration#adapter-driven-filepicker).
+## Network calls
 
-## Notes
-
-- All composables use Vue 3 Composition API. Call them inside `<script setup>` or `setup()` only.
-- Most composables return `Ref` or `ComputedRef` — destructure but keep the references reactive.
-- The composables that hit the network (generated plugin clients, `useExperimentData`, `useExperimentSelector`, `useExperimentNumber`, `useLiveDesign`) send the session token. Do not write your own `fetch` calls to MINT routes.
-- Prefer public package imports (the package root or the documented subpaths). `mint doctor` flags a root import of a name that moved to a subpath, the removed 1.3 names, direct private SDK subpaths, and raw plugin API `fetch('/api/...')` calls.
-
-## Related
-
-- [Component Library](/sdk/components/) — components that pair with these composables
-- [Design tokens](/sdk/frontend/design-tokens) — `useTheme` integrates with the token system
-- [Platform integration](/sdk/frontend/platform-integration) — platform context, experiment selection, and server files
-- [API Reference → Frontend SDK](/sdk/api/frontend) — every composable's exported types
+The composables that call the network send the session token: the generated plugin clients, `useExperimentData`, `useExperimentSelector`, `useExperimentNumber` and `useLiveDesign`. Do not write your own `fetch` calls to MINT routes. Import from the package root or the documented subpaths. `mint doctor` reports a root import of a name that moved to a subpath, a removed 1.3 name, a private SDK subpath and a raw plugin API `fetch('/api/...')` call.

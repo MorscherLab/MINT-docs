@@ -1,8 +1,8 @@
 # Plugin panels
 
-Show the data of your plugin on the experiment page, without a frontend. A **panel** is a tab in the **Design data** card or in the **Analysis artifacts** card. The plugin returns data in sections of fixed kinds. The platform checks the data and draws it. Plugin code does not run in the platform page.
+Show the data of your plugin on the experiment page, without a frontend. A panel is a tab in the **Design data** card or in the **Analysis artifacts** card. The plugin returns sections of fixed kinds. The platform checks the data and draws it. No plugin code runs in the platform page.
 
-Use a panel for a short summary, a status, a table or a plate layout. Keep work that needs interaction on the plugin's own page, and put a `link` section to that page in the panel.
+Use a panel for a short summary, a status, a table or a plate layout. Keep interactive work on the plugin page, and add a `link` section to that page.
 
 Panels need MINT 1.6 and `mint-sdk` 1.6 or later.
 
@@ -143,7 +143,7 @@ A plate has at most 9 `PlateGroup`s. The platform gives the groups their colours
 
 ### Width
 
-Every section takes `width`: `"full"` (default), `"two-thirds"`, `"half"` or `"third"`. The sections fill rows of six columns in declaration order: `full` takes 6, `two-thirds` 4, `half` 3 and `third` 2. A section that does not fit starts the next row. When the panel is narrower than 53rem, every section takes the full width.
+Every section takes `width`: `"full"` (default), `"two-thirds"`, `"half"` or `"third"`. The sections fill rows of six columns in declaration order: `full` takes 6, `two-thirds` 4, `half` 3 and `third` 2. A section that does not fit starts the next row. In a panel narrower than 53rem, every section takes the full width.
 
 ### Limits
 
@@ -155,13 +155,15 @@ Every section takes `width`: `"full"` (default), `"two-thirds"`, `"half"` or `"t
 | Text | 20,000 characters |
 | Handler time | 10 s in-process, 15 s for a plugin process |
 
-A `link` under `/plugin/` must stay under the plugin's own prefix. A section of a kind that the platform does not know shows "This section needs a newer MINT version". A plugin page can draw the same sections with the frontend component [PanelSections](/sdk/components/panel-sections).
+- A `link` under `/plugin/` must stay under the plugin's own prefix.
+- A section of a kind that the platform does not know shows "This section needs a newer MINT version".
+- A plugin page can draw the same sections with the frontend component [PanelSections](/sdk/components/panel-sections).
 
 ## Read data as the viewer
 
-The platform calls the handler as the user who opens the tab. `self.design`, `self.artifacts` and `self.context.experiments` read only what that user may read. The tables of the plugin have no platform scope: filter them yourself.
+The platform calls the handler as the user who opens the tab. `self.design`, `self.artifacts` and `self.context.experiments` read only what that user may read. Plugin tables have no platform scope: filter them yourself, see [Querying plugin data](/sdk/recipes/querying-plugin-data#read-within-a-scoped-session).
 
-Return a `StatePanel` when data is missing, as in the `layout` panel above. A live design can be incomplete; see [Live design forms](/sdk/recipes/live-design).
+Return a `StatePanel` when data is missing, as in the `layout` panel above. A live design can be incomplete; see [Live design forms](/sdk/recipes/live-design#handle-saves-in-the-plugin).
 
 ## Actions
 
@@ -170,9 +172,9 @@ An `Action(title, job, inputs={})` is a button on the tab. It starts a `@job` of
 - The job takes one input of type `ExperimentRef` (`mint_sdk.jobs`). The page sets it to the experiment id.
 - `inputs` gives fixed JSON values for other inputs. Each input that `inputs` leaves out needs a default.
 - A staged job cannot be an action.
-- `@plugin` raises `TypeError` for an action whose job is missing, is staged, or does not meet these rules. The plugin then does not load, and `mint doctor` reports the error under "Panels".
+- `@plugin` raises `TypeError` for an action whose job is missing, is staged, or breaks these rules. The plugin then does not load, and `mint doctor` reports the error under "Panels".
 
-The button follows the job's `access`: a viewer below that level does not see it. Set `Job.effect` to state what the job changes:
+A viewer below the job's `access` level does not see the button. Set `Job.effect` to what the job changes: `"read"`, `"write"` (default) or `"destructive"`. For a destructive job, the page and MCP `mint_start_job` ask the user to confirm first.
 
 ```python
 class Rescore(Job):
@@ -180,13 +182,7 @@ class Rescore(Job):
     effect = "destructive"
 ```
 
-| `Job.effect` | Meaning |
-|--------------|---------|
-| `"read"` | Changes nothing |
-| `"write"` | Changes data. The default |
-| `"destructive"` | Can overwrite or remove data. The page and MCP `mint_start_job` ask the user for confirmation first |
-
-On the page, the button shows a running state until the job for the experiment ends. A second click in that time starts no second job. Progress and errors show in the jobs tray. The tab loads again when the job ends. More than 3 actions go into one **Actions** menu.
+While the job runs, the button shows a running state, and a second click starts no second job. Progress and errors show in the jobs tray. More than 3 actions go into one **Actions** menu. For what users see, see [Plugin tabs](/guide/experiments#plugin-tabs).
 
 ## Turn off the analysis offer
 
@@ -197,7 +193,7 @@ class PlateQc(Metadata):
     analysis_offer = False
 ```
 
-`mint doctor` shows a hint for an analysis plugin without a page, a frontend, a generated UI and a `@job` that keeps the offer on.
+`mint doctor` shows a hint for an analysis plugin that keeps the offer on and has no page, frontend, generated UI or `@job`.
 
 ## Read a panel without the page
 
@@ -207,65 +203,26 @@ The platform serves each panel at:
 GET /api/experiments/{experiment_id}/panels/{plugin}/{panel_id}
 ```
 
-The answer is `{plugin, panel, experiment_id, sections, built_at}` with `Cache-Control: no-store`. The caller needs `experiments.view` and a visible experiment.
+The answer is `{plugin, panel, experiment_id, sections, built_at}` with `Cache-Control: no-store`. The caller needs `experiments.view` and a visible experiment. For the refusal codes (`plugin.panel_*`, `plugin.not_visible`, `plugin.permission_denied`), see [Error codes → Plugins](/reference/error-codes#plugins). `plugin.panel_not_found` also covers a panel that does not apply to the experiment type, and a design-slot panel of a plugin that is not the design plugin. For an invalid section, the `details` of `plugin.panel_invalid` names its index.
 
-| Status | Code | Cause |
-|--------|------|-------|
-| 403 | `plugin.not_visible` | The role does not see the plugin |
-| 403 | `plugin.permission_denied` | The role does not have `plugins.use` |
-| 403 | `plugin.panel_forbidden` | The panel `access` is above the caller's level |
-| 404 | `plugin.panel_not_found` | The plugin does not declare the panel, the panel does not apply to the experiment type, or the plugin is not the design plugin of a design-slot panel |
-| 502 | `plugin.panel_invalid` | The handler failed, timed out or returned an invalid answer. For an invalid section, `details` names its index |
+MCP serves each panel as a resource with the same checks; see [Panels and jobs over MCP](/sdk/recipes/mcp-tools#panels-and-jobs-over-mcp).
 
-MCP serves each panel as the resource template `mint://plugins/<plugin>/panels/<panel_id>/experiments/{experiment_id}`, with the same checks. `mint://experiments/{id}` lists the panels that apply as `panels: [{plugin, id, title, uri}]`. See [MCP tools](/sdk/recipes/mcp-tools#panels-and-jobs-over-mcp).
-
-A plugin in its own process serves its panels at `POST /__mint/panels/{id}`. The SDK app adds the route. Write no code for it.
+A plugin in its own process serves its panels at `POST /__mint/panels/{id}`. The SDK app adds this route.
 
 ## Refresh
 
-The page loads a tab when the user selects it. The tab loads again:
-
-- when the user clicks its refresh button;
-- when the user selects it more than 30 s after its last load;
-- when the job of an action ends;
-- 2 s after the last design change (design slot) or artifact change (analysis slot).
+The page loads a tab when the user selects it. It loads the tab again on the refresh button, on a selection more than 30 s after the last load, and when an action's job ends. It also loads again 2 s after the last design change (design slot) or artifact change (analysis slot).
 
 ## Test a panel
 
-`Harness.panel(panel_id, experiment_id, *, as_user=None)` calls a panel and returns its sections as the platform gets them. A refused `access`, a timeout and an invalid answer raise the same exception as on the platform.
-
-```python
-from mint_sdk import Actor
-from mint_sdk.testing import Harness, RecordingContext
-
-
-def test_layout_with_samples_shows_plate() -> None:
-    context = RecordingContext(
-        actor=Actor.standalone(),
-        experiments=[{"id": 7, "name": "Plate 1", "experiment_type": "metabolomics"}],
-    )
-    with Harness(PlateQcPlugin, context=context) as harness:
-        harness.client.portal.call(context.design.save, 7, {"sample_count": 20})
-        sections = harness.panel("layout", 7)
-
-    assert [section["kind"] for section in sections] == ["kv", "status", "plate"]
-```
-
-The MINT repository tests the full example in `packages/sdk-python/tests/test_plugin_panels_example.py`.
-
-The `mint init` standard template adds an analysis-slot panel "Summary" and a test that calls it. See [Testing plugins](/sdk/recipes/testing-plugins).
+Call the panel with `Harness.panel`; see [Testing plugins → Panels](/sdk/recipes/testing-plugins#panels). The MINT repository tests the full example in `packages/sdk-python/tests/test_plugin_panels_example.py`.
 
 ## `mint doctor` checks
 
-The "Panels" check gives a warning for:
+The "Panels" check warns about:
 
 - a panel id of the latest git tag that is gone (deep links and MCP addresses to it break);
 - `experiment_types` of a panel outside `Metadata.experiment_types`;
 - a design-slot panel of a plugin without `"design"` in `writes` (the panel never shows).
 
-## Related
-
-- [Experiments → Design and analysis on the detail page](/guide/experiments#design-and-analysis-on-the-detail-page)
-- [Live design forms](/sdk/recipes/live-design)
-- [Python SDK reference → Panels](/sdk/api/python#panels)
-- [RFC: plugin panels](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-11-18-plugin-panels.md)
+For all symbols, see [Python SDK reference → Panels](/sdk/api/python#panels). For the design decision, see the [RFC: plugin panels](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-11-18-plugin-panels.md).

@@ -1,14 +1,14 @@
 ---
 aside: false
 title: LoadingSpinner
-description: "LoadingSpinner is a feedback component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Animated spinner with a hidden status label for screen readers."
 ---
 
 <p class="mint-component-library__eyebrow">Feedback</p>
 
 # LoadingSpinner
 
-LoadingSpinner is a feedback component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `LoadingSpinner` to show that content is loading. `tone="inherit"` takes the text color of the parent.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

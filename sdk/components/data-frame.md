@@ -8,7 +8,7 @@ description: "Searchable, sortable, selectable table for dense experiment and an
 
 # DataFrame
 
-Searchable, sortable, selectable table for dense experiment and analysis results.
+Use `DataFrame` for a table of experiment or analysis results that the user can search, sort, select and resize.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,12 +25,12 @@ import { DataFrame } from "@morscherlab/mint-sdk"
 
 ## Basic Usage
 
-Build the structure with `defineDataFrame()` in `<script setup>` and pass it as `spec`. Bind the state with `v-model`.
+Build the structure with `defineDataFrame()` in `<script setup>` and pass it as `spec`. Bind the state (sort, selection, page, column widths) with `v-model`.
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue'
-import { DataFrame, defineDataFrame } from '@morscherlab/mint-sdk'
+import { DataFrame, SectionCard, defineDataFrame } from '@morscherlab/mint-sdk'
 
 const table = defineDataFrame({
   rowKey: 'id',
@@ -64,7 +64,9 @@ const columnWidths = ref<Record<string, number>>({})
 | `deleteLabel` | Tooltip and accessible label for the delete action |
 | `delete-row` | Emits the row object and row index after the delete action |
 
-Leave `columnWidths` unbound for resizing inside the table only. Bind it when you want to store widths in plugin settings. Without `bordered`, the table has no frame of its own: put it in a [SectionCard](/sdk/components/section-card#content-in-a-card).
+Leave `columnWidths` unbound to keep the widths only while the table is shown. Bind it to store the widths, for example in plugin settings.
+
+On its own, the table draws a border (`bordered`, default `true`). As the direct child of a [SectionCard](/sdk/components/section-card#content-in-a-card) body, it runs to the card edges without that border.
 
 <!-- sdk-props:start -->
 ## Props
@@ -114,9 +116,5 @@ Defaults are the values that vue-component-meta resolves from the source; object
 | ` footer ` | — | — |
 
 <!-- sdk-props:end -->
-
-## Related
-
-- [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables)
 
 [Back to component library](/sdk/components/)

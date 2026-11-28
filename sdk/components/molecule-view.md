@@ -8,7 +8,7 @@ description: "Read-only SMILES structure drawing, bare or as a tile with the SMI
 
 # MoleculeView
 
-Read-only SMILES structure drawing, bare or as a tile with the SMILES and a copy button.
+Use `MoleculeView` to draw a structure from a SMILES string, without editing.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -35,7 +35,7 @@ import { MoleculeView } from "@morscherlab/mint-sdk/lab"
 - Without `height`, the drawing fills its container.
 - The drawing follows the light or dark theme.
 - When the SMILES does not parse, the component shows the SMILES as text and emits `error`.
-- The renderer (`smiles-drawer`) loads when the component mounts. A page without a structure does not load it.
+- The renderer (`smiles-drawer`) loads when the component mounts, so a page without a structure does not load it.
 
 To let the user type or edit a structure, use [MoleculeInput](/sdk/components/molecule-input). `MoleculeInput` with `readonly` shows the structure in a `MoleculeView` tile.
 

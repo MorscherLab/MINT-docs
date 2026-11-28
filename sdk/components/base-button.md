@@ -8,7 +8,7 @@ description: "Tokenized action button with variants, sizes, loading, and disable
 
 # BaseButton
 
-Tokenized action button with variants, sizes, loading, and disabled states.
+Use `BaseButton` for an action. It has variants, sizes, an icon, and loading and disabled states.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -33,11 +33,11 @@ import { BaseButton } from "@morscherlab/mint-sdk"
 
 ## Icons
 
-Give an icon with the `icon` prop (a component, for example a Lucide icon) or the `icon-left` / `icon-right` slot.
+Give an icon with the `icon` prop (a component, for example a Lucide icon) or with the `icon-left` or `icon-right` slot.
 
 - Beside a label, the icon is 14px at `sm` and `md` and 18px at `lg`. The gap to the label is 6px (8px at `lg`). The side that holds the icon has less padding.
 - An icon-only button (`icon` and `label`, no default slot) is a square of 28, 32 or 40px with a 16px icon at each size. `label` is its accessible name and tooltip.
-- An icon in the default slot keeps its own size and equal padding. Move it to a slot to get the sizes above:
+- An icon in the default slot keeps its own size and equal padding. To get the sizes above, move it to an icon slot:
 
 ```vue
 <BaseButton variant="secondary">
@@ -46,7 +46,7 @@ Give an icon with the `icon` prop (a component, for example a Lucide icon) or th
 </BaseButton>
 ```
 
-While `loading` is true, the spinner takes the place of the `icon` prop or the `icon-left` slot, so the label does not move. A primary button label has weight 600 at each size.
+While `loading` is `true`, the spinner replaces the `icon` prop or the `icon-left` slot, so the label does not move. The label of a primary button has weight 600 at each size.
 
 <!-- sdk-props:start -->
 ## Props

@@ -8,7 +8,7 @@ description: "Fixed-position notice offering a reload when a newer plugin or pla
 
 # RuntimeUpdateNotice
 
-Fixed-position notice offering a reload when a newer plugin or platform build is ready.
+Use `RuntimeUpdateNotice` to offer a reload when a newer plugin or platform build is ready.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

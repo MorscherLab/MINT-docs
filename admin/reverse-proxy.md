@@ -1,13 +1,13 @@
 # Reverse proxy
 
-MINT serves plain HTTP and does not terminate TLS. Put a reverse proxy in front of it for every production install. The proxy does four jobs:
+This page tells you how to put a reverse proxy in front of MINT. MINT serves plain HTTP and does not terminate TLS, so every production install needs a proxy. The proxy must:
 
-- It terminates TLS for the public `https://` URL.
-- It forwards the client address and scheme in `X-Forwarded-*` headers.
-- It passes long-lived streams (server-sent events and one WebSocket) without buffering them.
-- It accepts large request bodies (plugin bundles, data uploads).
+- Terminate TLS for the public `https://` URL.
+- Send the client address and scheme in `X-Forwarded-*` headers.
+- Pass long-lived streams (server-sent events and one WebSocket) without buffering.
+- Accept large request bodies (plugin bundles, data uploads).
 
-Both install paths bind MINT to `127.0.0.1:8001` on the host: the [direct install](/admin/install-direct) through `mint-platform serve --host 127.0.0.1 --port 8001`, the [Docker install](/admin/install-docker) through `MINT_PORT=127.0.0.1:8001`. The examples below use that address and the public name `mint.example.org`.
+Both install methods bind MINT to `127.0.0.1:8001` on the host: the [direct install](/admin/install-direct) with `mint-platform serve --host 127.0.0.1 --port 8001`, the [Docker install](/admin/install-docker) with `MINT_PORT=127.0.0.1:8001`. The examples use that address and the public name `mint.example.org`.
 
 ## Proxy configuration
 
@@ -62,20 +62,23 @@ mint.example.org {
 
 :::
 
-Caddy gets TLS certificates automatically, redirects HTTP to HTTPS, sets the `X-Forwarded-*` headers, passes WebSocket upgrades and streams responses without extra configuration. With nginx, get certificates with `certbot --nginx -d mint.example.org`.
+Caddy gets TLS certificates, redirects HTTP to HTTPS, sets the `X-Forwarded-*` headers, passes WebSocket upgrades and streams responses without more configuration.
 
-Enable and test the nginx site:
+For nginx, do these steps:
 
-```bash
-sudo ln -s /etc/nginx/sites-available/mint /etc/nginx/sites-enabled/mint
-sudo nginx -t && sudo systemctl reload nginx
-```
+1. Get a certificate with `certbot --nginx -d mint.example.org`.
+2. Enable and test the site:
+
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/mint /etc/nginx/sites-enabled/mint
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
 
 For a Caddy container in the same Compose project, see [Install on Linux (Docker)](/admin/install-docker#reverse-proxy). That proxy targets `app:8000`, not `127.0.0.1:8001`.
 
 ## Public URL
 
-Set `server.externalUrl` in `config.json` to the public URL, with the `https://` scheme and no trailing path:
+Set `server.externalUrl` in `config.json` to the public URL, with `https://` and no path:
 
 ```json
 {
@@ -85,38 +88,41 @@ Set `server.externalUrl` in `config.json` to the public URL, with the `https://`
 }
 ```
 
-MINT uses this value for these functions:
+MINT uses this value as follows:
 
-- Login cookies get the `Secure` flag, although the proxy talks plain HTTP to MINT.
-- The [second factor](/admin/authentication#second-factor) is enforced only when `externalUrl` starts with `https://`.
+- The `mint_access_token` and `passkey_session` cookies get the `Secure` flag, although the proxy talks plain HTTP to MINT.
+- MINT enforces the [second factor](/admin/authentication#second-factor) with passkeys only when `externalUrl` starts with `https://`.
 - The `mint` CLI sign-in page is `<externalUrl>/device`.
 - Calendar feed URLs and the platform origin that plugin pages receive use this value.
+- `/mcp` accepts this host. See [Security settings](/admin/configuration#security-settings).
 
-When `externalUrl` is empty, MINT builds these URLs from the `X-Forwarded-Host` and `X-Forwarded-Proto` headers of a trusted proxy. Otherwise it uses the address of the request it received.
+When `externalUrl` is empty, MINT builds these URLs from the `X-Forwarded-Host` and `X-Forwarded-Proto` headers of a trusted proxy. Otherwise it uses the request that it received. Cookies then carry `Secure` only when the request arrived over HTTPS.
 
-Passkeys use `server.rpId` as the relying-party ID. Set it to the public host name (`mint.example.org`), or leave it empty and make sure that MINT trusts the proxy. An empty `rpId` comes from the trusted `X-Forwarded-Host` header, or else from the request host. Passkeys that users register under one ID do not work under a different ID, so decide on the host name before users register passkeys.
+If `externalUrl` starts with `https://` but users open MINT over plain HTTP, the browser drops the cookie and the login fails.
+
+Passkeys use `server.rpId` as the relying-party ID. Decide on the host name before users register passkeys. See [Sign in with a passkey](/admin/authentication#sign-in-with-a-passkey).
 
 ## Trusted proxies
 
-MINT believes the `X-Forwarded-*` headers only from a proxy that it trusts. Two settings control this trust, and they must name the same proxy addresses:
+MINT reads the `X-Forwarded-*` headers only from a trusted proxy. Two settings control this trust. Give both the same proxy addresses:
 
 | Setting | Read by | Default | Controls |
 |---|---|---|---|
-| `server.trustedProxyCidrs` (`config.json`) or `MINT_SERVER__TRUSTED_PROXY_CIDRS` | MINT | `["127.0.0.1/32", "::1/128"]` | Client IP for the rate limiter and the [audit log](/admin/platform-settings), passkey host from `X-Forwarded-Host` |
-| `mint-platform serve --forwarded-allow-ips` | Uvicorn | `127.0.0.1,::1` | Client address and scheme (`X-Forwarded-For`, `X-Forwarded-Proto`) that the application sees |
+| `server.trustedProxyCidrs` (`config.json`) or `MINT_SERVER__TRUSTED_PROXY_CIDRS` | MINT | `["127.0.0.1/32", "::1/128"]` | The client IP for the rate limiter and the [audit log](/admin/platform-settings#logs-and-audit-log), the passkey host from `X-Forwarded-Host`, and the `platformOrigin` that plugin frontends receive |
+| `mint-platform serve --forwarded-allow-ips` | Uvicorn | `127.0.0.1,::1` | The client address and scheme (`X-Forwarded-For`, `X-Forwarded-Proto`) that the application sees |
 
-An explicitly empty list (`[]`) in `trustedProxyCidrs` trusts no proxy. MINT then ignores all forwarded headers.
+An empty list (`[]`) in `trustedProxyCidrs` trusts no proxy. MINT then ignores all forwarded headers.
 
-Add only the address or the smallest CIDR of your proxy. A broad range lets any host in that range set a false client IP, which defeats the rate limiter.
+Add only the address or the smallest CIDR of your proxy. With a broad range, any host in that range can send a false client IP and get past the rate limiter.
 
 ### Proxy on the same host
 
-A host proxy that connects to `127.0.0.1:8001` needs no change with the direct install. The defaults trust loopback.
+With the direct install, a host proxy that connects to `127.0.0.1:8001` needs no change. The defaults trust loopback.
 
-With the Docker install, the container does not see `127.0.0.1` as the peer. Docker forwards the connection, and MINT sees the gateway address of the Compose network (for example `172.18.0.1`). To find the address that MINT sees, do these steps:
+With the Docker install, MINT does not see `127.0.0.1` as the peer. Docker forwards the connection, and MINT sees the gateway address of the Compose network (for example `172.18.0.1`). To find the address that MINT sees:
 
 1. Sign in through the public URL.
-2. Read your sign-in event from the [audit log](/admin/platform-settings#logs-and-audit-log) with a token from a user with `platform.view_logs`:
+2. Read your sign-in event from the [audit log](/admin/platform-settings#logs-and-audit-log) with the token of a user with `platform.view_logs`:
 
    ```bash
    curl -H "Authorization: Bearer $TOKEN" \
@@ -140,27 +146,27 @@ For the direct install, also add the same addresses to `--forwarded-allow-ips` i
 ExecStart=/opt/mint/.venv/bin/mint-platform serve --platform-dir /opt/mint --host 127.0.0.1 --port 8001 --forwarded-allow-ips 127.0.0.1,::1,10.0.0.5
 ```
 
-A proxy on another host also requires MINT to listen on an address that the proxy can reach. Bind `--host` to the private interface only, and block port 8001 from all other hosts with a firewall.
+A proxy on another host must reach MINT. Bind `--host` to the private interface only, and block port 8001 from all other hosts with a firewall.
 
 ## Streams and WebSockets
 
 MINT keeps some connections open for a long time:
 
-| Path | Type | Used for |
+| Path | Type | Use |
 |---|---|---|
 | `GET /api/events` | Server-sent events | [Realtime updates](/admin/configuration#realtimeenabled) and presence |
 | Plugin job streams under `/api/...` | Server-sent events | Job progress in plugin pages |
-| `/api/admin/terminal/ws` | WebSocket | **Admin -> Terminal** (only when `MINT_ADMIN_TERMINAL_ENABLED` is on) |
+| `/api/admin/terminal/ws` | WebSocket | **Admin -> System -> Terminal** (only when `MINT_ADMIN_TERMINAL_ENABLED` is on) |
 
-The event streams send the `X-Accel-Buffering: no` header, so nginx does not buffer them. `/api/events` sends a keepalive comment every 20 seconds, so the nginx default `proxy_read_timeout` of 60 seconds is sufficient for it. The `300s` value in the example above gives quiet job streams more time.
+The event streams send the header `X-Accel-Buffering: no`, so nginx does not buffer them. `/api/events` sends a keepalive comment every 20 seconds, so the nginx default `proxy_read_timeout` of 60 seconds is sufficient for it. The `300s` in the example gives quiet job streams more time.
 
 A proxy or CDN that ignores `X-Accel-Buffering` must turn off response buffering for these paths. Its idle timeout must be longer than 20 seconds.
 
-The WebSocket needs the `Upgrade` and `Connection` headers. The nginx example passes them through the `map` block. Without them, the admin terminal does not connect.
+The WebSocket needs the `Upgrade` and `Connection` headers. The `map` block of the nginx example passes them. Without them, the admin terminal does not connect.
 
 ## Request size
 
-nginx accepts request bodies up to 1 MB by default, and refuses larger bodies with `413 Request Entity Too Large`. Set `client_max_body_size` to the largest upload that you expect. MINT accepts plugin bundles (`.mint`) up to 200 MB, and plugins can accept larger data files. The examples above use 1 GB.
+nginx accepts request bodies up to 1 MB by default and refuses larger bodies with `413 Request Entity Too Large`. Set `client_max_body_size` to the largest upload that you expect. MINT accepts plugin bundles (`.mint`) up to 200 MB, and plugins can accept larger data files. The examples use 1 GB.
 
 ## Verify the proxy
 
@@ -171,19 +177,20 @@ nginx accepts request bodies up to 1 MB by default, and refuses larger bodies wi
    ```
 
    The response is `HTTP/2 200`.
-2. Check that the event stream is not buffered. Sign in, open the browser developer tools, and find the `events` request on the **Network** tab. Its type is `eventsource`, and it stays in the pending state.
+2. Check that the proxy does not buffer the event stream. Sign in and open the browser developer tools. On the **Network** tab, find the `events` request. Its type is `eventsource`, and it stays pending.
 3. Check the client IP in the audit log, as in [Proxy on the same host](#proxy-on-the-same-host).
 
 ## Troubleshooting
 
 | Symptom | Cause and fix |
 |---|---|
-| `502 Bad Gateway` | MINT is not running, or the proxy points to the wrong address. Run `curl -I http://127.0.0.1:8001/api/health` on the host. |
-| `413 Request Entity Too Large` on upload | `client_max_body_size` (nginx) or `request_body max_size` (Caddy) is too small. |
-| Rate limit fires for all users | All requests seem to come from one address. The proxy does not send `X-Forwarded-For`, or its address is not in `server.trustedProxyCidrs`. |
-| Audit log shows `172.x.0.1` for all users | Docker gateway address is not trusted. See [Proxy on the same host](#proxy-on-the-same-host). |
-| Passkey sign-in fails with an origin or RP ID error | `server.rpId` does not match the public host name, or MINT does not trust the proxy that sends `X-Forwarded-Host`. |
-| Pages do not update when other users make changes | The proxy buffers `/api/events`, or closes it in less than 20 seconds. See [Streams and WebSockets](#streams-and-websockets). |
-| Admin terminal does not connect | The proxy does not pass the WebSocket `Upgrade` header. |
+| `502 Bad Gateway` | MINT does not run, or the proxy points to the wrong address. Run `curl -I http://127.0.0.1:8001/api/health` on the host |
+| `413 Request Entity Too Large` on upload | `client_max_body_size` (nginx) or `request_body max_size` (Caddy) is too small |
+| The rate limit applies to all users | All requests seem to come from one address. The proxy does not send `X-Forwarded-For`, or its address is not in `server.trustedProxyCidrs`. See [Rate limiting](/admin/authentication#rate-limiting) |
+| The audit log shows `172.x.0.1` for all users | MINT does not trust the Docker gateway address. See [Proxy on the same host](#proxy-on-the-same-host) |
+| Passkey sign-in fails with an origin or RP ID error | `server.rpId` does not match the public host name, or MINT does not trust the proxy that sends `X-Forwarded-Host` |
+| Login fails, and the browser drops the cookie | `externalUrl` starts with `https://`, but users open MINT over plain HTTP. See [Public URL](#public-url) |
+| Pages do not update when other users make changes | The proxy buffers `/api/events`, or closes it in less than 20 seconds. See [Streams and WebSockets](#streams-and-websockets) |
+| The admin terminal does not connect | The proxy does not pass the WebSocket `Upgrade` header |
 
-Next step: [First-run setup](/admin/first-run).
+Next: [First-run setup](/admin/first-run).

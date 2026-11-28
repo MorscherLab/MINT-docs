@@ -1,14 +1,14 @@
 ---
 aside: false
 title: Avatar
-description: "Avatar is a feedback component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "User avatar as an image, an initial or a fallback icon, with an optional status dot."
 ---
 
 <p class="mint-component-library__eyebrow">Feedback</p>
 
 # Avatar
 
-Avatar is a feedback component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `Avatar` to show a person as a photo, an initial or a fallback icon. An optional dot shows the status.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

@@ -1,14 +1,14 @@
 ---
 aside: false
 title: Breadcrumb
-description: "Breadcrumb is a layout component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Breadcrumb trail; ancestors are links or buttons, the last item is the current page."
 ---
 
 <p class="mint-component-library__eyebrow">Layout</p>
 
 # Breadcrumb
 
-Breadcrumb is a layout component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `Breadcrumb` to show where the current page is in a hierarchy, for example project, experiment and analysis.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

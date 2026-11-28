@@ -8,7 +8,7 @@ description: "Paired start/end time pickers that validate range order and displa
 
 # TimeRangeInput
 
-Paired start/end time pickers that validate range order and display computed duration.
+Use `TimeRangeInput` to enter a start and an end time. It checks the order and can show the duration.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,7 +25,10 @@ import { TimeRangeInput } from "@morscherlab/mint-sdk/lab"
 
 ## Validation
 
-When end ≤ start, the fields show "End time must be after start time". The component emits `validity-change(valid)` on mount and whenever validity flips, and exposes `isValid` through a template ref so a form can block submit. With `showDuration`, the duration reads like `1 h 30 min` and shows "—" for an incomplete or inverted range. `disabledSlots` is forwarded to both pickers.
+- When the end is not after the start, the fields show "End time must be after start time".
+- The component emits `validity-change(valid)` on mount and each time the validity changes. It exposes `isValid` through a template ref, so that a form can block submit.
+- With `showDuration`, the duration reads like `1 h 30 min`, and "—" for an incomplete or inverted range.
+- Both pickers get `disabledSlots`.
 
 <!-- sdk-props:start -->
 ## Props

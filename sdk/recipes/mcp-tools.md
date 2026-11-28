@@ -1,6 +1,6 @@
 # MCP tools
 
-Publish plugin methods to AI assistants connected to the platform's `/mcp` endpoint. The platform owns the MCP protocol; a plugin declares plain async methods with `@tool`, `@prompt` or `@resource` from `mint_sdk.mcp`, and the SDK never imports `mcp`. Users connect an assistant with a personal access token as described in [AI Assistants and API Access](/guide/ai-and-api).
+Publish plugin methods to AI assistants that connect to the platform `/mcp` endpoint. Declare plain async methods with `@tool`, `@prompt` or `@resource` from `mint_sdk.mcp`. The platform runs the MCP protocol; the SDK never imports `mcp`. For how users connect an assistant, see [AI Assistants and API Access](/guide/ai-and-api).
 
 ## Declare a tool
 
@@ -33,7 +33,7 @@ class DoseResponsePlugin(Plugin):
         return FitResult(ic50_um=fit(design.data))
 ```
 
-A tool method takes `(self, ctx: ToolContext, args: ArgsModel)` and returns a Pydantic model. The argument and return models become the tool's input and output schemas, and the docstring is the description the assistant reads.
+A tool method takes `(self, ctx: ToolContext, args: ArgsModel)` and returns a Pydantic model. The two models become the input and output schemas of the tool. The docstring is the description that the assistant reads.
 
 | `Tool` option | Meaning |
 |---|---|
@@ -44,7 +44,7 @@ A tool method takes `(self, ctx: ToolContext, args: ArgsModel)` and returns a Py
 | `access` | Who may call the tool: `"use"` (default), `"configure"` (adds `plugins.configure`) or `"admin"` (platform administrators) |
 | `callers` | Plugins that may call the tool with `context.plugins.call`: a set of plugin names, or `"readers"` for every plugin that lists this plugin in `reads_from`. Defaults to `"readers"` for `"read"` and to none otherwise. See [Plugin communication](/sdk/concepts/plugin-communication#calls-to-tools-and-jobs) |
 
-The class is checked when Python defines it: an unknown or invalid option raises `TypeError`. State the effect honestly: it becomes the MCP tool annotations that clients use to decide whether to ask the user before a call. For a tool with `effect = "destructive"`, the platform asks the user to confirm the question before the call runs, when the client supports it. A decline ends the call before the method runs. The question is not an authorization: a client hook can answer it.
+An unknown or invalid option raises `TypeError` when Python defines the class. Set `effect` to what the tool really does: clients read it from the MCP tool annotations to decide whether to ask the user first. Before a tool with `effect = "destructive"` runs, the platform asks the user to confirm. See [confirmation questions](/guide/ai-and-api#what-an-ai-assistant-can-do-over-mcp).
 
 ## `ToolContext`
 
@@ -56,7 +56,7 @@ The class is checked when Python defines it: an unknown or invalid option raises
 | `deadline` | UTC time at which the call is stopped |
 | `await report(progress, total=None, message=None)` | Progress notification to the MCP client; dropped when no client listens |
 
-`ctx.design` and `ctx.artifacts` apply the plugin's write capabilities and the caller's experiment visibility, as for the plugin's REST routes. The platform calls a plugin with the caller's identity, never with the caller's token. An in-process plugin receives the caller as its request actor; a plugin in its own process is called with its internal token and the same identity headers the plugin proxy sends.
+The platform calls a plugin with the identity of the caller, never with the caller's token. An in-process plugin gets the caller as its request actor. A plugin in its own process gets its internal token and the identity headers that the plugin proxy sends.
 
 ## Declare prompts and resources
 
@@ -90,53 +90,65 @@ class DoseResponsePlugin(Plugin):
 | `@prompt(*, title=None)` | `async def name(self, args: ArgsModel) -> str \| list[PromptMessage]`, or `async def name(self)` | Prompt `<plugin>_<name>` |
 | `@resource(path, *, title=None, mime_type="text/plain")` | `async def name(self, ctx: ToolContext, param: T) -> str \| bytes` | Resource template `mint://plugins/<plugin>/<path>` |
 
-Prompt arguments arrive as strings and are validated into the model. A returned `str` becomes one user message.
-
-A resource `path` is relative and names its parameters as `{param}`, or `{+param}` to span `/`. The placeholders must match the method's parameters after `ctx`; each value is converted to its annotation. Return `str` for text and `bytes` for binary content. A resource read is stopped after 60 seconds. A resource path with `.` or `..` segments is skipped.
+- Prompt arguments arrive as strings and are validated into the model. A returned `str` becomes one user message.
+- A resource `path` is relative. It names its parameters as `{param}`, or `{+param}` to span `/`. The placeholders must match the method parameters after `ctx`. Each value is converted to its annotation.
+- A resource returns `str` for text and `bytes` for binary content. A read stops after 60 seconds.
+- The platform skips a resource path with `.` or `..` segments.
 
 ## Names
 
-The platform publishes tools and prompts as `<plugin>_<name>`, where `<plugin>` is the plugin name (its entry-point key) lowercased with every run of other characters replaced by `_` (a plugin named `dose-response` publishes `dose_response_fit_curve`). Method names must be lowercase `[a-z0-9_]`, starting with a letter, and the published name must fit in 64 characters. The `mint_` prefix is reserved for the platform's own tools, and a name another plugin already published is refused.
+The platform publishes tools and prompts as `<plugin>_<name>`. `<plugin>` is the entry-point key in lowercase, with each run of other characters replaced by `_`. For example, a plugin named `dose-response` publishes `dose_response_fit_curve`.
 
-If any declaration is invalid, the platform publishes none of the plugin's MCP declarations. `mint doctor` checks names, docstrings, signatures and schemas before you ship.
+- A method name is lowercase `[a-z0-9_]` and starts with a letter.
+- The published name fits in 64 characters.
+- The `mint_` prefix is reserved for the platform tools.
+- The platform refuses a name that another plugin already published.
+
+If one declaration is invalid, the platform publishes no MCP declaration of the plugin. `mint doctor` checks names, docstrings, signatures and schemas.
 
 ## Permissions
 
-Every plugin tool, prompt and resource needs `plugins.use` and a role that can see the plugin. A tool adds its own `access` level. A caller with a read-only token can call only tools with `effect = "read"`. Write calls are recorded in the audit log as `mcp.tool_call`.
-
-`ctx.design` and `ctx.artifacts` apply the plugin's write capabilities and the caller's experiment visibility. Check anything else the tool needs from `ctx.actor`.
+- Every plugin tool, prompt and resource needs `plugins.use` and a role that can see the plugin. A tool adds its own `access` level.
+- A read-only token can call only tools with `effect = "read"`.
+- The audit log records write calls as `mcp.tool_call`.
+- `ctx.design` and `ctx.artifacts` apply the plugin write capabilities and the caller's experiment visibility, as for the plugin REST routes. Check all other needs of the tool on `ctx.actor`.
 
 ## Limits
 
 The platform treats plugin output as untrusted:
 
-- A tool result must match its output schema and fit in 20,000 JSON characters; a larger result is refused with a message telling the assistant to ask for less. Save large outputs with `ctx.artifacts.save()` and return a summary.
+- A tool result must match its output schema and fit in 20,000 JSON characters. The platform refuses a larger result and tells the assistant to ask for less. Save large outputs with `ctx.artifacts.save()` and return a summary.
 - A rendered prompt must fit in 20,000 characters.
 - A resource must be at most 5 MiB.
-- Titles, descriptions and schemas are truncated or rejected when they are too long, and a plugin error reaches the caller as a short message only.
+- The platform cuts or refuses titles, descriptions and schemas that are too long. A plugin error reaches the caller as a short message only.
 
-The platform picks up an enabled plugin's declarations when the MCP endpoint starts and rechecks every 15 seconds, so a plugin process that starts late or changes its declarations is published without a platform restart. The platform reads `effect` and `idempotent` from the plugin MCP manifest, so a plugin process needs SDK 1.4.
+The platform reads the declarations of an enabled plugin when the MCP endpoint starts, and again every 15 seconds. A plugin process that starts late or changes its declarations is published without a platform restart. The platform reads `effect` and `idempotent` from the plugin MCP manifest, so a plugin process needs SDK 1.4 or later.
 
 ## Panels and jobs over MCP
 
-`@job` methods need no MCP declaration: the platform's job tools (`mint_start_job` and the related tools) offer every job the plugin declares. A client that supports MCP tasks runs a job as a [background task](/guide/ai-and-api#jobs-as-background-tasks). Before `mint_start_job` starts a job with `effect = "destructive"` on its `Job` spec, the platform asks the user for confirmation, as for a destructive tool. A decline starts nothing.
+`@job` methods need no MCP declaration. The platform job tools (`mint_start_job` and related tools) offer every job of the plugin. A job with `effect = "destructive"` on its `Job` spec gets the same confirmation question as a destructive tool. For tasks and questions, see [Jobs as background tasks](/guide/ai-and-api#jobs-as-background-tasks).
 
-`@panel` methods need no MCP declaration either. The platform publishes each [panel](/sdk/recipes/panels) as the resource template `mint://plugins/<plugin>/panels/<panel_id>/experiments/{experiment_id}`. A read returns the panel answer JSON `{plugin, panel, experiment_id, sections, built_at}`, built for the caller, with the checks of the REST route. A read-only token can read it. `mint://experiments/{id}` lists the panels that apply to the experiment and that the caller may open, as `panels: [{plugin, id, title, uri}]`. The export and panel templates are published before the plugin's own resources, so a `@resource` path cannot take their addresses.
+`@panel` methods need no MCP declaration either:
 
-To tell the assistant how to use your tools and jobs, ship a skill: see [MCP skills](/sdk/recipes/mcp-skills).
+- The platform publishes each [panel](/sdk/recipes/panels) as the resource template `mint://plugins/<plugin>/panels/<panel_id>/experiments/{experiment_id}`.
+- A read returns the panel answer `{plugin, panel, experiment_id, sections, built_at}`, built for the caller, with the checks of the REST route. A read-only token can read it.
+- `mint://experiments/{id}` lists the panels that apply to the experiment and that the caller may open, as `panels: [{plugin, id, title, uri}]`.
+- The export and panel templates are published before the plugin resources, so a `@resource` path cannot take their addresses.
+
+To tell the assistant how to use your tools and jobs, ship a [skill](/sdk/recipes/mcp-skills).
 
 ## Test a tool
 
-`mint dev` prints the plugin's tools under their published names and a `mint mcp call` line to try one. With the dev server running, call a tool with its arguments from a JSON file:
+`mint dev` prints the plugin tools under their published names, and a `mint mcp call` line to try one. With the dev server running, call a tool with arguments from a JSON file:
 
 ```bash
 echo '{"experiment_id": 42}' > args.json
 uv run mint mcp call fit_curve --json args.json
 ```
 
-`mint mcp call` takes the method name, not the published name. The dev server runs standalone: the tool sees the standalone actor, and `ctx.design` and `ctx.artifacts` raise `PluginException`. Flags: [CLI reference](/sdk/api/cli-reference#mint-mcp).
+`mint mcp call` takes the method name, not the published name. The dev server runs standalone: the tool sees the standalone actor, and `ctx.design` and `ctx.artifacts` raise `PluginException`. For the flags, see [CLI reference](/sdk/api/cli-reference#mint-mcp).
 
-For unit tests, call the tool through the SDK as the `mint init` scaffold does:
+For unit tests, call the tool through the SDK, as the `mint init` scaffold does:
 
 ```python
 import asyncio
@@ -155,12 +167,6 @@ def test_double_value_returns_a_real_result() -> None:
     assert result == {"input": 2.5, "doubled": 5.0}
 ```
 
-`call_tool()` applies the same argument validation, permission checks, timeout and output validation as the platform. `platform` is the plugin's platform context (`None` standalone); the call runs as `actor` in that context, so `ctx.design` and `ctx.artifacts` act as the caller. Test a tool that uses them with `platform=RecordingContext(...)` (see [Testing plugins](/sdk/recipes/testing-plugins)) or against a disposable platform. `render_prompt(plugin, name, args, actor=..., platform=...)` and `read_resource(plugin, name, params, actor=..., platform=...)` work the same way.
+`call_tool()` applies the same argument validation, permission checks, timeout and output validation as the platform. `platform` is the plugin platform context (`None` in standalone mode). The call runs as `actor` in that context, so `ctx.design` and `ctx.artifacts` act as the caller. To test a tool that uses them, pass `platform=RecordingContext(...)` (see [Testing plugins](/sdk/recipes/testing-plugins)) or use a disposable platform. `render_prompt(plugin, name, args, actor=..., platform=...)` and `read_resource(plugin, name, params, actor=..., platform=...)` work the same way.
 
-Verified against [v@MINT_VERSION@ `mcp.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/mcp.py) and [platform publishing](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/mcp/plugin_tools.py).
-
-- [AI Assistants and API Access](/guide/ai-and-api)
-- [MCP skills](/sdk/recipes/mcp-skills)
-- [Plugin panels](/sdk/recipes/panels)
-- [Route permissions](/sdk/recipes/route-permissions)
-- [Python SDK reference](/sdk/api/python#mcp-declarations)
+Verified against [v@MINT_VERSION@ `mcp.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/mcp.py) and [platform publishing](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/mcp/plugin_tools.py). For all symbols, see [Python SDK reference](/sdk/api/python#mcp-declarations).

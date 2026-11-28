@@ -1,14 +1,14 @@
 ---
 aside: false
 title: AppToastContainer
-description: "AppToastContainer is a feedback component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Toast container for the useToast() queue: title, detail, actions and a progress bar."
 ---
 
 <p class="mint-component-library__eyebrow">Feedback</p>
 
 # AppToastContainer
 
-AppToastContainer is a feedback component exported by @morscherlab/mint-sdk for plugin frontends.
+`AppToastContainer` shows the toasts of the shared `useToast()` queue. Mount it one time on a page without `PluginWorkspaceView`. The workspace renders one already (`spec.toasts`, default `true`).
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,19 +23,13 @@ AppToastContainer is a feedback component exported by @morscherlab/mint-sdk for 
 import { AppToastContainer } from "@morscherlab/mint-sdk"
 ```
 
-## Structured notifications in 1.2.1
+## Show a toast
 
-This component renders the shared `useToast()` queue. Use `toast.push()` for a
-title, detail, actions and progress indicator; the existing `success()` /
-`error()` helpers still work. See [useToast](/sdk/frontend/composables#usetoast)
-for an example and dismissal behavior.
+Call `toast.push()` for a toast with a title, a detail, up to two actions and a progress bar. The `success()`, `error()`, `warning()` and `info()` helpers show a toast with a title only. For an example and the dismiss behavior, see [useToast](/sdk/frontend/composables#usetoast).
 
 ## Toast positioning
 
-When a [AppTopBar](/sdk/components/app-top-bar) is mounted, it publishes
-`--mint-toast-offset-top` on `<html>`, and `AppToastContainer` reads it so toasts render
-1rem below the top bar instead of covering its right-hand controls. Without a mounted
-`AppTopBar`, the container stays 1rem from the top of the viewport.
+A mounted [AppTopBar](/sdk/components/app-top-bar) sets `--mint-toast-offset-top` on `<html>`. It measures from the top-most bar and updates on resize and scroll. The container reads the variable and shows the toasts 1rem below the top bar, clear of its controls. Without an `AppTopBar`, the toasts are 1rem below the top of the viewport.
 
 <!-- sdk-props:start -->
 ## Props

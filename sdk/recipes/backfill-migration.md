@@ -1,10 +1,10 @@
 # Backfill migrations
 
-Add a new column and populate historical rows without overwriting values users already supplied. This recipe extends the Alembic-based `panels` table from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), using MINT @MINT_VERSION@. The legacy integer migration protocol is removed in 1.4: a plugin that still uses it must [adopt its existing tables](/sdk/concepts/migrations#adopting-existing-tables) under the Alembic protocol first.
+Add a column and fill historical rows without overwriting values that users already supplied. This recipe extends the `panels` table from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables). A plugin on the removed legacy protocol must first [adopt its existing tables](/sdk/concepts/migrations#adopting-existing-tables); see [Migrations reference](/sdk/api/migrations#migrationspec-and-legacybaseline).
 
 ## Add a nullable value first
 
-Add this field to the current `Panel` model; its module already imports SQLModel `Field` and SQLAlchemy as `sa`:
+Add this field to the `Panel` model. The module already imports SQLModel `Field` and SQLAlchemy as `sa`:
 
 ```python
 notes: str | None = Field(default=None, sa_column=sa.Column(sa.Text, nullable=True))
@@ -37,15 +37,16 @@ def downgrade(*, schema: str | None) -> None:
     raise NotImplementedError("Use a reviewed forward migration or restore a backup")
 ```
 
-The database revision prevents the DDL from being applied again after successful completion. The update's NULL predicate preserves already-supplied values when the data step is reused in a maintenance operation. Do not assume Alembic `op.add_column()` itself is idempotent.
+- The stored revision stops the DDL from running again after it completes. `op.add_column()` itself is not idempotent.
+- The `IS NULL` predicate keeps values that users supplied, also when a maintenance job runs the data step again.
+- A Python default does not update existing rows. `server_default` applies only to new inserts. Here a new panel has no note, and an upgraded historical row records its origin.
+- Fresh SQLite and PostgreSQL installations run the packaged baseline and this revision.
 
-A Python default does not update existing rows. `server_default` affects database inserts; it is distinct from an explicit historical-data update. Here a newly created panel has no note, while an upgraded historical row records its origin. Both fresh SQLite and PostgreSQL installations execute the packaged baseline and this revision under the Alembic protocol.
-
-If notes should appear in HTTP responses or be editable, update the request/response models and handler assignment separately, then regenerate the frontend contract. This recipe changes storage only.
+This recipe changes storage only. To show or edit notes over HTTP, update the request and response models and the handler, then regenerate the frontend contract.
 
 ## Derive values with schema-aware SQL
 
-Use the supplied schema for all DDL and data queries. Do not rely on the PostgreSQL connection's search path or interpolate request data into SQL:
+Use the supplied `schema` for all DDL and data queries. Do not rely on the PostgreSQL search path. Do not put request data into SQL text:
 
 ```python
 # Inside upgrade(), after adding normalized_name:
@@ -59,25 +60,28 @@ op.get_bind().execute(
 )
 ```
 
-This uses Alembic's synchronous connection.
+`upgrade` runs on a synchronous connection; see [Revision module shape](/sdk/api/migrations#revision-module-shape).
 
 ## Large tables and transaction boundaries
 
-All pending revisions in one startup run share the host transaction and migration lock. A loop with `LIMIT 5000` bounds each statement's work but does not commit batches or release locks. Splitting the loop into several revisions applied together does not change that boundary. MINT rejects revision code that tries to commit, roll back, or start another host transaction.
+All pending revisions of one startup share the host transaction and the migration lock ([locking](/sdk/api/migrations#identity-history-and-locking)). A loop with `LIMIT 5000` bounds each statement, but it does not commit batches or release locks. Several revisions applied together do not change this.
 
-For a large live table, stage the work across deployments:
+For a large live table, stage the work across releases:
 
-1. Add a nullable column and ship readers that tolerate old NULL values plus writers that populate the new value.
-2. Run an authorized, restartable background/maintenance backfill with a short normal plugin session per batch, updating only rows still needing work.
-3. Verify the historical data, then enforce the desired constraint in a later release.
+1. Add a nullable column. Ship readers that accept old NULL values and writers that fill the new value.
+2. Run a restartable maintenance backfill. Use a short plugin session for each batch. Update only rows that still need work.
+3. Verify the historical data. Enforce the constraint in a later release.
 
-The maintenance job is separate from startup migrations; there is no `mint db backfill` or `mint db upgrade` command. `mint db current`, `mint doctor --only db` and `mint add migration --autogenerate` inspect and author against explicit development databases.
+The maintenance job is separate from startup migrations. There is no `mint db backfill` or `mint db upgrade` command. `mint db current`, `mint doctor --only db` and `mint add migration --autogenerate` work against explicit development databases.
 
-Alembic `alter_column(..., nullable=False)` is available. Use `op.batch_alter_table(..., schema=schema)` for SQLite table changes that require rebuilding, and test uniqueness, foreign keys, indexes, and data preservation on both backends. Schema changes can acquire locks; adding a column or constraint is not necessarily lock-free.
+- Use Alembic `alter_column(..., nullable=False)` to enforce the constraint.
+- Use `op.batch_alter_table(..., schema=schema)` for SQLite changes that rebuild the table.
+- Test uniqueness, foreign keys, indexes and data preservation on both backends.
+- Expect locks: adding a column or a constraint can lock the table.
 
 ## Test the real upgrade path
 
-After adding the model field and `p002`, add `tests/test_panel_migrations.py`. The test temporarily packages only the old revision, inserts historical data, then adds the actual new revision. It verifies both a populated upgrade and a fresh installation against the current model.
+After you add the model field and `p002`, add `tests/test_panel_migrations.py`. The test packages only the old revision, inserts historical data, then adds the new revision. It checks a populated upgrade and a fresh installation against the current model.
 
 ```python
 import asyncio
@@ -147,14 +151,14 @@ def test_panel_upgrade_preserves_data(tmp_path: Path, monkeypatch: pytest.Monkey
     asyncio.run(check())
 ```
 
-Run with the scaffold's test setup:
+Run the test:
 
 ```bash
 uv run pytest tests/test_panel_migrations.py -q
 ```
 
-Also run the tutorial's CRUD/ownership test with the updated model. For production, repeat the old-data upgrade on a disposable PostgreSQL database using the actual plugin schema and normal installed startup. SQLite passing does not prove PostgreSQL-specific JSON queries, constraints, identity-column behavior, or locking.
+1. Run the tutorial's CRUD and ownership test with the updated model.
+2. Repeat the old-data upgrade on a disposable PostgreSQL database with the real plugin schema and a normal installed startup. A SQLite pass does not prove PostgreSQL JSON queries, constraints, identity columns or locking.
+3. For a migration that adopts legacy data, add a test that `LegacyBaseline.validate` accepts the exact old schema and refuses mismatched data or history.
 
-For a migration that adopts existing legacy data, add a separate test proving `LegacyBaseline.validate` accepts the exact old schema and rejects mismatched data/history. Do not replace this with a fresh-database-only check.
-
-See [Migrations](/sdk/concepts/migrations) for history and recovery, and [Querying plugin data](/sdk/recipes/querying-plugin-data) for ordinary application sessions.
+For history and recovery, see [Migrations](/sdk/concepts/migrations).

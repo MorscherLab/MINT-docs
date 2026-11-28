@@ -8,7 +8,7 @@ description: "Compact status label for tables, metadata, and small state indicat
 
 # BasePill
 
-Compact status label for tables, metadata, and small state indicators.
+Use `BasePill` for a short status label in a table, in metadata or next to a title.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,13 +23,12 @@ Compact status label for tables, metadata, and small state indicators.
 import { BasePill } from "@morscherlab/mint-sdk"
 ```
 
-## Status dots in 1.2.1
+## Status dots
 
-Use `dot` to add a leading dot in the pill's semantic tone. Keep the text label
-so status does not depend on color alone.
+Set `dot` to add a leading dot in the tone color of the pill. Keep the text label, so that the status does not depend on color alone.
 
 ```vue
-<BasePill variant="success" dot>Completed</BasePill>
+<BasePill tone="success" dot>Completed</BasePill>
 ```
 
 <!-- sdk-props:start -->

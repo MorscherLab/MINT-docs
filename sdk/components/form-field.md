@@ -8,7 +8,7 @@ description: "Label, hint, error, and accessibility wrapper for form controls."
 
 # FormField
 
-Label, hint, error, and accessibility wrapper for form controls.
+Use `FormField` around a form control to give it a label, a hint, an error and the matching accessibility attributes.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,11 +23,9 @@ Label, hint, error, and accessibility wrapper for form controls.
 import { FormField } from "@morscherlab/mint-sdk"
 ```
 
-## Row layout in 1.2.1
+## Row layout
 
-`layout="row"` places the label on the left and a short control in a 7.5rem
-column. Use it for numbers, toggles and short selections; leave long text
-controls stacked. Connect `html-for` to the actual input's `id`.
+`layout="row"` puts the label on the left and the control in a 7.5rem column. Use it for numbers, toggles and short selections. Keep long text controls stacked. Set `html-for` to the `id` of the input.
 
 ```vue
 <FormField label="Replicates" html-for="replicates" layout="row">

@@ -1,14 +1,14 @@
 ---
 aside: false
 title: SampleHierarchyTree
-description: "SampleHierarchyTree is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Collapsible tree of the sample hierarchy, from study to treatment."
 ---
 
 <p class="mint-component-library__eyebrow">Lab widgets</p>
 
 # SampleHierarchyTree
 
-SampleHierarchyTree is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `SampleHierarchyTree` to browse a sample hierarchy: study, experiment, plate, sample, cell line, passage, clone and treatment.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

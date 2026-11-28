@@ -1,8 +1,8 @@
 # Exceptions reference
 
-The runtime exception family below inherits from `PluginException` and carries a machine-readable `code`, a human-readable `message`, and optional `details`.
+Every SDK runtime exception derives from `PluginException`. Each one has a machine-readable `code`, a human-readable `message` and optional `details`.
 
-SDK hosts automatically translate `PluginException` subclasses into HTTP responses. `mint_sdk.app.create_app()` registers the shared handlers (`mint_sdk.api_errors.register_api_error_handlers`), and integrated platform middleware uses the same envelope. A custom FastAPI host must register the SDK handlers or supply an equivalent mapping.
+The SDK host changes a `PluginException` into an HTTP response with the status below. `mint_sdk.app.create_app()` registers the handlers (`mint_sdk.api_errors.register_api_error_handlers`), and the platform uses the same mapping. A custom FastAPI host must register these handlers or an equivalent mapping.
 
 | Exception | HTTP status |
 |-----------|-------------|
@@ -16,7 +16,7 @@ SDK hosts automatically translate `PluginException` subclasses into HTTP respons
 | `PlatformCompatibilityError` | 426 |
 | Other `PluginException` subclasses | 500 |
 
-FastAPI request-model validation is 422; it is distinct from service-layer `ValidationException` (400). `HTTPException` retains its explicit status.
+A FastAPI request-model validation error is 422, not 400. An `HTTPException` keeps its own status.
 
 Source: [`mint_sdk/exceptions.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/exceptions.py).
 
@@ -41,7 +41,7 @@ PluginException
 
 ## `PluginException`
 
-Base class. All other exceptions inherit.
+The base class of all exceptions on this page, except the migration errors.
 
 ```python
 class PluginException(Exception):
@@ -59,11 +59,11 @@ class PluginException(Exception):
     def to_dict(self) -> dict: ...
 ```
 
-`to_dict()` produces a JSON-friendly shape if you catch and serialize the exception.
+`to_dict()` returns a JSON-ready dict. See [Serializing errors](#serializing-errors).
 
 ## `ValidationException`
 
-Use for invalid input that Pydantic doesn't catch — business rules, custom validators.
+Raise it for invalid input that Pydantic does not catch, such as a business rule.
 
 ```python
 class ValidationException(PluginException):
@@ -88,7 +88,7 @@ raise ValidationException(
 
 ## `PermissionException`
 
-Use for runtime ownership / authorization checks on top of the role guards.
+Raise it when a runtime ownership or authorization check fails after the access-level check.
 
 ```python
 class PermissionException(PluginException):
@@ -112,7 +112,7 @@ if user.id != panel.owner_id:
 
 ## `ConfigurationException`
 
-Use for plugin-side misconfiguration (missing required setting, malformed config).
+Raise it for a plugin misconfiguration, such as a missing required setting.
 
 ```python
 class ConfigurationException(PluginException):
@@ -136,7 +136,7 @@ if not self.settings.api_endpoint:
 
 ## `RepositoryException`
 
-Base class for storage / database errors. Use the subclasses (`NotFoundException`, `ConflictException`) when useful inside your service layer; raise `RepositoryException` directly only for generic DB failures.
+The base class of storage and database errors. Raise a subclass (`NotFoundException`, `ConflictException`) when one applies. Raise `RepositoryException` itself only for a general database failure.
 
 ```python
 class RepositoryException(PluginException):
@@ -164,7 +164,7 @@ except DatabaseError as exc:
 
 ## `NotFoundException`
 
-Subclass of `RepositoryException`. Use it when a repository or service lookup misses. SDK hosts translate this to HTTP 404.
+Subclass of `RepositoryException`. Raise it when a lookup finds nothing.
 
 ```python
 class NotFoundException(RepositoryException):
@@ -181,7 +181,7 @@ class NotFoundException(RepositoryException):
 panel = await repo.get_by_id(panel_id)
 if panel is None:
     raise NotFoundException(
-        f"Panel not found",
+        "Panel not found",
         entity="panel",
         entity_id=str(panel_id),
     )
@@ -191,7 +191,7 @@ if panel is None:
 
 ## `ConflictException`
 
-Subclass of `RepositoryException`. Use for duplicate-key, optimistic-concurrency, and state conflicts.
+Subclass of `RepositoryException`. Raise it for a duplicate key, a concurrent change or a state conflict.
 
 ```python
 class ConflictException(RepositoryException):
@@ -218,7 +218,7 @@ if existing:
 
 ## `PluginLifecycleException`
 
-Use during `initialize()` or `shutdown()` when the plugin hits an unrecoverable startup / lifecycle error.
+Raise it in `initialize()` or `shutdown()` for an error that the plugin cannot recover from.
 
 ```python
 class PluginLifecycleException(PluginException):
@@ -255,7 +255,7 @@ async def initialize(self) -> None:
 | `PluginCallError(message, details=None)` | `plugin.call_failed`; base of the `context.plugins.call` and `start_job` errors. Subclasses: `PluginNotReadable` and `PluginToolRefused` (`plugin.call_forbidden`), `PluginUnreachable` (`plugin.unreachable`). Import them from `mint_sdk.exceptions`. See [Plugin communication](/sdk/concepts/plugin-communication#calls-to-tools-and-jobs) |
 | `PlatformCompatibilityError(message, sdk_api_version=None, platform_api_version=None, details=None)` | Internal platform/SDK API mismatch; exception `code` is `PLATFORM_API_VERSION_MISMATCH`, HTTP envelope code is `plugin.api_version_mismatch`. Import it from `mint_sdk.exceptions`; it is not exported from `mint_sdk` |
 
-A veto in an observer event is a failed observer, not a rollback of an already committed experiment. A settings CAS conflict or artifact replacement conflict is a `ConflictException`, and a stale `expected_version` is a `VersionConflictException`; reload the authoritative state before creating a new edit.
+A veto in an observer event is a failed observer. It does not roll back the committed experiment. A settings revision conflict and an artifact replacement conflict raise `ConflictException`. A stale `expected_version` raises `VersionConflictException`. Load the current state again before you make a new edit.
 
 ## Migration-specific errors
 
@@ -263,7 +263,7 @@ Migration exceptions (`mint_sdk.migrations.errors`) do not inherit from `PluginE
 
 ## Serializing errors
 
-If you catch a `PluginException`, `to_dict()` gives you:
+`to_dict()` of a caught `PluginException` returns:
 
 ```json
 {
@@ -276,33 +276,12 @@ If you catch a `PluginException`, `to_dict()` gives you:
 }
 ```
 
-The HTTP envelope wraps the Python exception's fields and adds transport context:
+The HTTP response puts these fields in the [error envelope](/reference/error-codes#the-error-envelope), with `status` and `request_id`. The client can see `details`: do not put secrets or personal data in it.
 
-```json
-{
-  "code": "CONFLICT",
-  "message": "Artifact changed; reload before replacing it",
-  "status": 409,
-  "request_id": "example-request-id",
-  "details": null,
-  "detail": {"error": "CONFLICT", "message": "Artifact changed; reload before replacing it"},
-  "error": "CONFLICT"
-}
-```
+## Rules
 
-`X-Request-ID` carries the same request ID. Treat `details` as client-visible data, not a private logging channel. The frontend and Python client can inspect `code`, `status`, and `request_id` without parsing prose.
+- Raise an SDK exception for a structured application failure. Raise `HTTPException` when you need a specific HTTP status.
+- Use `raise ... from exc` for a low-level failure, so that the log keeps the original traceback.
+- An exception that is not a `PluginException` gives a 500. The platform then decides whether to file a bug report; see [Auto-issued bug reports](/admin/updates#auto-issued-bug-reports).
 
-The platform routes use the same envelope with their own codes, such as `user.not_found` or `auth.session_required`. See [Error codes](/reference/error-codes).
-
-## Notes
-
-- Use SDK exception classes for structured application failures; use `HTTPException` when an explicit HTTP status is appropriate.
-- Use `raise ... from exc` for low-level failures so the logs keep the original traceback.
-- Don't put secrets or PII in `details` — it ends up in client-visible JSON.
-- For non-`PluginException` errors that escape, the middleware returns 500 and the platform's auto-issue feature decides whether to file a GitHub bug.
-
-## Related
-
-- [Recipes → Error handling](/sdk/recipes/error-handling) — patterns and anti-patterns
-- [Error codes](/reference/error-codes) — the codes of the platform routes
-- [Workflow → Updates](/admin/updates) — auto-issue reporting (User Manual track)
+For patterns, see [Error handling](/sdk/recipes/error-handling).

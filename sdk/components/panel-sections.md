@@ -8,7 +8,7 @@ description: "Draws the sections of a plugin panel: key/value, table, text, JSON
 
 # PanelSections
 
-Draws the sections of a plugin panel: key/value, table, text, JSON, bar, link, status and plate.
+Use `PanelSections` on a plugin page to draw panel sections: key/value, table, text, JSON, bar, link, status and plate.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -26,9 +26,7 @@ import type { PanelSection } from "@morscherlab/mint-sdk"
 
 ## When to use it
 
-The platform draws the panels that a plugin declares with `@panel` on the experiment page. You do not need this component for that. See [Plugin panels](/sdk/recipes/panels).
-
-Use `PanelSections` on your own plugin page to show the same section data, for example the answer of a panel or of an instrument status report. [InstrumentStatusPanels](/sdk/components/instrument-status-panels) also uses it for each panel.
+The platform draws the panels that a plugin declares with `@panel` on the experiment page; see [Plugin panels](/sdk/recipes/panels). Use `PanelSections` only on your own plugin page, for example to show the answer of a panel or an instrument status report. [InstrumentStatusPanels](/sdk/components/instrument-status-panels) uses it for each panel.
 
 ## Basic Usage
 
@@ -49,18 +47,21 @@ Use `PanelSections` on your own plugin page to show the same section data, for e
 | `status` | An [AlertBox](/sdk/components/alert-box) with the state tone. Only `warning` and `error` are announced as alerts |
 | `plate` | A read-only [WellPlate](/sdk/components/well-plate). `format` is `54` (a 54-vial rack, A1 to F9), `96` or `384`. Groups take `--mint-sample-1` to `--mint-sample-9` in declaration order. A `blank` group has a dashed outline and a `qc` group a "Q" marker. `color_by: "value"` uses the heat scale, and `highlight` rings wells |
 
-A section of a kind that this SDK does not know shows "This section needs a newer MINT version". The other sections still show.
+A section of a kind that this SDK does not know shows "This section needs a newer MINT version". The other sections show as usual.
 
 ## Layout
 
-Sections fill rows of six columns in order. `width` sets the share of a row: `full` (the default) takes 6 columns, `two-thirds` 4, `half` 3 and `third` 2. A section that does not fit in the current row starts the next row. When the component is narrower than 53rem, each section takes the full width. Each section has the class `mint-panel-sections__section--<width>`.
+- Sections fill rows of six columns, in order. `width` sets the share of a row: `full` (default) 6 columns, `two-thirds` 4, `half` 3 and `third` 2.
+- A section that does not fit in the current row starts the next row.
+- When the component is narrower than 53rem, each section takes the full width.
+- Each section has the class `mint-panel-sections__section--<width>`.
 
 ## Links in the app
 
-A click on a `/plugin/` link without a modifier key emits `navigate` with the `href` and the mouse event. Call `event.preventDefault()` and route the link in your app. If you do not, the browser follows the link.
+A click on a `/plugin/` link without a modifier key emits `navigate` with the `href` and the mouse event. Call `event.preventDefault()` and route the link in your app. Otherwise the browser follows the link.
 
 ::: info Charts need Plotly
-A `bar` section renders `PlotlyChart`. Add `plotly.js-dist-min` to the plugin's frontend dependencies (`vp add plotly.js-dist-min`). The demo above has no `bar` section.
+A `bar` section renders `PlotlyChart`, so the plugin must declare `plotly.js-dist-min`; see [Charts need Plotly](/sdk/frontend/#charts-need-plotly). The demo above has no `bar` section.
 :::
 
 <!-- sdk-props:start -->

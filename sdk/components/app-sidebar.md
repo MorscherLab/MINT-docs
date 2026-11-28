@@ -8,7 +8,7 @@ description: "Sectioned sidebar for plugin-specific navigation and grouped tools
 
 # AppSidebar
 
-Sectioned sidebar for plugin-specific navigation and grouped tools.
+Use `AppSidebar` for plugin navigation and grouped tools in a side panel.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,27 +23,35 @@ Sectioned sidebar for plugin-specific navigation and grouped tools.
 import { AppSidebar } from "@morscherlab/mint-sdk/shell"
 ```
 
-## Changes in 1.2.1
+## Basic usage
 
-Sections now render as flat groups instead of nested cards. The effective default
-density is compact; use `density="comfortable"` for more spacing. The old
-`variant` prop has been removed, and `dense` is deprecated (removal in MINT 1.4). Use `collapsible`
-explicitly when you need a collapse button; it defaults to `false` on AppSidebar.
-
-When AppLayout owns placement, pass `:floating="false"` to the sidebar. The former
-"analysis chrome" width is now explicit: use `collapsible` plus `width="20rem"`
-instead of a variant:
+Set the structure in `spec`. Its type, `PluginWorkspaceSidebarSpec`, is also the `sidebar` part of a [PluginWorkspaceView](/sdk/components/plugin-workspace-view) spec. Fill a section with the `#section-<id>` slot.
 
 ```vue
-<AppSidebar
-  :panels="panels"
-  active-view="analysis"
-  :floating="false"
-  density="compact"
-  collapsible
-  width="20rem"
-/>
+<script setup lang="ts">
+import { AppSidebar } from '@morscherlab/mint-sdk/shell'
+import type { PluginWorkspaceSidebarSpec } from '@morscherlab/mint-sdk'
+
+const sidebar: PluginWorkspaceSidebarSpec = {
+  title: 'Analysis tools',
+  panels: { analysis: [{ id: 'parameters', label: 'Parameters', defaultOpen: true }] },
+  floating: false,
+  collapsible: true,
+  width: '20rem',
+}
+</script>
+
+<template>
+  <AppSidebar :spec="sidebar" active-view="analysis">
+    <template #section-parameters><!-- controls --></template>
+  </AppSidebar>
+</template>
 ```
+
+- Sections render as flat groups, not as nested cards.
+- The sidebar is compact by default (`dense`, default `true`).
+- The collapse button shows only with `collapsible`.
+- When `AppLayout` places the sidebar, set `floating: false`.
 
 <!-- sdk-props:start -->
 ## Props

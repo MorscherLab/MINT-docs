@@ -1,24 +1,12 @@
 # Tutorial 1 - First Analysis Plugin
 
-You'll build **hello-mint**, a small `ANALYSIS` plugin in `generated` mode. This is the shortest path to a useful first plugin: you write Python decorators, and the SDK supplies the standard job API plus a generated UI.
+Build `hello-mint`, a small analysis plugin in `generated` mode. You write Python decorators. The SDK supplies the job API and a generated UI.
 
-By the end you will have:
+Time: 20 to 30 minutes. Prerequisite: the toolchain from [Install the toolchain](/sdk/install). The generated project has its own environment.
 
-- A real `mint init --mode generated` project
-- One typed `@job`
-- A job test that uses the SDK runtime through `Harness`
-- A `.mint` bundle ready to install
-
-**Time:** 20-30 minutes
-**Prereqs:** the toolchain from `curl -fsSL https://mint-docs.morscherlab.org/install.sh | bash` (Windows: `irm https://mint-docs.morscherlab.org/install.ps1 | iex`). It installs Python 3.14, `uv` and the `mint` CLI. See [Install the toolchain](/sdk/install); the generated project has its own environment.
-
-::: info Current CLI shape
-MINT v@MINT_VERSION@ does not have `mint add job`. Start a job-based plugin with `mint init --mode generated`, or add `@job` methods directly to an existing plugin class.
-:::
+There is no `mint add job` command. To add a job to an existing plugin, write an `@job` method in the plugin class.
 
 ## 1. Scaffold the Project
-
-Create the plugin:
 
 ```bash
 mint init hello-mint \
@@ -41,7 +29,7 @@ cd hello-mint
 | Entry point | `hello-mint = "mint_plugin_hello_mint.plugin:HelloMintPlugin"` |
 | Plugin mode | `generated` |
 
-The generated tree is intentionally small:
+The scaffold creates these files:
 
 ```text
 hello-mint/
@@ -68,9 +56,7 @@ mint doctor --strict
 uv run pytest -q
 ```
 
-Both should pass before you change anything.
-
-A complete run of this step looks like this:
+Both commands must pass before you change anything. A complete run of this step looks like this:
 
 <Terminal title="~/plugins — zsh" :lines="[
   '$ mint init hello-mint --name \'Hello MINT\' --description \'Hello world analysis plugin\' --mode generated --type analysis --yes',
@@ -93,7 +79,7 @@ A complete run of this step looks like this:
 
 ## 2. Inspect the Plugin Class
 
-Open `src/mint_plugin_hello_mint/plugin.py`. The important parts look like this:
+Open `src/mint_plugin_hello_mint/plugin.py`. The main parts are:
 
 ```python
 from mint_sdk import Metadata, Plugin, job, plugin
@@ -115,8 +101,6 @@ class HelloMintPlugin(Plugin):
             "doubled": value * 2,
         }
 ```
-
-Three declarations do the work:
 
 | Declaration | What it declares |
 |-------------|------------------|
@@ -145,9 +129,9 @@ def test_generated_manifest_exposes_job() -> None:
     assert run.value == {"input": 2.5, "doubled": 5.0}
 ```
 
-`Harness` starts the real standalone plugin app, submits the job through the SDK job API, waits for completion, and returns a `Run` with the result value. This catches more integration drift than calling `HelloMintPlugin().analyze()` directly.
+`Harness` starts the real standalone plugin app, submits the job through the SDK job API, waits until it completes and returns a `Run` with the result. This test finds more integration errors than a direct call to `HelloMintPlugin().analyze()`.
 
-Run it:
+Run the test:
 
 ```bash
 uv run pytest -q
@@ -226,9 +210,7 @@ mint doctor --strict
 uv run pytest -q
 ```
 
-Generated controls handle numeric arrays, nullable/empty inputs, fixed literals
-and numeric bounds. Backend validators still decide which values
-are accepted; custom Pydantic validation failures return 422 responses.
+Generated controls handle numeric arrays, nullable and empty inputs, fixed literals and numeric bounds. The backend validators decide which values the job accepts. A failed custom Pydantic validation returns 422.
 
 ## 5. Preview the Generated UI
 
@@ -252,11 +234,11 @@ http://127.0.0.1:8003/hello-mint
 
 > [Screenshot: generated hello-mint workspace showing the Normalize intensities job form and completed JSON result]
 
-The generated UI is good when the plugin can be described as typed inputs plus result output. If the user experience needs custom layout, multi-step interaction, live previews, or a domain-specific control such as a plate map, use `standard` mode in [Tutorial 2](/sdk/tutorials/adding-a-frontend).
+The generated UI fits a plugin that has typed inputs and a result. For a custom layout, multi-step interaction, live previews or a domain control such as a plate map, use `standard` mode in [Tutorial 2](/sdk/tutorials/adding-a-frontend).
 
 ## 6. Build the Bundle
 
-Run the release checks you should expect in CI:
+Run the release checks that CI also runs:
 
 ```bash
 mint doctor --strict
@@ -273,39 +255,13 @@ The bundle lands in:
 dist/mint-plugin-hello-mint-<version>.mint
 ```
 
-A `.mint` bundle contains the plugin wheel, manifest, and any bundled frontend assets. Generated-mode plugins usually have no `frontend/` directory because the UI is supplied by the SDK.
+A `.mint` bundle contains the plugin wheel, the manifest and the frontend assets, if any. A generated-mode plugin has no `frontend/` directory, because the SDK supplies the UI.
 
 ## 7. Verify and deploy
 
-Check the real install path in a disposable platform container (requires Docker):
-
-```bash
-mint verify
-```
-
-`mint verify` builds the bundle, boots the MINT platform image, installs the bundle through the normal upload path, restarts, and waits until the plugin loads.
-
-Then deploy to a test platform you administer:
-
-```bash
-mint platform auth login --url https://mint-test.example.org
-mint deploy --url https://mint-test.example.org
-```
-
-`mint deploy` builds the same bundle, uploads it, restarts the platform, and confirms the restart by the new server `boot_id`. The restart requires the `platform.configure` permission; `--timeout` (default 180 s) covers the restart and the plugin load together. Use a test platform, not production.
-
-## Where You've Landed
-
-You now have a generated-mode analysis plugin that:
-
-- Declares metadata with `Metadata` and `@plugin`
-- Exposes one typed `@job`
-- Lets the SDK provide the standard form/result UI
-- Tests the real job runtime with `Harness`
-- Builds into an installable `.mint` bundle
+Test the bundle in a disposable platform with `mint verify`, then install it on a test platform with `mint deploy`. See [Deploying and verifying a plugin](/sdk/operations/deploying).
 
 ## Next
 
-- [Tutorial 2 - Adding a frontend](/sdk/tutorials/adding-a-frontend) - build a custom Vue workspace with `standard` mode
-- [Tutorial 3 - Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) - own a database schema
-- [Recipes](/sdk/recipes/) - patterns for the next features you'll add
+- [Tutorial 2 - Adding a frontend](/sdk/tutorials/adding-a-frontend): build a custom Vue workspace in `standard` mode.
+- [Tutorial 3 - Design plugin with tables](/sdk/tutorials/design-plugin-with-tables): own a database schema.

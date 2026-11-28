@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ChartContainer
-description: "ChartContainer is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Chart frame with header, toolbar, loading and empty states, and legend, around a renderer you own."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # ChartContainer
 
-`ChartContainer` supplies chart chrome, loading and empty states, and slots around a renderer you own. For native Plotly rendering and lifecycle management, use [PlotlyChart](/sdk/components/plotly-chart).
+Use `ChartContainer` to frame a chart from another library: header, toolbar, loading and empty states, and legend. For Plotly, use [PlotlyChart](/sdk/components/plotly-chart), which also loads, resizes and disposes the chart.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -45,9 +45,11 @@ import { ChartContainer } from '@morscherlab/mint-sdk/lab'
 </style>
 ```
 
-Neither variant draws a border, radius or background of its own: put the chart in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. With no data, the body shows an `EmptyState` with a chart icon; `emptyText`, `emptyHint` and the `#empty` slot change it. `frame` fills a parent with a definite height; give your chart renderer an appropriate height too. Both variants share one header: a one-line title and description above a hairline.
-
-Pass `legendItems` (`{ label, color, hidden? }[]`) to list series as clickable items in the header; a click emits `legend-toggle` with the item index, and your renderer applies the change. This component does not resize or dispose an external chart library for you.
+- The component has no frame of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card).
+- `variant="frame"` fills a parent with a definite height. Give your chart renderer a height too.
+- Both variants have one header: a one-line title and description above a hairline.
+- With `empty`, the body shows an `EmptyState` with a chart icon. `emptyText`, `emptyHint` and the `#empty` slot change it.
+- `legendItems` (`{ label, color, hidden? }[]`) lists the series as clickable items in the header. A click emits `legend-toggle` with the item index. Your renderer applies the change.
 
 | Slot | Placement |
 |------|-----------|
@@ -59,7 +61,7 @@ Pass `legendItems` (`{ label, color, hidden? }[]`) to list series as clickable i
 | `legend` | Below the chart body |
 | `footer` | Bottom of the frame/card |
 
-When `loading` is true the normal body slot is not rendered. Initialize custom renderers on their component mount and dispose them on unmount. Use `PlotlyChart` when you want the SDK to own that lifecycle.
+While `loading` is `true`, the default slot does not render. The component does not resize or dispose your chart. Create the chart when its component mounts and dispose it on unmount.
 
 <!-- sdk-props:start -->
 ## Props

@@ -8,7 +8,7 @@ description: "Compact overflow actions with an icon-only trigger and a viewport-
 
 # ActionMenu
 
-Compact overflow actions with an icon-only trigger and a viewport-safe teleported menu.
+Use `ActionMenu` for row or card actions behind an icon-only button. The menu stays inside the viewport.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -36,7 +36,7 @@ import { ActionMenu } from "@morscherlab/mint-sdk"
 />
 ```
 
-The `#trigger` slot replaces the default icon trigger. Render one `<button>` and wire the slot's `toggle` and `keydown` to it:
+The `#trigger` slot replaces the default icon button. Render one `<button>` and connect the `toggle` and `keydown` of the slot to it:
 
 ```vue
 <ActionMenu :items="items" @select="handleAction">

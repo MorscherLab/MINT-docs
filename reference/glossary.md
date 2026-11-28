@@ -1,190 +1,182 @@
 # Glossary
 
-A short reference for the terms used across MINT, written for someone landing on the platform for the first time.
+This page defines the terms used across MINT. Each entry links to the page with the details.
 
 ## A
 
 **Access level**
-The label `use`, `configure` or `admin` that a plugin puts on an endpoint, job, MCP tool or page (since MINT 1.4, in place of plugin roles). `use` needs `plugins.use` and plugin access, `configure` also needs `plugins.configure`, and `admin` needs the `admin` role. See [Plugin access levels](/admin/users-roles#plugin-access-levels).
+The label `use`, `configure` or `admin` that a plugin puts on an endpoint, job, MCP tool or page. See [Plugin access levels](/admin/users-roles#plugin-access-levels).
 
 **Admin**
-A platform-wide role that grants every permission. Only the exact role slug `admin` counts as a platform administrator, for the platform and for plugins. Distinct from a project creator or lead, which is scoped to one project.
+The role that has all permissions. Only the exact role slug `admin` is a platform administrator, for the platform and for plugins. A project creator or lead has rights in one project only.
 
 **Analysis plugin**
-A plugin that reads experiment data and produces results. Analysis plugins can save named analysis artifacts and may also expose their own plugin page for running analyses.
+A plugin that reads experiment data and saves analysis artifacts. It can also have its own page to run analyses.
 
 **Analysis artifact**
-A managed result object attached to one experiment. It is keyed by producing plugin plus `artifact_key`, has editable display metadata, can reference a file object, and appears in the experiment's **Analysis artifacts** card. Archive hides it from normal views; restore brings it back.
+A named result of one plugin for one experiment. It shows in the **Analysis artifacts** card of the experiment page. See [Experiments -> Artifacts](/guide/experiments#artifacts).
 
 **Analysis result**
-The analysis artifact with the key `default`. A plugin writes it with `artifacts.save(experiment, data)` and reads it with `artifacts.get(...)`. The older `save_analysis()` and `load_analysis()` helpers do not exist in SDK 1.4.
+The analysis artifact with the key `default`. A plugin writes it with `artifacts.save(experiment, data)` and reads it with `artifacts.get(...)`.
 
 **Archive (project)**
-Hides a project from default dashboards without deleting any data. Reversible.
+Hides a project from default dashboards. Deletes no data. You can undo it.
 
 **Archive (uninstall mode)**
-Renames a plugin's database schema to `_archived_<schema>_<date>` on uninstall. Data is unreachable but recoverable. The other uninstall modes are `keep` and `purge`.
+An uninstall mode that renames the plugin schema so that no code reads it. A database admin can recover it. See [Uninstall modes](/admin/plugins#uninstall-modes).
 
 **Artifact**
-A broad term for data produced or consumed around an experiment. In current MINT UI, analysis outputs are managed as **analysis artifacts**. File-backed artifacts store object references under the platform's configured data path or object store.
+Short for analysis artifact. A file artifact stores an object reference to the object store.
 
 **Authenticator**
-The device or method that proves a user's identity in WebAuthn / passkey login — a hardware key, Touch ID, Windows Hello, etc.
+The device or method that proves your identity at a passkey sign-in, such as a security key, Touch ID or Windows Hello. An authenticator app is the second-factor method that shows 6-digit codes.
 
 ## C
 
 **Capability**
-A `PluginCapabilities` flag declaring that a plugin needs platform services such
-as auth, experiments, database access, shared plugin tables, notifications, or
-calendar events. The platform and SDK use these flags when wiring runtime
-access.
+A `PluginCapabilities` flag that declares which platform services a plugin needs, such as auth, experiments, database access, shared plugin tables, notifications or calendar events.
 
 **Collaborator**
-A person added to one experiment, with the role `owner` or `collaborator`. The entry is stored on the experiment itself and survives project membership changes.
+A person added to one experiment with the role `owner` or `collaborator`. See [Experiments -> Collaborators](/guide/experiments#collaborators).
 
 **Custom role**
-A platform-wide role assembled by an admin from the platform permission catalog. Sits alongside the built-in Admin / Member / Viewer.
+A role that an admin builds from the permission catalog, next to the system roles Admin, Member and Viewer. See [Permissions -> Custom roles](/reference/permissions#custom-roles).
 
 ## D
 
 **Dependency lock**
-The hashed lock file `plugins.lock` under `<server.dataPath>/plugins/locks/` that pins the Python packages of in-process plugins. `state.json` next to it is the install record that startup restores from. See [Plugin dependency lock](/admin/plugins#plugin-dependency-lock).
+The hashed lock file `plugins.lock` under `<server.dataPath>/plugins/locks/` that pins the Python packages of in-process plugins. See [Plugin dependency lock](/admin/plugins#plugin-dependency-lock).
 
 **Design data**
-JSON validated against an experiment-design plugin's schema. Describes what the experiment is and what it contains.
+The JSON document that describes what an experiment is and what it contains. The design plugin of the experiment writes it.
 
 **Design plugin**
-A plugin that owns an experiment type and its database schema. Provides the experiment's design form and CRUD logic.
+The plugin that writes the design data of an experiment. It gives the design form. See [Choose a design plugin](/guide/experiments#choose-a-design-plugin).
 
 **Device code**
-The short code that `mint platform auth login` shows. A signed-in user approves it at `<externalUrl>/device`, and the CLI then receives a personal access token. See [Device-code sign-in](/admin/authentication#device-code-sign-in-for-the-mint-cli).
+The short code that `mint platform auth login` shows. You approve it on the `/device` page. See [Sign in the mint CLI](/guide/ai-and-api#sign-in-the-mint-cli).
 
 **Dev mode**
-`devMode: true` in `config.json`. Bypasses authentication on every route and disables passkeys; the PostgreSQL connection is kept, with `mint` / `mint` credentials if none are set. Only the `admin` role can turn it on from the admin UI. For local development only — never expose.
+`devMode: true` in `config.json`. Turns off authentication for local development. See [Configuration -> `devMode`](/admin/configuration#devmode).
 
 ## E
 
 **Error code**
-The machine-readable `code` field of an API error answer, such as `user.not_found`. Scripts compare it, not the message text. See [Error codes](/reference/error-codes).
+The machine-readable `code` field of an API error, such as `user.not_found`. Scripts compare the code, not the message. See [Error codes](/reference/error-codes).
 
 **Experiment**
-The unit of work in MINT. Has a type-scoped code, a type, a status, an owner, optional collaborators, one design-data payload, and zero or more analysis artifacts.
+The unit of work in MINT. It has a code, a type, a status, an owner, collaborators, one design document and analysis artifacts. See [Experiments](/guide/experiments).
 
 **Experiment code**
-Auto-assigned, globally unique identifier generated by `naming_service` in `TYPE-EXP-SEQ` format, such as `LCM-EXP-001` or `DR-EXP-001`.
+The experiment number, unique across MINT, in `TYPE-EXP-SEQ` format, such as `LCM-EXP-001`. A new experiment has none. MINT assigns it when the experiment starts or when a user or plugin asks for it. See [Experiment numbers](/guide/experiments#experiment-numbers).
 
 **Experiment type**
-A slug that an administrator creates in **Admin -> Lab content -> Experiment types**. Plugins do not create types. A plugin can limit the types that it works with, and an administrator can narrow that list further.
+A slug that an admin creates in **Admin -> Lab content -> Experiment types**. Plugins do not create types. A plugin can limit the types that it works with, and an admin can narrow that list. See [Experiment types](/admin/platform-settings#experiment-types).
 
 ## I
 
 **Isolation**
-How a plugin runs apart from the platform process: in its own venv and subprocess, in a Docker container, or as an external HTTP service. The platform proxies HTTP to it. In-process plugins share the platform venv under the dependency lock, which blocks an install that conflicts. Isolation is not an OS sandbox.
+How a plugin runs apart from the platform process. See [Isolation](/sdk/concepts/isolation).
 
 ## J
 
 **JWT (JSON Web Token)**
-The auth token MINT issues after a successful password or passkey login. Stored in the HttpOnly `mint_access_token` cookie, marked `Secure` on HTTPS deployments. 7-day lifetime by default (`auth.tokenExpireMinutes`).
+The session token that MINT issues after sign-in. It is stored in the HttpOnly `mint_access_token` cookie, marked `Secure` on HTTPS sites. The default lifetime is 7 days (`auth.tokenExpireMinutes`).
 
 ## L
 
 **Live design**
-A design plugin that declares `Design(live=True)`. The experiment page draws its design form from the plugin's schema, and each field saves by itself. See [Design and analysis on the detail page](/guide/experiments#design-and-analysis-on-the-detail-page).
+A design plugin that declares `Design(live=True)`. The experiment page shows its design form, and each field saves by itself. See [Fill in the design](/guide/experiments#fill-in-the-design).
 
 ## M
 
 **Marketplace**
-The catalog of plugins available for install. Sourced from `marketplace.registryUrl`. A platform administrator installs plugins from it; the install API needs `plugins.install`.
+The catalog of plugins that admins can install. See [Marketplace](/guide/marketplace).
 
 **Marketplace registry**
-A static JSON feed that points at GitHub release `.mint` assets. Hostable on
-any HTTPS endpoint. The default registry is `MorscherLab/mint-registry`; private
-deployments can point `marketplace.registryUrl` at an aggregate registry.
+The JSON catalog at `marketplace.registryUrl` that points to `.mint` release assets. See [Publishing -> Registry format](/sdk/operations/publishing#registry-format).
 
 **Member (system role)**
-The default role for new users: can create and edit projects and experiments and use plugins, but has no platform-admin rights. Write access comes from the role's permissions, not from project membership. Most lab users are Members.
+The default role for new users. Members create and edit projects and experiments and use plugins, but have no admin rights. See [Permissions -> System roles](/reference/permissions#system-roles).
 
 **Migration (platform)**
-An Alembic revision under `api/db_revisions/` that the platform applies on startup. Tracked via `alembic_version`. A database from before 1.2.2 must be adopted by MINT 1.2.x (≥ 1.2.2) first; see [Updates](/admin/updates).
+An Alembic revision under `api/db_revisions/` that the platform applies at startup. See [Updates](/admin/updates).
 
 **Migration (plugin)**
-A schema change for a plugin's own tables. A plugin opts into the shared Alembic runtime with `Metadata.database = MigrationSpec(...)` from `mint_sdk.migrations`; the platform runs revisions under a migration lock, and a failed migration keeps the plugin disabled. The older `PluginMigration` runner was removed in MINT 1.4; a plugin that still uses it stays disabled.
+A schema change of the tables of a plugin. See [Migrations API](/sdk/api/migrations).
 
 **MINT**
-Mass-spec Infrastructure for Next-generation Toolkits. The current name for the platform formerly called MLD. Rebrand landed alongside `v1.0.0`.
+Mass-spec Infrastructure for Next-generation Toolkits. The platform was called MLD before `v1.0.0`. See [FAQ](/reference/faq).
 
 **MLD**
-The historical name of the platform — Morscher Laboratory Database. Now retired in favor of MINT.
+The former name of the platform (Morscher Laboratory Database).
 
 ## P
 
 **Passkey**
-A WebAuthn credential — a public/private key pair stored on a device. Replaces or supplements password login.
+A WebAuthn credential: a key pair stored on a device. It replaces or adds to the password sign-in.
 
 **Permission**
-A `resource.action` string (e.g., `experiments.edit`) that backend routes check. Current MINT releases define 27 permissions in 11 groups.
+A `resource.action` string, such as `experiments.edit`, that the server checks. MINT has 27 permissions in 11 groups. See [Permissions](/reference/permissions).
 
 **Personal access token**
-A `mint_pat_` credential that a user creates for scripts, the `mint` CLI (`MINT_TOKEN`) and AI assistants. It acts with the owner's role, can be read-only, and has a lifetime of 30, 90 or 365 days. See [Personal access tokens](/admin/authentication#personal-access-tokens).
+A `mint_pat_` credential for scripts, the `mint` CLI and AI assistants. See [AI Assistants and API Access](/guide/ai-and-api).
 
 **Plugin**
-A self-contained extension to the platform. A plugin declares a `Metadata` subclass, registers it with `@plugin(Meta)` from `mint-sdk`, and is discovered via the
-`mint.plugins` entry-point group.
+An extension of the platform. A plugin declares a `Metadata` subclass, registers it with `@plugin(Meta)` from `mint-sdk`, and is found through the `mint.plugins` entry-point group.
 
 **Plugin panel**
-A tab that a plugin adds to the **Design data** or **Analysis artifacts** card of the experiment page. A panel shows sections that the plugin builds for the experiment, and can have actions that start plugin jobs. See [Design and analysis on the detail page](/guide/experiments#design-and-analysis-on-the-detail-page).
+A tab that a plugin adds to the **Design data** or **Analysis artifacts** card of the experiment page. See [Plugin tabs](/guide/experiments#plugin-tabs).
 
 **`PlatformContext`**
-The runtime bridge the platform hands a plugin during startup. It exposes the current actor plus scoped services for experiments, projects, analysis artifacts, plugin-owned data, settings, notifications, calendar events, and job visibility according to the plugin's declared capabilities.
+The object that the platform gives a plugin at startup. It gives the current user and the services for experiments, projects, artifacts, plugin data, settings, notifications, calendar events and jobs that the plugin declared. See [Platform context](/sdk/concepts/platform-context).
 
 **Prerelease updates**
-When `updates.includePrereleases` is true, the platform update checker includes GitHub prereleases in addition to stable releases.
+With `updates.includePrereleases` set to true, the update check includes GitHub prereleases. See [Updates -> Prereleases](/admin/updates#prereleases).
 
 **Project**
-The top-level grouping in MINT. Owns a set of experiments and a member list. When `access.experimentVisibilityMode` is `restricted`, project membership decides which experiments a non-admin can see; in the default `open` mode it does not.
+The top-level group in MINT. It has experiments and a member list. See [Projects](/guide/projects).
 
 **Project role**
-A stored project-membership label. Current values are `editor` and `viewer`; route-level write access still comes from system RBAC.
+The membership label `editor` or `viewer` in a project. See [Users & roles -> Project membership](/admin/users-roles#project-membership).
 
 **Purge (uninstall mode)**
-Drops a plugin's database schema and all its tables permanently. Irreversible.
+An uninstall mode that drops the plugin schema. You cannot undo it. See [Uninstall modes](/admin/plugins#uninstall-modes).
 
 ## R
 
 **Repository pattern**
-The platform's data-access abstraction. Each resource (project, experiment, user, …) has a repository that centralizes PostgreSQL access and permission boundaries.
+The data-access layer of the platform. Each resource, such as project, experiment or user, has a repository for its PostgreSQL access and permission checks.
 
 **Routes prefix**
-The URL path a plugin mounts under, declared with `Metadata.prefix`. A prefix of `/`, or one that shares its first `/api` segment with a platform route, is refused.
+The URL path of a plugin, declared with `Metadata.prefix`. See [Isolation](/sdk/concepts/isolation).
 
 ## S
 
 **Second factor**
-The passkey step after a password or edu-ID sign-in. It is on by default (`auth.requireSecondFactor`) and enforced only with an `https://` `server.externalUrl`. See [Second factor](/admin/authentication#second-factor).
+The step after a password or edu-ID sign-in: a passkey or a code from an authenticator app (TOTP). See [Access -> Second factor](/guide/access#second-factor) and [Authentication -> Second factor](/admin/authentication#second-factor).
 
 **Service token**
-A `mint_svc_` credential for an instrument daemon. It belongs to one plugin and a subset of the instruments granted to that plugin, and it reaches only that plugin's routes. An administrator issues it in **Admin -> People & access -> Service tokens**. See [Service tokens](/admin/authentication#service-tokens).
+A `mint_svc_` credential for an instrument daemon. It belongs to one plugin and reaches only the routes of that plugin. See [Service tokens](/admin/authentication#service-tokens).
 
 **Snapshot**
-A saved previous plugin lock (`plugins/locks/history/`, the 10 most recent) used for
-best-effort package rollback. Short-lived - not a database or object-store
-backup substitute.
+A saved earlier plugin lock, used to roll back plugin packages. It is not a backup. See [Rollback](/admin/plugins#rollback).
 
 **SDK**
-`mint-sdk` (Python) for plugin backends; `@morscherlab/mint-sdk` (npm) for plugin frontends. The contract between plugins and the platform.
+`mint-sdk` (Python) for plugin backends, and `@morscherlab/mint-sdk` (npm) for plugin frontends.
 
 **SSO (Single Sign-On)**
-Delegating authentication to an external identity provider. Current MINT releases include built-in SWITCH edu-ID sign-in through OpenID Connect. Other providers can still be handled by an organization-managed reverse proxy or access gateway when needed.
+Sign-in through an external identity provider. MINT has built-in SWITCH edu-ID sign-in through OpenID Connect. See [SWITCH edu-ID SSO](/admin/authentication#switch-edu-id-sso).
 
 **Status (experiment)**
-One of `planned`, `ongoing`, `completed`, or `cancelled`. Most plugins gate writes on the status.
+One of `planned`, `ongoing`, `completed`, or `cancelled`. See [Lifecycle](/guide/experiments#lifecycle).
 
 ## V
 
 **Viewer (system role)**
-A platform-wide role that can view projects, experiments, plugins and users and can use plugins, but cannot create or edit platform records.
+A role that can view projects, experiments, instruments, plugins and users, and can use plugins. It cannot create or edit platform records.
 
 ## W
 
 **WebAuthn**
-The browser standard behind passkey login. MINT uses it via the `passkey_service`.
+The browser standard for passkey sign-in.

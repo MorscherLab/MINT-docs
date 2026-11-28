@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ExperimentSelectorModal
-description: "ExperimentSelectorModal is a workflow component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Modal to search and select a platform experiment, with filters and keyboard navigation."
 ---
 
 <p class="mint-component-library__eyebrow">Workflow</p>
 
 # ExperimentSelectorModal
 
-ExperimentSelectorModal is a workflow component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `ExperimentSelectorModal` to let the user search the platform experiments and pick one.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,7 +25,7 @@ import { ExperimentSelectorModal } from "@morscherlab/mint-sdk/data"
 
 ## Selected row
 
-A selected row shows the soft accent fill, the teal title and a trailing check. It has no coloured left bar.
+A selected row shows the soft accent fill, the teal title and a trailing check, with no coloured left bar. `ArtifactSelectorModal` marks a selected row the same way. In `ArtifactSaveDialog`, the selected file row has the soft accent fill only.
 
 <!-- sdk-props:start -->
 ## Props

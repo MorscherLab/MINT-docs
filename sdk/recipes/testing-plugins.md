@@ -1,8 +1,6 @@
 # Testing plugins
 
-## Goal
-
-Write fast unit and integration tests for plugin code without spinning up a full platform. Use the `mint_sdk.testing` helpers.
+Test plugin code without a running platform. Use the helpers of `mint_sdk.testing`.
 
 ## The harness
 
@@ -17,7 +15,7 @@ from mint_sdk.testing import (
 )
 ```
 
-These six names are the complete public testing surface. The source of truth is `packages/sdk-python/src/mint_sdk/testing/__init__.py`. `PluginTestHarness`, `CompletedPluginJob`, `PluginJobTestError`, `make_test_plugin`, `build_test_app` and `write_standalone_plugin_module` are removed (`mint doctor --fix` renames the first three). `mint_sdk.testing.plugins` holds `make_test_plugin` and `build_test_app` for the SDK's own tests; plugin tests use `Harness`.
+These six names are the complete public testing API ([`testing/__init__.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/testing/__init__.py)). `mint_sdk.testing.plugins` is for the SDK's own tests. For the removed 1.3 helpers, see [Migrate from MINT 1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4#run-the-codemod).
 
 ## Project layout
 
@@ -38,9 +36,12 @@ my_plugin/
 
 ## Plugin tests with `Harness` and `RecordingContext`
 
-`Harness(plugin, *, settings=None, context=None, timeout=10.0)` starts the plugin on its real app (`mint_sdk.app.create_app`) in a `TestClient`. `harness.client` is that client. `settings=` overrides the plugin settings (kept in memory). `context=` is the platform context that the plugin sees; without it the plugin runs standalone.
+`Harness(plugin, *, settings=None, context=None, timeout=10.0)` starts the plugin on its real app (`mint_sdk.app.create_app`) in a `TestClient`, `harness.client`.
 
-`RecordingContext` is an in-memory `PlatformContext` whose `experiments`, `design`, `artifacts`, `users`, `instruments` and `objects` namespaces really write and read. It applies the platform's access rules and design-data validation, and `Harness` applies the write set of the plugin's `Metadata.writes` to it.
+- `settings=` overrides the plugin settings, in memory.
+- `context=` is the platform context that the plugin sees. Without it, the plugin runs standalone.
+
+`RecordingContext` is an in-memory `PlatformContext`. Its `experiments`, `design`, `artifacts`, `users`, `instruments` and `objects` namespaces really write and read. It applies the platform access rules and design-data validation. `Harness` applies the plugin's `Metadata.writes` to it.
 
 ```python
 # tests/test_routes.py
@@ -65,13 +66,20 @@ def test_summary_route_reads_the_design():
     assert response.status_code == 200
 ```
 
-Pass `plugin_id`, `reads_from`, `reads_from_any_plugin` (default `True`: a `"*"` counts as confirmed), `writes_to`, `experiment_types`, `experiments`, `users`, `instruments`, `design=Design(...)` and `instrument_status_grant` to `RecordingContext` to set up the case. A wrong `plugin_id` raises `ValueError` when the harness binds it. `context.set_actor(...)` changes the actor between calls. `context.published` keeps each `(name, payload)` that `context.publish` delivered, `context.streamed` keeps each `(topic, name, payload)` that the platform would stream for a `"realtime"` plugin, and `context.instruments.reports` keeps each accepted status report.
+To set up the case, pass these arguments to `RecordingContext`: `plugin_id`, `reads_from`, `reads_from_any_plugin` (default `True`: a `"*"` counts as confirmed), `writes_to`, `experiment_types`, `experiments`, `users`, `instruments`, `design=Design(...)` and `instrument_status_grant`. A wrong `plugin_id` raises `ValueError` when the harness binds it.
 
-The harness does not simulate real auth. `RecordingContext.is_authenticated` is `False` without an actor, and there is no real JWT verification. Tests that verify auth dependencies override the FastAPI dependency directly, or give the context an `Actor` with the role and permissions to test. Test `access="configure"` and `access="admin"` routes with an `Actor` that has `plugins.configure` and with the role `admin`.
+| Member | Use |
+|--------|-----|
+| `context.set_actor(...)` | Changes the actor between calls |
+| `context.published` | Each `(name, payload)` that `context.publish` delivered |
+| `context.streamed` | Each `(topic, name, payload)` that the platform would stream for a `"realtime"` plugin |
+| `context.instruments.reports` | Each accepted status report |
+
+The harness does not simulate real authentication. `RecordingContext.is_authenticated` is `False` without an actor, and no JWT is verified. To test an auth dependency, override the FastAPI dependency, or give the context an `Actor` with the role and permissions to test. Test `access="configure"` with an `Actor` that has `plugins.configure`, and `access="admin"` with the role `admin`.
 
 ## Job tests with `Harness.run`
 
-`Harness.run(job, payload=None, /, **inputs)` opens a job session, submits the job, polls until it finishes and returns a `Run`. `Path` inputs are uploaded through the plugin's staging endpoint first. `job` is the job id or the decorated method.
+`Harness.run(job, payload=None, /, **inputs)` opens a job session, submits the job, polls until it ends and returns a `Run`. `job` is the job id or the decorated method. `Path` inputs go through the plugin staging endpoint first.
 
 ```python
 from mint_sdk import Job, JobContext, Metadata, Plugin, job, plugin
@@ -101,7 +109,10 @@ def test_double_job_returns_twice_the_input():
     assert run.value == 42
 ```
 
-The job ID defaults to the method name in kebab-case (`read_file` becomes `"read-file"`), or the `Job.id` of the spec. `run.value` is the JSON value (the text for text results, the typed wire payload for other results); `run.job` is the final job state. A failed or cancelled job raises `JobFailedException` with the job's error; a timeout raises `TimeoutError`. Give the inputs as a mapping, a pydantic model or keyword arguments, not both.
+- The job ID is the `Job.id` of the spec, else the method name in kebab-case (`read_file` becomes `"read-file"`).
+- `run.value` is the JSON value: the text for text results, the typed wire payload for other results. `run.job` is the final job state.
+- A failed or cancelled job raises `JobFailedException` with the job error. A timeout raises `TimeoutError`.
+- Give the inputs as a mapping, a pydantic model or keyword arguments, not both.
 
 To call a handler directly, build its context with `job_context`:
 
@@ -115,7 +126,7 @@ def test_handler_reports_progress():
     assert context.reports
 ```
 
-`job_context(*, settings=None, cancelled=False, actor=None)` keeps `reports` and `warnings`. `job_context(cancelled=True)` makes `context.check()` raise `asyncio.CancelledError`. A settings mapping is exposed as attributes of `context.settings`.
+`job_context(*, settings=None, cancelled=False, actor=None)` keeps `reports` and `warnings`. With `cancelled=True`, `context.check()` raises `asyncio.CancelledError`. A settings mapping becomes attributes of `context.settings`.
 
 ## Events, exports and calls
 
@@ -129,9 +140,11 @@ def test_handler_reports_progress():
 | `context.plugins.start_job` | `stub_job(plugin, job, *, handle)` | `started_jobs`, as `(plugin, job, args, on_behalf_of)` |
 | `context.plugins.subscribe` | Nothing | `subscriptions` (a set of names) |
 
-`Harness` has the same `stub_export`, `stub_call` and `stub_job` methods; they need `context=RecordingContext(...)`. A stubbed export pages the rows in order and applies `ids` (on `key`), `experiment_id` and `updated_since` (on `updated_at`). A target outside `reads_from` raises `PermissionException` for a read and `PluginNotReadable` for a call. A target without a stub raises `NotFoundException`.
+- `Harness` has the same `stub_export`, `stub_call` and `stub_job` methods. They need `context=RecordingContext(...)`.
+- A stubbed export pages the rows in order. It applies `ids` (on `key`), `experiment_id` and `updated_since` (on `updated_at`).
+- A target outside `reads_from` raises `PermissionException` for a read and `PluginNotReadable` for a call. A target without a stub raises `NotFoundException`.
 
-`harness.deliver(name, payload, /, *, experiment_id=None)` delivers a bus event of another plugin to the `@on(name)` handlers, as the event bus does. Each handler gets a `PluginEvent` with a new increasing `id`, `attempt` 1 and no actor. A handler failure raises, and an event that no handler takes raises `ValueError`.
+`harness.deliver(name, payload, /, *, experiment_id=None)` delivers a bus event of another plugin to the `@on(name)` handlers, as the event bus does. Each handler gets a `PluginEvent` with a new increasing `id`, `attempt` 1 and no actor. A handler failure raises. An event that no handler takes raises `ValueError`.
 
 ```python
 from mint_sdk.testing import Harness, RecordingContext
@@ -155,7 +168,9 @@ Run a tool, prompt or resource through the same code as the platform with `call_
 
 ## Panels
 
-`Harness.panel(id, experiment_id, as_user=)` calls a `@panel` method through the runtime and returns its sections as dictionaries. The `mint init` standard scaffold has one such test:
+`Harness.panel(panel_id, experiment_id, /, *, as_user=None)` calls a `@panel` method through the runtime and returns its sections as dictionaries, as the platform gets them. A refused `access`, a timeout and an invalid answer raise the same exception as on the platform. To give the panel data, pass `context=RecordingContext(...)` and save design data or artifacts first.
+
+The `mint init` standard template adds an analysis-slot panel "Summary" and this test:
 
 ```python
 def test_summary_panel_shows_the_experiment_and_links_to_the_workspace() -> None:
@@ -170,42 +185,25 @@ def test_summary_panel_shows_the_experiment_and_links_to_the_workspace() -> None
 
 ## Frontend tests
 
-Frontend tests run with `vp run test` (Vitest through Vite+) in `frontend/`. Name each test `it('should <behavior> when <condition>')`: the oxlint preset of `mint lint` checks that titles start with "should".
+Run frontend tests with `vp run test` (Vitest through Vite+) in `frontend/`. Name each test `it('should <behavior> when <condition>')`. The oxlint preset of `mint lint` checks that titles start with "should".
 
-`FormBuilder`, `SettingsModal` and the generated UI load the `path`, `file`, `molecule`, `formula` and `sequence` fields on first use. A test that finds one of these fields right after mount loads them first:
-
-```ts
-import { beforeAll } from 'vitest'
-import { preloadFormFieldTypes } from '@morscherlab/mint-sdk/runtime'
-
-beforeAll(() => preloadFormFieldTypes())
-```
+Some form field types load on first use. A test that finds such a field right after mount must call `preloadFormFieldTypes()` in `beforeAll`; see [Field types that load on first use](/sdk/frontend/form-builder#field-types-that-load-on-first-use).
 
 ## Testing migrations
 
-For Alembic migrations (`Metadata.database`), use `run_migrations`, `inspect_migrations` and `check_migrations` against temporary SQLite databases; [Backfill migrations](/sdk/recipes/backfill-migration#test-the-real-upgrade-path) has a complete upgrade test. The `mint-sdk[local-db]` extra supplies `aiosqlite` and `greenlet` for `sqlite+aiosqlite://` tests. The legacy `MigrationRunner` is removed.
+For Alembic migrations (`Metadata.database`), run `run_migrations`, `inspect_migrations` and `check_migrations` against temporary SQLite databases. [Backfill migrations](/sdk/recipes/backfill-migration#test-the-real-upgrade-path) has a complete upgrade test. The `mint-sdk[local-db]` extra supplies `aiosqlite` and `greenlet` for `sqlite+aiosqlite://` tests.
 
-## Coverage targets
+## What to cover
 
-Aim to cover:
+- The happy path of every route.
+- The error paths of every route: validation, not found, permission, access level.
+- The `initialize` and `shutdown` cycle of the plugin.
+- Each migration on an empty database, and on top of the previous migration.
 
-- Every route's happy path
-- Every route's error paths (validation, not found, permission, access level)
-- The plugin's `initialize` / `shutdown` cycle
-- Each migration applies cleanly to an empty database
-- Each migration applies cleanly when run on top of the previous
+The platform sets no coverage threshold.
 
-The platform doesn't require any specific coverage threshold — pick what your team finds useful.
+## Setup tips
 
-## Notes
-
-- `pytest-asyncio` is the conventional async test runner. Add it via `uv add --dev pytest-asyncio` and set `asyncio_mode = "auto"` in `pyproject.toml`.
-- `RecordingContext` keeps state in memory; share one instance across several route calls within one test.
-- Run `mint doctor --strict` and `mint lint` in CI to catch removed and deprecated APIs and design-rule findings.
-
-## Related
-
-- [Tutorials → First analysis plugin](/sdk/tutorials/first-analysis-plugin) — basic test setup
-- [Recipes → Backfill migrations](/sdk/recipes/backfill-migration) — testing complex migrations
-- [Operations → CI patterns](/sdk/operations/ci-patterns) — running tests in CI
-- [API → Python SDK](/sdk/api/python#testing) — what each helper exports
+- For async tests, add `pytest-asyncio` with `uv add --dev pytest-asyncio` and set `asyncio_mode = "auto"` in `pyproject.toml`.
+- `RecordingContext` keeps state in memory. Share one instance across the route calls of one test.
+- Run `mint doctor --strict` and `mint lint` in CI. They find removed and deprecated APIs and design-rule problems. See [CI patterns](/sdk/operations/ci-patterns).

@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ExperimentPopover
-description: "ExperimentPopover is a workflow component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Top-bar control for the attached experiment, with a Save button and a summary panel."
 ---
 
 <p class="mint-component-library__eyebrow">Workflow</p>
 
 # ExperimentPopover
 
-ExperimentPopover is a workflow component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `ExperimentPopover` in your own top bar to show the attached experiment and to change, open, save or detach it. `PluginWorkspaceView` shows it when `spec.experiment` is `true`.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

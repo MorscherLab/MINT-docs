@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ExperimentCodeBadge
-description: "ExperimentCodeBadge is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Badge that shows an experiment code and copies it on click."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # ExperimentCodeBadge
 
-ExperimentCodeBadge is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `ExperimentCodeBadge` to show an experiment code. A click copies the code; set `copyable` to `false` to turn this off.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

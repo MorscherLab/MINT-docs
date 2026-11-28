@@ -8,7 +8,7 @@ description: "Edits one plugin secret setting: shows set / not set / provided-by
 
 # SecretInput
 
-Edits one plugin secret setting: shows set / not set / provided-by-environment state and submits a replacement, keep, or clear.
+Use `SecretInput` to edit one plugin secret setting. It shows whether the secret is set, not set or comes from the environment, and submits a new value, keep or clear.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

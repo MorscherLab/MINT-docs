@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ScientificNumber
-description: "ScientificNumber is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Read-only number in plain, scientific or SI-prefix notation, with unit and copy button."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # ScientificNumber
 
-ScientificNumber is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `ScientificNumber` to show a measured value in plain, scientific (×10ⁿ) or SI-prefix notation.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,7 +25,9 @@ import { ScientificNumber } from "@morscherlab/mint-sdk/lab"
 
 ## Copying
 
-The copy button appears on hover, on keyboard focus, and always on touch devices, and confirms with `Copied <value>`. Screen readers hear `6.022 × 10^23`, and a text selection across the number pastes `10^23`. The copy button, and a selection inside the number, copy the canonical string (`6.022e23 mol⁻¹`).
+- The copy button shows on hover and on keyboard focus, and always on touch devices. It confirms with `Copied <value>`.
+- The copy button and a selection inside the number copy the canonical string (`6.022e23 mol⁻¹`). A selection across the number pastes `10^23`.
+- Screen readers read `6.022 × 10^23`.
 
 <!-- sdk-props:start -->
 ## Props

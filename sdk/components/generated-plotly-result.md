@@ -8,10 +8,10 @@ description: "Renders a generated job's Plotly result spec, with a static image 
 
 # GeneratedPlotlyResult
 
-Renders a generated job's Plotly result spec, with a static image fallback.
+`GeneratedPlotlyResult` draws the Plotly result of a generated job. It shows a static image when the chart cannot render.
 
-::: info Generated UI (internal)
-This component renders a piece of the SDK's backend-driven **generated UI** system (`@generated_ui` / job manifests). Plugin authors typically don't place it directly; it is composed automatically inside `GeneratedPluginView`. Documented here for completeness and for authors customizing generated-UI rendering.
+::: info Generated UI
+[GeneratedPluginView](/sdk/components/generated-plugin-view) places this component for you. Use it directly only to change how a generated UI renders.
 :::
 
 <div class="mint-component-reference__actions">
@@ -20,7 +20,7 @@ This component renders a piece of the SDK's backend-driven **generated UI** syst
 </div>
 
 ::: info Uses Plotly
-This component renders a job result with `PlotlyChart`. The docs do not load plotly.js. To see it work, run a plugin with `mint dev`.
+This component renders a job result with `PlotlyChart`, so the plugin must declare `plotly.js-dist-min`; see [Charts need Plotly](/sdk/frontend/#charts-need-plotly). The docs do not load plotly.js. To see it work, run a plugin with `mint dev`.
 :::
 
 ## Import

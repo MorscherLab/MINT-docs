@@ -1,20 +1,27 @@
 # First-run setup
 
-Install MINT ([direct](/admin/install-direct) or [Docker](/admin/install-docker)) and put a [reverse proxy](/admin/reverse-proxy) in front of it. Then finish setup in the browser.
+This page tells you how to finish the setup in the browser. First, install MINT ([direct](/admin/install-direct) or [Docker](/admin/install-docker)) and put a [reverse proxy](/admin/reverse-proxy) in front of it.
 
-Open the public URL in your browser. Until setup completes (`setupCompleted` in `config.json`), MINT shows the **Setup** wizard:
+## Run the setup wizard
 
-1. **Database** — PostgreSQL host, port, database name, user, and password. **Test connection** checks them. The wizard saves these values to `config.json`, replacing the `database` block and `DB_USERNAME` / `DB_PASSWORD`. A field that an environment variable or `.env` sets (`MINT_DATABASE__HOST`, `__PORT`, `__DATABASENAME`, `MINT_DB_USERNAME`, `MINT_DB_PASSWORD`; always the case under Docker Compose) is read-only and shows the variable name. **Test connection** uses the configured value, and the wizard does not write it to `config.json`. An environment-set password needs an environment-set host and port.
-2. **Administrator** — username (at least 3 characters) and password (at least 8 characters, at most 72 bytes when UTF-8 encoded).
-3. **Restart** — MINT creates the admin account and asks for a restart before first login.
+Open the public URL in your browser. Until the setup is complete (`setupCompleted` in `config.json`), MINT shows the **Setup** wizard:
 
-> [Screenshot: setup wizard on the administrator step with the password requirements checklist]
+1. **Database.** Enter the PostgreSQL host, port, database name, user and password. Click **Test connection**. The wizard saves the values to `config.json`: the `database` block, `DB_USERNAME` and `DB_PASSWORD`.
+2. **Administrator.** Enter a username (at least 3 characters) and a password. The wizard shows the [password rules](/admin/authentication#accounts-and-registration).
+3. **Restart.** MINT creates the admin account and asks for a restart before the first login.
 
-The wizard keeps the admin password in `config.json` only while setup is in progress and clears it once setup completes. Once setup completes, the wizard cannot be run again.
+> [Screenshot: setup wizard on the Administrator step, with the password rules checklist]
 
-After setup:
+A database field that an environment variable or `.env` sets is read-only and shows the variable name. These variables are `MINT_DATABASE__HOST`, `__PORT`, `__DATABASENAME`, `MINT_DB_USERNAME` and `MINT_DB_PASSWORD`. Docker Compose always sets them. **Test connection** uses the configured value, and the wizard does not write it to `config.json`. A password from the environment needs a host and a port from the environment.
 
-1. Decide whether people may create their own accounts. Self-registration is on by default (`auth.allowRegistration`); new accounts get the default role, Member, and stay inactive until an administrator activates them. See [Authentication](/admin/authentication#accounts-and-registration).
-2. Create experiment types in **Admin -> Lab content** and configure notifications in **Admin -> System** (see [Platform settings](/admin/platform-settings)). The marketplace registry URL is set with `marketplace.registryUrl` in `config.json`.
-3. Create accounts with `mint platform admin user create`, or let people register, then assign system roles (see [Users & roles](/admin/users-roles)).
-4. Create your first **Project** (see [Projects](/guide/projects)).
+The wizard keeps the admin password in `config.json` only during the setup and clears it at the end. You cannot run the wizard again after the setup is complete.
+
+## After the setup
+
+1. Decide whether people can create their own accounts. Self-registration is on by default. See [Accounts and registration](/admin/authentication#accounts-and-registration).
+2. Create the experiment types in **Admin -> Lab content**. See [Experiment types](/admin/platform-settings#experiment-types).
+3. Configure notifications in **Admin -> System**. See [Notifications](/admin/platform-settings#notifications).
+4. Create accounts with `mint platform admin user create`, or let people register. Then assign system roles. See [Users & roles](/admin/users-roles).
+5. Create the first project. See [Projects](/guide/projects).
+
+The marketplace registry URL is `marketplace.registryUrl` in `config.json`; see [`marketplace`](/admin/configuration#marketplace).

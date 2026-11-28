@@ -1,9 +1,6 @@
 # Deploying and verifying a plugin
 
-Build a `.mint` bundle, verify it on a disposable MINT platform, then install
-that same artifact on the intended server. These instructions target MINT
-**@MINT_VERSION@**; the platform requires PostgreSQL. A standalone plugin's SQLite file
-is development storage, not the platform database.
+Build a `.mint` bundle, verify it on a disposable MINT platform, then install the same bundle on the target server. A standalone plugin's SQLite file is development storage, not the platform database.
 
 ## 1. Check and build locally
 
@@ -15,38 +12,45 @@ uv run pytest
 uv run mint build
 ```
 
-For a frontend plugin, run its tests and type check as well. `mint build` runs
-Python tests and the frontend build, validates SDK release alignment and
-packages frontend assets into the wheel. See [packaging](/sdk/operations/packaging).
+For a frontend plugin, also run its tests and its type check. `mint build` runs the Python tests and the frontend build, checks that the two SDKs resolve to the same release, and puts the frontend assets into the wheel. See [Packaging](/sdk/operations/packaging).
 
-## 2. Verify the real installation path
+## 2. Verify the installation path
 
 ```bash
 uv run mint verify --bundle dist/my-plugin-0.2.0.mint
 ```
 
-Replace the filename with the bundle you built. Docker verification creates a
-throwaway platform and PostgreSQL service, completes initial setup, uploads the
-bundle, waits for restart/loading and then tears down the environment. Defaults
-use the stable platform image; use `--channel beta` for a prerelease or `--image
-IMAGE` to choose a particular platform image. `--keep` preserves the environment
-for inspection. `--timeout` (default 300 seconds) bounds setup, restart and
-plugin load.
+Use the filename of the bundle that you built. Docker must run. The command does these steps:
 
-To include your plugin's own API smoke checks:
+1. Start a temporary platform and a PostgreSQL service.
+2. Complete the initial setup.
+3. Upload the bundle.
+4. Wait for the restart and the plugin load.
+5. Remove the environment.
+
+| Option | Effect |
+|---|---|
+| (none) | Use the stable platform image |
+| `--channel beta` | Use the prerelease image |
+| `--image IMAGE` | Use this platform image |
+| `--keep` | Keep the environment for inspection |
+| `--timeout` | Limit setup, restart and plugin load (default 300 seconds) |
+
+To run your own API smoke tests, write the smoke suite, then set:
 
 ```toml
 [tool.mint]
 verify_command = "uv run pytest tests/smoke -x"
 ```
 
-The runner supplies `MINT_VERIFY_URL`, `MINT_VERIFY_USERNAME` and
-`MINT_VERIFY_PASSWORD`. Use these only for the temporary verification instance;
-do not log credentials. Write the smoke suite before enabling this setting.
+The runner sets `MINT_VERIFY_URL`, `MINT_VERIFY_USERNAME` and `MINT_VERIFY_PASSWORD`. These credentials are for the temporary instance only. Do not log them.
 
-A fresh install is not an upgrade test. For a database plugin, also install the
-previous release on a staging platform, create representative data, upgrade to
-the new bundle and verify that data after restart.
+A new installation does not test an upgrade. For a plugin with database tables, also do these steps on a staging platform:
+
+1. Install the previous release.
+2. Create representative data.
+3. Upgrade to the new bundle.
+4. After the restart, check the data.
 
 ## 3. Deploy to a test platform
 
@@ -57,129 +61,81 @@ mint deploy --url test --bundle dist/my-plugin-0.2.0.mint
 mint platform plugin list
 ```
 
-The URL must identify your intended test platform. `--url` takes a URL or
-part of a host name from `mint platform auth hosts`, and deploy then uses the
-credential stored for that host before `MINT_TOKEN`. `--to` is the older
-name of the same option. `deploy` uploads the bundle
-and, by default, performs the restart/load workflow. `--no-restart` leaves any
-required restart to the administrator. The equivalent upload-only path is:
+Make sure that the URL names your test platform. `--url` takes a URL or a part of a host name from `mint platform auth hosts`. `deploy` uses the credential stored for that host before `MINT_TOKEN`. `--to` is the older name of `--url`.
+
+`deploy` uploads the bundle and then restarts the platform and waits for the plugin. With `--no-restart`, the administrator does the restart. To upload only:
 
 ```bash
 mint platform plugin upload dist/my-plugin-0.2.0.mint
 ```
 
-Platform permissions govern installation. `--force` skips ordinary dependency
-conflict preflight; it does not override `requires_mint` or the platform SDK
-version constraint. It is not a normal "replace old version" flag.
+`plugin upload` sends a `.mint` file from your computer. To install the `.mint` asset of a GitHub release, use `mint platform plugin github install REPO --tag TAG`.
 
-`plugin upload` sends the published `.mint` file from your machine. For a
-GitHub-hosted release, use `mint platform plugin github install REPO --tag TAG` to fetch
-its `.mint` asset. Settings use
-the runtime plugin name, while upgrade/uninstall commands take the installed
-package name; `plugin list --json` shows both.
+`--force` skips the dependency-conflict check before the upload. It does not override `requires_mint` or the SDK range of the platform. Do not use it to replace an old version.
+
+Settings commands take the runtime plugin name. Upgrade and uninstall commands take the installed package name. `plugin list --json` shows both.
 
 ### What deploy confirms
 
-Without `--bundle`, `mint deploy` first builds the bundle exactly like
-`mint build` (tests included). A dirty git tree stops the build; pass
-`--allow-dirty` to build anyway. Without `--url`, it targets `MINT_URL`, then
-the default host. It
-then uploads the bundle, which requires `plugins.install`. If the platform
-reports that a restart is needed, it restarts the platform and waits:
+Without `--bundle`, `mint deploy` builds the bundle as `mint build` does, tests included. A dirty git tree stops the build. To build anyway, add `--allow-dirty`. Without `--url`, the target is `MINT_URL`, then the default host.
 
-1. **Restart.** Before restarting, it reads `boot_id` from `GET /api/health`;
-   every server process reports a new one. The restart counts only once a
-   different `boot_id` appears, so redeploying the same version (for example,
-   uncommitted edits) is confirmed as well. A platform older than 1.2.9 reports
-   no `boot_id`; the command then waits for health and for the plugin to load
-   the version recorded in the bundle's `manifest.json`.
-2. **Load.** It waits until the plugin appears in the platform's loaded list.
-   If the loaded version differs from the bundle version, it prints a warning
-   naming both and still succeeds; check that `Plugin.metadata.version` follows
-   the package version.
-3. **Enabled.** It reads the plugin entry and exits 1 when the platform
-   disabled the plugin: `enabled` is false, a `migration_error` is set (for
-   example "Migration checksum or owner mismatch" after a released revision
-   changed), or the dependency lock disabled it. The message gives the error
-   text and the reason. `mint platform plugin list` shows the same state.
+The upload needs `plugins.install`. When the platform reports that a restart is necessary, `deploy` restarts it and waits:
 
-`--timeout` (default 180 seconds) is one budget for restart and load together.
-Failures print `Error: ...` and exit 1; with `--json` they print
-`{"success": false, "message": ...}`. Restarting requires
-`platform.configure`. An account without it gets an error saying the plugin
-is installed but not running. Ask an administrator to restart, or deploy with
-`--no-restart`, which prints `Uploaded. Restart the platform to load the
-plugin.`
+1. **Restart.** Before the restart, `deploy` reads `boot_id` from `GET /api/health`. Each server process reports a new `boot_id`. The restart counts only when a different `boot_id` appears. Thus a redeploy of the same version is also confirmed. A platform older than 1.2.9 reports no `boot_id`. Then `deploy` waits for health and for the plugin version in the bundle's `manifest.json`.
+2. **Load.** `deploy` waits until the plugin is in the loaded list of the platform. When the loaded version is not the bundle version, it prints a warning with both versions and still succeeds. Make sure that `Plugin.metadata.version` follows the package version.
+3. **Enabled.** `deploy` reads the plugin entry. It exits 1 when the platform disabled the plugin: `enabled` is false, a `migration_error` is set, or the dependency lock disabled the plugin. An example `migration_error` is "Migration checksum or owner mismatch" after a released revision changed. The message gives the error and the reason. `mint platform plugin list` shows the same state.
+
+`--timeout` (default 180 seconds) limits the restart and the load together. A failure prints `Error: ...` and exits 1. With `--json`, it prints `{"success": false, "message": ...}`.
+
+The restart needs `platform.configure`. Without it, `deploy` stops with an error that says that the plugin is installed but not running. Ask an administrator to restart the platform, or deploy with `--no-restart`. Then the command prints `Uploaded. Restart the platform to load the plugin.`
 
 ## 4. Check behavior after installation
 
 | Check | What it proves |
 |---|---|
-| Open the plugin through the platform, then reload its nested route | Packaged assets and frontend routing work |
-| Sign in as the expected member and as a restricted user | Backend resource and access-level checks work |
+| Open the plugin in the platform, then reload a nested route | Packaged assets and frontend routing work |
+| Sign in as an expected member and as a restricted user | Backend resource and access-level checks work |
 | Select an experiment; save, reload and export | Data ownership and persistence work |
-| Run a job and inspect the saved artifact | Computation and platform result integration work |
-| Change a setting and restart | Validated settings survive restart |
-| Upgrade existing tables and inspect old rows | The migration path preserves data |
+| Run a job and open the saved artifact | Computation and result integration work |
+| Change a setting and restart | Validated settings stay after a restart |
+| Upgrade existing tables and read old rows | The migration keeps the data |
 
-Read diagnostics with `mint platform debug summary` / `mint platform debug logs`, or the platform
-admin logs. Use [typed errors and request IDs](/sdk/recipes/error-handling) to
-connect frontend failures with backend logs.
+To read diagnostics, use `mint platform debug summary`, `mint platform debug logs` or the admin logs of the platform. To connect a frontend failure to the backend log, use [typed errors and request IDs](/sdk/recipes/error-handling).
 
 ## Deploy to a platform on another SDK minor
 
-A plugin runs only on a platform whose `mint-sdk` its requirement admits. At the first start of a new minor, the platform disables every in-process plugin whose wheel excludes the platform SDK, and uninstalls its packages from the platform environment. A plugin process whose cached wheel excludes it does not start. The plugin data stays, and Admin > Plugins shows the reason. Install the release of the plugin that is built for the new SDK to enable it again. The startup log shows one error line for each disabled plugin; this is expected.
+A plugin runs only on a platform whose `mint-sdk` its requirement admits. At the first start of a new minor, the platform disables each in-process plugin whose wheel excludes the platform SDK and removes its packages from the platform environment. A plugin process whose cached wheel excludes the platform SDK does not start. The plugin data stays. Admin > Plugins shows the reason, and the startup log has one error line for each disabled plugin. Install a release of the plugin that admits the new SDK. See [Plugins that exclude the new platform version](/admin/updates#plugins-that-exclude-the-new-platform-version).
 
-The platform also disables a plugin whose own requirements do not resolve against the platform lock, for example a cap below a new platform floor such as `sqlalchemy<2.1` on 1.6. The plugin runs on the libraries of the platform, so a new platform minor can change its behavior without a plugin release. See [Migrate from 1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6#changes-without-a-new-plugin-release).
+The platform also disables a plugin whose requirements do not resolve against the platform lock. A plugin runs on the libraries of the platform, so a new minor can change its behavior without a new plugin release. For 1.6, see [Changes without a new plugin release](/sdk/operations/migrate-1.5-to-1.6#changes-without-a-new-plugin-release).
 
-Test against the platform image of the target minor, for example `mint verify --image ghcr.io/morscherlab/mint:1.6.0`. The platform and the plugin process also compare the internal API version at the handshake; a plugin process on an older SDK fails with HTTP 426 `plugin.api_version_mismatch`.
+Test against the image of the target minor, for example `mint verify --image ghcr.io/morscherlab/mint:1.6.0`. The platform and a plugin process compare the internal API version at the handshake. A plugin process on an older SDK fails with HTTP 426 `plugin.api_version_mismatch`.
 
-A Dockerfile or process unit for a plugin process runs `mint -C DIR daemon` or `uv run uvicorn mint_sdk.app:create_app --factory`. A command that names `mint_sdk.runtime:create_plugin_app` or a plugin-written factory does not work any more.
+A Dockerfile or process unit of a plugin process runs `mint -C DIR daemon` or `uv run uvicorn mint_sdk.app:create_app --factory`. A command that names `mint_sdk.runtime:create_plugin_app` or a factory of your own does not work.
 
 ## Runtime choices and storage
 
-See [Isolation](/sdk/concepts/isolation#runtime-comparison) for the runtime table.
+The runtime table is in [Isolation](/sdk/concepts/isolation#runtime-comparison). To register an external or Docker runtime, use `mint platform plugin runtime external` or `docker`. See the [CLI reference](/sdk/api/cli-reference#mint-platform-plugin). The runtime is not related to the `generated` or `standard` UI mode or to the data-access type of the plugin.
 
-External and Docker runtimes can be registered using `mint platform plugin runtime
-external` / `docker`; see the [CLI reference](/sdk/api/cli-reference) and
-[isolation guide](/sdk/concepts/isolation). Runtime isolation is distinct from
-`generated`/`standard` UI modes and from the plugin's data-access type.
-
-Keep code/assets in the wheel. Use context-provided data directories, plugin
-schema sessions or managed artifact storage for persistent data; do not write
-beside installed Python source. In the scaffold, `frontend/dist` is mapped into
-`<plugin_module>/frontend` inside the wheel. The loader serves it through the
-plugin's frontend mount.
+Keep code and assets in the wheel. For persistent data, use the data directories of the context, plugin schema sessions or managed artifact storage. Do not write next to the installed Python source.
 
 ## Native libraries and offline installs
 
-Declare scientific Python dependencies in your package. The SDK supplies the
-framework stack, but it does not install `Rscript`, operating-system libraries
-or hardware drivers. Document and verify these on the target Linux host/image.
+Declare the scientific Python dependencies in your package. The SDK supplies the framework libraries. It does not install `Rscript`, operating-system libraries or hardware drivers. Document and verify these on the target Linux host or image.
 
-`mint build --vendor-deps` includes dependency wheels; `--include-wheel PATH`
-adds a wheel you already built. Native wheels must match the target OS,
-architecture and Python ABI. Vendoring on macOS is not proof that a bundle can
-install offline on Linux. Use a matching Linux build/verification environment.
+For an offline target, vendor the dependency wheels. See [Offline installs](/sdk/operations/packaging#offline-installs). Do the build and the verification on Linux of the target architecture.
 
 ## Migrations, long jobs and recovery
 
-Migrations run during plugin loading and can delay startup. Alembic revisions
-and PostgreSQL advisory locks coordinate the schema update; they do
-not make the entire deployment a distributed transaction. For large backfills,
-use [staged schema changes](/sdk/recipes/backfill-migration).
+Migrations run while the plugin loads and can make the startup slower. Alembic revisions and PostgreSQL advisory locks control the schema update. They do not make the full deployment one transaction. For large backfills, use [staged schema changes](/sdk/recipes/backfill-migration).
 
-Declare managed computations with `@job` rather than blocking an HTTP handler.
-The default standalone job runtime is process-local; do not promise restart
-recovery or multi-replica execution solely because an endpoint uses `@job`.
-Verify the actual platform execution mode and storage setup for durable work.
-In-memory caches and local files are not automatically shared between replicas.
+Declare long computations with `@job`. Do not block an HTTP handler. The default standalone job runtime is local to the process. `@job` alone does not give recovery after a restart or execution on several replicas. Verify the execution mode and the storage of the platform for durable work. In-memory caches and local files are not shared between replicas.
 
-Before production upgrades, preserve the previous bundle plus matching
-PostgreSQL and object/file-storage backups. Installing a previous `.mint` bundle does not
-reverse database migrations. Either retain backward-compatible schema changes,
-ship a forward fix, or restore the corresponding data snapshot. Document any
-plugin-specific restore requirements with the release.
+Before a production upgrade, keep the previous bundle and matching backups of PostgreSQL and the object and file storage. A previous `.mint` bundle does not reverse database migrations. Do one of these:
 
-Source: [verification runner](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/verify_command.py),
-[deployment command](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/deploy_command.py).
+- Keep schema changes backward compatible.
+- Ship a forward fix.
+- Restore the matching data backup.
+
+Document restore steps that are specific to the plugin in the release notes.
+
+Source: [verification runner](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/verify_command.py), [deployment command](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/deploy_command.py).

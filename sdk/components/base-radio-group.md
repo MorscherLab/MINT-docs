@@ -1,14 +1,14 @@
 ---
 aside: false
 title: BaseRadioGroup
-description: "BaseRadioGroup is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Radio button group in list or tile layout."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # BaseRadioGroup
 
-BaseRadioGroup is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `BaseRadioGroup` to pick one option from a short list, shown as a list or as tiles.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

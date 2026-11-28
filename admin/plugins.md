@@ -1,114 +1,75 @@
 # Plugins
 
-MINT is built around a plugin architecture. The platform itself stays small:
-projects, experiments, members, plugins, and marketplace. Everything
-lab-specific - LC-MS sequence design, drug-response prediction, chemical
-drawing, importers, viewers - arrives as a plugin.
+This page tells administrators how to install, check, update and remove plugins. The platform holds projects, experiments, members and the marketplace. Plugins add all lab-specific functions, for example LC-MS sequence design, drug-response prediction, importers and viewers.
 
-> [Screenshot: Admin -> Plugins group showing Installed and Registry sections, pending restart rows, and marketplace cards]
+> [Screenshot: Admin -> Plugins -> Installed with one running plugin, one plugin with a Restart required badge, and one row disabled by the dependency lock]
 
-Think of the plugin system as five layers:
+Each plugin has a type that sets its default experiment write policy. See [How plugins attach data](/guide/data-model#how-plugins-attach-data). Plugin authors: see [Plugin types](/sdk/concepts/plugin-types).
 
-| Layer | What it owns |
-|-------|--------------|
-| **Package** | A Python wheel or `.mint` bundle with one `mint.plugins` entry point |
-| **Runtime metadata** | The plugin's declared type, route prefix, capabilities, nav items, and config schema |
-| **Install record** | The platform manifest and registry metadata stored under `server.dataPath` |
-| **Runtime load** | Startup discovery, migrations, settings resolution, `initialize(context)`, route/job/frontend mounting |
-| **Access and services** | Plugin access levels, settings, jobs, notifications, calendar feeds, and uninstall cleanup |
+## Plugin states
 
-## Plugin types
+**Admin -> Plugins -> Installed** shows one of these states for each plugin:
 
-Each plugin has a type that sets its default experiment write policy. See [How plugins attach data](/guide/data-model#how-plugins-attach-data); developers see [Plugin types](/sdk/concepts/plugin-types).
+- **Installed but not loaded yet**, with a **Restart required** badge: the package is installed, but MINT does not serve its routes until the server restarts.
+- **Running**: MINT mounted the routes, jobs, generated UI and frontend assets of the plugin.
+- **Update ready**: a newer release is staged and becomes active at the next restart.
+- **Updating**: an update is in progress.
+- **Migration failed**: a plugin migration failed. See [Plugin migrations](#plugin-migrations).
+- **Disabled**: the plugin does not load, for example after the [dependency lock](#startup-reconcile) disabled it.
 
-## Plugin lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> Registered: wheel or .mint exposes mint.plugins entry point
-    Registered --> Resolving: install or update requested
-    Resolving --> PackageInstalled: compatibility and dependency checks pass
-    PackageInstalled --> RestartRequired: package recorded in manifest
-    RestartRequired --> Discovering: server starts or restarts
-    Discovering --> Migrating: optional plugin migrations
-    Migrating --> Initializing: settings hook and initialize(context)
-    Initializing --> Running: routes jobs frontend mounted
-    Running --> Updating: admin update or auto update
-    Updating --> Resolving
-    Running --> Uninstalling: admin uninstall
-    Uninstalling --> [*]: keep archive or purge
-    Migrating --> Failed: migration raises
-    Initializing --> Failed: startup raises
-```
-
-| Phase | What happens |
-|-------|--------------|
-| **Registered** | The package declares one `mint.plugins` entry point. Identity comes from PEP 621; runtime behavior comes from the plugin's declared metadata. |
-| **Resolving** | Marketplace or upload install checks `min_platform_version`, bundle `[tool.mint].requires_mint`, the plugin's `mint-sdk` requirement against the platform's `mint-sdk`, and compiles the [plugin dependency lock](#plugin-dependency-lock). |
-| **Package installed** | The wheel or `.mint` bundle is installed from the new lock, the source artifact is cached when needed, a manifest entry is written, and the previous lock is kept in the lock history for rollback. |
-| **Restart required** | A successful install or update does not guarantee the new code is serving traffic yet. The package can appear as **Installed but not loaded yet** until the server restarts. |
-| **Discovering** | On startup, MINT [reconciles the plugin lock](#startup-reconcile), restores missing manifest packages from their recorded wheels, imports loadable entry points, and keeps non-in-process manifest packages out of normal in-process discovery. A recorded wheel path that is absolute outside the data directory, or escapes it through `..`, is rejected: the plugin stays disabled and the rejection is logged. |
-| **Migrating** | Optional plugin Alembic revisions run before the plugin initializes. A failure disables only that plugin; MINT keeps running. |
-| **Initializing** | Decorator-declared config is resolved, `@on_config_change` startup hooks run, then `initialize(context)` runs if the plugin overrides it. |
-| **Running** | Decorated endpoints, native routers, jobs, generated UI manifests, and frontend assets are mounted under the plugin route prefix. Admin UI shows **Running**, **Updating**, **Update ready**, **Migration failed**, **Disabled**, or **Pending restart**. |
-| **Updating** | Updates repeat the install path against the newer package. The new code becomes active after the required restart/load cycle. |
-| **Uninstalling** | The package and manifest entry are removed; plugin-owned data follows the selected cleanup mode. |
-
-> [Screenshot: plugin lifecycle visualization with state pills]
-
-For what the platform does at each phase from the plugin side, see [Lifecycle](/sdk/concepts/lifecycle). Capability flags are covered in [Plugin types](/sdk/concepts/plugin-types).
+For each phase from the plugin side, see [Plugin lifecycle](/sdk/concepts/lifecycle).
 
 ## Install steps
 
-1. The marketplace service confirms the registry entry is compatible with the running platform version.
-2. The plugin manager downloads the GitHub release asset matching `source.asset_pattern`.
-3. If the asset is a `.mint` bundle, the platform reads the bundle's `manifest.json` and checks its `requires_mint` specifier unless the admin explicitly forces the install. A bundle without `manifest.json` is rejected with "Invalid .mint bundle: bundle has no manifest.json". Rebuild it with `mint build`, which always writes the manifest.
-4. The plugin's `mint-sdk` requirement is checked against the platform's own `mint-sdk`. Plugins always run the platform's `mint-sdk`, so a plugin that excludes it is rejected, for example: `Plugin requires mint-sdk>=1.3.0,<1.4, platform has 1.4.3.` The same check runs for isolated installs and on startup restore.
-5. The [plugin dependency lock](#plugin-dependency-lock) is recompiled with the new plugin. A lock that cannot be resolved blocks the install; a lock that changes or removes packages other plugins use is reported as a conflict (retry-with-force dialog).
-6. The package or bundle is installed exactly as the new lock pins it, the source artifact is recorded for restore, and the previous lock is kept in the lock history.
-7. The platform reports whether a restart is required before the plugin is loaded.
-8. On startup, MINT discovers the entry point, applies migrations, resolves plugin settings, runs `initialize(context)`, and mounts endpoints, jobs, generated UI, and frontend assets.
+To install a plugin, use **Admin -> Plugins -> Registry**, upload a `.mint` bundle, or run `mint platform plugin upload` or `mint platform plugin github install` (see [mint CLI](/admin/cli#plugins)). MINT then does these checks:
 
-`POST /api/plugins/install` accepts a package name, a Git URL, a wheel or an sdist, and (in dev mode only) a local or editable source. It refuses a `.mint` file name and a `github:` release: upload the bundle instead, or install the release from the marketplace. A plugin named `platform` (any case) does not load, because the name is reserved for platform events.
+1. The registry entry must be compatible with the running platform version (`min_platform_version`).
+2. For a GitHub release, MINT downloads the asset that matches `source.asset_pattern`.
+3. A `.mint` bundle must have a `manifest.json`, and its `requires_mint` must admit the platform. An administrator can force the install past `requires_mint`. A bundle without `manifest.json` gets "Invalid .mint bundle: bundle has no manifest.json". Rebuild it with `mint build`.
+4. The plugin's `mint-sdk` requirement must admit the platform's `mint-sdk`, because plugins always run the platform's SDK. Otherwise MINT refuses the install, for example: `Plugin requires mint-sdk>=1.3.0,<1.4, platform has 1.4.3.` The same check runs for subprocess installs and at startup restore.
+5. MINT compiles the [plugin dependency lock](#plugin-dependency-lock) with the new plugin and installs the package exactly as the lock pins it.
+6. MINT reports whether a restart is necessary. At the next start, MINT applies the plugin migrations, resolves the settings, runs `initialize(context)`, and mounts the plugin.
 
-A GitHub plugin update whose bundle is invalid is refused when MINT stages it, not at the next start. If a staged plugin update is later missing or not a valid ZIP archive, or excludes the running platform, MINT sets it aside under `<server.dataPath>/updates/failed/plugins` with the reason and starts normally.
+> [Screenshot: install progress dialog with the compatibility, lock and install steps complete and a Restart required message]
 
-If install fails, the operation reports the failing step and leaves the plugin uninstalled or requiring administrator cleanup, depending on where the failure occurred. Dependency conflicts surface as a retry-with-force dialog; use that only when you understand the dependency change.
+After the install, open **Admin -> Plugins -> Installed**. If the plugin shows **Restart required**, restart the server.
 
-Plugin installs (including installs from GitHub), upgrades, uninstalls, lock rollbacks, and plugin and platform updates run one at a time. A second operation waits until the first one finishes.
+If an install fails, MINT reports the failing step. The plugin stays uninstalled or needs cleanup, depending on the step. A dependency conflict opens a retry-with-force dialog. Use force only when you understand the dependency change.
 
-> [Screenshot: install progress dialog with each step ticking through]
+Plugin installs, upgrades, uninstalls, lock rollbacks, and plugin and platform updates run one at a time. A second operation waits until the first one ends.
 
-After a successful install, check **Admin -> Plugins -> Installed**. A package can appear as
-**Installed but not loaded yet** with a **Restart required** badge. It is not
-serving plugin routes until the server restarts and the plugin reaches the
-running state.
+Other install rules:
 
+- `POST /api/plugins/install` accepts a package name, a Git URL, a wheel or an sdist. A local or editable source works only in dev mode. The route refuses a `.mint` file name and a `github:` release: upload the bundle, or install the release from the marketplace.
+- A plugin named `platform` (any case) does not load. The name is reserved for platform events.
+- MINT refuses a GitHub plugin update with an invalid bundle when it stages the update. If a staged update is later missing, is not a valid ZIP archive, or excludes the running platform, MINT moves it to `<server.dataPath>/updates/failed/plugins` with the reason and starts normally.
 
-From **Admin -> Plugins -> Installed**, click **Uninstall** on a plugin to remove it; see [Uninstall modes](#uninstall-modes).
+To remove a plugin, click **Uninstall** on its card in **Admin -> Plugins -> Installed**. See [Uninstall modes](#uninstall-modes).
 
 ## Who can install
 
-The **Registry** section needs `plugins.configure` or `plugins.install`. The install and update buttons on its plugin cards appear only for a platform administrator (the `admin` role). The API routes `POST /api/marketplace/install/{plugin_name}` and `POST /api/marketplace/uninstall/{plugin_name}` need `plugins.install`. There are no install requests.
+- The **Registry** section needs `plugins.configure` or `plugins.install`.
+- The install and update buttons on the registry cards appear only for a platform administrator (the `admin` role).
+- `POST /api/marketplace/install/{plugin_name}` and `POST /api/marketplace/uninstall/{plugin_name}` need `plugins.install`.
+- There are no install requests.
 
 ## Plugin dependency lock
 
-In-process plugins share the platform's Python environment. MINT controls what they install with a lock under `<server.dataPath>/plugins/locks/`:
+In-process plugins share the platform's Python environment. MINT controls their packages with a lock in `<server.dataPath>/plugins/locks/`:
 
 | File | Contents |
 |------|----------|
-| `requirements.in` | One requirement per in-process plugin, in install order |
-| `state.json` | The structured twin of `requirements.in`, plus the disabled plugins. It is the one install record of in-process plugins |
-| `plugins.lock` | The hashed lock, compiled with `uv pip compile` using the platform's own lock as constraints. Platform-owned packages are omitted |
-| `history/` | The 10 most recent previous locks, kept as rollback points |
+| `requirements.in` | One requirement for each in-process plugin, in install order |
+| `state.json` | The structured copy of `requirements.in`, plus the disabled plugins. It is the only install record of in-process plugins |
+| `plugins.lock` | The hashed lock. `uv pip compile` makes it, with the platform's own lock as constraints. It leaves out platform-owned packages |
+| `history/` | The 10 most recent previous locks, as rollback points |
 
-Every install, upgrade and uninstall edits `requirements.in` and recompiles the lock:
+Every install, upgrade and uninstall edits `requirements.in` and compiles the lock again:
 
-- If the lock cannot be resolved, the operation is blocked and the resolver error is shown.
-- The conflict report is the difference between the old and the new lock. When it would change or remove packages, the operation stops until you retry with force (`force=true` in the API). Downgrading a plugin also needs force.
-- Packages that leave the lock are uninstalled. Packages that the platform owns are never uninstalled.
-- `POST /api/plugins/{name}/upgrade` fails for a plugin that the lock does not track. A local or editable source can upgrade only in dev mode. Upgrading a disabled plugin enables it again.
-- A plugin wheel is rejected before resolving when its `mint-sdk` requirement excludes the platform version.
+- If the lock does not resolve, MINT blocks the operation and shows the resolver error.
+- MINT compares the old and the new lock. If the new lock changes or removes packages, the operation stops until you retry with force (`force=true` in the API). A plugin downgrade also needs force.
+- MINT uninstalls packages that leave the lock. It never uninstalls platform-owned packages.
+- `POST /api/plugins/{name}/upgrade` fails for a plugin that the lock does not track. A local or editable source can upgrade only in dev mode. An upgrade of a disabled plugin enables it again.
 
 ### Source policy
 
@@ -116,28 +77,36 @@ Every install, upgrade and uninstall edits `requirements.in` and recompiles the 
 |--------|-----------|
 | Package index, wheel, `.mint` bundle | Version and hash |
 | Git | Commit |
-| Source distribution | Hash; marked not reproducible because it is built on install |
-| Local path or editable install | Not locked; accepted only in dev mode |
+| Source distribution | Hash. Marked as not reproducible, because it is built at install |
+| Local path or editable install | Not locked. Accepted only in dev mode |
 
 ### Startup reconcile
 
-On every start, MINT brings the platform environment in line with the lock. It restores in-process plugins from `state.json` alone. A plugin that is in `data/plugins/manifest.json` but not in `state.json` is not installed at startup; install it again.
+At each start, MINT makes the platform environment agree with the lock. It restores in-process plugins from `state.json` only. MINT does not install a plugin that is in `data/plugins/manifest.json` but not in `state.json`; install it again.
 
-- On the first start without a lock, MINT builds the lock from the manifest: the cached wheel, then the fetched release, then the installed package, then the source.
-- After a platform upgrade, MINT recompiles the lock. A plugin that no longer resolves is disabled: one that is incompatible with the new platform on its own, or, when two plugins conflict, the one installed later.
-- MINT reinstalls locked packages that are missing (for example after a container rebuild).
-- A locked wheel can be gone, for example after the download cache was cleared. When the plugin came from a GitHub release, MINT downloads the wheel again, but only when a recompile or a reinstall needs it. MINT does not download a plugin that is installed at its locked version.
-- When MINT cannot reinstall a locked artifact (a local wheel that is gone, or a hash mismatch), it disables only that plugin. MINT tries again at each later start.
-- If the lock cannot be compiled for another reason than a resolution conflict (for example, the package index is unreachable), MINT commits nothing, restores no plugin, and tries again at the next start.
-- Outside dev mode, plugins from local or editable sources are disabled.
+- At the first start without a lock, MINT builds the lock from the manifest. It uses the cached wheel, then the release download, then the installed package, then the source.
+- After a platform upgrade, MINT compiles the lock again. It disables a plugin that does not resolve: a plugin that is incompatible with the new platform, or, of two conflicting plugins, the one installed later.
+- MINT reinstalls locked packages that are missing, for example after a container rebuild.
+- If a locked wheel is gone and the plugin came from a GitHub release, MINT downloads the wheel again. It does this only when a compile or a reinstall needs the wheel.
+- If MINT cannot reinstall a locked artifact (a local wheel that is gone, or a hash mismatch), it disables only that plugin. It tries again at each later start.
+- If the lock does not compile for another reason, for example an unreachable package index, MINT changes nothing and restores no plugin. It tries again at the next start.
+- Outside dev mode, MINT disables plugins from local or editable sources.
 
-A disabled plugin appears at the bottom of **Admin -> Plugins -> Installed** as **Disabled by the dependency lock — `<package>`: `<reason>`**, and in `GET /api/plugins` under `dependency_lock`. Typical reasons start with `Plugin requires mint-sdk…` (a plugin built for SDK 1.3 after the update to 1.4), `Incompatible with MINT <version>`, `Conflicts with earlier-installed plugin(s) …`, `Could not reinstall from the plugin lock`, or `Local and editable plugin sources are only allowed in dev mode.` Install a compatible plugin release, or uninstall the plugin from the row's action menu.
+A disabled plugin appears at the bottom of **Admin -> Plugins -> Installed** as **Disabled by the dependency lock — `<package>`: `<reason>`**. `GET /api/plugins` lists it under `dependency_lock`. Typical reasons start with:
+
+- `Plugin requires mint-sdk…`
+- `Incompatible with MINT <version>`
+- `Conflicts with earlier-installed plugin(s) …`
+- `Could not reinstall from the plugin lock`
+- `Local and editable plugin sources are only allowed in dev mode.`
+
+To fix it, install a compatible plugin release, or uninstall the plugin from the row's action menu.
 
 > [Screenshot: Admin -> Plugins -> Installed footer with a "Disabled by the dependency lock" row and its reason]
 
 ### Rollback
 
-Rolling back applies a lock from `history/` and makes it current. There is no UI yet; use the API. A plugin that the rollback removes stays removed after a restart. MINT applies the current lock again when the rollback fails.
+A rollback applies a lock from `history/` and makes it current. There is no UI. Use the API or `mint platform plugin rollback`, then restart the platform.
 
 | Action | Route | Permission |
 |--------|-------|------------|
@@ -145,29 +114,37 @@ Rolling back applies a lock from `history/` and makes it current. There is no UI
 | Show one entry | `GET /api/plugins/snapshots/{id}` | `plugins.configure` |
 | Apply it | `POST /api/plugins/snapshots/{id}/rollback` | `plugins.install` |
 
-A lock compiled for another platform version is refused, so rollback cannot undo a platform upgrade. A lock with local or editable sources is refused outside dev mode. Rollback restores Python packages only; it does not undo plugin database migrations.
+- A plugin that the rollback removes stays removed after a restart.
+- If the rollback fails, MINT applies the current lock again.
+- MINT refuses a lock that it compiled for another platform version. A rollback cannot undo a platform upgrade.
+- Outside dev mode, MINT refuses a lock with local or editable sources.
+- A rollback restores Python packages only. It does not undo plugin database migrations. Keep database backups.
 
 ### Cache cleanup
 
-A daily background task, `uv_cache_prune`, runs `uv cache prune --ci` under the plugin operation lock. It removes the downloaded wheels and keeps the wheels built from source. The next plugin install downloads its wheels again. The task does not run in dev mode.
+A daily task, `uv_cache_prune`, runs `uv cache prune --ci` under the plugin operation lock. It removes the downloaded wheels and keeps the wheels built from source. The next plugin install downloads its wheels again. The task does not run in dev mode.
 
 ## Event deliveries
 
-MINT delivers plugin events through a durable event bus. The `experiment.*` observer events and the events that a plugin declares are written to the database in the transaction of the write. A background task then delivers each event to every subscribing plugin at least once, also after a subscriber outage or a platform restart. A plugin can receive the same event more than once. A plugin handler must be idempotent.
+MINT delivers plugin events through a durable event bus, at least once, with retries. For the delivery rules, see [Delivery rules](/sdk/concepts/plugin-communication#delivery-rules).
 
-To see the deliveries of one plugin, open **Admin -> Plugins -> Installed**, open the action menu of the plugin card, and choose **Event deliveries**. The action needs `plugins.configure`. The list shows the 50 most recent deliveries, newest first. Each row has the event name, the event number, the attempts, the time, the last error and a status.
+To see the deliveries of one plugin:
+
+1. Open **Admin -> Plugins -> Installed**.
+2. Open the action menu of the plugin card.
+3. Choose **Event deliveries**. This needs `plugins.configure`.
+
+The list shows the 50 most recent deliveries, newest first. Each row has the event name, the event number, the attempts, the time, the last error and a status.
 
 | Status | Meaning |
 |--------|---------|
-| `pending` | MINT has not delivered the event yet |
+| `pending` | MINT did not deliver the event yet |
 | `processing` | MINT is delivering the event now |
 | `delivered` | The plugin accepted the event |
 | `skipped` | The plugin was disabled or uninstalled |
 | `dead` | The delivery failed five times |
 
-MINT retries a failed delivery after `min(3600, 5 x 2^(n-1))` seconds, where `n` is the number of attempts. After the fifth failed attempt, the delivery is `dead`. A plugin that is still starting keeps its events pending without an attempt.
-
-Click **Retry** on a dead delivery to give it five new attempts. MINT records each retry as `plugin.event_retry` in the [audit log](/admin/platform-settings#logs-and-audit-log). The API routes are `GET /api/plugins/{name}/event-deliveries` and `POST /api/plugins/{name}/event-deliveries/{event_id}/retry`. Both need `plugins.configure`.
+To try a dead delivery again, click **Retry**. It gets five new attempts. The [audit log](/admin/platform-settings#logs-and-audit-log) records each retry as `plugin.event_retry`. The API routes are `GET /api/plugins/{name}/event-deliveries` and `POST /api/plugins/{name}/event-deliveries/{event_id}/retry`. Both need `plugins.configure`.
 
 A daily task deletes delivered and skipped deliveries after 7 days and dead deliveries after 30 days. An uninstall drops the unfinished deliveries of the plugin.
 
@@ -175,121 +152,86 @@ A daily task deletes delivered and skipped deliveries after 7 days and dead deli
 
 ## Plugins that read other plugins
 
-A plugin declares the plugins that it reads in `reads_from`. The entry `"*"` means every enabled plugin. It grants nothing until an administrator consents: set the platform-owned plugin setting `reads_from_any_plugin` with `PATCH /api/plugins/{name}/config`. Only a platform administrator can set it. Until then, `GET /api/plugins` shows `reads_from_consent_needed` for the plugin. Plugin authors: see [Plugin communication](/sdk/concepts/plugin-communication).
+A plugin with `"*"` in `reads_from` can read every enabled plugin, but only after an administrator consents. To consent, a platform administrator sets the plugin setting `reads_from_any_plugin` with `PATCH /api/plugins/{name}/config`. Until then, `GET /api/plugins` shows `reads_from_consent_needed` for the plugin. See [Read every plugin](/sdk/concepts/plugin-communication#read-every-plugin-reads-from).
 
 ## MCP skills and tasks
 
-The `/mcp` endpoint serves skills and tasks to AI clients. There is no setting for them. How users see them: [Skills](/guide/ai-and-api#skills) and [Jobs as background tasks](/guide/ai-and-api#jobs-as-background-tasks).
+The `/mcp` endpoint serves plugin skills and runs plugin jobs as tasks. There is no setting for them. For users, see [Skills](/guide/ai-and-api#skills) and [Jobs as background tasks](/guide/ai-and-api#jobs-as-background-tasks). For the skill rules, see [MCP skills](/sdk/recipes/mcp-skills#rules).
 
-**Skills.** MINT serves two platform skills and the skills of every enabled plugin. There is no switch per plugin. A plugin skill is text that the AI assistant reads as instructions, so install only plugins that you trust, as for their MCP tools.
-
-- A user sees a plugin skill only with `plugins.use` and a role that sees the plugin (**Plugin access**), as for the tools of the plugin. A skill gives no permission: MINT checks each tool call again.
-- A disabled or uninstalled plugin loses its skills at once.
-- MINT reads the skill files when the MCP declarations of a plugin change, checks them and serves its own copy. The check runs every 15 seconds. A plugin in its own process must answer in 15 seconds; otherwise MINT keeps the skills that it served before and tries again at the next check.
-- MINT does not serve a skill that breaks a rule, for example a name without the plugin name in front, more than 64 files, more than 1 MiB, or text that looks like an access token. The log then has the warning `Skipping MCP skill '<name>' of plugin '<plugin>': <reason>`. A plugin can serve at most 20 skills.
+- MINT serves the skills of every enabled plugin. There is no switch for each plugin. The AI assistant reads a skill as instructions, so install only plugins that you trust.
+- When MINT refuses a skill, the log has the warning `Skipping MCP skill '<name>' of plugin '<plugin>': <reason>`.
 - A plugin from the dev proxy (`config.dev.toml`) serves skills only in dev mode.
-
-**Tasks.** A task is a plugin job that an MCP client follows in the background. MINT keeps tasks in memory, with the job handles. A platform restart, also a scheduled update, ends every task: the client reports it as failed. A result that a job saved with `save_to` before the restart stays in the experiment. Tasks and job handles share the limit of 64 unfinished jobs per access token. When a user stops a task in the client, MINT cancels the job without a confirmation question and records the call as `mcp.tool_call` of `tasks/cancel` in the [audit log](/admin/platform-settings#logs-and-audit-log).
+- A platform restart, also a scheduled update, ends every task. The client reports it as failed.
+- When a user stops a task in the client, MINT cancels the job. The audit log records `mcp.tool_call` of `tasks/cancel`.
 
 ## Plugin requests and credentials
 
-With authentication enabled, every request to a plugin route needs an `Authorization: Bearer` credential. This applies to the plugin proxy and to in-process plugin routes. The credential is one of:
+With authentication on, every request to a plugin route needs an `Authorization: Bearer` credential: a session token, a [personal access token](/admin/authentication#personal-access-tokens) or a [service token](/admin/authentication#service-tokens). This applies to the plugin proxy and to in-process plugin routes. For the responses, see [Platform authentication gate](/sdk/recipes/route-permissions#platform-authentication-gate).
 
-- a session token;
-- a [personal access token](/admin/authentication#personal-access-tokens);
-- a [service token](/admin/authentication#service-tokens), which reaches only the routes of its own plugin.
-
-| Situation | Response |
-|-----------|----------|
-| No credential, or one that does not resolve (including a deactivated account) | 401 `auth.required` |
-| MINT cannot reach the database to check the credential | 503 `auth.unavailable` |
-| A read-only personal access token sends a write | 403 `auth.read_only_token` |
-
-MINT does not read the session cookie for plugin routes, and a plugin cannot declare a public path. A plugin that checked its own ingest key must use a service token instead. Plugin frontends call the API through the SDK client, which sends the Bearer credential. With authentication disabled, plugin routes stay open.
+- MINT does not read the session cookie on plugin routes. A plugin cannot declare a public path.
+- A plugin that checked its own ingest key must use a service token.
+- With authentication off, plugin routes stay open.
 
 ## Isolation
 
-Plugins run with one of two isolation strategies:
+A plugin runs in the platform process or in its own runtime. For the runtime types, see [Runtime isolation](/sdk/concepts/isolation). For administrators:
 
-| Strategy | When | Mechanism |
-|----------|------|-----------|
-| **Shared environment** | When dependency sets are compatible | Plugin shares the platform's venv |
-| **Per-plugin venv** | When the plugin's manifest entry installs it as a subprocess | `uv` creates a separate venv; plugin runs in a subprocess and the platform proxies HTTP to it |
+- An administrator with `plugins.install` registers an external HTTP runtime (`POST /api/plugins/runtime/external`) or a Docker-managed runtime (`POST /api/plugins/runtime/docker`).
+- No API installs a subprocess plugin. MINT restores subprocess plugins only from existing manifest entries.
+- A subprocess plugin has its own hashed `plugin.lock` next to its wheel. MINT installs and restores its venv with `uv pip install --no-deps -r plugin.lock`. MINT installs `mint-sdk[server]` into each venv, so an offline `find-links` directory must also hold the `uvicorn[standard]` wheels.
+- A gone local-source wheel, a hash mismatch, or a wheel that excludes the platform `mint-sdk` leaves a subprocess plugin disabled. After a platform upgrade, MINT compiles the lock again and rebuilds the venv.
+- MINT refuses a runtime whose prefix is `/` or conflicts with another route, and logs an error. See [Runtime isolation](/sdk/concepts/isolation#runtime-comparison).
+- Plugin processes reach the platform at `127.0.0.1:<MINT_LISTEN_PORT>`; see [`server`](/admin/configuration#server). A Docker plugin uses `server.externalUrl`, or else `host.docker.internal:<port>`.
+- After a plugin process starts, MINT polls its `GET /__mint/health` route. A degraded or unhealthy answer marks the plugin degraded. If a process exits before its port opens, MINT starts it again on the same port.
+- MINT sends a settings write for a plugin in its own process to that process. When the process does not answer, the write fails with 503. See [Settings revisions](/sdk/concepts/lifecycle#settings-revisions-and-runtime-changes).
+- A plugin crash does not stop the platform.
 
-Besides in-process and subprocess plugins, an administrator can register an external HTTP runtime (`POST /api/plugins/runtime/external`) or a Docker-managed runtime (`POST /api/plugins/runtime/docker`). `plugins.install` is necessary. No API installs a subprocess plugin. MINT restores subprocess plugins from existing manifest entries only.
-
-A subprocess plugin gets its own hashed `plugin.lock` next to its persisted wheel, and its venv is installed and restored with `uv pip install --no-deps -r plugin.lock`. MINT installs `mint-sdk[server]` into each plugin venv, so `uvicorn` comes from the SDK and the plugin does not declare it. Restore installs the lock as it is. A cached wheel that is gone is reinstalled from the hashed lock. A local-source wheel that is gone, a hash mismatch, or a wheel that excludes the platform `mint-sdk` leaves the plugin disabled. An offline `find-links` directory must therefore also hold the `uvicorn[standard]` wheels. When that lock pins a different `mint-sdk` than the platform (after a platform upgrade), MINT recompiles it and rebuilds the venv.
-
-In both cases the plugin's HTTP surface is mounted at the prefix that the plugin declares (`Metadata.prefix`). The user can't tell from the URL whether the plugin is in-process or out-of-process; the platform handles the proxy transparently. MINT refuses to start a subprocess, Docker or external runtime whose prefix is `/`, or whose first `/api` segment is the same as a platform route, an in-process plugin or an earlier runtime. It logs an error.
-
-Plugin processes reach the platform at `127.0.0.1:<MINT_LISTEN_PORT>` (a Docker plugin: `server.externalUrl`, or else `host.docker.internal:<port>`). `mint-platform serve`, `dev` and `daemon` set `MINT_LISTEN_PORT` to the port that they bind. A bare `uvicorn --port` launch must set it. After a plugin process starts, MINT polls its `GET /__mint/health` route. A degraded or unhealthy answer marks the plugin degraded. If a process exits before its port opens, MINT restarts it on the same port.
-
-For a plugin in its own process (subprocess, Docker or external runtime), settings written through `PUT` or `PATCH /api/plugins/{name}/config` go to the plugin process, which validates and stores them. A `PUT` needs `If-Match`. When the process does not answer, the write fails with 503 and nothing is stored.
-
-Administrators can inspect isolated subprocesses from the server status view:
-plugin name, status, port, start time, and restart count are shown in the
-**Plugin processes** card.
-
-The middleware in [`api/plugins/middleware.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/plugins/middleware.py) wraps every plugin call with error isolation — a plugin crash never takes down the platform.
+**Admin -> System -> Server** shows a **Plugin processes** card with the name, status, port, start time and restart count of each plugin process.
 
 ## Plugin migrations
 
-Plugins that own database tables ship Alembic revisions (see [Migrations](/sdk/concepts/migrations)). The admin UI surfaces:
+Plugins that own database tables ship Alembic revisions. See [Migrations](/sdk/concepts/migrations). The admin UI shows:
 
-- `schema_revision` — the plugin's currently applied revision (the old `schema_version` field is gone)
-- `pending_migrations` — revisions known to the plugin but not yet applied
-- `migration_error` — the failure reason, if a migration crashed
+- `schema_revision`: the applied revision of the plugin.
+- `pending_migrations`: the revisions that the plugin knows but has not applied.
+- `migration_error`: the reason of a failed migration.
 
-If a migration fails, the plugin shows **Migration failed**, stays disabled, never reaches `initialize()`, and its routes are not mounted. Schema drift detected only against the plugin's models is shown as a warning badge and does not disable the plugin. The rest of MINT keeps running. Install a fixed plugin release and restart; the runner retries pending migrations. MINT 1.4 no longer runs the legacy `get_migrations_package()` protocol. A plugin that still defines it stays disabled, with the reason in `migration_error`. The plugin author must move to `Metadata.database` and adopt the old history with `LegacyBaseline.from_plugin_history()`.
+If a migration fails, the plugin shows **Migration failed** and stays disabled. MINT does not mount its routes, and the rest of MINT keeps running. Install a fixed plugin release and restart; MINT then tries the pending migrations again. A plugin that still defines the removed `get_migrations_package()` also stays disabled, with the reason in `migration_error`. Its author must move to `Metadata.database`; see [Migrations reference](/sdk/api/migrations).
+
+Schema drift against the plugin's models shows as a warning badge and does not disable the plugin.
 
 ## Update settings
 
-The **Update settings** card on **Admin -> System -> Updates** edits the `updates` section of `config.json`: scheduled updates, the daily update time, the update scope (platform, plugins), background checks, the check interval, the platform repository and platform pre-releases. It needs `platform.configure`. **Admin -> Plugins -> Advanced** keeps only the private package indexes and needs `plugins.configure`. The controls for private package indexes (`PUT /api/plugins/config/extra-index-urls`), the update sources (`PUT|DELETE /api/updates/sources/{package}`) and the **Plugin pre-releases** toggle need `plugins.install`, because they change where plugin code comes from. A role with `plugins.configure` but not `plugins.install` (for example a Plugin operator) gets 403. These writes are audited (`plugins.extra_index_urls_update` with values redacted, `updates.source_update`, `updates.source_delete`). See [Updates](/admin/updates) for what each setting does.
+The **Update settings** card on **Admin -> System -> Updates** edits the `updates` section of `config.json`. For what each setting does, see [Updates](/admin/updates#platform-updates). The permissions:
 
-The release list of a GitHub plugin source comes from `GET /api/updates/releases` (`plugins.install`). When GitHub answers 401 or 404, the list shows 400 `update_source.repository_inaccessible` with the cause:
+- The schedule and the checks need `platform.configure`.
+- **Admin -> Plugins -> Advanced** holds only the private package indexes and needs `plugins.configure`.
+- Changes to where plugin code comes from need `plugins.install`: the private package indexes (`PUT /api/plugins/config/extra-index-urls`), the update sources (`PUT|DELETE /api/updates/sources/{package}`) and the **Plugin pre-releases** switch. A role with `plugins.configure` but not `plugins.install` gets 403.
+- The audit log records these writes as `plugins.extra_index_urls_update` (values redacted), `updates.source_update` and `updates.source_delete`.
+
+The release list of a GitHub plugin source comes from `GET /api/updates/releases` (`plugins.install`). When GitHub answers 401 or 404, the list shows 400 `update_source.repository_inaccessible` with one of these messages:
 
 | Message | Cause | Fix |
 |---------|-------|-----|
 | GitHub rejected the configured token | The GitHub token expired or was revoked | Replace the token in the update settings |
-| GitHub repository `<owner>/<repo>` does not exist, or the configured GitHub token cannot read it | The repository name is wrong, or the token has no access to the private repository | Correct the repository, or give the token read access |
+| GitHub repository `<owner>/<repo>` does not exist, or the configured GitHub token cannot read it | The repository name is wrong, or the token cannot read the private repository | Correct the repository, or give the token read access |
 | GitHub repository `<owner>/<repo>` does not exist, or it is private | No token is set, and the repository is wrong or private | Correct the repository, or set `updates.githubToken` (`MINT_UPDATES__GITHUB_TOKEN`) |
-
-> [Screenshot: Admin -> System -> Updates -> Update settings with Scheduled updates, Daily update time and Update scope]
 
 ## Uninstall modes
 
-| Mode | What happens to data |
-|------|----------------------|
-| **keep** (current Admin UI / CLI behavior) | The package is uninstalled; plugin-owned tables and rows are kept in the database. Reinstalling the plugin can restore access. |
-| **archive** (manager-level cleanup mode) | The plugin schema is renamed with an archived prefix. No code can read it automatically, but a database admin can recover it. |
-| **purge** (manager-level cleanup mode) | The plugin schema is dropped after explicit confirmation. **Irreversible.** |
+| Mode | Effect on data |
+|------|----------------|
+| keep | MINT uninstalls the package and keeps the plugin tables and rows. A reinstall can use them again. The admin UI and `mint platform plugin uninstall` always use this mode |
+| archive | MINT renames the plugin schema to `_archived_<schema>_<date>`. No code reads it, but a database administrator can recover it |
+| purge | MINT drops the plugin schema with all tables. It needs a confirmation token that is the plugin name. This cannot be undone |
 
-The current browser UI and `mint platform plugin uninstall` path use the safe
-default: keep plugin data. The manager also tracks notification/calendar cleanup
-work so plugin-owned service rows can be finalized even if an uninstall is
-interrupted. An uninstall revokes the plugin's [service tokens](/admin/authentication#service-tokens). A failed revocation is retried at the next start. After you reinstall a plugin, issue a new service token for its daemon. Take a database backup before using lower-level cleanup paths or
-manual schema removal.
+Archive and purge are available only in the plugin manager, not in the UI or the CLI. Take a database backup before you use them or remove a schema by hand.
+
+An uninstall also:
+
+- Revokes the plugin's [service tokens](/admin/authentication#service-tokens). MINT retries a failed revocation at the next start. After a reinstall, issue a new token.
+- Records the cleanup of notifications and calendar feeds, so that MINT can finish it after an interrupted uninstall.
 
 ## Plugin access levels
 
-A plugin tags each endpoint, job, MCP tool and page with an access level (`use`, `configure` or `admin`). The platform maps the level to the caller's system role. There are no per-plugin roles. See [Users & Roles → Plugin access levels](/admin/users-roles#plugin-access-levels).
-
-## Built-in plugins
-
-The marketplace can advertise first-party and lab-local plugins. Names and availability depend on the registry configured for your deployment.
-
-| Example plugin | Likely type | Role |
-|----------------|-------------|------|
-| MS experiment designer | `EXPERIMENT_DESIGN` or `FULL` | LC-MS sequence and plate-map design |
-| RAW file uploader | `ANALYSIS` | RAW file upload, conversion, and result attachment |
-| HMDB browser | `STATIC` or `ANALYSIS` | Metabolite lookup and annotation |
-| Chemical drawing widget | `STATIC` | Chemical structure drawing or visualization |
-
-The full catalog lives in the marketplace.
-
-## Next
-
-→ [Marketplace](/guide/marketplace) — discover and install plugins
-→ [Updates](/admin/updates) — keeping plugins and the platform fresh
-→ [Plugin development guide](/sdk/) — `mint init`, `mint dev`, `mint build`
-→ [SDK concepts](/sdk/concepts/) — what's in `mint-sdk` and how plugins integrate
+A plugin tags each endpoint, job, MCP tool and page with an access level (`use`, `configure` or `admin`). See [Plugin access levels](/admin/users-roles#plugin-access-levels).

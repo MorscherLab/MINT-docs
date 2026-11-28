@@ -1,16 +1,12 @@
 # R integration
 
-## Goal
-
-Run an R analysis from a Python plugin, with validated input and output, and save the result as a platform artifact.
-
-The SDK's `RAnalysisBridge` keeps FastAPI and Pydantic as the plugin contract and runs R as a child process:
+Run an R analysis from a Python plugin with validated input and output, and save the result as an artifact. The SDK `RAnalysisBridge` keeps FastAPI and Pydantic as the plugin contract and runs R as a child process:
 
 ```text
 Rscript <script.R> <input.json> <output.json>
 ```
 
-The bridge validates the input model, writes it to `input.json`, runs the script, and validates `output.json` against the output model. It also enforces a timeout, stops the whole R process group on cancellation, and records provenance.
+The bridge validates the input model and writes it to `input.json`. It runs the script and validates `output.json` against the output model. It also enforces a timeout, stops the whole R process group on cancellation, and records provenance.
 
 ## Scaffold it
 
@@ -30,7 +26,9 @@ uv run mint doctor --only r
 | `src/<module>/r_scripts/mint_bridge.R` | Helpers: `mint_read_input()`, `mint_parameter()`, `mint_write_output()`, `mint_experiment_id()`, `mint_artifact_dir()` |
 | `r-requirements.txt` | `jsonlite` |
 
-Other options: `--script PATH` uses an existing script, `--generate` regenerates the frontend contract, and `--page` adds a starter Vue page. `mint doctor --only r` checks that `Rscript` is found, that `jsonlite` is declared (in `renv.lock` or `r-requirements.txt`), and that scripts can find `mint_bridge.R`.
+Options: `--script PATH` uses an existing script, `--generate` regenerates the frontend contract, and `--page` adds a starter Vue page.
+
+`mint doctor --only r` checks that `Rscript` is found, that `jsonlite` is declared in `renv.lock` or `r-requirements.txt`, and that the scripts can find `mint_bridge.R`.
 
 ## Define the bridge
 
@@ -91,7 +89,7 @@ fit <- nls(response ~ bottom + (top - bottom) / (1 + (dose / IC50)^slope),
 mint_write_output(as.list(coef(fit)))   # argv[2] or MINT_R_OUTPUT
 ```
 
-The script receives the input and output paths as `argv[1]` and `argv[2]`, also exposed as `MINT_R_INPUT` and `MINT_R_OUTPUT`. `MINT_EXPERIMENT_ID` is set when you pass `experiment_id`. Write the output file; stdout is kept only for logs.
+The script gets the input and output paths as `argv[1]` and `argv[2]`, and as `MINT_R_INPUT` and `MINT_R_OUTPUT`. When you pass `experiment_id`, the bridge sets `MINT_EXPERIMENT_ID`. Write the result to the output file; stdout goes only to the logs.
 
 ## Call it from a route or job
 
@@ -116,19 +114,28 @@ class MyPlugin(Plugin):
         return fit
 ```
 
-For long fits, call the bridge inside a `@job` and pass the job context as `bridge.run(payload=..., context=context)`. On cancellation, the bridge stops the R process group and raises `asyncio.CancelledError`. See [Writing results](/sdk/recipes/writing-results) for artifact keys and run history.
+For long fits, call the bridge in a `@job` and pass the job context: `bridge.run(payload=..., context=context)`. On cancellation, the bridge stops the R process group and raises `asyncio.CancelledError`. For artifact keys and run history, see [Writing results](/sdk/recipes/writing-results).
 
 ## Environment, errors and provenance
 
-- **Environment.** The R child does not inherit the plugin environment. Only `PATH`, `HOME`, `LANG`, `TMPDIR`, `LC_*` and `R_*` pass through, plus the `MINT_R_*` and `MINT_EXPERIMENT_ID` variables the bridge sets. Plugin tokens and database or S3 credentials stay in the parent. Pass anything else explicitly: `bridge.run(payload=..., extra_env={"MY_TOOL_HOME": "/opt/tool"})`.
-- **Errors.** Input validation, a missing script or executable, a non-zero exit, a timeout, a missing output file and output validation all raise `RBridgeError` (code `R_BRIDGE_ERROR`). The error details that reach API clients contain only the last part of stderr (`stderr_tail`) and never stdout. The full stdout and stderr go to the plugin log.
-- **Provenance.** `bridge.last_run` is an `RRunProvenance` with the executable, script, paths, exit code, elapsed time and full output. Store what you need for reproducibility in the artifact payload.
+Environment:
+
+- The R child does not inherit the plugin environment. Only `PATH`, `HOME`, `LANG`, `TMPDIR`, `LC_*` and `R_*` pass through, plus the `MINT_R_*` and `MINT_EXPERIMENT_ID` variables of the bridge.
+- Plugin tokens and database or S3 credentials stay in the parent.
+- Pass other variables explicitly: `bridge.run(payload=..., extra_env={"MY_TOOL_HOME": "/opt/tool"})`.
+
+Errors:
+
+- Input validation, a missing script or executable, a non-zero exit, a timeout, a missing output file and output validation all raise `RBridgeError` (code `R_BRIDGE_ERROR`).
+- The error details for API clients contain only the end of stderr (`stderr_tail`), never stdout. The full stdout and stderr go to the plugin log.
+
+Provenance: `bridge.last_run` is an `RRunProvenance` with the executable, script, paths, exit code, elapsed time and full output. Store what you need for reproducibility in the artifact payload.
 
 ## Packaging and deployment
 
-With the scaffold's `[tool.hatch.build.targets.wheel] packages = ["src/<module>"]`, the files under `src/<module>/r_scripts/` ship inside the wheel. Check with `unzip -l` on the built wheel. Setting `working_dir` from `Path(__file__)`, as above, resolves the script in the installed package.
+With the scaffold setting `[tool.hatch.build.targets.wheel] packages = ["src/<module>"]`, the files under `src/<module>/r_scripts/` ship in the wheel. Check with `unzip -l` on the built wheel. A `working_dir` from `Path(__file__)`, as above, finds the script in the installed package.
 
-The SDK does not install R or R packages. Install `Rscript` and the packages your script loads (at least `jsonlite`) on the platform host or image, or set `MINT_RSCRIPT`. See [Deploying](/sdk/operations/deploying#native-libraries-and-offline-installs).
+The SDK does not install R or R packages. Install `Rscript` and the packages that your script loads (at least `jsonlite`) on the platform host or image, or set `MINT_RSCRIPT`. See [Deploying](/sdk/operations/deploying#native-libraries-and-offline-installs).
 
 ## Testing R-backed routes
 
@@ -149,15 +156,9 @@ async def test_fit_uses_bridge_output(monkeypatch):
 
 For integration tests, install R in CI (for example with `r-lib/actions/setup-r`) and cache the R library.
 
-## Notes
+## When to use R
 
-- `rpy2`, which embeds R in the plugin process, is not part of the SDK. It shares one interpreter across all requests, and an R crash takes down the plugin process. Prefer the bridge unless you have measured that per-call `Rscript` startup is the bottleneck.
-- Use R only for R-specific libraries (`limma`, `DESeq2`, specialized statistics); each R dependency adds deployment work.
+- Use R only for R-specific libraries such as `limma`, `DESeq2` or special statistics. Each R dependency adds deployment work.
+- The SDK does not include `rpy2`, which embeds R in the plugin process. With `rpy2`, all requests share one interpreter, and an R crash stops the plugin process. Use the bridge unless you measured that `Rscript` startup per call is the bottleneck.
 
 Source: [R bridge](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/r.py), [scaffold templates](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/add_r_templates.py).
-
-## Related
-
-- [Recipes → Writing results](/sdk/recipes/writing-results) — how the R output gets persisted
-- [Recipes → Error handling](/sdk/recipes/error-handling) — typed errors and request IDs
-- [Operations → Deploying](/sdk/operations/deploying) — installing R alongside MINT

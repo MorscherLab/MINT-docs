@@ -8,7 +8,7 @@ description: "Floating, source-driven job status tray for plugin and platform wo
 
 # JobsStatusTray
 
-Floating, source-driven job status tray for plugin and platform workflows.
+Use `JobsStatusTray` to show the running and finished jobs of a plugin in a floating tray.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

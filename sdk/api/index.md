@@ -1,27 +1,12 @@
 # API Reference
 
-Back-of-book reference for the SDK's public surface. Each page enumerates exports from one area of `mint-sdk`, with one-line descriptions and links to the source on GitHub. For deeper coverage and exact method signatures with full type hints, the source itself is authoritative.
-
-This section is intentionally **not** the front door for plugin development. Start with [Concepts](/sdk/concepts/) or jump to [Tutorials](/sdk/tutorials/) instead.
-
-## Pages
-
-| Area | Page |
-|------|------|
-| Python SDK exports (declaration, context, jobs, MCP, testing) | [Python SDK](/sdk/api/python) |
-| Frontend SDK exports | [Frontend SDK](/sdk/api/frontend) |
-| Migration framework | [Migrations](/sdk/api/migrations) |
-| Typed REST client | [REST client](/sdk/api/client) |
-| Exception taxonomy | [Exceptions](/sdk/api/exceptions) |
-| `mint` CLI | [CLI reference](/sdk/api/cli-reference) |
+These pages list the public names of `mint-sdk` and `@morscherlab/mint-sdk`, with one line per name and links to the source. To learn plugin development, start with [Concepts](/sdk/concepts/) or [Tutorials](/sdk/tutorials/).
 
 ## Source links
 
-The SDK source is the canonical reference:
+- [`MINT/packages/sdk-python/src/mint_sdk/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk): every Python module
+- [`MINT/packages/sdk-frontend/src/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src): every component, composable and type
+- [`mint_sdk/__init__.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/__init__.py): the Python package root exports. Import every other name from its module
+- [`composables/index.ts`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/index.ts): the frontend composable list
 
-- [`MINT/packages/sdk-python/src/mint_sdk/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-python/src/mint_sdk) — every Python module
-- [`MINT/packages/sdk-frontend/src/`](https://github.com/MorscherLab/MINT/tree/main/packages/sdk-frontend/src) — every component, composable, and type
-- [`MINT/packages/sdk-python/src/mint_sdk/__init__.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/__init__.py) — the canonical Python export list (the L1 and L2 author names; import every other name from its module)
-- [`MINT/packages/sdk-frontend/src/composables/index.ts`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/index.ts) — the canonical frontend composable list
-
-When this manual disagrees with the source, the source wins. Open a docs issue if you spot a divergence.
+When this manual and the source disagree, the source is correct. Open a docs issue for each difference.

@@ -1,107 +1,100 @@
 # Users & Roles
 
-MINT controls access with a **system role** per user plus project membership. The system role decides which actions a user may take anywhere in the platform. Project membership records who works on a project and, in restricted visibility mode, which experiments a user can see. Roles combine 27 permissions in 11 groups; admins can build custom roles from them.
+This page tells administrators how to manage accounts, roles, project membership and plugin access. Each user has one system role. The role decides which actions the user can do in the whole platform. Project membership records who works on a project. In restricted visibility mode, it also decides which experiments a user can see. For the full permission catalog, see [Permissions](/reference/permissions).
 
-> [Screenshot: Admin -> People & access -> Roles page with the Admin / Member / Viewer presets and a custom role]
+> [Screenshot: Admin -> People & access -> Roles with the Admin, Member and Viewer roles and one custom role]
 
 ## Accounts
 
-People get an account by self-registration (on by default, controlled by `auth.allowRegistration`) or from an admin with `mint platform admin user create`. A self-registered account is **inactive** until an administrator activates it; the person sees "Waiting for approval" at sign-in. Activate it from the Users list (see [Waiting for approval](/reference/troubleshooting#waiting-for-approval)). See [Authentication → Accounts and registration](/admin/authentication#accounts-and-registration).
+People get an account by self-registration or from an administrator. See [Accounts and registration](/admin/authentication#accounts-and-registration).
 
-**Admin -> People & access -> Users** (needs `users.view`) lists accounts. With `users.manage` you can edit a user, change the role, reset the password, reset the passkeys (see [Recovery](/admin/authentication#recovery)), deactivate, reactivate, or delete. MINT refuses an action on your own account (delete, deactivate, password reset, passkey reset, role change) with 400. It refuses to delete, deactivate or demote the last active administrator with 409.
+To activate a self-registered account:
+
+1. Open **Admin -> People & access -> Users** (needs `users.view`).
+2. Find the inactive account. The person sees "Waiting for approval" at sign-in.
+3. Open its action menu and choose **Activate user** (needs `users.manage`).
+
+With `users.manage`, you can also edit a user, change the role, reset the password, reset the passkeys (see [Recovery](/admin/authentication#recovery)), deactivate, activate again, or delete.
+
+- MINT refuses an action on your own account (delete, deactivate, password reset, passkey reset, role change) with 400.
+- MINT refuses to delete, deactivate or demote the last active administrator with 409.
+
+> [Screenshot: Admin -> People & access -> Users with one inactive account and its action menu open on Activate user]
 
 ## System roles
 
-Three roles ship out of the box:
+MINT has three system roles: Admin, Member (the default for new accounts) and Viewer. For the permissions of each role, see [System roles](/reference/permissions#system-roles).
 
-| Role | Permissions |
-|------|-------------|
-| **Admin** | All 25. Also the only role that can manage the Admin role, disable authentication, or enable dev mode. |
-| **Member** (default for new accounts) | All `projects.*` and `experiments.*`; `instruments.view`; `plugins.view`, `plugins.use`; `users.view`; `platform.view_logs`; `filesystem.browse` |
-| **Viewer** | `projects.view`, `experiments.view`, `instruments.view`, `plugins.view`, `plugins.use`, `users.view` |
+- Member does not have `plugins.configure`, because that permission gives the plugin `configure` access level. See [Plugin access levels](#plugin-access-levels).
+- Member and Viewer do not see the **Admin** entry. See [Admin panel](/reference/permissions#admin-panel).
+- A new role does not get `instruments.edit` automatically. Grant it to the roles that maintain the [instrument directory](/guide/instruments).
 
-Member does not have `plugins.configure`, because that permission gives the plugin `configure` access level (see [Plugin access levels](#plugin-access-levels)). The 1.4 upgrade removed it from the Member role; other roles keep their grants. The admin panel opens only for a role that holds one of `users.manage`, `platform.configure`, `plugins.configure`, `plugins.install` or `notices.publish`. Member and Viewer hold none of them, so they do not see the **Admin** entry. `users.view` and `platform.view_logs` alone do not open the admin panel.
-
-Every user has exactly one system role. Change it on **Admin -> People & access -> Users**.
-
-The 1.3 upgrade gave every existing role, custom roles included, `instruments.view`, and gave the Admin role `instruments.edit`. Roles created later get neither automatically. Grant `instruments.edit` to the roles that maintain the [instrument directory](/guide/instruments).
+To change the role of a user, open **Admin -> People & access -> Users** and edit the user.
 
 ## Custom roles
 
-**Admin -> People & access -> Roles** (needs `users.manage`) edits roles. Besides the permission toggles, each role has:
+To create or edit a role:
+
+1. Open **Admin -> People & access -> Roles** (needs `users.manage`).
+2. Click **New role**, or open an existing role.
+3. Enter the name and the slug.
+4. Switch on the permissions.
+5. Set the project scope and the plugin access (see the table below).
+6. Click **Create role** (or **Save role** for an existing role).
 
 | Setting | Options | Effect |
 |---------|---------|--------|
-| **Project scope** | All projects / Assigned only | Whether the role sees every project or only projects the user is assigned to |
-| **Plugin access** | All plugins / Selected only | Which plugins users with this role can see and open. A plugin matches by its registry name or its route prefix |
+| **Project scope** | All projects / Assigned only | The role sees every project, or only the projects that the user is assigned to |
+| **Plugin access** | All plugins / Selected only | The plugins that the role can see and open. A plugin matches by its registry name or its route prefix |
 
-> [Screenshot: role editor with permission toggles, project scope, and plugin access]
+> [Screenshot: role editor with the permission switches, the project scope and the plugin access list]
 
-The **slug** of a role must be lowercase and URL-safe: it matches `^[a-z0-9][a-z0-9_-]*$` and has at most 100 characters. MINT refuses other slugs with 422, so a look-alike of `admin` (for example `Admin`) cannot exist. Only the exact slug `admin` is a platform administrator, for the platform and for every plugin. The upgrade gave a role with an empty slug the slug `role-<id>`; rename it if necessary.
+The slug of a role must match `^[a-z0-9][a-z0-9_-]*$` and have at most 100 characters. MINT refuses other slugs with 422, so a look-alike such as `Admin` cannot exist. Only the exact slug `admin` is a platform administrator, for the platform and for every plugin. A role that had an empty slug got the slug `role-<id>` at the upgrade. Rename it if necessary.
 
-A custom role suits narrow jobs, for example a "Plugin operator" with `plugins.view`, `plugins.use`, and `plugins.configure` but not `plugins.install`.
+Use a custom role for a narrow job. Example: a "Plugin operator" with `plugins.view`, `plugins.use` and `plugins.configure`, but not `plugins.install`.
 
 ### Who can manage whom
 
-A non-admin with `users.manage` can only act within their own rights:
-
-- They cannot assign the Admin role or edit it.
-- They cannot create, edit, or assign a role that has permissions or plugin access they lack.
-- They cannot create a user in a role that outranks theirs, or edit, activate, deactivate, delete, or reset the password of such a user.
+A non-admin with `users.manage` can act only within their own rights. They cannot assign or edit the Admin role, give a permission that they do not have, or act on a user whose role outranks theirs. See [Limits on `users.manage`](/reference/permissions#limits-on-users-manage).
 
 ## Project membership
 
-Each project has a creator and an optional lead. The creator, the lead, or an Admin can edit the project, delete it, and manage its members; they also need the matching permission (`projects.edit`, `projects.delete`, `projects.manage_members`).
+Each project has a creator and an optional lead. The creator, the lead or an Admin can edit the project, delete it and manage its members. Each of them also needs the matching permission: `projects.edit`, `projects.delete` or `projects.manage_members`.
 
-Add members from the project's **Edit** form: pick an existing user under **Members**. Members are labelled `editor` or `viewer`. The label is shown in the UI, but write access still comes from the system role.
+To add a member, open the project's **Edit** form and select an existing user under **Members**. For the steps in the UI, see [Projects](/guide/projects).
 
 | Project relationship | Effect |
 |----------------------|--------|
-| **Creator / lead** | Can edit or delete the project and manage members, given the matching permission |
-| **Member: editor** | Label only; counts toward restricted experiment visibility |
-| **Member: viewer** | Label only; counts toward restricted experiment visibility |
+| Creator or lead | Can edit or delete the project and manage members, with the matching permission |
+| Member: `editor` | A label only. Counts for restricted experiment visibility |
+| Member: `viewer` | A label only. Counts for restricted experiment visibility |
 
-Do not use project membership instead of system roles. A user still needs `experiments.edit` to edit experiments, and so on. An experiment's own [collaborators](/guide/experiments#collaborators) can also grant visibility on a single experiment.
+Project membership does not replace system roles. A user still needs `experiments.edit` to edit experiments. To show one experiment to a person, add them as a [collaborator](/guide/experiments#collaborators).
 
-> [Screenshot: project Team card listing members and their project roles]
-
-## The 27 permissions
-
-Permissions are `resource.action` strings. The backend checks them on every route; the role editor shows them as grouped toggles.
-
-| Group | Permissions |
-|-------|-------------|
-| **`projects.*`** (5) | `view`, `create`, `edit`, `delete`, `manage_members` |
-| **`experiments.*`** (5) | `view`, `create`, `edit`, `delete`, `manage_codes` |
-| **`instruments.*`** (2) | `view`, `edit` |
-| **`plugins.*`** (4) | `view`, `use`, `configure`, `install` |
-| **`jobs.*`** (2) | `read_all`, `manage_all` |
-| **`filesystem.*`** (1) | `browse` |
-| **`notifications.*`** (2) | `receive_important`, `broadcast` |
-| **`calendar.*`** (1) | `read_all` |
-| **`notices.*`** (1) | `publish` |
-| **`users.*`** (2) | `view`, `manage` |
-| **`platform.*`** (2) | `configure`, `view_logs` |
-
-The authoritative list is [`api/permissions.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/permissions.py). See also [Permissions](/reference/permissions).
+> [Screenshot: project Team card with three members and their editor or viewer labels]
 
 ## Plugin access levels
 
-A plugin tags each endpoint, job, MCP tool and page with an access level. The platform maps the level to the caller's system role. There are no per-plugin roles:
+A plugin tags each endpoint, job, MCP tool and page with an access level. The platform maps the level to the caller's system role. There are no roles for each plugin.
 
 | Level | Who passes |
 |-------|-----------|
-| `use` | A role with `plugins.use` that may see the plugin (**Plugin access**) |
-| `configure` | The `use` rule plus `plugins.configure` |
+| `use` | A role with `plugins.use` that can see the plugin (**Plugin access**) |
+| `configure` | The `use` rule, plus `plugins.configure` |
 | `admin` | A platform administrator (the `admin` role). An administrator passes every level |
 
-An unknown level from a plugin is treated as `admin`. A plugin page with `configure` access is hidden from a role without `plugins.configure`. Only a platform administrator can change the settings of a plugin, unless the plugin sets `settings_access = "configure"` in its `Metadata`. Then a role with `plugins.configure` can change them too.
+- MINT treats an unknown level from a plugin as `admin`.
+- A plugin page with the `configure` level is hidden from a role without `plugins.configure`.
+- Only a platform administrator can change the settings of a plugin. If the plugin sets `settings_access = "configure"` in its `Metadata`, a role with `plugins.configure` can also change them.
 
-To let a person configure plugins, give their role `plugins.configure`. Create a custom role such as "Plugin operator" for this. For the upgrade from MINT 1.3, see [Upgrading from MINT 1.3](/admin/updates#upgrading-from-mint-1-3).
+To let a person configure plugins, give their role `plugins.configure`, for example with a "Plugin operator" role.
 
-Which plugins a role can see is decided by **Plugin access** and `plugins.use`. It applies to the plugin proxy, in-process plugin routes, `GET /api/plugins`, and the plugin data on the REST and MCP APIs. For a role without access to a plugin, the experiment data and artifacts of that plugin are left out of lists and answer 404 on a single read, and a named plugin answers 403 `plugin.not_visible`. A write into a plugin's design data or objects also needs `plugins.use`. A `plugin_access` value that is not `"all"`, a list of plugin names or null grants no plugin.
+**Plugin access** and `plugins.use` decide which plugins a role can see. This applies to the plugin proxy, in-process plugin routes, `GET /api/plugins`, and the plugin data on the REST and MCP APIs. For a role without access to a plugin:
 
-## Next
+- MINT leaves the experiment data and artifacts of that plugin out of lists.
+- A single read of that data answers 404.
+- A request that names the plugin answers 403 `plugin.not_visible`.
 
-→ [Authentication](/admin/authentication) — how users sign in
-→ [Permissions](/reference/permissions) — full RBAC reference
+A write into the design data or objects of a plugin also needs `plugins.use`. A `plugin_access` value other than `"all"`, a list of plugin names, or null grants no plugin.
+
+Plugin authors: see [Route permissions](/sdk/recipes/route-permissions).

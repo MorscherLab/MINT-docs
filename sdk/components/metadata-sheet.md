@@ -8,7 +8,7 @@ description: "Spreadsheet-style editor for per-run sample metadata: factor colum
 
 # MetadataSheet
 
-Spreadsheet-style editor for per-run sample metadata. Each row is one run. Each column is one factor, such as treatment or time. The sheet derives the group of each sample from the factor columns and marks missing and non-numeric values.
+Use `MetadataSheet` to edit sample metadata in a spreadsheet. Each row is one run. Each column is one factor, such as treatment or time. The sheet derives the group of each sample from the factor columns and marks missing and non-numeric values.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,11 +23,9 @@ Spreadsheet-style editor for per-run sample metadata. Each row is one run. Each 
 import { MetadataSheet, mergeMetadataSheet } from "@morscherlab/mint-sdk/lab"
 ```
 
-`MetadataSheet` is new in 1.5.1.
-
 ## Basic Usage
 
-Bind both `v-model:rows` and `v-model:columns`. An edit of a column (label, kind, role, unit) updates `columns`.
+Bind both `v-model:rows` and `v-model:columns`. An edit of a column (label, kind, role, unit) updates `columns`. The sheet has no frame of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card).
 
 ```vue
 <script setup lang="ts">
@@ -71,8 +69,9 @@ The group of a sample is the joined values of its `group` and `order` columns. A
 - Drag the fill handle to repeat values down a column.
 - `Cmd+Z` (or `Ctrl+Z`) undoes the last change (100 steps).
 - `Cmd+C` and `Cmd+V` (or `Ctrl`) exchange tab-separated cells with Excel.
-- A pasted block or an imported CSV or `.xlsx` file whose header names the run column is merged by run name. The run column is the first header that reads `run`, `sample`, `file`, `name`, `sample name`, `file name` or `run name`, or equals `runLabel`. A header such as `Time (h)` sets the unit of a number column. Column kinds and roles are guessed. The user can change them in the column menu.
-- The run column is at most 20rem wide. A longer run name, such as a file path, is cut at its start, so its end stays visible. The full name shows on hover.
+- A pasted block, or an imported CSV or `.xlsx` file, merges by run name when its header names the run column. The run column is the first header that reads `run`, `sample`, `file`, `name`, `sample name`, `file name` or `run name`, or equals `runLabel`.
+- A header such as `Time (h)` sets the unit of a number column. The sheet guesses the column kinds and roles. The user can change them in the column menu.
+- The run column is at most 20rem wide. A longer run name, such as a file path, is cut at its start, so that its end stays visible. The full name shows on hover.
 
 ## Who owns the runs
 
@@ -84,16 +83,16 @@ The `runs` prop sets who adds rows.
 | `'imported'` | Read-only | Adds a row for each new run name | Takes a table |
 | `'fixed'` | Read-only. The host owns the rows, for example one row for each data file | Fills only the rows that match | Offers no upload |
 
-Every row that an import or a header paste adds is also emitted as `add-runs`, after `update:rows` carried it. Use the event to react to new runs.
+The sheet also emits each row that an import or a header paste adds as `add-runs`, after `update:rows`. Use the event to react to new runs.
 
-`runsEditable` is deprecated. Use `runs` instead: `true` is `'editable'` and `false` is `'fixed'`. When both are set, `runs` wins. 2.0 removes `runsEditable`.
+`runsEditable` is deprecated and removed in 2.0. Use `runs`: `true` is `'editable'` and `false` is `'fixed'`. When both are set, `runs` wins.
 
 ## Locking, validation and import
 
-- `lockedColumns` is a list of column keys. The cells, name and existence of these columns are fixed. The user can still change their kind and role.
+- `lockedColumns` is a list of column keys. The user cannot edit the cells of these columns, rename them or delete them, but can change their kind and role.
 - `columnsAddable: false` stops new columns from the "+" button, a wide paste or an import.
-- `validateCell(value, column, row)` is a host rule for filled cells. Return a message to mark the cell like a non-numeric value. The message shows on hover and the footer counts the cell "to check". Return `null` to accept. The value stays editable.
-- Pass `experiments` to show the "From experiment" menu. It is hidden when the list is empty. A choice emits `import-experiment` with `'fill'` or `'replace'`. The host loads the design of that experiment and merges it with `mergeMetadataSheet`.
+- `validateCell(value, column, row)` is your rule for filled cells. Return a message to mark the cell like a non-numeric value: the message shows on hover, and the footer counts the cell "to check". Return `null` to accept the value. The cell stays editable.
+- Pass `experiments` to show the "From experiment" menu. An empty list hides it. A choice emits `import-experiment` with `'fill'` or `'replace'`. Load the design of that experiment and merge it with `mergeMetadataSheet`.
 
 ```ts
 import { mergeMetadataSheet } from '@morscherlab/mint-sdk/lab'
@@ -106,22 +105,22 @@ async function onImportExperiment(experiment, mode) {
 }
 ```
 
-`mergeMetadataSheet(sheet, incoming, mode)` matches rows by run name and columns by label (case-insensitive). It adds an unknown column. `'fill'` writes only empty cells. `'replace'` also overwrites. An empty incoming value never clears a cell. The result also holds `filled`, `replaced`, `unknownRuns` (incoming runs with no row, which are not added) and `addedColumns`.
+`mergeMetadataSheet(sheet, incoming, mode)` matches rows by run name and columns by label (case-insensitive). It adds unknown columns. `'fill'` writes only empty cells. `'replace'` also overwrites filled cells. An empty incoming value never clears a cell. The result also holds `filled`, `replaced`, `addedColumns` and `unknownRuns` (incoming runs without a row; the merge does not add them).
 
 ## Toolbar
 
-The `actions` slot adds host buttons before Undo. An empty sheet shows only these host actions, and no toolbar when the host has none. The drop zone is the one import entry of an empty sheet. Filter, Import, Copy sheet and Paste appear when the sheet has rows. The `empty` slot replaces the drop zone.
+- The `actions` slot adds your buttons before Undo.
+- An empty sheet shows only your actions, and no toolbar when you give none. Its drop zone is the only import entry. The `empty` slot replaces the drop zone.
+- Filter, Import, Copy sheet and Paste show when the sheet has rows.
 
 ## Select runs from the host
 
-The component exposes `selectRuns(runs)`. It selects the rows whose run is in the list, on the Type column (the first factor column when `showType` is false), and scrolls the first one into view. One pasted value or a fill-drag then sets exactly those rows. Rows that are not adjacent show alone until the user clicks **Show all rows**. Use it, for example, for chips that select all runs of one file-name pattern.
+Call the exposed `selectRuns(runs)`, for example from chips that select all runs of one file-name pattern. It selects the rows whose run is in the list, in the Type column (the first factor column when `showType` is `false`), and scrolls the first one into view. One pasted value or a fill-drag then sets exactly those rows. Rows that are not adjacent show alone until the user clicks Show all rows.
 
 ```ts
 const sheet = useTemplateRef<{ selectRuns: (runs: readonly string[]) => void }>('sheet')
 sheet.value?.selectRuns(['QC_01', 'QC_02'])
 ```
-
-The sheet has no frame of its own. As the direct child of a `SectionCard` body it runs to the card edges, and in a `fill` card it takes the height that is left and scrolls its own rows.
 
 ## Helpers
 

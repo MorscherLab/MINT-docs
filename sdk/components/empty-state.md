@@ -8,7 +8,7 @@ description: "Empty-list and empty-view treatment with optional action affordanc
 
 # EmptyState
 
-Empty-list and empty-view treatment with optional action affordance.
+Use `EmptyState` when a list or a view has no data. It can show an action button.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

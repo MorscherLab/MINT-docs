@@ -1,8 +1,8 @@
 # Tutorial — Create a Workflow Plugin
 
-Build **batch-coordinator**, a workflow plugin (`writes = {"experiments"}`) that lists visible experiments and creates experiment records for downstream design and analysis plugins. It deliberately declares no design-data or result writes.
+Build `batch-coordinator`, a workflow plugin (`writes = {"experiments"}`). It lists visible experiments and creates experiment records for the design and analysis plugins. It declares no design-data or result writes.
 
-This tutorial targets **MINT v@MINT_VERSION@**. A workflow is a plugin category and write policy; it does not automatically schedule jobs or invoke other plugins.
+A workflow is a plugin type and a write policy. It does not schedule jobs or call other plugins by itself.
 
 ## 1. Scaffold a standard plugin
 
@@ -16,9 +16,7 @@ mint init batch-coordinator \
 cd batch-coordinator
 ```
 
-The project contains a FastAPI backend, Vue workspace, generated client, tests, and build workflows. `--type workflow` is supported even though the CLI's help description omits it. Generated mode accepts only `analysis`.
-
-Inspect the scaffold's `Metadata`: it already sets `writes = {"experiments"}`, which gives experiment CRUD and no design-data or result writes. `auth` defaults to `True`.
+The project has a FastAPI backend, a Vue workspace, a generated client, tests and build workflows. The `Metadata` of the scaffold already sets `writes = {"experiments"}`: experiment CRUD, and no design-data or result writes. `auth` is `True` by default.
 
 ## 2. Add platform-backed endpoints
 
@@ -107,15 +105,15 @@ class BatchCoordinatorPlugin(Plugin):
         )
 ```
 
-`CurrentActor` supplies platform-authenticated identity. The platform makes the calling user the creator, and the request cannot choose it. The route checks `experiments.create`; the scoped namespace also checks this plugin's write policy and the platform-owned experiment-type allowlist. Use an experiment type configured for your MINT installation.
+`CurrentActor` supplies the authenticated identity. The calling user becomes the creator of the experiment; see [What the platform enforces](/sdk/concepts/platform-context#what-the-platform-enforces). The route checks `experiments.create`. The scoped namespace also checks the write policy of this plugin and the experiment-type allowlist of the platform. Use an experiment type that your MINT installation has.
 
-The list requires `experiments.view` and returns at most 50 visible experiments (newest first). Add filters (`status`, `type`, `project`, `search`) if this workspace must browse larger collections.
+The list needs `experiments.view` and returns at most 50 visible experiments, newest first. To browse larger collections, add the filters `status`, `type`, `project` or `search`.
 
-The routes do not call `design.save()` or `artifacts.save_all()`: the design plugin owns scientific inputs, and the analysis plugin owns outputs. Even if an accidental call is added later, this plugin's write set denies it.
+The routes do not call `design.save()` or `artifacts.save_all()`. The design plugin owns the scientific inputs, and the analysis plugin owns the outputs. The write set of this plugin refuses such a call.
 
 ## 3. Verify standalone behavior
 
-`mint dev` runs without an installed platform context. These platform-backed endpoints return HTTP 503, making missing integration visible. Keep the UI usable with an explanatory error state instead of pretending to create a platform experiment locally.
+`mint dev` runs without a platform context, so these endpoints return HTTP 503. Show this error in the UI. Do not create a fake experiment locally.
 
 Replace the scaffolded backend tests with:
 
@@ -150,7 +148,7 @@ mint sdk generate
 mint doctor --strict
 ```
 
-The generated contract changes when the routes change. The scaffold `App.vue` shows the controls of `analysisControls` in the sidebar, calls `run(values)` of the store on submit and sets `experiment: true`, so the top bar shows the experiment chip. Keep `App.vue` and the export names, and replace `frontend/src/stores/analysis.ts`. The sidebar form now creates an experiment:
+The generated contract changes when the routes change. The scaffold `App.vue` shows the controls of `analysisControls` in the sidebar and calls `run(values)` of the store on submit. It also sets `experiment: true`, so the top bar shows the experiment chip. Keep `App.vue` and the export names. Replace `frontend/src/stores/analysis.ts`, so that the sidebar form creates an experiment:
 
 ```ts
 import { defineStore } from 'pinia'
@@ -207,7 +205,7 @@ export const useAnalysisStore = defineStore('analysis', () => {
 })
 ```
 
-The generated methods here are `listExperiments()` and `createExperiment(body)`. The client supplies the configured route prefix and authentication integration. The frontend displays HTTP errors, including the standalone 503; the backend remains responsible for permission checks.
+The generated methods are `listExperiments()` and `createExperiment(body)`. The client supplies the route prefix and the authentication. The frontend shows HTTP errors, also the standalone 503. The backend does the permission checks.
 
 Replace `frontend/src/views/WorkspaceView.vue`. The main area lists the visible experiments:
 
@@ -248,7 +246,7 @@ onMounted(batch.refresh)
 </template>
 ```
 
-Replace the scaffold's `WorkspaceView.test.ts` with a check of the actual request contract:
+Replace `WorkspaceView.test.ts` of the scaffold with a test of the request contract:
 
 ```typescript
 import { flushPromises, mount } from '@vue/test-utils'
@@ -289,11 +287,9 @@ it('should create an experiment and refresh the visible list when the sidebar fo
 })
 ```
 
-See [adding a frontend](/sdk/tutorials/adding-a-frontend) to add views to the workspace or build a richer experiment workspace.
-
 ## 4. Test the installed integration
 
-After updating the frontend, run its checks and package the plugin:
+Run the frontend checks and package the plugin:
 
 ```bash
 cd frontend
@@ -304,17 +300,9 @@ mint sdk generate --check
 mint build
 ```
 
-Check that the bundle installs and loads, then deploy it to a test platform you administer:
+Test the bundle in a disposable platform with `mint verify`, then install it on a test platform with `mint deploy`. See [Deploying and verifying a plugin](/sdk/operations/deploying).
 
-```bash
-mint verify
-mint platform auth login --url https://mint-test.example.org
-mint deploy --url https://mint-test.example.org
-```
-
-`mint verify` boots the MINT platform image in Docker, installs the bundle through the normal upload path, restarts, and waits until the plugin loads. `mint deploy` uploads the same bundle, restarts the platform (requires `platform.configure`), and confirms the restart by the new server `boot_id`; `--timeout` (default 180 s) covers restart and load together.
-
-On the test platform, configure the plugin's allowed experiment types. Then verify the actual platform boundary:
+On the test platform, set the allowed experiment types of the plugin. Then check the platform boundary:
 
 | Action | Expected result |
 |---|---|
@@ -325,11 +313,11 @@ On the test platform, configure the plugin's allowed experiment types. Then veri
 | Write this plugin's design data or analysis result | Rejected by explicit write policy |
 | Load an experiment created by another plugin | Existing design ownership and results remain unchanged |
 
-The local test verifies the declared write set and the standalone boundary. It does not replace installed-platform authorization tests. `mint dev --platform` registers a dev proxy; it does not turn the local process into an installed plugin with all platform services.
+The local test checks the declared write set and the standalone boundary. It does not replace authorization tests on an installed platform. `mint dev --platform` is only a development proxy; see [Development proxy limitations](/sdk/concepts/isolation#development-proxy-limitations).
 
-## 5. Extend the workflow deliberately
+## 5. Extend the workflow
 
-For existing experiments, the namespace exposes:
+For existing experiments, the namespace has these methods:
 
 ```python
 experiment = await self.context.experiments.get(experiment_id)
@@ -337,10 +325,11 @@ updated = await self.context.experiments.update(experiment_id, notes="Awaiting a
 deleted = await self.context.experiments.delete(experiment_id)
 ```
 
-Put these calls behind authenticated routes with the relevant `experiments.edit` or `experiments.delete` permission and your workflow's ownership rules. Handle `None` / `False` as missing or inaccessible resources. Keep mutations scoped to an experiment the user selected; do not expose unrestricted table access.
+Put these calls behind authenticated routes that check `experiments.edit` or `experiments.delete` and the ownership rules of your workflow. Treat `None` or `False` as a missing or inaccessible experiment. Change only an experiment that the user selected. Do not expose unrestricted table access.
 
-Use `@job` for your plugin's own queued calculations, [events](/sdk/concepts/lifecycle) such as `@on("experiment.status_changed")` for reacting to platform changes, and [plugin tables](/sdk/tutorials/design-plugin-with-tables) for orchestration records that need durable state. Adding tables is independent of granting design ownership.
-
-Use [analysis artifacts](/sdk/concepts/platform-context) to read downstream outputs. Declare exact producer plugin IDs in `reads_from` when reading another plugin's payload. Merely listing a plugin in `depends_on` controls load order; it does not grant result access or execute that plugin.
+- For queued calculations of your plugin, use `@job`.
+- To react to platform changes, use [events](/sdk/concepts/lifecycle) such as `@on("experiment.status_changed")`.
+- For durable orchestration records, use [plugin tables](/sdk/tutorials/design-plugin-with-tables). Tables do not give design ownership.
+- To read the results of other plugins, declare their exact IDs in `reads_from`; see [Cross-plugin readers](/sdk/concepts/platform-context#cross-plugin-readers). `depends_on` sets only the load order. It does not give access to results and does not run that plugin.
 
 Source: [workflow scaffolding](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/init_command.py), [repository protocol](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/repositories.py), and [platform permissions](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/permissions.py).

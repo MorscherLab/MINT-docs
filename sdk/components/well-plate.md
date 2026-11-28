@@ -8,11 +8,8 @@ description: "Interactive 96- and 384-well plate map with heatmaps, selection, a
 
 # WellPlate
 
-Interactive plate map with heatmaps, selection, and editing hooks. Supported formats are 6, 12, 24, 48, 54, 96, and 384 wells.
+Use `WellPlate` to show and select wells on a plate, with heatmaps and editing hooks. Formats are 6, 12, 24, 48, 54, 96 and 384 wells.
 
-::: warning Deprecated prop
-`showSampleTypeIndicator` is a no-op and is removed in **MINT 1.4**. The sample-type marker already encodes the type by shape, with `Q` / `i` glyphs for QC / iQC.
-:::
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -29,44 +26,56 @@ import { WellPlate } from "@morscherlab/mint-sdk/lab"
 
 ## Basic Usage
 
-```vue
-<WellPlate
-  v-model="selectedWells"
-  :format="384"
-  :wells="wells"
-  selection-mode="multiple"
-  size="fill"
-/>
-```
-
-## Selection
-
-A click selects one well. Ctrl/Cmd-click toggles a well. Shift-click (or Shift+Enter, Shift+Space on a focused well) selects the rectangle from the anchor well to the clicked well. The anchor is the last well that got a plain click or a Ctrl/Cmd-click, or the start of a dragged rectangle. Ctrl/Cmd+Shift-click adds the rectangle to the current selection. Escape or an empty selection drops the anchor. Without an anchor, Shift-click toggles a well like Ctrl/Cmd-click. Range selection applies in `multiple` and `rectangle` modes.
-
-## Decorate wells without changing sample data
-
-`wellClass` and `wellStyle` let you mark a QC state or a focused well independently of sample type and heatmap values:
+Set the structure (format, selection mode, size, heatmap, well editor) once with `defineWellPlate()` and pass it as `spec`. The wells and the selected wells stay props.
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue'
-import { WellPlate, type WellClassResolver, type WellStyleResolver } from '@morscherlab/mint-sdk'
+import { WellPlate, defineWellPlate } from '@morscherlab/mint-sdk/lab'
 
-const selected = ref<string[]>([])
-const flagged = new Set(['A1', 'B2'])
-const wellClass: WellClassResolver = well => ({ 'qc-flagged': flagged.has(well.id) })
-const wellStyle: WellStyleResolver = well =>
-  well.id === 'A1' ? { outline: '2px solid var(--text-primary)', outlineOffset: '2px' } : undefined
+const plate = defineWellPlate({ format: 384, selectionMode: 'multiple', size: 'fill' })
+const selectedWells = ref<string[]>([])
 </script>
 
 <template>
-  <WellPlate
-    v-model="selected"
-    :format="96"
-    :show-well-ids="true"
-    :well-class="wellClass"
-    :well-style="wellStyle"
-  />
+  <WellPlate v-model="selectedWells" :spec="plate" :wells="wells" />
+</template>
+```
+
+The sample-type marker shows the type by shape, with a `Q` glyph for QC and an `i` glyph for iQC.
+
+## Selection
+
+- A click selects one well.
+- Ctrl/Cmd-click toggles a well.
+- Shift-click (or Shift+Enter, Shift+Space on a focused well) selects the rectangle from the anchor well to the clicked well.
+- Ctrl/Cmd+Shift-click adds the rectangle to the current selection.
+- The anchor is the last well that got a plain click or a Ctrl/Cmd-click, or the start of a dragged rectangle. Escape or an empty selection drops the anchor. Without an anchor, Shift-click toggles a well like Ctrl/Cmd-click.
+
+Range selection works in the `multiple` and `rectangle` selection modes.
+
+## Decorate wells without changing sample data
+
+Use the `wellClass` and `wellStyle` spec options to mark a well, for example a QC flag or a focused well. They do not change the sample type or the heatmap values.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { WellPlate, defineWellPlate } from '@morscherlab/mint-sdk/lab'
+
+const selected = ref<string[]>([])
+const flagged = new Set(['A1', 'B2'])
+const plate = defineWellPlate({
+  format: 96,
+  showWellIds: true,
+  wellClass: well => ({ 'qc-flagged': flagged.has(well.id) }),
+  wellStyle: well =>
+    well.id === 'A1' ? { outline: '2px solid var(--text-primary)', outlineOffset: '2px' } : undefined,
+})
+</script>
+
+<template>
+  <WellPlate v-model="selected" :spec="plate" />
   <p>Flagged wells: A1 and B2. A1 is the focused well.</p>
 </template>
 
@@ -75,7 +84,11 @@ const wellStyle: WellStyleResolver = well =>
 </style>
 ```
 
-Both callbacks receive the resolved `Well` (including its `id`, `row`, `col`, and state). `wellClass` accepts a class string, array, or boolean map. `wellStyle` is merged after heatmap/sample styling, so it can override those styles; prefer an outline or border when the heatmap must remain visible. These hooks do not disable selection, edit data, or persist a QC flag. Supply a visible legend/text explanation rather than conveying meaning through color alone.
+- Both callbacks get the resolved `Well`, with its `id`, `row`, `col` and state.
+- `wellClass` returns a class string, an array or a boolean map.
+- `wellStyle` applies after the heatmap and sample styles, so it can override them. To keep the heatmap visible, use an outline or a border.
+- The hooks do not disable selection, edit data or store a QC flag.
+- Do not show meaning by color alone. Add a legend or a text.
 
 <!-- sdk-props:start -->
 ## Props
@@ -126,9 +139,5 @@ Defaults are the values that vue-component-meta resolves from the source; object
 | ` empty ` | — | Replaces the default empty placeholder. |
 
 <!-- sdk-props:end -->
-
-## Related
-
-- [WellPlate playground](/sdk/components/well-plate)
 
 [Back to component library](/sdk/components/)

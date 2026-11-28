@@ -8,10 +8,10 @@ description: "Renders standardized text, table, image, Plotly, JSON, and artifac
 
 # GeneratedResultRenderer
 
-Renders standardized text, table, image, Plotly, JSON, and artifact job results.
+`GeneratedResultRenderer` draws a job result of a generated plugin UI: text, table, image, Plotly, JSON or artifact.
 
-::: info Generated UI (internal)
-This component renders a piece of the SDK's backend-driven **generated UI** system (`@generated_ui` / job manifests). Plugin authors typically don't place it directly; it is composed automatically inside `GeneratedPluginView`. Documented here for completeness and for authors customizing generated-UI rendering.
+::: info Generated UI
+[GeneratedPluginView](/sdk/components/generated-plugin-view) places this component for you. Use it directly only to change how a generated UI renders.
 :::
 
 <div class="mint-component-reference__actions">
@@ -29,7 +29,7 @@ import { GeneratedResultRenderer } from "@morscherlab/mint-sdk/runtime"
 
 ## Artifact downloads
 
-For an `artifact` result with a `download_url`, the renderer downloads the file through the SDK transport. The transport adds the Bearer credential. With auth enabled, the platform does not read the session cookie on plugin routes. A plain link or a `fetch` without a Bearer gets a 401, so do not use them for plugin routes.
+For an `artifact` result with a `download_url`, the renderer downloads the file through the SDK transport, which adds the Bearer credential. Do not use a plain link or your own `fetch` for a plugin route: they get a 401. See [Platform authentication gate](/sdk/recipes/route-permissions#platform-authentication-gate).
 
 ## Basic Usage
 

@@ -8,7 +8,7 @@ description: "Multi-step workflow container with progress, validation, and navig
 
 # StepWizard
 
-Multi-step workflow container with progress, validation, and navigation slots.
+Use `StepWizard` to split a task into steps, with progress, validation and Back and Next buttons.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -36,13 +36,13 @@ import { StepWizard } from "@morscherlab/mint-sdk/lab"
 </StepWizard>
 ```
 
-The default navigation shows a step counter (`2 / 4`) on the left and Cancel, Back, and Next / Finish as `BaseButton`s on the right. A custom `#navigation` slot replaces all of it; style custom navigation through that slot.
-
-The `#actions-start` slot adds an action that keeps the wizard open, for example **Save draft**. It shows left of Cancel, Back and Next.
+- The default navigation shows a step counter (`2 / 4`) on the left, and Cancel, Back and Next (or Finish) buttons on the right.
+- The `#navigation` slot replaces all of it.
+- The `#actions-start` slot adds an action that keeps the wizard open, for example Save draft. It shows to the left of Cancel, Back and Next.
 
 ## In a modal
 
-Inside a [BaseModal](/sdk/components/base-modal), the wizard puts its buttons in the modal footer: one dialog has one footer. Do not give the modal a `#footer` slot of its own. The `mint lint` rule `wizard-in-modal` reports a `StepWizard` in a `BaseModal` that has its own footer.
+Inside a [BaseModal](/sdk/components/base-modal), the wizard puts its buttons in the modal footer, so that the dialog has one footer. Do not give the modal its own `#footer` slot. The `mint lint` rule `wizard-in-modal` reports a `StepWizard` in a `BaseModal` that has its own footer.
 
 ```vue
 <BaseModal v-model:open="open" title="New sequence">

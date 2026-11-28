@@ -1,8 +1,8 @@
 # Libraries
 
-The library store holds large, read-only reference files that plugins use: spectral libraries, databases and similar data. An administrator imports each file or directory once. MINT checks it with a SHA-256 hash and keeps every version. A plugin that declares a library reads the version that you choose.
+This page tells administrators how to import and manage reference libraries. The library store holds large, read-only reference files that plugins use, for example spectral libraries and databases. Use it for files that are too large for a plugin wheel or that several plugins share.
 
-Use the store for files that are too large for a plugin wheel and that many plugins can share. Plugin authors: see [Use a reference library](/sdk/recipes/libraries).
+You import each file or directory once. MINT checks it with a SHA-256 hash and keeps every version. A plugin that declares a library reads the version that you choose. Plugin authors: see [Use a reference library](/sdk/recipes/libraries).
 
 > [Screenshot: Admin -> Plugins -> Libraries listing two libraries with versions, states and the Promote, Retire and Delete actions]
 
@@ -104,7 +104,3 @@ The default Compose file keeps `libraries.path` on the data volume (`/app/data/l
 | `library.not_retired` | 409 | You tried to delete a version that is not retired |
 | `library.in_use` | 409 | A pin names the version, or a plugin read it in the last 24 hours |
 
-## Next
-
-→ [Use a reference library](/sdk/recipes/libraries) — the plugin side
-→ [Configuration](/admin/configuration#libraries) — `libraries.path`

@@ -1,14 +1,14 @@
 ---
 aside: false
 title: BatchProgressList
-description: "BatchProgressList is a data display component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Per-item status list of a batch operation with a progress summary."
 ---
 
 <p class="mint-component-library__eyebrow">Data display</p>
 
 # BatchProgressList
 
-BatchProgressList is a data display component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `BatchProgressList` to show the status of each item in a batch. It emits `cancel` and `retry`.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

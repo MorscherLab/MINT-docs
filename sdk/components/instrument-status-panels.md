@@ -8,7 +8,7 @@ description: "Card with one tab for each typed panel of an instrument live statu
 
 # InstrumentStatusPanels
 
-Card with one tab for each typed panel of an instrument live status.
+Use `InstrumentStatusPanels` to show the typed panels of an instrument live status, one tab for each panel.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,7 +23,7 @@ Card with one tab for each typed panel of an instrument live status.
 import { InstrumentStatusPanels } from "@morscherlab/mint-sdk/lab"
 ```
 
-Each tab draws its panel with [PanelSections](/sdk/components/panel-sections). A `json` panel is a collapsed tree. A table of more than 20 rows shows 20 rows and "Show all N rows". A table reads `column_types`; a column without an entry whose values are all numbers or null is right-aligned in the mono font. A `bar` panel renders `PlotlyChart`: declare `plotly.js-dist-min` in the plugin.
+Each tab draws its panel with [PanelSections](/sdk/components/panel-sections), which describes each section kind. A `bar` panel renders `PlotlyChart`, so the plugin must declare `plotly.js-dist-min`; see [Charts need Plotly](/sdk/frontend/#charts-need-plotly).
 
 <!-- sdk-props:start -->
 ## Props

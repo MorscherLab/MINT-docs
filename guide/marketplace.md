@@ -1,87 +1,57 @@
 # Marketplace
 
-The marketplace is where admins find and install plugins for MINT. Other users ask an admin to install a plugin; MINT has no in-app install request.
+Admins find and install plugins in the marketplace. If you are not an admin and need a plugin, tell your admin its name. MINT has no install request form.
 
-> [Screenshot: Admin -> Plugins -> Registry showing plugin cards, filters, Installed/Update badges, and cached registry status]
+## Registry
 
-## What's a marketplace registry
+The marketplace reads one registry: a JSON catalog of plugins at `marketplace.registryUrl` in `config.json`. The default registry is `https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json`. A lab can host its own. For the format, see [Publishing -> Registry format](/sdk/operations/publishing#registry-format).
 
-A registry is a JSON feed of available plugins, hosted at `marketplace.registryUrl` (set in `config.json`). The default registry is `https://raw.githubusercontent.com/MorscherLab/mint-registry/main/registry.json`; private labs can host their own.
+An entry marked `source.private` shows only when the server has a GitHub token for updates.
 
-The feed for each plugin contains:
+The **Registry** catalog lists only registry plugins. A plugin installed outside the registry shows only under **Installed**.
 
-| Field | Purpose |
-|-------|---------|
-| `name` + `display_name` | Stable plugin ID and the readable label. After install, the platform shows the display name the plugin declares |
-| `source.github_repo` + `source.asset_pattern` | GitHub release source and `.mint` asset glob |
-| `latest_version` + `min_platform_version` | Advertised version and minimum platform version |
-| `plugin_type` | `static`, `analysis`, `experiment_design`, `full`, or `workflow` |
-| `capabilities` | Whether the plugin requires auth, database access, and/or a frontend |
-| `source.private` | Marks entries that should only appear when the deployment has a GitHub token configured |
-| Author + repo + license | Provenance |
-| Description, tags, icon URL | Marketplace UI |
+MINT keeps a cache of the registry in memory and under `server.dataPath/marketplace/`. When the registry is not available, the catalog uses the cache and marks the response as cached. To fetch the registry again, click **Refresh** in the **Registry** section. You need `plugins.configure`.
 
-A plugin can be in the registry without yet being installed. Conversely, plugins installed outside the registry through **Admin -> Plugins -> Installed** or the platform API will not appear in the Registry catalog. They still show up under **Installed**.
+## Browse plugins
 
-MINT keeps an in-memory and on-disk registry cache under
-`server.dataPath/marketplace/`. If the remote registry is temporarily
-unavailable, the catalog falls back to the cache and marks the response as
-cached. Click **Refresh** in the Registry section to force a fetch when you have
-`plugins.configure`.
+1. Open **Admin -> Plugins -> Registry**.
+2. Select a type in the **Filter plugins** list, or **Installed** or **Updates**. Each item shows a count.
+3. Optional: type in **Search**.
+4. Click a card to open its details.
 
-## Browsing
+To see the **Registry** section, you need `plugins.view` and `plugins.configure` or `plugins.install`. The Member role does not have these; see [Users & roles -> Plugin access levels](/admin/users-roles#plugin-access-levels).
 
-Open **Admin -> Plugins -> Registry**. You need `plugins.view` plus either `plugins.configure` or `plugins.install` to see this section. The Member role does not hold `plugins.configure` since MINT 1.4, so a Member sees the section only when an admin gave the role one of these permissions. Cards show name, type, latest version, tags, author, and a one-line summary.
+A card shows the name, type, latest version, tags, author and a one-line summary. The details show the GitHub repository, the documentation link, the license, the type and the **Min Platform** version. If the plugin needs a newer MINT version, the card shows **Incompatible** and the install and update buttons are disabled.
 
-> [Screenshot: marketplace card with the Install button]
-
-| Filter | Notes |
-|--------|-------|
-| **Filter plugins** list | All / Static / Analysis / Experiment design / Workflow / Full, then **Installed** and **Updates**, each with a count |
-| **Search** | Free text search over the plugin list |
-
-Click a card to open the detail view. It shows the GitHub repository, optional
-documentation link, license, type, and **Min Platform** requirement. If the
-registry requires a newer MINT version than the one currently running, the card
-is labeled **Incompatible** and direct install/update buttons are disabled.
+> [Screenshot: Admin -> Plugins -> Registry with the Filter plugins list, plugin cards with Installed and Update badges, and the Refresh button]
 
 ## Install
 
-Install, update, and uninstall buttons show to administrators. A user who is not an administrator sees no install buttons. This also applies to a user with `plugins.install`. The marketplace API accepts an install from a role with `plugins.install`. If you need a plugin, tell your admin its name. There is no install request form: MINT 1.4 removed the **Request Install** button and the review step.
+Only administrators see the install, update and uninstall buttons. For the full rule, see [Plugins -> Who can install](/admin/plugins#who-can-install).
 
-An install is refused when the plugin's `mint-sdk` requirement excludes the SDK of the running platform. See [Plugins](/admin/plugins) for the install steps and the plugin lock.
+MINT refuses an install when the `mint-sdk` requirement of the plugin excludes the SDK of the running platform. For the install steps, see [Plugins -> Install steps](/admin/plugins#install-steps).
 
-## What happens during install
+## Update
 
-See [Plugins → Install steps](/admin/plugins#install-steps) for the install lifecycle.
+A card shows an **Update** badge when a newer compatible version is available.
 
-## Upgrade
+1. Click **Update**.
+2. Read the result. MINT repeats the install for the new version and tells you if a server restart is necessary.
 
-Marketplace cards show an **Update** badge when a newer compatible version is
-available. Click **Update**; the platform repeats the install flow against the
-new version, records the updated package, and reports whether a server restart
-is required before the new code is active.
+If the update fails before activation, MINT names the failed step. If the plugin migration fails at startup, the plugin shows **Migration failed** and stays disabled.
 
-If the update fails before activation, the platform reports the failing step. If the plugin's migration fails at startup, that plugin shows **Migration failed** and stays disabled.
-
-MINT has no per-plugin automatic update in the marketplace. Your admin can schedule updates for the platform and its plugins together; see [Updates](/admin/updates).
+The marketplace does not update plugins automatically. Your admin can schedule updates of the platform and its plugins; see [Updates](/admin/updates).
 
 ## Uninstall
 
-An admin uninstalls plugins; see [Plugins → Uninstall modes](/admin/plugins#uninstall-modes).
+An admin uninstalls plugins. See [Plugins -> Uninstall modes](/admin/plugins#uninstall-modes).
 
-## Hosting a private registry
+## Host a private registry
 
-A registry is a static JSON document plus the `.mint` bundle files it points at. Any HTTPS host works (S3, GitHub Pages, an internal HTTP server). Set `marketplace.registryUrl` to the JSON's URL and restart MINT.
+1. Put the registry JSON and the `.mint` bundles on an HTTPS host, such as GitHub Pages, S3 or an internal server.
+2. Set `marketplace.registryUrl` to the URL of the JSON.
+3. Restart MINT.
 
-The platform reads one registry URL. If your lab wants the public catalog plus
-private plugins, publish an aggregate `registry.json` that includes both. For
-private GitHub release assets, configure an updates GitHub token so private
-entries can be shown and downloaded.
+MINT reads one registry URL. To show the public catalog and your private plugins, publish one `registry.json` that contains both. For private GitHub release assets, set a GitHub token for updates.
 
-The schema for the registry feed lives in [`api/models/marketplace_schemas.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/models/marketplace_schemas.py). A reference implementation is at [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry).
-
-## Next
-
-→ [Updates](/admin/updates) — auto-updates and pin versions
-→ [Plugin development → Operations → Packaging](/sdk/operations/packaging) — `mint build` produces installable bundles
+The schema is in [`api/models/marketplace_schemas.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/api/models/marketplace_schemas.py). A reference registry is [`MorscherLab/mint-registry`](https://github.com/MorscherLab/mint-registry).

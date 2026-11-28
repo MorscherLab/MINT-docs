@@ -1,14 +1,14 @@
 ---
 aside: false
 title: SequenceInput
-description: "SequenceInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Text area for DNA, RNA and protein sequences, with validation, statistics and tools."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # SequenceInput
 
-SequenceInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `SequenceInput` to enter a DNA, RNA or protein sequence. It detects the type and gives GC content, reverse complement and FASTA tools.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,7 +25,10 @@ import { SequenceInput } from "@morscherlab/mint-sdk/lab"
 
 ## Behavior
 
-The field keeps the typed text and reports problems under it: `N` bases as a warning with their count, characters outside the alphabet as an error naming them. `v-model` receives the sanitized sequence. `maxLength` counts sequence characters, not typed characters. `useSequenceUtils().findSequenceProblems()` returns the same report for your own fields.
+- The field keeps the typed text and reports problems under it. `N` bases are a warning with their count. Characters outside the alphabet are an error that names them.
+- `v-model` gets the cleaned sequence.
+- `maxLength` counts sequence characters, not typed characters.
+- For your own fields, `useSequenceUtils().findSequenceProblems()` returns the same report.
 
 <!-- sdk-props:start -->
 ## Props

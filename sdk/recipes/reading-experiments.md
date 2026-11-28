@@ -1,6 +1,6 @@
 # Reading and managing experiments
 
-The plugin context exposes metadata, design data, and analysis through scoped namespaces: `context.experiments`, `context.design` and `context.artifacts`. The namespaces work in both in-process and isolated integrated plugins.
+Read, create and update experiments through the scoped namespaces `context.experiments`, `context.design` and `context.artifacts`. They work in in-process and isolated plugins.
 
 ## Read one visible experiment
 
@@ -22,7 +22,7 @@ class MyPlugin(Plugin):
         }
 ```
 
-The dependency checks `experiments.view` and scoped visibility/type compatibility. A missing or hidden experiment produces 404; standalone mode produces 503. The design payload can be absent even when the experiment exists.
+For the checks and status codes of `CurrentExperiment`, see [Request-scoped access](/sdk/concepts/platform-context#request-scoped-access). The design payload can be absent when the experiment exists.
 
 ## List experiments
 
@@ -45,7 +45,7 @@ class MyPlugin(Plugin):
         return [{"id": item.id, "name": item.name, "code": item.experiment_code} for item in items]
 ```
 
-`self.context` is never `None`. In standalone mode, `experiments.list` raises `UnavailableException` (HTTP 503), so the route needs no separate check.
+`self.context` is never `None`. In standalone mode, `experiments.list` raises `UnavailableException` (HTTP 503), so the route needs no standalone check.
 
 | `list` argument | Meaning |
 |-----------------|---------|
@@ -57,11 +57,11 @@ class MyPlugin(Plugin):
 | `search` | Search text |
 | `limit` | Newest first; default 100. `None` returns all visible experiments |
 
-The result is a list of the newest visible experiments that match; it respects visibility and type restrictions. There is no offset: to scan more than a page, call with `limit=None` and process the list, or narrow the filters. The external [REST client](/sdk/api/client) has its own richer filter surface.
+The result lists the newest matching experiments that the caller can see, within the type restrictions. There is no offset. To read more than one page, call with `limit=None`, or narrow the filters. The external [REST client](/sdk/api/client) has more filters.
 
 ## Create an experiment from a workflow plugin
 
-A scheduler can create experiment metadata without owning design or analysis data. Declare `writes = {"experiments"}`:
+A scheduler can create experiments without owning design or analysis data. Declare `writes = {"experiments"}`:
 
 ```python
 from fastapi import HTTPException
@@ -90,18 +90,26 @@ class RunPlanner(Plugin):
         return {"experiment_id": experiment.id}
 ```
 
-The `lcms_batch` type must already exist and be enabled on the platform. The platform makes the calling user the creator (`created_by`), as for an experiment created in the UI; a plugin does not pass it. A call without a user creates an experiment without an owner. The new experiment has no experiment code. It gets the next code at its first status change from `planned`. The new row does not become the workflow plugin's design. The design plugin supplies its own payload later; a plugin with `writes = {"experiments"}` cannot write design or results, or manage collaborators.
+- The `lcms_batch` type must exist and be enabled on the platform.
+- The calling user becomes the creator; see [What the platform enforces](/sdk/concepts/platform-context#what-the-platform-enforces).
+- The new experiment has no number. For when it gets one, see [Experiment numbers](/guide/experiments#experiment-numbers).
+- The workflow plugin does not become the design owner. The design plugin saves its own payload later.
+- A plugin with only `writes = {"experiments"}` cannot write design data or results, or manage collaborators.
 
 ## Update and delete metadata
 
-Within an authorized route with a resolved experiment:
+In an authorized route with a resolved experiment:
 
 ```python
 updated = await self.context.experiments.update(experiment.id, status="ongoing", notes="Acquisition started")
 deleted = await self.context.experiments.delete(experiment.id)
 ```
 
-These are separate examples: use update for a status action and delete only for a user-requested deletion. Check the corresponding actor permission (`experiments.edit` or `experiments.delete`) at the route boundary. The namespace additionally enforces the plugin's effective write capability (`"experiments"` in `writes`), visibility, and type restrictions. `update()` returns `Experiment | None`; `delete()` returns `bool`.
+These are two separate examples. Use `update` for a status action, and `delete` only when the user asks for a deletion.
+
+- Check the actor permission (`experiments.edit` or `experiments.delete`) in the route.
+- The namespace also checks the plugin write capability (`"experiments"` in `writes`), visibility and type restrictions.
+- `update()` returns `Experiment | None`. `delete()` returns `bool`.
 
 Plugin writes follow the same rules as REST writes:
 
@@ -110,7 +118,7 @@ Plugin writes follow the same rules as REST writes:
 - Another plugin's `experiment.before_save` handler can veto a plugin's design-data save (`EventVetoException`, 422).
 - `None` means "not sent". `update(..., notes=None)` does not clear the field. Clear a field through the REST API or the UI.
 
-The update arguments are `name`, `status`, `type`, `parent`, `project`, `notes`, and `tags`. For advanced platform-only metadata operations, use the public platform API instead of importing SQL models.
+The update arguments are `name`, `status`, `type`, `parent`, `project`, `notes` and `tags`. For other metadata operations, use the public platform API. Do not import platform SQL models.
 
 ## Read another plugin's output
 
@@ -126,10 +134,14 @@ if artifact is not None:
     score = artifact.result["score"]
 ```
 
-`artifacts.get` returns the whole artifact, or `None` when absent. `artifacts.list` returns metadata, not every result payload; read the selected result on demand. To avoid reading a large table, save small summaries and large tables under separate keys. See [PlatformContext](/sdk/concepts/platform-context#cross-plugin-readers).
+`artifacts.get` returns the whole artifact, or `None`. `artifacts.list` returns metadata only; read the selected result when you need it. See [Cross-plugin readers](/sdk/concepts/platform-context#cross-plugin-readers) and [Split results](/sdk/recipes/writing-results#split-results-so-readers-can-skip-large-tables).
 
 ## Data shape and source
 
-`Experiment` is a slots dataclass, not a live ORM row. Its `design_owner_plugin_id` identifies the existing design owner, `experiment_code` is the number (or `None`), and `version` is the write counter for `design.save(..., expected_version=)`. Mutating a returned dataclass does not persist changes.
+`Experiment` is a slots dataclass, not a live ORM row. A change to it is not saved.
+
+- `design_owner_plugin_id` names the design owner.
+- `experiment_code` is the number, or `None`.
+- `version` is the write counter for `design.save(..., expected_version=)`.
 
 Verified against [v@MINT_VERSION@ repository protocol](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/repositories.py) and [request dependencies](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/runtime_dependencies.py).

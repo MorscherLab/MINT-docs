@@ -1,6 +1,6 @@
 # Writing results
 
-Publish small structured results as named JSON artifacts, large files as file-backed artifacts, and queryable run history in plugin-owned tables. All platform persistence below uses the plugin's `context.artifacts` and `context.design` namespaces (the `self.artifacts` and `self.design` shortcuts).
+Save small structured results as named JSON artifacts and large files as file-backed artifacts. Keep queryable run history in plugin-owned tables. The examples use `self.artifacts` and `self.design`, the shortcuts for `context.artifacts` and `context.design`.
 
 ## Save a named JSON result
 
@@ -29,9 +29,12 @@ class PeakQcPlugin(Plugin):
         return {"artifact_id": artifact.id, "result": result}
 ```
 
-`CurrentExperiment` requires a visible compatible platform experiment, so this route returns 503 in standalone mode. Without the platform, `artifacts.save` raises `UnavailableException`; it does not save locally.
+In standalone mode, this route returns 503 from [`CurrentExperiment`](/sdk/concepts/platform-context#request-scoped-access). Without the platform, `artifacts.save` raises `UnavailableException`; it does not save locally.
 
-JSON saves replace by default (`replace=True`): they are upserts by `(experiment_id, plugin_id, key)`. Saving `summary` again replaces that output; saving an archived key restores it with the new payload. The key is `"default"` when you omit it. Use `self.name` when a call needs your plugin ID, rather than taking an owner ID from a request body.
+- A JSON save replaces by default (`replace=True`). It is an upsert by `(experiment_id, plugin_id, key)`.
+- Saving `summary` again replaces that output. Saving an archived key restores it with the new payload.
+- Without a key, the key is `"default"`.
+- When a call needs your plugin ID, use `self.name`. Never take an owner ID from a request body.
 
 ## Save several outputs atomically
 
@@ -44,9 +47,10 @@ saved = await self.artifacts.save_all(experiment.id, [
 ])
 ```
 
-The batch commits every member or none, and raises the member failure. Results preserve input order. Duplicate keys in a batch raise `ValidationException`. An empty batch returns `[]`.
-
-This transaction covers this artifact batch, not preceding uploads, design saves, external computation, or writes to a different experiment. A loop across experiments consists of separate commits.
+- The batch commits every member or none, and raises the failure of the member.
+- The results keep the input order.
+- Duplicate keys in a batch raise `ValidationException`. An empty batch returns `[]`.
+- The transaction covers only this artifact batch. Earlier uploads, design saves, external computation and writes to other experiments are separate. A loop across experiments makes separate commits.
 
 ## Split results so readers can skip large tables
 
@@ -60,9 +64,9 @@ summary = await self.artifacts.get(experiment.id, "summary")            # reads 
 
 ## Preserve history and handle retries
 
-Use a persisted job/run UUID as the key prefix when each run must remain independently visible, for example `run-{run_id}-summary`. Store algorithm version, parameters, input references, and run ID in the payload so a result can be reproduced.
+To keep each run visible, use a stored job or run UUID as the key prefix, for example `run-{run_id}-summary`. Store the algorithm version, parameters, input references and run ID in the payload, so that a result can be reproduced.
 
-A stable key prevents duplicate rows during retries, but the default save replaces a previous payload. For strict create-only output, pass `replace=False`:
+A stable key prevents duplicate rows on a retry, but the default save replaces the previous payload. For create-only output, pass `replace=False`:
 
 ```python
 artifact = await self.artifacts.save(
@@ -71,7 +75,7 @@ artifact = await self.artifacts.save(
 )
 ```
 
-An existing active **or archived** key raises `ConflictException` (409). A read-then-save check alone is not safe against concurrent writers. On a retry conflict, reload and confirm the existing output matches the intended run before treating it as success.
+An existing key, active or archived, raises `ConflictException` (409). A read-then-save check does not protect against concurrent writers. On a retry conflict, reload the output and confirm that it belongs to the intended run before you treat it as a success.
 
 ## Create a file-backed artifact
 
@@ -91,9 +95,11 @@ artifact = await self.artifacts.save(
 )
 ```
 
-A file artifact takes a `pathlib.Path` and needs an explicit key. (Bytes, `str` paths, file objects and object references are not accepted: upload through `context.objects(experiment.id)` first, then save the file.) The file goes to the experiment/plugin object store; the artifact stores a compact typed reference. `filename` defaults to the name of the path.
+- A file artifact takes a `pathlib.Path` and an explicit key. Bytes, `str` paths, file objects and object references are refused. For those, upload through `context.objects(experiment.id)` first, then save the file.
+- The file goes to the object store of the experiment and plugin. The artifact stores a typed reference.
+- `filename` defaults to the name of the path.
 
-Download using the SDK helper so consumers do not reconstruct object URLs:
+Download with the SDK helper. Do not build object URLs yourself:
 
 ```python
 await self.artifacts.download(experiment.id, f"run-{run_id}-report", Path("/tmp/downloaded-report.csv"))
@@ -101,11 +107,11 @@ await self.artifacts.download(experiment.id, f"run-{run_id}-report", Path("/tmp/
 
 `download` returns the destination `Path` and raises `NotFoundException` when the artifact does not exist.
 
-For job-produced files, return `FileResult` and persist it in an async `@finalize(Spec)` method with the adopted `ManagedFile`; job result storage is temporary. See [Jobs and generated UI](/sdk/tutorials/first-analysis-plugin).
+Job result storage is temporary. For a file that a job makes, return `FileResult`, and save it in an async `@finalize(Spec)` method with the adopted `ManagedFile`. See [First analysis plugin](/sdk/tutorials/first-analysis-plugin).
 
 ## Replace an existing file safely
 
-Save again to the same key. Replacing a file artifact is a compare-and-swap on its object key:
+Save again to the same key. The replacement is a compare-and-swap on the object key:
 
 ```python
 artifact = await self.artifacts.save(
@@ -117,13 +123,23 @@ artifact = await self.artifacts.save(
 )
 ```
 
-Concurrent replacements conflict with 409 (`ConflictException`). Pass `expect` (the object key that the user's edit is based on) when the edit follows a previously read revision; a stale key is rejected. A replaced file artifact keeps its kind, filename and name, and `note=None` keeps its note. The platform removes the old object after the replacement commits.
+- Concurrent replacements conflict with 409 (`ConflictException`).
+- When the edit follows a revision that the user read, pass `expect` with that object key. A stale key is refused.
+- A replaced file artifact keeps its kind, filename and name. `note=None` keeps its note.
+- The platform removes the old object after the replacement commits.
 
-`artifacts.save` writes only the artifacts of the calling plugin. To read a file artifact of another plugin, name it in `reads_from` and pass `plugin=` to `artifacts.get` and `artifacts.download`. There is no cross-plugin file replacement in 1.4. A plugin in `writes_to` only opens that plugin's object store with `context.objects(experiment_id, plugin=...)`, create-only.
+`artifacts.save` writes only the artifacts of the calling plugin. No plugin can replace a file artifact of another plugin. To read one, name the producer in `reads_from` and pass `plugin=` to `artifacts.get` and `artifacts.download`. For `writes_to` (create-only object access), see [Cross-plugin readers](/sdk/concepts/platform-context#cross-plugin-readers).
 
 ## Use a file artifact as a job input
 
-A generated-UI `@job` with a `Path` input can take an existing file-backed analysis artifact. The input picker lists artifacts. On submit, the UI posts the experiment ID and artifact ID to `POST {prefix}/jobs/artifacts`. The SDK copies the file into the job's temporary staging. The handler still receives an ordinary `pathlib.Path`. In the frontend SDK, the selection is a `PluginJobArtifactPathInput` (`kind: 'artifact-path'`).
+A generated-UI `@job` with a `Path` input can take an existing file-backed artifact:
+
+1. The input picker lists the artifacts.
+2. On submit, the UI posts the experiment ID and artifact ID to `POST {prefix}/jobs/artifacts`.
+3. The SDK copies the file into the temporary staging of the job.
+4. The handler gets an ordinary `pathlib.Path`.
+
+In the frontend SDK, the selection is a `PluginJobArtifactPathInput` (`kind: 'artifact-path'`).
 
 `GET {prefix}/jobs/artifacts?experiment_id=N` lists the artifacts that staging accepts. An artifact is readable when all of these are true:
 
@@ -132,7 +148,7 @@ A generated-UI `@job` with a `Path` input can take an existing file-backed analy
 - The artifact belongs to this plugin, or to a plugin in this plugin's `reads_from`.
 - The artifact is a file artifact (`mint.analysis_file.v1`).
 
-The SDK checks the same rules again on each job submission. If access changes in between (permission, visibility, archive, deletion or readers), the submission gets 404 and the staged copy is released. When nothing is readable, the picker shows "No file artifacts this plugin can read".
+The SDK checks the same rules again on each job submission. If access changed in between (permission, visibility, archive, deletion or readers), the submission gets 404 and the SDK releases the staged copy. When nothing is readable, the picker shows "No file artifacts this plugin can read".
 
 ## Design data belongs to its design plugin
 
@@ -144,9 +160,11 @@ saved_design = await self.design.save(
 )
 ```
 
-The plugin must write design data (`"design"` in `Metadata.writes`). One experiment has one design payload and one owner. The first design save establishes ownership; another plugin cannot replace or delete it, including a plugin with all three writes. Conflicts return `DESIGN_DATA_OWNERSHIP_CONFLICT` (409).
+The plugin needs `"design"` in `Metadata.writes`. The first design save makes the plugin the design owner; for the ownership rules, see [`DesignData`](/sdk/concepts/data-model#designdata). Another plugin's save gets 409 `DESIGN_DATA_OWNERSHIP_CONFLICT`.
 
-Declare `Metadata.design = Design(version="2.0", schema=Model)` for platform validation and for the owner's schema version. The platform validates every `design.save` against the schema. These fields describe the payload contract; they do not migrate old JSON automatically. To refuse a write over a newer one, pass `expected_version=experiment.version`; a stale value raises `VersionConflictException` (412). See [Data model](/sdk/concepts/data-model).
+- Declare `Metadata.design = Design(version="2.0", schema=Model)`. The platform validates every `design.save` against the schema.
+- The schema and version describe the payload. They do not migrate old JSON.
+- To refuse a write over a newer one, pass `expected_version=experiment.version`. A stale value raises `VersionConflictException` (412).
 
 ## Read, archive, and share
 
@@ -156,14 +174,11 @@ archived = await self.artifacts.archive(experiment.id, "summary")
 restored = await self.artifacts.restore(experiment.id, "summary")
 ```
 
-Lists return metadata; call `artifacts.get` to read a selected result. `archive` and `restore` return `True` when the artifact exists. The experiment UI presents artifacts with open/download/archive actions. Other plugins must be named in their `reads_from` for this plugin ID; ordinary lists expose only the calling plugin's outputs. Archiving is a visibility/lifecycle action, not permanent deletion or a version history.
+- Lists return metadata. Call `artifacts.get` to read a selected result.
+- `archive` and `restore` return `True` when the artifact exists. Archiving hides the artifact. It is not a deletion or a version history.
+- A list shows only the outputs of the calling plugin. Another plugin reads them only when it names this plugin in its `reads_from`.
+- The experiment page shows the artifacts with open, download and archive actions; see [Artifacts](/guide/experiments#artifacts).
 
-The 1.3 compatibility result (`save_analysis`, `PluginAnalysisResult`) and the `/api/internal` analysis result routes are removed. Save a single result as the `default` artifact.
+## Source
 
-## Source and related guides
-
-Verified against [v@MINT_VERSION@ persistence helpers](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/plugin_persistence.py) and [repository contract](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/repositories.py).
-
-- [Data model and ownership](/sdk/concepts/data-model)
-- [Plugin-owned tables](/sdk/recipes/querying-plugin-data)
-- [REST artifact downloads](/sdk/api/client)
+Verified against [v@MINT_VERSION@ persistence helpers](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/plugin_persistence.py) and [repository contract](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/repositories.py). For REST downloads, see [REST client](/sdk/api/client).

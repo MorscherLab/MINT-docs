@@ -8,11 +8,7 @@ description: "Standard generated workspace for a plugin that exposes an SDK job 
 
 # GeneratedPluginView
 
-Standard generated workspace for a plugin that exposes an SDK job manifest.
-
-::: info Generated UI (internal)
-This component renders a piece of the SDK's backend-driven **generated UI** system (`@generated_ui` / job manifests). Plugin authors typically don't place it directly; it is composed automatically inside `GeneratedPluginView`. Documented here for completeness and for authors customizing generated-UI rendering.
-:::
+Use `GeneratedPluginView` as the page of a plugin that exposes an SDK job manifest. It loads the manifest from `base-url` and runs the jobs. For generated and standard plugins, see [Plugin types](/sdk/concepts/plugin-types).
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

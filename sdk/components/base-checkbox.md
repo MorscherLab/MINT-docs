@@ -8,7 +8,7 @@ description: "Single checkbox control for boolean plugin settings and form field
 
 # BaseCheckbox
 
-Single checkbox control for boolean plugin settings and form fields.
+Use `BaseCheckbox` for one on/off value, as a checkbox or as a switch (`type="switch"`).
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -26,7 +26,7 @@ import { BaseCheckbox } from "@morscherlab/mint-sdk"
 ## Descriptions and screen readers
 
 - `ariaDescribedby` takes the id (or ids) of elements that describe the control, for example its error. It works for `type="checkbox"` and `type="switch"`.
-- With `layout="row"`, a `label` and a `description`, the description shows in a tooltip on the label. The label never takes focus, so the checkbox itself names the tooltip in its `aria-describedby`. A screen reader reads the description when the checkbox takes focus.
+- With `layout="row"`, a `label` and a `description`, the description shows in a tooltip on the label. The label never takes focus, so the checkbox names the tooltip in its own `aria-describedby`. A screen reader reads the description when the checkbox takes focus.
 - `ariaLabel` names the control when there is no visible label, for example in a table row.
 
 ```vue

@@ -8,7 +8,7 @@ description: "Themed text and numeric input with error, placeholder, and v-model
 
 # BaseInput
 
-Themed text and numeric input with error, placeholder, and v-model support.
+Use `BaseInput` for a text or number field. Wrap it in a [FormField](/sdk/components/form-field) to get a label, a hint and an error.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -33,7 +33,7 @@ import { BaseInput } from "@morscherlab/mint-sdk"
 </FormField>
 ```
 
-The `#prefix` slot takes a bare leading glyph (a search icon, a currency sign); the `#suffix` slot renders a unit segment inside the field border:
+The `#prefix` slot takes a leading glyph, such as a search icon or a currency sign. The `#suffix` slot shows a unit segment inside the field border:
 
 ```vue
 <BaseInput v-model="volume" type="number">
@@ -41,7 +41,7 @@ The `#prefix` slot takes a bare leading glyph (a search icon, a currency sign); 
 </BaseInput>
 ```
 
-Without either slot, the component renders the bare `<input>` as its root.
+Without a slot, the root element is the `<input>`.
 
 <!-- sdk-props:start -->
 ## Props

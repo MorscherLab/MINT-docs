@@ -1,8 +1,8 @@
 # Tutorial 4 — Access Levels
 
-Add access levels to **panel-designer** from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables). Every user with the `plugins.use` permission manages their own panel drafts. A role with `plugins.configure` sees a summary of all drafts. Only a platform administrator deletes a draft of another user.
+Add access levels to `panel-designer` from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables). Every user with the `plugins.use` permission manages their own panel drafts. A role with `plugins.configure` also sees a summary of all drafts. Only a platform administrator can delete a draft of another user.
 
-Plugin roles no longer exist. A plugin tags each endpoint, job, MCP tool and page with an `access` level, and the platform maps the level to its own permissions. A plugin does not store or assign roles.
+A plugin tags each endpoint, job, MCP tool and page with an `access` level: `use` (the default), `configure` or `admin`. The platform maps the level to its own permissions, and the plugin stores no roles. See [Access levels](/sdk/recipes/route-permissions#access-levels) for who passes each level.
 
 ## 1. Understand the permission boundaries
 
@@ -13,15 +13,7 @@ Plugin roles no longer exist. A plugin tags each endpoint, job, MCP tool and pag
 | Access level | May this user call this plugin endpoint, job, tool or page? | `access="configure"` |
 | Row ownership and experiment scope | Which records may this user access? | `Panel.owner_user_id == actor.user_id` |
 
-The three levels:
-
-| Level | Who passes |
-|---|---|
-| `"use"` (default) | A role with `plugins.use` that can see the plugin. The platform checks this before the request reaches the plugin |
-| `"configure"` | A role that also has `plugins.configure` |
-| `"admin"` | A platform administrator (the role with the slug `admin`) |
-
-A platform administrator meets every level. The Member system role has no `plugins.configure`; an administrator gives it to a custom role for each person who must configure plugins. No level removes the owner predicate of Tutorial 3.
+No access level replaces the owner predicate of Tutorial 3.
 
 ## 2. Tag the endpoints
 
@@ -69,7 +61,7 @@ async def delete_any_panel(self, panel_id: str) -> dict[str, bool]:
     return {"deleted": True}
 ```
 
-`access="configure"` and `access="admin"` are enforced for every caller: the SDK refuses an actor below the level with 403 before the handler runs. The handlers need no role check of their own. The existing draft endpoints keep the default `access="use"`.
+The SDK refuses a caller below the level with 403 before the handler runs, so the handlers need no role check of their own. The draft endpoints keep the default `access="use"`.
 
 Page entries take the same argument. A page with an `access` above `"use"` is hidden from viewers below that level:
 
@@ -84,17 +76,22 @@ class PanelDesignerMeta(Metadata):
     ]
 ```
 
-A page with an `access` needs `auth = True` on the `Metadata` (the default). `Metadata.settings_access` sets the level that changes the plugin settings (`"admin"` by default).
+A page with an `access` needs `auth = True` on the `Metadata`, which is the default. `Metadata.settings_access` sets the level that can change the plugin settings (`"admin"` by default).
 
-A job takes the level in its `Job` spec: `class Reindex(Job): access = "admin"`. An MCP tool takes it in its `Tool` spec. Inside a handler, `actor.can("configure")` tells whether the caller meets a level, for example to hide a field.
+A job takes the level in its `Job` spec: `class Reindex(Job): access = "admin"`. An MCP tool takes it in its `Tool` spec. In a handler, `actor.can("configure")` tells whether the caller meets a level, for example to hide a field.
 
 ## 3. Use the levels in the UI
 
-Run `mint sdk generate`; the generated client exposes `panelAccess()`, `panelStats()` and `deleteAnyPanel(panelId)`. Load the access flags when the workspace opens. Show the summary only when `can_configure` is true, and the delete action only when `can_admin` is true. In the frontend, `usePlatform().can('configure')` gives the same answer from the platform context. Frontend controls communicate permissions; the backend checks enforce them.
+1. Run `mint sdk generate`. The client now has `panelAccess()`, `panelStats()` and `deleteAnyPanel(panelId)`.
+2. Load the access flags when the workspace opens.
+3. Show the summary only when `can_configure` is true.
+4. Show the delete action only when `can_admin` is true.
+
+`usePlatform().can('configure')` gives the same answer from the platform context. The frontend only shows or hides controls; the backend checks enforce the levels.
 
 ## 4. Test every level
 
-Standalone mode passes every level, so a test needs a platform context. `RecordingContext(actor=...)` gives the plugin an actor with the role and permissions that you choose. It has no database, so test the guard on routes that pass or fail at the level check. Add `tests/test_panel_access.py`:
+Standalone mode passes every level, so the tests of Tutorial 3 stay valid. To test a level, give the plugin a platform context: `RecordingContext(actor=...)` gives an actor with the role and permissions that you choose. It has no database, so test routes that pass or fail at the level check. Add `tests/test_panel_access.py`:
 
 ```python
 from mint_sdk import Actor
@@ -136,17 +133,10 @@ mint sdk generate
 mint doctor --strict
 ```
 
-Standalone mode (no platform context) passes every level, so the tests of Tutorial 3 stay valid. Test the levels with a `RecordingContext`, as above, and verify the full path on a real platform in step 5.
 
 ## 5. Verify and deploy
 
-```bash
-mint verify
-mint platform auth login --url https://mint-test.example.org
-mint deploy --url https://mint-test.example.org
-```
-
-`mint verify` boots the MINT platform image in Docker, installs the bundle through the normal upload path, restarts, and waits until the plugin loads. `mint deploy` uploads the same bundle to a test platform you administer, restarts it (requires `platform.configure`), and confirms the restart by the new server `boot_id`; `--timeout` (default 180 s) covers restart and load together.
+Test the bundle in a disposable platform with `mint verify`, then install it on a test platform with `mint deploy`. See [Deploying and verifying a plugin](/sdk/operations/deploying).
 
 On the test platform, check the real roles in **Admin → Roles**:
 
@@ -157,6 +147,4 @@ On the test platform, check the real roles in **Admin → Roles**:
 | Platform administrator | Also delete any draft |
 | Role without `plugins.use`, or a role that cannot see the plugin | 403 `plugin.permission_denied` or `plugin.not_visible` before the plugin runs |
 
-Publishing additionally requires `experiments.edit`, a visible compatible experiment, and the plugin's design-write capability.
-
-See [route permissions](/sdk/recipes/route-permissions), [platform permissions](/reference/permissions), and [CI patterns](/sdk/operations/ci-patterns).
+Publishing also needs `experiments.edit`, a visible compatible experiment and the design-write capability of the plugin. For the platform permissions, see [Permissions](/reference/permissions).

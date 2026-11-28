@@ -8,7 +8,7 @@ description: "Standard modal dialog with controlled visibility and footer slots.
 
 # BaseModal
 
-Standard modal dialog with controlled visibility and footer slots.
+Use `BaseModal` for a dialog. Bind `v-model:open` to show and hide it.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -38,9 +38,10 @@ import { BaseModal } from "@morscherlab/mint-sdk"
 ## Behavior
 
 - With `layout="rail"`, a `ModalTab.section` groups adjacent rail items under a section heading. The scoped `#pane-header` slot (`{ tab }`) replaces the pane's default title and subtitle.
-- A [StepWizard](/sdk/components/step-wizard#in-a-modal) in the body puts its buttons in the modal footer. Do not add a `#footer` slot then.
+- A [StepWizard](/sdk/components/step-wizard#in-a-modal) in the body puts its buttons in the modal footer. Then do not add a `#footer` slot.
 - The overlay uses the `--mint-scrim` token.
-- With modals stacked, Escape closes only the topmost one. A modal mounted already open takes focus on mount, preferring an `[autofocus]` descendant.
+- With stacked modals, Escape closes only the top one.
+- A modal that mounts open takes the focus, on an `[autofocus]` descendant when there is one.
 
 <!-- sdk-props:start -->
 ## Props

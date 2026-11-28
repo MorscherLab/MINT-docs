@@ -1,6 +1,6 @@
 # REST client reference
 
-`MINTClient` is the synchronous Python client for the MINT platform REST API. Use it from external scripts, CI jobs, or notebooks; from inside a plugin process, prefer `PlatformContext` accessors which avoid the network round-trip.
+`MINTClient` is the synchronous Python client for the MINT REST API. Use it in external scripts, CI jobs and notebooks. In plugin code, use [`PlatformContext`](/sdk/concepts/platform-context) instead: it avoids the REST round trip and keeps the plugin access checks.
 
 Source: [`mint_sdk/client/client.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/client/client.py).
 
@@ -14,7 +14,7 @@ with MINTClient(base_url="https://mint.example.org", token="mint_pat_...") as cl
     ...
 
 # 2. Env-aware (no arguments) — reads MINT_URL and MINT_TOKEN, falling back
-#    to credentials stored by `mint platform auth login` at ~/.config/mint/credentials.json
+#    to the credentials that `mint platform auth login` stored
 with MINTClient() as client:
     ...
 
@@ -24,9 +24,9 @@ with MINTClient(base_url="https://mint.example.org",
     me = client.whoami()
 ```
 
-To get a personal access token, run `mint platform auth login` (the client then reads the stored token), or create one in **Profile → Access tokens**. A platform that enforces a second factor (`auth.requireSecondFactor`) refuses password sign-in, so use a token there.
+To get a personal access token, run `mint platform auth login` or see [Create a token](/guide/ai-and-api#create-a-token).
 
-`MINTClient` is **synchronous** — uses plain `with`, not `async with`. The constructor signature:
+`MINTClient` is synchronous: use `with`, not `async with`. Constructor:
 
 ```python
 def __init__(
@@ -39,33 +39,31 @@ def __init__(
 ) -> None: ...
 ```
 
-When `base_url` is `None`, the resolution order is:
+When `base_url` is `None`, the client uses the first value it finds:
 
-1. `MINT_URL` env var
-2. Stored credentials at `~/.config/mint/credentials.json` (written by `mint platform auth login`; honors `XDG_CONFIG_HOME`)
-3. Otherwise raise `APIError`
+1. The `MINT_URL` environment variable.
+2. The [stored CLI credentials](/sdk/api/cli-reference#mint-platform-auth).
+3. None: the client raises `APIError`.
 
-When `token` is `None`, the same fallback chain runs for the JWT (env: `MINT_TOKEN`).
+When `token` is `None`, the same order applies, with `MINT_TOKEN` first.
 
-When `timeout=None`, the client uses the shared platform transport policy: `MINT_PLATFORM_TIMEOUT` / `MINT_PLATFORM_CONNECT_TIMEOUT`, defaulting to 30 s / 10 s. An explicit timeout overrides that policy for this client.
+When `timeout` is `None`, the client uses `MINT_PLATFORM_TIMEOUT` and `MINT_PLATFORM_CONNECT_TIMEOUT` (defaults 30 s and 10 s). An explicit `timeout` overrides them for this client.
 
 ## Convenience auth methods
 
 | Method | Returns | Purpose |
 |--------|---------|---------|
-| `client.login(username, password)` | `dict` | Authenticate with a password; store the JWT in the client. Raises `APIError` (`code="auth.second_factor_required"`) on a platform that asks for a passkey |
+| `client.login(username, password)` | `dict` | Sign in with a password and keep the JWT in the client. On a platform that enforces a second factor (`auth.requireSecondFactor`), it raises `APIError` with `code="auth.second_factor_required"` and keeps no token: use a personal access token there |
 | `client.logout()` | `None` | Clear stored credentials |
 | `client.whoami()` | `dict` | Return current user info |
 | `client.health()` | `dict` | Platform health payload from `/health`; no authentication required |
 | `client.close()` | `None` | Close the HTTP connection; the context manager calls it |
 
-`login`, `logout`, and `whoami` are thin wrappers over `client.auth`.
-
-On a platform that enforces a second factor (`auth.requireSecondFactor`), `login` raises `auth.second_factor_required` and stores no token; use a personal access token (`MINT_TOKEN`) there.
+`login`, `logout` and `whoami` call `client.auth`.
 
 ## Resource clients
 
-`MINTClient` exposes typed sub-clients per resource. Each is a `@cached_property` that lazy-imports its module on first access:
+Each resource has a typed sub-client. The client creates it on first access:
 
 | Property | Type | Purpose |
 |----------|------|---------|
@@ -77,6 +75,7 @@ On a platform that enforces a second factor (`auth.requireSecondFactor`), `login
 | `client.updates` | `UpdatesAPI` | Platform/plugin update checks, GitHub release installs |
 | `client.objects` | `ObjectsAPI` | Typed object upload, download, list, existence and deletion |
 | `client.instruments` | `InstrumentsAPI` | Read instruments with their latest live status |
+| `client.libraries` | `LibrariesAPI` | Administer the [library store](/admin/libraries) |
 
 Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/client/resources).
 
@@ -89,21 +88,20 @@ Source for resource methods: [`mint_sdk/client/resources/`](https://github.com/M
 | `client.projects` | `list(*, status=None, search=None, my_projects=False, skip=0, limit=100)`, `get(id)`, `create(...)`, `update(id, **fields)`, `delete(id)`, `experiments(id, *, skip=0, limit=100)`, `members(id)` |
 | `client.plugins` | `list()`, `install(source, *, force=False)`, `upload(path, *, force=False)`, `upgrade(package_name, *, force=False)`, `uninstall(package_name)`, `register_external(name, target, ...)`, `register_docker(name, image, ...)`, `get_config(plugin_name)`, `set_config(plugin_name, config, *, expected_revision)`, `update_config(plugin_name, config)`, `get_extra_index_urls()`, `set_extra_index_urls(urls)`, `snapshots()`, `snapshot(snapshot_id)` |
 | `client.admin` | `status()`, `system()`, `config()`, `restart()`, `logging_config()`, `logs(*, limit=100, offset=0, level=None, search=None, plugin=None)`; users: `list_users()`, `get_user(id)`, `create_user(*, username, password, ...)`, `update_user(id, **fields)`, `delete_user(id)`, `activate_user(id)`, `deactivate_user(id)`; roles: `list_roles()`, `list_permissions()`, `create_role(*, name, slug, permissions, ...)`, `update_role(id, **fields)`, `delete_role(id)`; audit: `audit_events(*, action=None, skip=0, limit=100, since=None, until=None)` (`action` matches a prefix; needs `platform.view_logs`) |
+| `client.libraries` | `list()`, `import_(source, *, name, version, publisher="platform", media_type=None, license="", meta=None, promote=False)`, `operation(operation_id)`, `promote(publisher, name, version)`, `retire(...)`, `restore(...)`, `delete(...)` |
 | `client.updates` | `check()`, `config()`, `sources()`, `update_plugin(package_name, *, force=False)`, `update_platform()`, `list_releases(github_url, *, asset_pattern="*.mint")`, `install_github(github_url, *, tag=None, asset_pattern="*.mint", force=False)` |
 
-`set_config()` sends the revision as `If-Match`; a stale revision fails with `ConflictError`. Read it from `get_config()` first.
+`set_config()` sends the revision as `If-Match`. Read the revision with `get_config()` first. A stale revision raises `ConflictError`.
 
 ### Instruments
 
-`client.instruments.list()` returns instruments as `list[dict]`. Each dict has a `live_status` key, which is `None` until a plugin reports a status. `client.instruments.get(instrument_id)` returns one instrument by ID. Both need the `instruments.view` permission. The CLI equivalent is [`mint platform instruments`](/sdk/api/cli-reference#mint-platform-instruments).
+`client.instruments.list()` returns a `list[dict]`. The `live_status` key of each dict is `None` until a plugin reports a status. `client.instruments.get(instrument_id)` returns one instrument. Both need the `instruments.view` permission. The CLI command is [`mint platform instruments`](/sdk/api/cli-reference#mint-platform-instruments).
 
-::: warning Not exposed
-Earlier docs claimed `client.users` and `client.artifacts` — those don't exist. First-class artifact readers live at `client.experiments.artifacts`, and raw object operations at `client.objects`. There is no `MINTClient.from_env()` factory; use the env-aware constructor (option 2 above).
-:::
+The client has no `client.users`, `client.artifacts` or `MINTClient.from_env()`. Use `client.admin` for users, `client.experiments.artifacts` for artifacts, `client.objects` for raw objects, and `MINTClient()` without arguments for the environment.
 
 ## Experiments
 
-`client.experiments.list()` unwraps the platform response and returns a plain `list[dict]`:
+`client.experiments.list()` returns a plain `list[dict]`:
 
 ```python
 with MINTClient() as client:
@@ -122,23 +120,21 @@ with MINTClient() as client:
     )
 ```
 
-CRUD methods mirror the REST API:
-
 | Method | Purpose |
 |--------|---------|
 | `list(...)` | Filter visible experiments by status, type, project, owner, date window, or search text |
 | `get(experiment_id)` | Fetch one experiment detail record |
-| `create(name=..., experiment_type="custom", project_id=None, notes=None, tags=None)` | Create an experiment; MINT assigns the type-scoped code |
+| `create(name=..., experiment_type="custom", project_id=None, notes=None, tags=None)` | Create an experiment. For the experiment code, see [Experiment numbers](/guide/experiments#experiment-numbers) |
 | `update(experiment_id, **fields)` | Patch metadata such as name, status, type, project, notes, tags, or dates |
-| `delete(experiment_id)` | Delete the experiment row |
+| `delete(experiment_id)` | Delete the experiment at once. See [Deleting experiments](/guide/experiments#deleting-experiments) |
 | `list_types()` | List enabled experiment types |
 | `next_seq(experiment_type)` | Preview the next code sequence for a type |
 
-Deletion is immediate in the current backend. Take a normal database backup before running bulk delete scripts.
+Back up the database before you run a bulk delete script.
 
 ## Experiment data
 
-Design data is one JSON payload per experiment. Compatibility analysis results are still available as per-plugin JSON payloads; user-facing result review in current MINT is centered on first-class analysis artifacts.
+Design data is one JSON payload per experiment. `client.experiments.analysis` reads and writes one JSON result per plugin (`/experiments/{id}/results`). The experiment page shows [analysis artifacts](#first-class-artifact-downloads), not these results.
 
 ```python
 with MINTClient() as client:
@@ -161,8 +157,6 @@ with MINTClient() as client:
 |-----------|---------|
 | `client.experiments.design_data` | `get`, `save`, `delete`, `tree`, `summary`, `export` |
 | `client.experiments.analysis` | `list`, `get`, `save`, `delete` |
-
-The flat methods of earlier releases (`get_data`, `save_data`, `delete_data`, `get_data_tree`, `get_data_summary`, `export_data`, `get_results`, `get_result`, `save_result`, `delete_result`) are removed; use the namespaces above.
 
 ## First-class artifact downloads
 
@@ -187,13 +181,13 @@ with MINTClient() as client:
 | `get_file_bytes(..., max_bytes=..., ...)` | Bounded buffered file read |
 | `download_file(experiment_id, path, plugin_id=..., artifact_key=..., ...)` | Streaming download with validated size/checksum and atomic destination replacement |
 
-There is no artifact write method in this client namespace; publish artifacts inside the producing plugin with the [persistence helpers](/sdk/recipes/writing-results).
+The client cannot write artifacts. The producing plugin writes them; see [Writing results](/sdk/recipes/writing-results).
 
-Raw objects use `client.objects.list/put_bytes/put_file/get_bytes/get_ref/download_file/exists/delete`, with an experiment ID and explicit `plugin_id`. These are public REST operations using the authenticated user's platform permissions; they do not impersonate an installed plugin. Uploading an object alone does not create a visible analysis artifact.
+`client.objects` has `list`, `put_bytes`, `put_file`, `get_bytes`, `get_ref`, `download_file`, `exists` and `delete`. Each call takes an experiment ID and an explicit `plugin_id`. The calls use the permissions of the signed-in user, not of the plugin. An uploaded object does not create an analysis artifact.
 
 ## Errors
 
-The client raises `APIError` (and `mint_sdk.exceptions` subclasses where applicable) on non-2xx responses, parsed from the platform's structured error body:
+The client raises `APIError`, or a subclass, for each non-2xx response. It reads the [error envelope](/reference/error-codes#the-error-envelope):
 
 ```python
 from mint_sdk.client import APIError, MINTClient
@@ -205,17 +199,23 @@ with MINTClient() as client:
         print(f"failed: {e}")
 ```
 
-Connection/timeout failures are wrapped as `NetworkError`. A 401 or 403 raises `AuthError`, a 404 `NotFoundError` and a 409 `ConflictError`; any other error status raises `APIError`. `AuthError`, `NotFoundError` and `ConflictError` also derive from the matching SDK exception, so one `except` clause covers both. Check `code` (for example `auth.second_factor_required`) rather than the class to tell cases apart. Errors expose `status_code` (also `status`), `code`, `message`, `request_id`, and `details`. Import them from `mint_sdk.client`.
+| Failure | Class |
+|---------|-------|
+| Connection error or timeout | `NetworkError` |
+| 401, 403 | `AuthError` |
+| 404 | `NotFoundError` |
+| 409 | `ConflictError` |
+| Other error status | `APIError` |
+
+`AuthError`, `NotFoundError` and `ConflictError` also derive from the matching SDK exception, so one `except` clause catches both. To tell cases apart, compare `code` (for example `auth.second_factor_required`), not the class. Each error has `status_code` (also `status`), `code`, `message`, `request_id` and `details`. Import the classes from `mint_sdk.client`.
 
 ## Token refresh
 
-`MINTClient` wires a refresh callback at construction. When a request returns 401 with an expired session token, the client attempts `auth.refresh()` once before re-raising. A credential with the `mint_pat_` prefix is a personal access token. The client never refreshes it. Long-running scripts get refresh for free; explicit triggers aren't needed.
-
-For automation, use a personal access token (`MINT_TOKEN`) and handle authentication failures explicitly. A refresh attempt does not guarantee that an expired or revoked session can continue.
+When a request with an expired session token returns 401, the client calls `auth.refresh()` once, then raises. The client never refreshes a personal access token (prefix `mint_pat_`). A refresh can fail for a revoked session. For automation, use a personal access token (`MINT_TOKEN`) and handle authentication errors in your script.
 
 ## Pagination
 
-The `list` methods return plain Python lists after unwrapping the platform response. For page-by-page pulls, pass `skip` and `limit` yourself:
+The `list` methods return plain lists. To read page by page, pass `skip` and `limit`:
 
 ```python
 with MINTClient() as client:
@@ -229,15 +229,8 @@ with MINTClient() as client:
         skip += len(batch)
 ```
 
-For very large result sets, prefer querying only what you need — accumulating every page in a list can exhaust client memory.
+For a large result set, filter the query: a list of every page can use all client memory.
 
-## Notes
+## Threads
 
-- `MINTClient` instances are not thread-safe. Use one per thread.
-- Inside a plugin, prefer `PlatformContext` accessors over `MINTClient` — they avoid the public REST hop in shared mode and preserve plugin capability, owner, reader, type, and actor visibility checks. An isolated context implements the same protocol over internal HTTP.
-- The credentials file (`~/.config/mint/credentials.json`, or `$XDG_CONFIG_HOME/mint/credentials.json`) is the user's responsibility to secure (`chmod 600`); `mint platform auth login` sets that automatically.
-
-## Related
-
-- [Concepts → PlatformContext](/sdk/concepts/platform-context) — the in-process alternative
-- [CLI reference → mint platform auth](/sdk/api/cli-reference#mint-platform-auth) — token management
+A `MINTClient` instance is not thread-safe. Use one instance per thread.

@@ -1,14 +1,14 @@
 ---
 aside: false
 title: TagsInput
-description: "TagsInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Tag field with suggestions, categories and a maximum count."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # TagsInput
 
-TagsInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `TagsInput` to enter a list of tags, with suggestions as the user types.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

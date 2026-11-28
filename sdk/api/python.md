@@ -1,6 +1,6 @@
 # Python SDK reference
 
-This reference targets the released **MINT SDK @MINT_VERSION@**. The SDK requires Python 3.14 or later. The `cli` and `dev` extras include `httpx2`. Uvicorn comes from the `server` extra (`mint-sdk[server]`); a plugin does not declare `uvicorn` itself.
+This page lists the public Python names of `mint-sdk` @MINT_VERSION@. The SDK requires Python 3.14 or later. The `cli` and `dev` extras include `httpx2`. Uvicorn comes from the `server` extra (`mint-sdk[server]`); a plugin does not declare `uvicorn` itself.
 
 The `mint_sdk` package root exports only the names that a plugin author uses most. Import every other name from its module, for example `from mint_sdk.jobs import JobState`. A name that is not in the root raises `ImportError`. `mint docs python` shows the signatures of the installed SDK.
 
@@ -57,7 +57,7 @@ Source: [`mint_sdk/plugin_decorators.py`](https://github.com/MorscherLab/MINT/bl
 | `ui` | `"generated" \| None` | `None` | Serve the SDK-generated workspace |
 | `analysis_offer` | `bool` | `True` | The Analysis artifacts card of the experiment page offers to start the plugin. Set `False` for a plugin that only shows [panels](#panels) (SDK 1.6) |
 | `reads_from` | `frozenset[str]` | `frozenset()` | Plugin IDs whose artifacts, exports, bus events, tools and jobs this plugin may use. `{"*"}` needs administrator consent. See [Plugin communication](/sdk/concepts/plugin-communication#reads-from-is-the-gate) |
-| `writes_to` | `frozenset[str]` | `frozenset()` | Plugin IDs whose object store this plugin may write to, create-only, with `context.objects(experiment_id, plugin=...)`. It does not replace their artifacts |
+| `writes_to` | `frozenset[str]` | `frozenset()` | Plugin IDs whose object store this plugin may write to with `context.objects(experiment_id, plugin=...)`. Create-only; see [Cross-plugin readers](/sdk/concepts/platform-context#cross-plugin-readers) |
 | `experiment_types` | `frozenset[str] \| None` | `None` | Experiment types that the plugin supports. Platform policy can narrow the set |
 | `depends_on` | `tuple[str, ...]` | `()` | Plugin names that must load first |
 | `emits` | `Mapping[str, type[BaseModel]]` | `{}` | Events of this plugin that go to the event bus: `"<plugin>.<event>"` to payload model. See [Event bus](/sdk/concepts/plugin-communication#event-bus) |
@@ -113,15 +113,9 @@ class QcPlugin(Plugin):
 
 ### Access levels
 
-Plugin roles do not exist. An endpoint, job, MCP tool or page declares an `access` level:
+An endpoint, job, MCP tool or page declares an `access` level: `"use"`, `"configure"` or `"admin"`. For who passes each level, see [Access levels](/sdk/recipes/route-permissions#access-levels).
 
-| Level | Who passes |
-|-------|-----------|
-| `"use"` | A role with `plugins.use` that can see the plugin. The platform checks this before the request reaches the plugin |
-| `"configure"` | A role that also has `plugins.configure` |
-| `"admin"` | A platform administrator (the role with the slug `admin`) |
-
-`Actor.can(access)` returns `True` when the actor meets a level. A platform administrator meets every level. `Actor.is_platform_admin` is `True` only for the exact role slug `admin`. An endpoint with `auth=False` accepts only `access="use"`.
+`Actor.can(access)` returns `True` when the actor meets a level. A platform administrator meets every level. `Actor.is_platform_admin` is `True` only for the role slug `admin`.
 
 `Actor` is a frozen dataclass: `user_id`, `username`, `role`, `role_id`, `permissions`. It has `has_permission(permission)`, `can(access)` and `is_platform_admin`. `Actor.standalone()` returns the single-user actor of standalone mode.
 
@@ -152,14 +146,20 @@ created = await self.context.experiments.create("Run 1", "drp", project="Screen 
 await self.context.experiments.update(created.id, status="ongoing")
 ```
 
-`experiments.list` takes `status`, `type`, `project`, `created_by`, `parent`, `search` and `limit` (default 100; `None` returns all). `create(name, type, *, project, notes, tags, parent)` makes the calling user the creator. The new experiment has no experiment code; it gets the next code at its first status change from `planned`. `update` follows the platform status rules. An unknown status or a transition that is not allowed raises `ValidationException`. A type change on an experiment with a number raises `ConflictException`. A `None` argument means "not sent": it never clears a field. Another plugin's `experiment.before_save` handler can veto a design-data save with `EventVetoException`.
+`experiments.list` takes `status`, `type`, `project`, `created_by`, `parent`, `search` and `limit` (default 100; `None` returns all). `create(name, type, *, project, notes, tags, parent)` makes the calling user the creator; see [What the platform enforces](/sdk/concepts/platform-context#what-the-platform-enforces). For the experiment code, see [Experiment numbers](/guide/experiments#experiment-numbers). `update` follows the platform status rules:
+
+- An unknown status or a transition that is not allowed raises `ValidationException`.
+- A type change on an experiment with a number raises `ConflictException`.
+- A `None` argument means "not sent": it never clears a field.
+
+The `experiment.before_save` handler of another plugin can veto a design-data save with `EventVetoException`.
 
 ```python
 saved = await self.context.design.save(experiment_id, {"samples": []})
 saved = await self.context.design.save(experiment_id, data, expected_version=experiment.version)
 ```
 
-`design.save(experiment_id, data, *, version=None, expected_version=None)` stores one design record for the calling plugin. `version` defaults to `Design.version`. With `expected_version`, the save succeeds only while the experiment is still at that `Experiment.version`; otherwise it raises `VersionConflictException` (HTTP 412). Without it the last write wins.
+`design.save(experiment_id, data, *, version=None, expected_version=None)` stores one design record for the calling plugin. `version` defaults to `Design.version`. With a stale `expected_version`, it raises `VersionConflictException` (412); without it, the last write wins.
 
 ```python
 await self.artifacts.save(experiment_id, {"peaks": rows}, "peaks")                  # replace=True
@@ -226,7 +226,7 @@ class QcPlugin(Plugin[Settings]):
 
 `@on("settings", fields=...)` runs once for startup, a platform update, a reset and a programmatic save. `change.source` tells which. Startup settings and their handler run before `initialize()`. `update_settings(changes, *, replace=False, revision=None)` changes settings from plugin code. A merge (`replace=False`) loads the latest settings and retries a lost compare-and-swap. `replace=True` stores the complete value; in integrated mode it needs `revision=self.settings_revision`, and a newer stored revision raises `SettingsConflictError`. An unknown field raises `ValidationException`. `mint_sdk.settings` has `settings_form_fields` and `settings_schema`.
 
-For a plugin in its own process, `PUT` and `PATCH /api/plugins/{name}/config` send the typed settings to the plugin process. The plugin validates, stores and applies them without a restart. A `PUT` needs `If-Match`.
+`PUT` and `PATCH /api/plugins/{name}/config` change the settings without a restart, also for a plugin in its own process; see [Settings revisions and runtime changes](/sdk/concepts/lifecycle#settings-revisions-and-runtime-changes). A `PUT` needs `If-Match`.
 
 Resolution order, last wins: model defaults, saved store, explicit `.env`, process environment, startup override. Environment keys are `MINT_PLUGIN_<NORMALIZED_PLUGIN_NAME>__<FIELD>`. Higher-priority values are locked and not saved.
 
@@ -251,19 +251,27 @@ class QcPlugin(Plugin):
 
 | Event | Payload class | Notes |
 |-------|--------------|-------|
-| `experiment.before_save` | `BeforeExperimentSave` | Runs in sequence and fails closed. Return `None` to allow; raise `EventVetoException` to refuse (422). Any other exception or return value also stops the save. Also runs for each live-design patch, with `data` = `{"plugin_id", "data", "ops"}` |
-| `experiment.after_save` | `AfterExperimentSave` | Observer. `data` is the design stored at delivery, with its `version`. For live-design patches it comes 30 s after the last patch of a user, and at least every 5 min |
+| `experiment.before_save` | `BeforeExperimentSave` | Blocking; fails closed. Return `None` to allow, raise `EventVetoException` to refuse (422). See [Typed events](/sdk/concepts/lifecycle#typed-events-and-their-limits). For a live-design patch, `data` is `{"plugin_id", "data", "ops"}` |
+| `experiment.after_save` | `AfterExperimentSave` | Observer. `data` is the design stored at delivery, with its `version`. For the live-design cadence, see [Experiment events](/sdk/concepts/plugin-communication#experiment-events) |
 | `experiment.status_changed` | `ExperimentStatusChanged` | Observer |
 | `experiment.created` | `ExperimentCreated` | After the write commits |
 | `experiment.updated` | `ExperimentUpdated` | `changed_fields` lists the changed fields |
 | `experiment.deleted` | `ExperimentDeleted` | `experiment_code` and `experiment_type` of the deleted row |
 | `<plugin>.<event>` | any JSON value, or `PluginEvent[Model]` | Event of this plugin from `context.publish`, or a bus event of a plugin in `reads_from` |
 
-A plugin gets only the events that it declares with `@on`. The writing plugin does not receive the events of its own write. The observer events and the bus events of other plugins come through the durable event bus: after the commit, at least once, in no fixed order. A handler failure makes the platform deliver the event again. See [Plugin communication](/sdk/concepts/plugin-communication#delivery-rules). The platform sends events to a plugin process, Docker-managed runtime and external HTTP runtime at `/__mint/events`.
+A plugin gets only the events that it declares with `@on`. The writing plugin does not get the events of its own write. Observer events and bus events come through the durable event bus; see [Delivery rules](/sdk/concepts/plugin-communication#delivery-rules). The platform sends events to a plugin process, a Docker-managed runtime and an external HTTP runtime at `/__mint/events`.
 
 `@health` returns `Health(status="healthy" \| "degraded" \| "unhealthy", message=None, details={})`. The SDK serves the result at `GET /__mint/health`: 200 for healthy or degraded, 503 for unhealthy. The platform polls this route. A handler that raises or runs longer than `timeout` (at most 4 seconds) reports unhealthy. A plugin without `@health` reports healthy.
 
-`context.publish(name, payload, *, experiment_id=None)` delivers `"<plugin>.<event>"` to the `@on(name)` handlers of the same plugin. An event in `Metadata.emits` also goes to the [event bus](/sdk/concepts/plugin-communication#event-bus). With `"realtime"` in `Metadata.features` and the platform flag `realtimeEnabled` on, the platform also streams the event on `plugin:<plugin>`, or `plugin:<plugin>:experiment:<id>` with `experiment_id`. The payload is JSON of at most 16 KiB (`mint_sdk.protocol.MAX_EVENT_PAYLOAD_BYTES`); a larger payload raises `ValidationException`. `experiment_id` must name an experiment that `experiments.get` returns, or `publish` raises `NotFoundException`. The platform sends a plugin topic to every user who may use the plugin; put experiment data only on the experiment topic. See `examples/realtime-events` in the MINT repository and `useRealtime` in the frontend SDK.
+`context.publish(name, payload, *, experiment_id=None)` delivers `"<plugin>.<event>"` to the `@on(name)` handlers of the same plugin.
+
+- An event in `Metadata.emits` also goes to the [event bus](/sdk/concepts/plugin-communication#event-bus).
+- With `"realtime"` in `Metadata.features` and the platform flag `realtimeEnabled` on, the platform also streams the event on `plugin:<plugin>`, or on `plugin:<plugin>:experiment:<id>` with `experiment_id`.
+- The platform sends a plugin topic to every user who may use the plugin. Put experiment data only on the experiment topic.
+- The payload is JSON of at most 16 KiB (`mint_sdk.protocol.MAX_EVENT_PAYLOAD_BYTES`). A larger payload raises `ValidationException`.
+- `experiment_id` must name an experiment that `experiments.get` returns, else `publish` raises `NotFoundException`.
+
+Examples: `examples/realtime-events` in the MINT repository, and [useRealtime](/sdk/frontend/composables#userealtime-and-usepresence).
 
 ## Jobs
 
@@ -344,7 +352,16 @@ class QcPlugin(Plugin):
 | `ToolContext` | `actor`, `deadline`, `design`, `artifacts` (both act as the caller; they raise `PluginException` in standalone mode) and `report(progress, total=None, message=None)` |
 | `PromptMessage` | `role` (`"user"` or `"assistant"`) and `text` |
 
-`call_tool(plugin, name, arguments, *, actor, platform, progress=None, read_only=False)`, `render_prompt(plugin, name, arguments, *, actor, platform)`, `read_resource(plugin, name, params, *, actor, platform)`, `mcp_manifest(plugin)` and `mcp_problems(plugin)` run and describe declarations for tests and tooling. From SDK 1.6, `mcp_manifest(plugin)` also lists each skill of `Metadata.skills` with the path, size and SHA-256 of every file; `mint_sdk.mcp_skills.skill_problems(plugin_name, name, files)` returns the reasons why the platform does not serve a skill ([MCP skills](/sdk/recipes/mcp-skills)). A tool with `effect = "destructive"` makes the platform ask the user to confirm before the call runs.
+For tests and tooling, these functions run and describe the declarations:
+
+- `call_tool(plugin, name, arguments, *, actor, platform, progress=None, read_only=False)`
+- `render_prompt(plugin, name, arguments, *, actor, platform)`
+- `read_resource(plugin, name, params, *, actor, platform)`
+- `mcp_manifest(plugin)`: also lists each skill of `Metadata.skills` with the path, size and SHA-256 of each file (SDK 1.6)
+- `mcp_problems(plugin)`
+- `mint_sdk.mcp_skills.skill_problems(plugin_name, name, files)`: the reasons why the platform does not serve a skill. See [MCP skills](/sdk/recipes/mcp-skills)
+
+For a tool with `effect = "destructive"`, the platform asks the user to confirm the call; see [AI Assistants and API Access](/guide/ai-and-api).
 
 ## Panels
 
@@ -375,7 +392,7 @@ class QcPlugin(Plugin):
 | `validate_section(value, *, routes_prefix)` | Validates one section |
 | `panel_manifest(plugin)` | The panel entries of the plugin manifest |
 
-Limits: `MAX_PANEL_SECTIONS` (20), `MAX_PANEL_BYTES` (128 KiB), `MAX_TABLE_ROWS` (200), `MAX_TABLE_COLUMNS` (20), `MAX_TEXT_CHARS` (20,000) and `PANEL_TIMEOUT_SECONDS` (10). The platform serves a panel at `GET /api/experiments/{id}/panels/{plugin}/{panel_id}` and over MCP as `mint://plugins/<plugin>/panels/<panel_id>/experiments/{experiment_id}`.
+The limit constants are `MAX_PANEL_SECTIONS`, `MAX_PANEL_BYTES`, `MAX_TABLE_ROWS`, `MAX_TABLE_COLUMNS`, `MAX_TEXT_CHARS` and `PANEL_TIMEOUT_SECONDS`. For their values, see [Limits](/sdk/recipes/panels#limits). For the REST and MCP addresses of a panel, see [Read a panel without the page](/sdk/recipes/panels#read-a-panel-without-the-page).
 
 Source: [`mint_sdk/panels.py`](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/panels.py).
 
@@ -393,7 +410,7 @@ A plugin reports the live status of an instrument with `context.instruments.repo
 
 `InstrumentLiveStatus` fields: `instrument_id`, `state`, `active_method`, `current_sample`, `sequence_progress`, `has_unacknowledged_alerts`, `has_unacknowledged_critical`, `last_seen`, `state_since`, `reported_by`, `reporter` and `panels`. The platform keeps the latest snapshot in memory. A read shows `disconnected` when the last report is older than 60 seconds. A platform restart empties the snapshots. A report can also add rows to the instrument history that the platform stores in its database: a state change, a finished sample, a finished sequence or a disconnect.
 
-A daemon authenticates with a platform **service token** (`mint_svc_...`). A service token names no user: mount the route with `auth=False` and read the caller with `CurrentServiceCaller`. `ServiceCaller` is a frozen dataclass with `token_id` and `instrument_ids` (the token binding intersected with the plugin grant; never empty). The plugin must check `instrument_ids`; the platform does not re-check the binding. `mint_sdk.instrument_alerts` has `InstrumentAlert`, `InstrumentAlertList` and `instrument_alerts_router(list_fn, ack_fn)`; declare `"instrument_alerts"` in `features` and mount the router with sub-prefix `""`. How-to: [Report instrument status](/sdk/recipes/instrument-status).
+A daemon authenticates with a platform service token (`mint_svc_...`); see [Authentication](/admin/authentication). A service token names no user: mount the route with `auth=False` and read the caller with `CurrentServiceCaller`. `ServiceCaller` is a frozen dataclass with `token_id` and `instrument_ids` (the token binding intersected with the plugin grant; never empty). The plugin must check `instrument_ids`; the platform does not re-check the binding. `mint_sdk.instrument_alerts` has `InstrumentAlert`, `InstrumentAlertList` and `instrument_alerts_router(list_fn, ack_fn)`; declare `"instrument_alerts"` in `features` and mount the router with sub-prefix `""`. How-to: [Report instrument status](/sdk/recipes/instrument-status).
 
 `InstrumentRepository.get(id)`, `list(*, active=True)`, `create(InstrumentCreate)` and `update(id, InstrumentUpdate)` read and write the shared instrument directory under the current actor permissions (`instruments.view`, `instruments.edit`). There is no delete: set `is_active=False`.
 
@@ -413,7 +430,11 @@ Run a plugin with `mint dev`, or with `uv run uvicorn mint_sdk.app:create_app --
 
 ### Runtime version negotiation
 
-`mint_sdk.compat` defines `PLATFORM_API_VERSION` (`"2"` in 1.4) and `is_sdk_compatible()`. A plugin process checks `MINT_PLATFORM_API_VERSION` from its spawn environment first and sends `X-MINT-SDK-Version` and `X-MINT-Platform-API-Version` on every internal call. A hard API mismatch raises `PlatformCompatibilityError` (HTTP 426, `plugin.api_version_mismatch`) and the plugin process fails fast. A soft SDK mismatch only logs a warning. The platform sends the minimum SDK version in the handshake; a plugin wheel whose `mint-sdk` requirement excludes the platform SDK is refused at install.
+`mint_sdk.compat` defines `PLATFORM_API_VERSION` (`"2"`) and `is_sdk_compatible()`. A plugin process first checks `MINT_PLATFORM_API_VERSION` from its spawn environment. It sends `X-MINT-SDK-Version` and `X-MINT-Platform-API-Version` on every internal call.
+
+- A hard API mismatch raises `PlatformCompatibilityError` (HTTP 426, `plugin.api_version_mismatch`), and the plugin process stops at once.
+- A soft SDK mismatch logs a warning only.
+- The platform sends the minimum SDK version in the handshake. It refuses to install a plugin wheel whose `mint-sdk` requirement excludes the platform SDK.
 
 ## Testing
 
@@ -463,9 +484,4 @@ Modules that start with `_` are internal and can change without notice. `mint_sd
 
 ## Removed APIs
 
-SDK 1.4 removes the 1.3 author API with no aliases: `AnalysisPlugin`, `@mint_plugin`, `PluginMetadata`, `PluginNavItem`, `PluginCapabilities`, `get_experiment_repository()` and the other `get_*` context accessors, plugin roles, `get_migrations_package()` and the legacy migration protocol, `@job_finalizer`, `@mcp_tool`, `check_health()` and others. The [migration guide](/sdk/operations/migrate-1.3-to-1.4) lists each removal with its replacement. `mint doctor --fix` rewrites most of them.
-
-## Related
-
-- [Concepts](/sdk/concepts/) — the model these symbols implement
-- [Recipes](/sdk/recipes/) — patterns using these symbols
+SDK 1.4 removed the 1.3 author API, with no aliases. `mint doctor` reports each use, and `mint doctor --fix` rewrites most of them. See [Migrate 1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4).

@@ -358,12 +358,4 @@ mint verify --image ghcr.io/morscherlab/mint:@MINT_VERSION@
 
 `mint doctor --strict` passes when no 1.3 form is left. `mint verify` installs the bundle into a disposable 1.4 platform and loads it. Then follow [Regenerate, test and install](/sdk/operations/upgrading#regenerate-test-and-install).
 
-## Related
-
-- [Upgrading the SDK](/sdk/operations/upgrading)
-- [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3)
-- [Updates](/admin/updates)
-- [Python SDK reference](/sdk/api/python)
-- [Frontend SDK reference](/sdk/api/frontend)
-
 Release sources: [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md), [platform changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md), [SDK 1.4 author API decision](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/decisions/2026-10-04-sdk-14-author-api.md).

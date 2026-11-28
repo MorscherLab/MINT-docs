@@ -1,6 +1,6 @@
 # Error handling
 
-Standalone and integrated SDK routes get the same structured error envelope. Raise a typed SDK exception for a known application failure; use `HTTPException` for an explicit transport status. Unexpected exceptions remain 500 errors.
+Raise a typed SDK exception for a known application failure. Use `HTTPException` for an explicit transport status. An unexpected exception stays a 500 error. Standalone and integrated routes send the same error envelope.
 
 ## Validate and report business failures
 
@@ -26,30 +26,30 @@ class MyPlugin(Plugin):
         return {"reference_sample": body.reference_sample}
 ```
 
-Pydantic rejects an empty field with 422 before the handler. The business-rule failure above becomes 400 with `code="VALIDATION_ERROR"`. `CurrentExperiment` supplies the separate permission/visibility checks.
+Pydantic refuses an empty field with 422 before the handler runs. The business-rule failure above becomes 400 with `code="VALIDATION_ERROR"`. `CurrentExperiment` does the permission and visibility checks.
 
-## Use the appropriate exception
+## Choose the exception
 
-| Situation | Raise | SDK HTTP response |
-|-----------|-------|-------------------|
-| Invalid business input | `ValidationException` | 400 |
-| Forbidden action | `PermissionException` | 403 |
-| Missing resource | `NotFoundException` | 404 |
-| Duplicate or stale edit | `ConflictException` | 409 |
-| Design write over a newer experiment version (`expected_version`) | `VersionConflictException` (`mint_sdk.exceptions`) | 412 |
-| Blocking lifecycle veto | `EventVetoException` | 422 |
-| Plugin misconfiguration/storage failure | `ConfigurationException` / `RepositoryException` | 500 |
-| Platform integration unavailable (standalone) | `UnavailableException` | 503 |
+| Situation | Raise |
+|-----------|-------|
+| Invalid business input | `ValidationException` |
+| Forbidden action | `PermissionException` |
+| Missing resource | `NotFoundException` |
+| Duplicate or stale edit | `ConflictException` |
+| Design write over a newer experiment version (`expected_version`) | `VersionConflictException` (`mint_sdk.exceptions`) |
+| Blocking lifecycle veto | `EventVetoException` |
+| Plugin misconfiguration or storage failure | `ConfigurationException` / `RepositoryException` |
+| Platform integration unavailable (standalone) | `UnavailableException` |
 
-Ownership conflicts and unsupported experiment types already have SDK subclasses; allow the platform to report them. A call to a platform-only namespace in standalone mode raises `UnavailableException` by itself. See [Exceptions](/sdk/api/exceptions) for constructors and the complete status mapping.
+For the HTTP status of each exception and the constructors, see [Exceptions](/sdk/api/exceptions). The SDK already raises its own subclasses for ownership conflicts and unsupported experiment types. A platform-only namespace raises `UnavailableException` in standalone mode by itself.
 
 ## Handle concurrent edits without losing data
 
-For settings replacement, retain `settings_revision` from the snapshot used to build the candidate. For file-artifact replacement, retain the object's key and supply `expect=` to `artifacts.save`. For a design write, pass `expected_version=experiment.version` to `design.save`. A 409 or 412 means the candidate is stale: fetch the new state and ask the UI to reconcile the change. Do not retry the same full replacement without its revision.
-
-Use `update_settings({...})` for a shallow settings patch that the SDK can safely retry against the latest state. JSON artifact batches are atomic; a failure should not be converted into a partial-success response.
-
-For plugin-owned SQL tables, enforce uniqueness with a database constraint. A preflight `SELECT` can improve feedback but cannot prevent concurrent inserts. Catch the specific integrity error, roll back, and translate only the known duplicate constraint into `ConflictException`.
+- Settings: keep `settings_revision` from the snapshot that you changed. For a shallow patch, use `update_settings({...})`; the SDK retries it against the latest state.
+- File artifacts and design data: pass `expect=` or `expected_version=`; see [Replace an existing file safely](/sdk/recipes/writing-results#replace-an-existing-file-safely).
+- A 409 or 412 means that the candidate is stale. Fetch the new state and let the UI reconcile the change. Do not send the same full replacement again without its revision.
+- A JSON artifact batch is atomic. Do not turn its failure into a partial-success response.
+- Plugin-owned SQL tables: enforce uniqueness with a database constraint. A preflight `SELECT` cannot stop concurrent inserts. Catch the integrity error, roll back, and turn only the known duplicate constraint into `ConflictException`.
 
 ## Preserve the traceback and keep secrets out of responses
 
@@ -66,11 +66,11 @@ except DatabaseError as exc:
     ) from exc
 ```
 
-`raise ... from exc` preserves the server traceback. `message`, `details`, and exception `to_dict()` may all reach the client. Log internal diagnostics separately; do not interpolate database connection strings, raw SQL errors, credentials, or entire request bodies into public errors.
+`raise ... from exc` keeps the server traceback. `message`, `details` and `to_dict()` can reach the client. Log internal diagnostics separately. Keep connection strings, raw SQL errors, credentials and full request bodies out of public errors.
 
 ## Expected upstream failures
 
-Translate a known timeout into an actionable status:
+Turn a known timeout into a status that the user can act on:
 
 ```python
 import httpx
@@ -83,32 +83,26 @@ except httpx.TimeoutException as exc:
     raise HTTPException(503, "Instrument service timed out; retry shortly") from exc
 ```
 
-Retry only operations whose semantics permit it. A timed-out write may already have committed. Reload by its stable identity before repeating an artifact or external write. Do not turn arbitrary failures into 404 or swallow cancellation with a broad catch.
+- Retry only an operation that is safe to repeat. A write that timed out can already be committed.
+- Before you repeat an artifact or external write, reload it by its stable identity.
+- Do not turn other failures into 404. Do not catch cancellation with a broad `except`.
 
 ## Failed jobs and host logs
 
-A failed `@job` is a job-state failure, not necessarily an HTTP failure when it
-was submitted. Read its terminal `error` and job ID from the job client/status
-tray. Handler failures carry `<ExceptionType>: <message>`. Service jobs preserve the original chained
-cause when present and log the exception.
+A failed `@job` fails in its job state. Its submit request can still have succeeded.
 
-Process workers send their formatted traceback to the host, which logs it
-through the platform's handlers. Inspect **Admin -> System -> Logs** or the
-service logs with the job ID. Keep raised messages free of credentials and raw sensitive
-inputs, because the job error is visible to its authorized readers.
+- Read the final `error` and the job ID from the job client or the jobs tray. A handler failure reads `<ExceptionType>: <message>`.
+- Service jobs keep the original chained cause, when there is one, and log the exception.
+- Process workers send the formatted traceback to the host, which logs it through the platform handlers. Search **Admin -> System -> Logs** or the service logs for the job ID.
+- Authorized readers of the job see its error. Keep credentials and sensitive raw inputs out of raised messages.
 
-The host waits up to 30 seconds for a process worker to exit after
-SIGKILL. This prevents some large, already-finished jobs from losing their
-result during slow kernel cleanup. It does not extend the job's execution
-budget or hide a handler exception. If `Job worker could not be stopped`
-persists, inspect host/process resource pressure and the logs before
-rerunning a write-producing job.
+After SIGKILL, the host waits up to 30 seconds for a process worker to exit. This keeps the result of a large finished job during slow kernel cleanup. It does not extend the run time of the job or hide a handler exception. If `Job worker could not be stopped` stays, examine host resource pressure and the logs before you run a job that writes again.
 
 Source: [v@MINT_VERSION@ job manager](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/job_manager.py).
 
 ## Reading errors on the client
 
-The wire envelope includes `code`, `message`, `status`, `request_id`, and `details`, with legacy `detail`/`error` fields retained. Show the actionable message, use `code` for branching, and include `request_id` in support reports. Do not parse English message text to distinguish a conflict from a permission failure.
+The fields of the error envelope are in [Error codes](/reference/error-codes#the-error-envelope). Show `message` to the user. Branch on `code`, never on the English message text. Put `request_id` in support reports.
 
 ```python
 from mint_sdk.client import APIError, MINTClient, NotFoundError
@@ -122,6 +116,6 @@ with MINTClient() as client:
         print(exc.message, exc.code, exc.request_id)
 ```
 
-SDK-created apps install the handlers automatically. For a custom host, use the shared `mint_sdk.api_errors.register_api_error_handlers(app)` integration or implement the same contract explicitly.
+SDK-created apps install the error handlers. For a custom host, call `mint_sdk.api_errors.register_api_error_handlers(app)`, or implement the same contract.
 
 Verified against [v@MINT_VERSION@ error handlers](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/api_errors.py), [exception mapping](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/exceptions.py), and [client exceptions](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/client/_exceptions.py).

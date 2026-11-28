@@ -8,7 +8,7 @@ description: "Accessible pointer and keyboard separator for resizable workbench 
 
 # LayoutResizeHandle
 
-`LayoutResizeHandle` provides a focusable separator with bounded keyboard updates and a `resize-start` pointer event. Pair it with `useManualLayoutResize()` for drag handling; the handle alone does not listen for pointer movement or size your panels.
+Use `LayoutResizeHandle` as a focusable separator between two resizable panes. Pair it with `useManualLayoutResize()`: the handle does not track pointer movement or size your panels.
 
 <demo vue="./demos/LayoutResizeHandle.vue" title="LayoutResizeHandle" description="Drag the handle to resize a side panel between 200 and 400 pixels." />
 
@@ -21,7 +21,7 @@ import {
   LayoutResizeHandle,
   resizedLeadingPanelWidth,
   useManualLayoutResize,
-} from '@morscherlab/mint-sdk'
+} from '@morscherlab/mint-sdk/shell'
 
 const container = ref<HTMLElement | null>(null)
 const width = ref(280)
@@ -62,13 +62,21 @@ const { startResize } = useManualLayoutResize<'sidebar'>({
 </style>
 ```
 
-`orientation="vertical"` means a vertical separator controlling width: Left/Right decrease/increase the value. For a horizontal separator use Up/Down. Home/End jump to `min`/`max`; `step` defaults to 10. Supply a meaningful `label` for the separator's accessible name.
+- `orientation="vertical"` is a vertical separator that sets a width. Left and Right decrease and increase the value. A horizontal separator uses Up and Down.
+- Home and End go to `min` and `max`. `step` defaults to 10.
+- `label` is the accessible name of the separator. Make it say what it resizes.
 
-`useManualLayoutResize()` captures starting geometry, coordinates pointer movement, and removes listeners on completion, cancellation, disable, or unmount. `resizedLeadingPanelWidth()` handles a left panel, `resizedTrailingPanelWidth()` reverses the drag direction for a right panel, and `resizedVerticalSplitPercent()` calculates a bounded vertical percentage. Keep the constraints used by keyboard and pointer paths consistent. The `edge` prop affects handle styling; it does not reverse your resize calculation.
+`useManualLayoutResize()` records the start geometry, follows the pointer, and removes its listeners when the drag ends, is cancelled or disabled, or the component unmounts.
 
-The example has a minimum layout width. For narrow screens, switch to your application's stacked/overlay layout and disable resizing rather than making the content unusably narrow. Persist widths only if the plugin needs to remember them; the SDK does not save layout values automatically.
+- `resizedLeadingPanelWidth()` sizes a left panel.
+- `resizedTrailingPanelWidth()` sizes a right panel; it reverses the drag direction.
+- `resizedVerticalSplitPercent()` gives a bounded percentage for a top and bottom split.
 
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/LayoutResizeHandle.vue) · [Resize composable](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/composables/useManualLayoutResize.ts)
+Use the same limits for the keyboard and the pointer. The `edge` prop changes only the style of the handle. It does not reverse your calculation.
+
+The example has a minimum width. On a narrow screen, switch to a stacked or overlay layout and disable resizing. The SDK does not save the widths; store them yourself if the plugin must remember them.
+
+[Resize composable source](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-frontend/src/composables/useManualLayoutResize.ts)
 
 <!-- sdk-props:start -->
 ## Props

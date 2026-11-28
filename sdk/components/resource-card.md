@@ -8,7 +8,7 @@ description: "Card displaying a lab resource with availability status, specs, ta
 
 # ResourceCard
 
-Card displaying a lab resource with availability status, specs, tags, and a book action.
+Use `ResourceCard` to show a lab resource, such as an instrument, with its status, specifications, tags and a Book button.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

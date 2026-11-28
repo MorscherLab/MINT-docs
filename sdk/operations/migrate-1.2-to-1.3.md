@@ -208,7 +208,7 @@ Remove `get_migrations_package()` in the same change. `plugin_name` is the plugi
 
 ### Peer dependencies
 
-`@morscherlab/mint-sdk` @MINT_VERSION@ declares these peer ranges:
+`@morscherlab/mint-sdk` 1.3 declares these peer ranges:
 
 | Peer | Range |
 |---|---|
@@ -251,13 +251,5 @@ These APIs still ship in 1.3 and are removed in MINT 1.4. `mint doctor` reports 
 ## Update and verify the plugin
 
 Follow [Regenerate, test and install](/sdk/operations/upgrading#regenerate-test-and-install), then run the plugin against a disposable MINT 1.3 platform and exercise settings, experiment reads and writes, jobs, migrations and every screen that used a removed component.
-
-## Related
-
-- [Upgrading the SDK](/sdk/operations/upgrading)
-- [Migrate from 1.1 to 1.2](/sdk/operations/migrate-1.1-to-1.2)
-- [Updates](/admin/updates)
-- [Python SDK reference](/sdk/api/python)
-- [Frontend SDK reference](/sdk/api/frontend)
 
 Release sources: [SDK changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/CHANGELOG.md), [platform changelog](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/CHANGELOG.md), [package-root exports](https://github.com/MorscherLab/MINT/blob/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/__init__.py).

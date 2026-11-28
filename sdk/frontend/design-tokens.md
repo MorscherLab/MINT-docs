@@ -1,28 +1,10 @@
 # Design tokens
 
-Every visual aspect of the platform — color, type size, radius, focus rings, shadows, layers, and common component states — is parameterized as a CSS custom property. The frontend SDK ships about 125 tokens in `styles/variables.css` (MINT design v2). **Plugin frontends should reference tokens, never hex codes.** Tailwind CSS is optional; to use a token as a utility, map it in your own `@theme` block (see [Tailwind utilities](#tailwind-utilities)).
-
-## Why tokens
-
-When a user chooses another accent palette, or a deployment overrides the platform's brand color, every plugin re-themes automatically — no per-plugin update needed. A hardcoded `#0D9488` in your plugin breaks that.
-
-Tokens also make light/dark/density work universally. The dark theme just changes the variable values; a plugin that uses `var(--bg-primary)` flips correctly without code changes.
+Every visual property of the platform is a CSS custom property: colour, type size, radius, focus rings, shadows, layers and common component states. The frontend SDK declares about 125 tokens in `styles/variables.css` (MINT design v2). Use tokens in plugin frontends, not hex codes. A token follows the user's theme, palette and density, and a brand override of the deployment. A hardcoded `#0D9488` does not.
 
 ## Setup
 
-`mint init --mode standard` scaffolds these imports for you. `generated` mode uses the SDK-managed UI and does not need a plugin-authored Vue bundle. Manual setup:
-
-```css
-/* frontend/src/style.css */
-@import "tailwindcss";
-@import "@morscherlab/mint-sdk/styles";
-```
-
-The `styles` export does not load the Geist fonts. A `@import url(...)` inside it would follow other rules, and `@tailwindcss/vite` drops it. Load the fonts with a `<link>` in the plugin `index.html`. `mint init` does this. Inside the platform, the platform loads the fonts.
-
-```html
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" />
-```
+`mint init --mode standard` adds the style import and the Geist font link. For a manual setup, see [Frontend SDK → Setup checklist](/sdk/frontend/#setup-checklist). The `styles` export does not import the fonts, because `@tailwindcss/vite` drops an `@import url(...)` inside it.
 
 With `moduleResolution: "bundler"` (the `mint init` template), TypeScript 6 accepts `import '@morscherlab/mint-sdk/styles'` with no `declare module`.
 
@@ -45,15 +27,15 @@ MINT has one teal accent. The accent tokens follow the user's palette (`html[dat
 | `--mint-primary` | Alias of `--color-primary` | | |
 | `--mint-brand`, `--mint-brand-hover`, `--mint-brand-soft` | MINT brand mark color, hover, tint | `#7BD0B5`, `#5FB89A`, `rgba(123, 208, 181, 0.12)` | same |
 
-Always use `--text-on-accent` for text and icons on an accent fill, never `white`. White on the light accent `#0D9488` is 3.74:1, a known accepted exception.
+Use the brand tokens for links, primary buttons, focused inputs and the main action of a screen.
 
-`--color-cta`, `--color-cta-hover`, and `--color-purple` are aliases of the accent. They remain until MINT 2.0, and `mint doctor` warns when a plugin uses them.
+For text and icons on an accent fill, use `--text-on-accent`, not `white`. White on the light accent `#0D9488` is 3.74:1, an accepted exception to WCAG AA.
+
+`--color-cta`, `--color-cta-hover` and `--color-purple` are aliases of the accent. They remain until MINT 2.0. `mint doctor` warns when a plugin uses them.
 
 ### Entity accents (retired)
 
-Experiments and projects no longer have their own hues. `--color-experiment*` and `--color-project*` (base, `-hover`, `-soft`, `-border`) alias slate neutrals until MINT 2.0, and `mint doctor` warns on them. Tell entities apart by icon and label, not by hue.
-
-Use brand tokens for: links, primary buttons, focused inputs, the most-prominent action on a screen.
+Experiments and projects have no hues of their own. `--color-experiment*` and `--color-project*` (base, `-hover`, `-soft`, `-border`) are aliases of slate neutrals until MINT 2.0. `mint doctor` warns on them. Identify entities by icon and label, not by hue.
 
 ### Semantic feedback
 
@@ -125,7 +107,7 @@ The `mint lint` rule `font-size-token` (on by default, and part of the "Design r
 | `--focus-ring-soft` | Softer translucent focus ring |
 | `--focus-ring-soft-error` | Softer translucent error focus ring |
 
-Every interactive component honors these. Custom components should follow the same pattern.
+Each token is a full `box-shadow` value. Use it with `box-shadow`, not `outline`. Every interactive SDK component uses these tokens; use them in custom components too.
 
 ### Spacing, radius, and elevation
 
@@ -161,9 +143,9 @@ Use these tokens for your own layers, so a dropdown opens above the jobs tray an
 |---------------|-----|
 | `--mint-transition` | Simple custom hover/focus transitions (`120ms ease`) |
 | `--mint-ease-out-quart` | The SDK's standard easing curve (`cubic-bezier(0.25, 1, 0.5, 1)`) |
-| `@media (prefers-reduced-motion: reduce)` | The SDK globally shortens animation and transition durations |
+| `@media (prefers-reduced-motion: reduce)` | The SDK shortens all animations and transitions; see [Theming → Reduced motion](/sdk/frontend/theming#reduced-motion) |
 
-The SDK respects `prefers-reduced-motion` globally. Custom animations should either use the same media query or keep motion non-essential. Do not add hover lift, glow, or blur.
+Do not add hover lift, glow or blur.
 
 ### Data colors
 
@@ -182,13 +164,13 @@ The SDK respects `prefers-reduced-motion` globally. Custom animations should eit
 | `--mint-scrim` | Overlay behind a modal (`rgba(15, 23, 42, 0.45)` in both themes). Use it for your own overlay |
 | `--mint-strip-bg` | Background of strip content (`AlertBox`, `EmptyState variant="inline"`) in a `SectionCard` |
 | `--scrollbar-track`, `--scrollbar-thumb`, `--scrollbar-hover` | Scrollbar colors |
-| `--mint-toast-offset-top` | Top offset of the toast stack. Not declared in the stylesheet: a mounted `AppTopBar` sets it on `<html>` to its bottom edge plus 1rem and updates it on resize and scroll. The toast stack falls back to `1rem` |
+| `--mint-toast-offset-top` | Top offset of the toast stack. `AppTopBar` sets it; see [Toast positioning](/sdk/components/app-toast-container#toast-positioning) |
 
 Legacy aliases still used by some components: `--mint-bg-primary`, `--mint-bg-secondary`, `--mint-bg-card`, `--mint-bg-hover`, `--mint-bg-input`, `--mint-text-primary`, `--mint-text-secondary`, `--mint-text-muted`, `--mint-text-inverse`, `--mint-border`, `--mint-border-focus`. Use the canonical `--bg-*`, `--text-*`, and `--border-*` names in new code.
 
 ## Tailwind utilities
 
-Tailwind CSS is optional. The SDK stylesheet is complete without it, and `tailwindcss` is not a peer dependency. The SDK ships no `*-mint-*` utility classes, no Tailwind preset, and no legacy global classes such as `.btn-primary`, `.card`, or `.alert-success`. Use `BaseButton`, `SectionCard`, `BaseInput`, and `AlertBox`.
+Tailwind CSS is optional; see [Setup checklist](/sdk/frontend/#setup-checklist). The SDK ships no `*-mint-*` utility classes, no Tailwind preset, and no legacy global classes such as `.btn-primary`, `.card`, or `.alert-success`. Use `BaseButton`, `SectionCard`, `BaseInput`, and `AlertBox`.
 
 With Tailwind v4, map the tokens you need in your own `@theme` block. The values stay theme-aware because they reference the SDK custom properties:
 
@@ -214,7 +196,7 @@ Then `bg-mint-primary`, `text-mint-danger`, and `rounded-mint` resolve to the to
 
 ## Custom CSS
 
-When utility classes are not sufficient:
+Use tokens in component CSS when a utility class is not sufficient:
 
 ```vue
 <style scoped>
@@ -238,33 +220,24 @@ When utility classes are not sufficient:
 
 ## Don'ts
 
-- **Do not hardcode hex codes** — `color: #0D9488;` does not re-theme. Use `var(--color-primary)` or a Tailwind utility that you mapped in `@theme`.
-- **Do not use `white` on an accent fill** — use `var(--text-on-accent)`.
-- **Do not use a `--focus-ring*` token as `outline`** — they are `box-shadow` values.
-- **Do not import code from the platform frontend** — your plugin is its own bundle. Tokens are the contract.
-- **Do not make new semantic colors** — `--mint-success` already exists. A different green from yours will look out of place.
-- **Do not repeat transition values** — use `var(--mint-transition)` or the SDK's components/utilities where possible.
-- **Do not write a literal font size** — use a `--font-size-*` token. See [Type scale](#type-scale).
+- Do not hardcode hex codes. `color: #0D9488;` does not follow the theme. Use `var(--color-primary)` or a Tailwind utility that you mapped in `@theme`.
+- Do not use `white` on an accent fill. Use `var(--text-on-accent)`.
+- Do not use a `--focus-ring*` token as `outline`. The tokens are `box-shadow` values.
+- Do not import code from the platform frontend. The plugin is its own bundle, and the tokens are the contract.
+- Do not make new semantic colours. Use `--mint-success` and the other semantic tokens.
+- Do not repeat transition values. Use `var(--mint-transition)` or the SDK components.
+- Do not write a literal font size. Use a `--font-size-*` token; see [Type scale](#type-scale).
 
 ## Auditing your plugin
 
-Run `mint lint` before each push. Its design rules report literal colours, literal font sizes, retired tokens and other token misuse. `mint lint --explain <rule>` gives the reason for a rule. A quick extra check before merging plugin frontend changes:
+1. Run `mint lint` before each push. Its design rules report literal colours, literal font sizes, retired tokens and other token misuse.
+2. Run `mint lint --explain <rule>` to see the reason for a rule.
+3. Before you merge a frontend change, search for hex codes:
+   ```bash
+   grep -rE "#[0-9a-fA-F]{6}\b" src/ frontend/src/
+   ```
+4. Replace each hit with a `var(--…)` token, unless the colour must not follow the theme.
 
-```bash
-# Find any hardcoded hex codes in your plugin's Vue / CSS
-grep -rE "#[0-9a-fA-F]{6}\b" src/ frontend/src/
-```
+## Token stability
 
-Hits are usually candidates for `var(--…)` substitution.
-
-## Notes
-
-- Token names are stable across SDK minor versions. The aliases `--color-cta*`, `--color-purple`, `--color-experiment*`, and `--color-project*` remain until MINT 2.0.
-- The platform may override variables in its own root stylesheet (`packages/sdk-frontend/src/styles/variables.css` is the master; the platform's `frontend/src/style.css` can `:root { --color-primary: ...; }` to re-skin).
-- Plugin Histoire stories should be reviewed in light, dark, AND white backgrounds — every story file declares them.
-
-## Related
-
-- [Theming](/sdk/frontend/theming) — palette overrides, density, accessibility
-- [Component Library](/sdk/components/) — every component reads tokens
-- The token source: `packages/sdk-frontend/src/styles/variables.css`
+Token names do not change in an SDK minor version. The retired aliases above remain until MINT 2.0. The token source is `packages/sdk-frontend/src/styles/variables.css`. A deployment can override any token on `:root`; see [Theming → Brand overrides](/sdk/frontend/theming#brand-overrides).

@@ -8,7 +8,7 @@ description: "Save/update dialog for analysis artifacts; delegates the write to 
 
 # ArtifactSaveDialog
 
-Save/update dialog for analysis artifacts; delegates the write to a plugin-supplied handler.
+Use `ArtifactSaveDialog` to save or update an analysis artifact. Your `saveHandler` does the write.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -29,7 +29,7 @@ import { ArtifactSaveDialog } from "@morscherlab/mint-sdk/data"
 
 ```vue
 <ArtifactSaveDialog
-  v-model="open"
+  v-model:open="open"
   :save-handler="saveArtifact"
   mode="json"
   :result="results"
@@ -38,10 +38,6 @@ import { ArtifactSaveDialog } from "@morscherlab/mint-sdk/data"
   @error="handleError"
 />
 ```
-
-## Selected row
-
-The selected file row shows the soft accent fill and no coloured left bar.
 
 <!-- sdk-props:start -->
 ## Props

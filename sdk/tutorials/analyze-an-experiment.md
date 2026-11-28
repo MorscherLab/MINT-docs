@@ -1,10 +1,10 @@
 # Tutorial 6 — Analyze an Experiment
 
-Build **panel-summary**, an analysis plugin (`writes = {"artifacts"}`, the default) that reads the design of a visible MINT experiment, computes a summary, and saves it as a named analysis artifact on that experiment. The artifact then appears on the experiment page, grouped under this plugin.
+Build `panel-summary`, an analysis plugin that reads the design of a visible MINT experiment, computes a summary and saves it as a named artifact on that experiment. The artifact shows on the experiment page under this plugin.
 
-This connects Tutorial 1 (a typed calculation) to real platform data. It reads designs published by the **panel-designer** plugin from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables), whose design payload is `{"panel": {"name": ..., "drugs": [...]}}`.
+The plugin reads the designs that `panel-designer` from [Tutorial 3](/sdk/tutorials/design-plugin-with-tables) publishes. Their payload is `{"panel": {"name": ..., "drugs": [...]}}`.
 
-**Prereqs:** Python 3.14+, `uv`, the `mint` CLI from `mint-sdk[cli]==@MINT_VERSION@`, Docker for `mint verify`, and a test MINT platform with panel-designer installed.
+Prerequisites: the toolchain from [Install the toolchain](/sdk/install), Docker for `mint verify`, and a test MINT platform with `panel-designer` installed.
 
 ## 1. Scaffold a generated plugin
 
@@ -18,11 +18,11 @@ mint init panel-summary \
 cd panel-summary
 ```
 
-Generated mode needs no frontend. It sets `ui = "generated"` and needs at least one `@job`, so the scaffold's `analyze` job stays in place. The experiment analysis below is an ordinary `@endpoint`, because it is triggered for one experiment, not from the generated job form.
+Generated mode needs no frontend. It sets `ui = "generated"` and needs at least one `@job`, so keep the `analyze` job of the scaffold. The experiment analysis below is an ordinary `@endpoint`, because it runs for one experiment and not from the generated job form.
 
 ## 2. Write the calculation as a plain function
 
-Keep the science free of platform objects, so it can be tested directly. Create `src/mint_plugin_panel_summary/summary.py`:
+Keep the calculation free of platform objects, so that you can test it directly. Create `src/mint_plugin_panel_summary/summary.py`:
 
 ```python
 from typing import Any
@@ -97,18 +97,14 @@ class PanelSummaryPlugin(Plugin):
         return {"experiment_id": experiment.id, "artifact_id": artifact.id, "summary": summary}
 ```
 
-What each piece does:
+- `CurrentExperiment` resolves the experiment of the path; see [Request-scoped access](/sdk/concepts/platform-context#request-scoped-access).
+- `self.design.get()` returns the design data (`DesignData`), or `None` when there is no design. `design.data` is the JSON payload of the design owner.
+- `self.artifacts.save()` saves a named artifact under the ID of this plugin; see [Writing results](/sdk/recipes/writing-results).
+- The default write set `{"artifacts"}` lets the plugin write analysis results. It cannot change the design or create experiments.
 
-| Piece | Behavior |
-|---|---|
-| `CurrentExperiment` | Resolves `experiment_id` from the path, requires `experiments.view`, and returns only an experiment the actor can see and this plugin is allowed to use. Missing or invisible experiments return 404; without a platform context it returns 503 |
-| `self.design.get()` | Reads the experiment's design data (`DesignData`); `design.data` is the owner's JSON payload. It returns `None` when there is no design |
-| `self.artifacts.save()` | Saves a named artifact under this plugin's ID. Saving again with the same key replaces it |
-| `writes = {"artifacts"}` | The default write set: this plugin can write analysis results; it cannot change the design or create experiments |
+The `experiments.edit` check is a decision of this route: it limits who can attach results. A plugin can read the design of another plugin without a declaration. To read the analysis artifacts of another plugin, declare it in `reads_from`; see [Cross-plugin readers](/sdk/concepts/platform-context#cross-plugin-readers).
 
-The `experiments.edit` check is a route decision: it limits who may attach results. Reading another plugin's **design** needs no reader declaration. Reading another plugin's **analysis artifacts** does; see `reads_from` in [PlatformContext](/sdk/concepts/platform-context#cross-plugin-readers).
-
-To list experiments instead of addressing one, use `self.context.experiments.list(limit=50)`, which returns the visible, type-compatible experiments.
+To list experiments, use `self.context.experiments.list(limit=50)`. It returns the visible experiments whose type the plugin supports.
 
 ## 4. Test the calculation and the standalone boundary
 
@@ -149,7 +145,7 @@ def test_summary_route_requires_the_platform() -> None:
     assert response.status_code == 503
 ```
 
-Standalone mode has no platform context, so `CurrentExperiment` returns 503 instead of pretending an experiment exists. Test the platform path after deployment.
+Standalone mode has no platform context, so `CurrentExperiment` returns 503. Test the platform path after deployment.
 
 ```bash
 uv run pytest -q
@@ -158,13 +154,7 @@ mint doctor --strict
 
 ## 5. Verify and deploy
 
-```bash
-mint verify
-mint platform auth login --url https://mint-test.example.org
-mint deploy --url https://mint-test.example.org
-```
-
-`mint verify` builds the bundle, boots the MINT platform image in Docker, installs the bundle through the normal upload path, restarts, and waits until the plugin loads. `mint deploy` uploads the same bundle to a test platform you administer, restarts it (requires `platform.configure`), and confirms the restart by the new server `boot_id`; `--timeout` (default 180 s) covers restart and load together.
+Test the bundle in a disposable platform with `mint verify`, then install it on a test platform with `mint deploy`. See [Deploying and verifying a plugin](/sdk/operations/deploying).
 
 On the test platform:
 
@@ -177,13 +167,13 @@ curl -X POST https://mint-test.example.org/api/panel-summary/experiments/<experi
   -H "Authorization: Bearer <token>"
 ```
 
-4. Open the experiment page and check that a **Panel summary** artifact appears under Panel Summary.
-5. Repeat as a user without `experiments.edit` (403) and with an experiment the user cannot see (404).
+4. Open the experiment page. Check that a **Panel summary** artifact shows under Panel Summary.
+5. Call the route as a user without `experiments.edit`. Expect 403.
+6. Call the route with an experiment that the user cannot see. Expect 404.
 
 > [Screenshot: experiment page showing the Panel summary artifact grouped under the Panel Summary plugin]
 
 ## Next
 
-- [Writing results](/sdk/recipes/writing-results) — file-backed artifacts, batches, archive and restore
-- [Reading experiments](/sdk/recipes/reading-experiments) — listing and filtering visible experiments
-- [Data model](/sdk/concepts/data-model) — design data, artifacts, and ownership
+- [Writing results](/sdk/recipes/writing-results): file-backed artifacts, batches, archive and restore.
+- [Reading experiments](/sdk/recipes/reading-experiments): list and filter visible experiments.

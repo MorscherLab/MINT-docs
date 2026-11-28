@@ -1,40 +1,20 @@
 # Operations
 
-Operating a MINT plugin — the work that happens after `mint dev` and before users start clicking. This section covers packaging, publishing, CI patterns, versioning policy, deployment considerations, and SDK upgrades.
+These pages take a working plugin to a release that administrators can install.
 
-## Lifecycle of a release
+1. [Package](/sdk/operations/packaging) the plugin into a `.mint` bundle with `mint build`.
+2. [Deploy and verify](/sdk/operations/deploying) the bundle on a disposable platform.
+3. [Publish](/sdk/operations/publishing) the bundle as a GitHub Release asset. Optionally, add it to a marketplace registry.
+4. [Automate](/sdk/operations/ci-patterns) the checks, the build and the release in GitHub Actions.
 
-```
-develop ──▶ test ──▶ build ──▶ publish ──▶ install ──▶ upgrade
-                       │           │           │           │
-                       │           │           │           └─▶ deploying.md
-                       │           │           └─▶ marketplace registry submission
-                       │           └─▶ publishing.md (.mint release asset)
-                       └─▶ packaging.md (.mint bundle)
-```
+[Versioning](/sdk/operations/versioning) tells you how to choose the plugin version and the compatibility ranges. The plugin version comes from the git tag through `hatch-vcs`. Do not edit it by hand.
 
-## Pages
+## Move to a new SDK release
 
-| Page | Covers |
-|------|--------|
-| [Packaging](/sdk/operations/packaging) | `mint build`, the `.mint` bundle structure, what gets included |
-| [Publishing](/sdk/operations/publishing) | Publish `.mint` release assets and optionally register them in a marketplace |
-| [CI patterns](/sdk/operations/ci-patterns) | Scaffold GitHub Actions workflows plus checksum, registry PR and SDK-compatibility additions |
-| [Versioning](/sdk/operations/versioning) | SemVer, `hatch-vcs`, SDK ranges, `requires_mint`/`min_platform_version`, committed lockfiles |
-| [Deploying](/sdk/operations/deploying) | `mint verify`, `mint deploy` and what it confirms, storage and recovery |
-| [Migrate from 1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6) | Vite+ and pnpm, `mint migrate`, `mint lint`, the new `mint doctor` checks, runtime library changes and the frontend SDK deprecations |
-| [Migrate from 1.4 to 1.5](/sdk/operations/migrate-1.4-to-1.5) | Frontend root exports, named SDK imports, observer events through the event bus, the frontend toolchain and the new 1.5 APIs |
-| [Migrate from 1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4) | The SDK 1.4 author API, access levels, migrations, CLI and frontend changes |
-| [Migrate from 1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3) | Removed Python and frontend APIs, settings `access`, SDK range, deprecated legacy migrations |
-| [Migrate from 1.1 to 1.2](/sdk/operations/migrate-1.1-to-1.2) | PostgreSQL, repository, frontend, and plugin-discovery changes from 1.1 |
-| [Upgrading the SDK](/sdk/operations/upgrading) | `mint sdk update`, lockfiles, regenerate and verify |
+Follow [Upgrading the SDK](/sdk/operations/upgrading) for each SDK update. For a new minor release, also follow its migration guide:
 
-## Conventions
-
-The platform's release flow uses `hatch-vcs` to derive versions from git tags. Plugins should follow the same pattern — a tag becomes a release, `hatch-vcs` reads it, and the wheel embeds it in `_version.py`. No manual version edits.
-
-The marketplace registry uses each entry's `min_platform_version` to decide whether the running platform can install or update the plugin. Keep that platform floor honest. Keep the `mint-sdk` dependency range honest too, because it still controls plugin builds and Python dependency resolution.
-
-## Next
-
-→ [Packaging](/sdk/operations/packaging) — `mint build` and the `.mint` artifact
+- [1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6): Vite+ and pnpm, `mint migrate`, `mint lint`, new `mint doctor` checks, runtime library changes, frontend deprecations
+- [1.4 to 1.5](/sdk/operations/migrate-1.4-to-1.5): frontend root exports, named SDK imports, observer events through the event bus, frontend toolchain, new 1.5 APIs
+- [1.3 to 1.4](/sdk/operations/migrate-1.3-to-1.4): the SDK 1.4 author API, access levels, migrations, CLI and frontend changes
+- [1.2 to 1.3](/sdk/operations/migrate-1.2-to-1.3): removed Python and frontend APIs, settings `access`, SDK range, deprecated legacy migrations
+- [1.1 to 1.2](/sdk/operations/migrate-1.1-to-1.2): PostgreSQL, repository, frontend and plugin-discovery changes

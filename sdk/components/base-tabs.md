@@ -1,14 +1,14 @@
 ---
 aside: false
 title: BaseTabs
-description: "BaseTabs is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Underline tab bar with count badges, icons, meta text and an optional More menu."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # BaseTabs
 
-BaseTabs is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `BaseTabs` to switch between views of one page with an underline tab bar.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,8 +25,7 @@ import { BaseTabs } from "@morscherlab/mint-sdk"
 
 ## Tabs
 
-BaseTabs renders underline tabs, with count badges. There is no `variant` prop. Use [SegmentedControl](/sdk/components/segmented-control)
-with `variant="card"` for a pill-style choice control.
+`BaseTabs` has one style, underline tabs with count badges, and no `variant` prop. For a pill-style choice, use [SegmentedControl](/sdk/components/segmented-control) with `variant="card"`.
 
 ```vue
 <BaseTabs v-model="activeTab" :options="tabs" />
@@ -34,7 +33,7 @@ with `variant="card"` for a pill-style choice control.
 
 An option's `meta` shows as muted text after the label.
 
-With `overflow="menu"`, the tabs that do not fit move into a trailing **More** menu. The selected tab stays in the bar. A long label is cut, and the label and meta show in `title`. A tab chosen from the menu gets the focus.
+With `overflow="menu"`, the tabs that do not fit move into a More menu at the end. The selected tab stays in the bar. A long label is cut, and `title` holds the label and meta. A tab chosen from the menu gets the focus.
 
 ```vue
 <BaseTabs v-model="activeTab" :options="runTabs" overflow="menu" />

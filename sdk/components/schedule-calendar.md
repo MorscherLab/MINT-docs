@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ScheduleCalendar
-description: "ScheduleCalendar is a workflow component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Drag-and-drop week and day calendar for lab events in time slots."
 ---
 
 <p class="mint-component-library__eyebrow">Workflow</p>
 
 # ScheduleCalendar
 
-ScheduleCalendar is a workflow component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `ScheduleCalendar` to book lab events, such as instrument runs, in time slots on a week or day view.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -23,7 +23,7 @@ ScheduleCalendar is a workflow component exported by @morscherlab/mint-sdk for p
 import { ScheduleCalendar } from "@morscherlab/mint-sdk/lab"
 ```
 
-The component has no border, radius or background of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. In the card it runs to the card edges.
+The component has no frame of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card).
 
 <!-- sdk-props:start -->
 ## Props

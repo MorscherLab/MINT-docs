@@ -8,7 +8,7 @@ description: "Render native Plotly traces with SDK theme, sizing, loading, empty
 
 # PlotlyChart
 
-`PlotlyChart` renders native Plotly traces inside `ChartContainer`, loads Plotly lazily when mounted, follows theme/container changes, and cleans up on unmount. The plugin declares `plotly.js-dist-min` in its own frontend dependencies (`vp add plotly.js-dist-min`). See [Charts need Plotly](/sdk/frontend/#charts-need-plotly).
+Use `PlotlyChart` to render Plotly traces with the MINT theme. It loads Plotly when it mounts, follows theme and size changes, and cleans up on unmount. Declare `plotly.js-dist-min` in the plugin; see [Charts need Plotly](/sdk/frontend/#charts-need-plotly).
 
 ::: info Uses Plotly
 This component loads plotly.js when it mounts. The docs do not load plotly.js. To see it work, run a plugin with `mint dev`.
@@ -81,13 +81,22 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 <!-- sdk-props:end -->
 
-The component defaults to responsive rendering, hides the Plotly logo, hides the modebar (`displayModeBar: false`; pass `config: { displayModeBar: true }` to restore it), and sets `showSendToCloud: false`. Plotly 4 shows the modebar "Upload to Cloud" button by default, and that button sends the figure to cloud.plotly.com. The component applies `mintPlotlyTemplate()` (MINT fonts, the `--mint-sample-1…8` group palette, token-based grid and axis colors) and re-reads it on every theme change. Your `layout` and `config` override those defaults.
+Defaults:
 
-With two or more legend traces, the series are listed in the chart header and a click toggles the trace. Set `headerLegend: false`, or set `layout.showlegend` (`true` keeps Plotly's in-plot legend, `false` shows none), to leave the legend to Plotly. Input traces/layout are copied before Plotly receives them, so Plotly's mutations do not modify caller-owned reactive state.
+- Responsive rendering, no Plotly logo.
+- No modebar (`displayModeBar: false`). Pass `config: { displayModeBar: true }` to show it.
+- `showSendToCloud: false`. Plotly 4 shows an "Upload to Cloud" modebar button by default, which sends the figure to cloud.plotly.com.
+- The `mintPlotlyTemplate()` theme: MINT fonts, the `--mint-sample-1…8` group palette, and grid and axis colors from the tokens. The chart reads it again on each theme change.
+
+Your `layout` and `config` override these defaults.
+
+With two or more legend traces, the chart header lists the series, and a click toggles a trace. To leave the legend to Plotly, set `headerLegend: false` or `layout.showlegend` (`true` keeps the Plotly legend in the plot, `false` shows none). The component copies the traces and the layout before Plotly gets them, so Plotly does not change your reactive state.
 
 ## Workbench charts and point clicks
 
-Set `variant="frame"` for compact chrome that fills a workbench panel. Give the parent a definite height and set `height="100%"` on the plot canvas. Numeric `height` values are pixels. Use `active` to pause rendering and resize work while a retained tab is hidden. The chart follows the size of its container with the Plotly `responsive` option. `responsive` is always on; `responsive: false` in `config` has no effect.
+- `variant="frame"` gives compact chrome that fills a workbench panel. Give the parent a definite height, and set `height="100%"`. A number in `height` is pixels.
+- Set `active` to `false` to pause rendering and resizing while a kept-alive tab is hidden.
+- The chart follows the size of its container. The Plotly `responsive` option is always on; `responsive: false` in `config` has no effect.
 
 ```vue
 <script setup lang="ts">
@@ -120,28 +129,26 @@ const selectedPoint = ref<number | null>(null)
 </style>
 ```
 
-`plotly-click` emits Plotly's `PlotMouseEvent` only when `clickEvents` is enabled. `pointNumber` is the point index within its trace; use `curveNumber` or trace `customdata` when mapping a multi-trace plot to domain records. The SDK does not expose every Plotly event as a Vue emit.
+`plotly-click` emits the Plotly `PlotMouseEvent` only when `clickEvents` is `true`. `pointNumber` is the index of the point in its trace. To map a point of a multi-trace plot to a record, use `curveNumber` or the trace `customdata`. The component does not emit the other Plotly events.
 
-If your application already owns a compatible custom Plotly build, pass it through `:plotly="customPlotly"` to bypass the default lazy import. That build must be Plotly 4.1.2 or later, or the chart does not follow the size of its container, and it must include the trace types you use. A plugin that always passes its own build does not need the `plotly.js-dist-min` package. Otherwise retain the SDK default; a custom build is optional.
+To use your own Plotly build, pass it as `:plotly="customPlotly"`. The component then does not load `plotly.js-dist-min`. The build must be Plotly 4.1.2 or later, or the chart does not follow the size of its container. It must include the trace types you use.
 
 ## Plotly 4 builds and types
 
-The SDK uses `plotly.js-dist-min` ^4.3.0. The SDK `dist/` does not bundle Plotly. `PlotlyChart` loads Plotly lazily from your plugin's `node_modules` when it first renders. Declare the package in the plugin: `mint doctor` gives the warning "Frontend chart dependency" when it is missing, and `--strict` counts it. When Plotly cannot load, the chart shows "Unable to load the chart library." and logs the cause one time with `console.error`. A render failure shows "Unable to display this chart."
+The SDK uses `plotly.js-dist-min` ^4.3.0 and does not bundle it. `PlotlyChart` loads it from the `node_modules` of your plugin when it first renders, so declare the package in the plugin; see [Charts need Plotly](/sdk/frontend/#charts-need-plotly). When Plotly cannot load, the chart shows "Unable to load the chart library." and logs the cause one time with `console.error`. When rendering fails, it shows "Unable to display this chart."
 
 - A plugin that calls `Plotly.newPlot` itself with `mintPlotlyTemplate()` does not get the `PlotlyChart` defaults. Pass `showSendToCloud: false` in the config.
 - Import Plotly types from `plotly.js-dist-min`. Do not use `@types/plotly.js`, which describes Plotly 3.
 - Remove any ambient `declare module 'plotly.js-dist-min'` shim. It hides the types that Plotly 4 ships, and the `PlotlyChart` prop types stop resolving.
-- Plotly 4 removes the `scattermapbox`, `choroplethmapbox`, and `densitymapbox` traces and the mapbox subplot. Figures that use them, such as plotly.py `px.*_mapbox` figures, do not render.
+- Plotly 4 has no `scattermapbox`, `choroplethmapbox` or `densitymapbox` traces and no mapbox subplot. Figures that use them, such as plotly.py `px.*_mapbox` figures, do not render.
 
 ## Slots and behavior
 
-- `header`: replace the title/description content; `toolbar` remains separate.
-- `toolbar`: extra actions in the header.
-- `subhead`: content between the header and chart body.
-- `empty`: replace the default empty-state content.
-- `error`: replace the rendering-failure message; the default message has `role="alert"`.
+- `header`: replaces the title and description. `toolbar` stays.
+- `toolbar`: actions in the header.
+- `subhead`: content between the header and the chart body.
+- `empty`: replaces the empty state.
+- `error`: replaces the render-failure message. The default message has `role="alert"`.
 - `legend`, `footer`: content below the chart body.
 
-Set `empty` yourself when an analysis has no data. Bind `loading` to request state and keep axis labels/units explicit. For another chart library or event bindings beyond this API, use [ChartContainer](/sdk/components/chart-container).
-
-[Release source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/PlotlyChart.vue) · [Frontend tutorial](/sdk/tutorials/adding-a-frontend) · [Component library](/sdk/components/)
+Set `empty` when an analysis has no data, and bind `loading` to the request state. For another chart library, or for Plotly events that this component does not emit, use [ChartContainer](/sdk/components/chart-container).

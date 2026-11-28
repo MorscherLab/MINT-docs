@@ -1,14 +1,14 @@
 ---
 aside: false
 title: FormBuilder
-description: "Schema-driven form renderer for experiment-design and plugin settings UIs."
+description: "Control-model form renderer for experiment-design and plugin settings UIs."
 ---
 
 <p class="mint-component-library__eyebrow">Workflow</p>
 
 # FormBuilder
 
-Schema-driven form renderer for experiment-design and plugin settings UIs.
+Use `FormBuilder` to render a form from a control model that you build with `defineControlModel()`.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -26,8 +26,10 @@ import { FormBuilder } from "@morscherlab/mint-sdk"
 ## Basic Usage
 
 ```vue
-<FormBuilder :schema="designSchema" v-model="designData" />
+<FormBuilder :spec="designModel" v-model="designData" />
 ```
+
+Build `designModel` with `defineControlModel()`. For control models, field types, validation and conditional fields, see the [FormBuilder guide](/sdk/frontend/form-builder).
 
 <!-- sdk-props:start -->
 ## Props
@@ -64,9 +66,5 @@ Defaults are the values that vue-component-meta resolves from the source; object
 This component declares no slots.
 
 <!-- sdk-props:end -->
-
-## Related
-
-- [FormBuilder deep dive](/sdk/frontend/form-builder)
 
 [Back to component library](/sdk/components/)

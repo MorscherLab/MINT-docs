@@ -8,7 +8,7 @@ description: "Button that runs a default action, with a chevron menu that runs a
 
 # SplitButton
 
-Button that runs a default action, with a chevron menu that runs any action and makes it the new default.
+Use `SplitButton` for a default action plus a menu of other actions. The last action chosen in the menu becomes the default.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

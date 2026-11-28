@@ -1,14 +1,14 @@
 ---
 aside: false
 title: FormulaInput
-description: "FormulaInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Text input for chemical formulas with a rendered preview and the molecular weight."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # FormulaInput
 
-FormulaInput is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `FormulaInput` to enter a chemical formula, for example `Ca(OH)2` or `CuSO4·5H2O`.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -25,7 +25,10 @@ import { FormulaInput } from "@morscherlab/mint-sdk/lab"
 
 ## Behavior
 
-While blurred, the field shows the rendered formula; while focused, the raw text. A fixed `MW · value · g/mol` segment shows the molecular weight. An unknown element or unparsable formula puts the field in the error state and names the symbol. All 118 elements, hydrates (`·` or `*`), and trailing charges (`SO4^2-`, `Fe2+`, `NH4+`) are accepted.
+- Without focus, the field shows the rendered formula. With focus, it shows the raw text.
+- A fixed `MW · value · g/mol` segment shows the molecular weight.
+- An unknown element or a formula that does not parse puts the field in the error state and names the symbol.
+- The field accepts all 118 elements, hydrates (`·` or `*`) and trailing charges (`SO4^2-`, `Fe2+`, `NH4+`).
 
 <!-- sdk-props:start -->
 ## Props

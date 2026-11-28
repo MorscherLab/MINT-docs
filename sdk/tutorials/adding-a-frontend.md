@@ -1,22 +1,10 @@
 # Tutorial 2 - Adding a Frontend
 
-You'll build **hello-standard** with MINT SDK **@MINT_VERSION@**: a `standard` mode plugin with a FastAPI-style backend and a Vue 3 workspace. Use this path when your plugin needs custom interaction, results, or navigation. Generated mode remains the shorter path for Python parameters and standard result views.
+Build `hello-standard`, a `standard` mode plugin with a FastAPI-style backend and a Vue 3 workspace. Use this mode when your plugin needs custom interaction, results or navigation.
 
-By the end you will have:
-
-- A plugin class with `@endpoint` handlers
-- A Vue workspace using `@morscherlab/mint-sdk`
-- A generated typed client in `frontend/src/generated/mint-plugin.ts`
-- Backend and frontend checks that can run in CI
-
-**Time:** 40-50 minutes
-**Prereqs:** Python 3.14+, `uv`, the Vite+ CLI `vp` 1.5.1 or later, and the `mint` CLI from `mint-sdk[cli]` @MINT_VERSION@.
-
-Install Vite+ once (`curl -fsSL https://vite.plus | bash` on macOS and Linux) and check it with `vp --version`. The `mint` CLI runs every frontend command through `vp`, and `vp` sets up Node.js and pnpm for the frontend.
+Time: 40 to 50 minutes. Prerequisite: the full toolchain from [Install the toolchain](/sdk/install), including Vite+ (`vp` 1.5.1 or later).
 
 ## 1. Scaffold in Standard Mode
-
-Create a new standard plugin:
 
 ```bash
 mint init hello-standard \
@@ -28,7 +16,7 @@ mint init hello-standard \
 cd hello-standard
 ```
 
-`standard` mode includes both backend and frontend files:
+The scaffold creates backend and frontend files:
 
 ```text
 hello-standard/
@@ -76,9 +64,7 @@ cd ..
 uv run pytest -q
 ```
 
-The frontend uses pnpm and Vite+. `package.json` names `"packageManager": "pnpm@12.21.0"`, and its scripts run `vp`: `vp dev`, `vp build`, `vp test`, `vp fmt` and `vp fmt --check`. The `lint` script runs `uv run mint -C .. lint`. `vite.config.ts` imports `defineConfig` from `vite-plus` and holds the `test`, `fmt` and `lint` settings. Tailwind runs through `@tailwindcss/vite`, so the scaffold has no `postcss.config.js` and no `vitest.config.ts`. The build is `vue-tsc --noEmit && vp build`, and there is no `tsconfig.node.json`. `index.html` loads the Geist fonts with a `<link>`. `mint doctor` checks these points; see [`mint doctor`](/sdk/api/cli-reference#mint-doctor).
-
-`mint lint` checks the MINT design rules, then runs ruff and oxlint. A new plugin passes it with no finding. See [`mint lint`](/sdk/api/cli-reference#mint-lint).
+The frontend uses pnpm and Vite+, and its scripts run `vp`. For the files and scripts of the scaffold, see [`mint init`](/sdk/api/cli-reference#mint-init). `mint lint` checks the MINT design rules, then runs ruff and oxlint; a new plugin passes with no finding.
 
 The scaffold tests use `Harness`, which runs the backend app without a built frontend. Build the frontend (`vp run build`) before you run the plugin with `mint dev` against its bundled assets or build the bundle.
 
@@ -147,11 +133,14 @@ class HelloStandardPlugin(Plugin):
         ]
 ```
 
-`@endpoint` is the normal path for plugin HTTP APIs. Use native `routers()` only when you need a FastAPI feature that `@endpoint` does not cover, such as dynamic router factories or non-standard route classes. The SDK serves the plugin health route (`/__mint/health`) itself; add `@health` only to report a real status. The `@tool` method publishes the calculation to AI assistants (see [MCP tools](/sdk/recipes/mcp-tools)); delete it when you do not need it. The `@panel` method adds a "Summary" tab to the Analysis artifacts card of each experiment page; change its sections or delete it.
+- `@endpoint` is the normal way to declare plugin HTTP APIs. Use native `routers()` only for a FastAPI feature that `@endpoint` does not cover, such as dynamic router factories or custom route classes.
+- The SDK serves the health route (`/__mint/health`) itself. Add `@health` only to report a real status.
+- The `@tool` method publishes the calculation to AI assistants; see [MCP tools](/sdk/recipes/mcp-tools). Delete it when you do not need it.
+- The `@panel` method adds a "Summary" tab to the Analysis artifacts card of each experiment page. Change its sections or delete it; see [Panels](/sdk/recipes/panels).
 
 ## 3. Inspect the Backend Test
 
-The scaffold tests the real SDK runtime app through `Harness`, so the backend tests do not depend on a frontend build:
+The scaffold tests the real SDK runtime app through `Harness`, so the backend tests do not need a frontend build:
 
 ```python
 import asyncio
@@ -186,17 +175,9 @@ def test_mcp_tool_returns_a_real_result() -> None:
     )
 
     assert result == {"input": 2.5, "doubled": 5.0}
-
-
-def test_summary_panel_shows_the_experiment_and_links_to_the_workspace() -> None:
-    with Harness(HelloStandardPlugin) as harness:
-        sections = harness.panel("summary", 7)
-
-    assert [(section["kind"], section.get("href")) for section in sections] == [
-        ("kv", None),
-        ("link", "/plugin/hello-standard"),
-    ]
 ```
+
+The scaffold also tests the summary panel with `Harness.panel`; see [Testing plugins → Panels](/sdk/recipes/testing-plugins#panels).
 
 Run it after every backend route change:
 
@@ -206,7 +187,7 @@ uv run pytest -q
 
 ## 4. Inspect the Frontend Shell
 
-`frontend/src/main.ts` creates the app and installs Pinia and Vue Router. It does not install `MINTSdk`: the app imports each SDK component by name from its entry, so the first-load bundle holds only the components that the plugin uses.
+`frontend/src/main.ts` creates the app and installs Pinia and Vue Router. The app imports each SDK component by name and does not install `MINTSdk`; see [Package entry points](/sdk/frontend/#package-entry-points).
 
 ```ts
 import { createApp } from 'vue'
@@ -279,18 +260,13 @@ const workspace = definePluginWorkspaceView({
 </template>
 ```
 
-`PluginWorkspaceView` takes one `:spec` built with `definePluginWorkspaceView`. It already uses [AppLayout](/sdk/components/app-layout) internally and supplies the standard top bar and the sidebar. Do not wrap it in another `AppLayout`, and do not put an `AppContainer` around `<router-view />`. `main: 'plain'` lets the page place its own `SectionCard`s in the main area. The sidebar renders the controls of `sidebar.controls` as a form, and its submit emits `form-submit`.
+`PluginWorkspaceView` takes one `:spec` built with `definePluginWorkspaceView`. It supplies the top bar and the sidebar; see [AppLayout or a workspace?](/sdk/frontend/#applayout-or-a-workspace) for the shell rules. `main: 'plain'` lets the page put its own `SectionCard`s in the main area. The sidebar shows the controls of `sidebar.controls` as a form, and its submit emits `form-submit`.
 
 A plugin type that writes experiments (`experiment-design`, `full`, `workflow`) also gets `experiment: true` in the spec. The top bar then shows the experiment chip, so the user picks the experiment there and not in a form field.
 
-Keep this shell for custom plugin screens. The `mint lint` layout rules check it: `workspace-sidebar` reports a workspace with `sidebar: false`, and `nested-card` a card inside a card. For the selection guide and each component's props, see [AppLayout or a workspace?](/sdk/frontend/#applayout-or-a-workspace).
+Keep this shell for custom plugin screens. The `mint lint` layout rules check it: `workspace-sidebar` reports a workspace with `sidebar: false`, and `nested-card` reports a card inside a card.
 
-The CSS entry imports Tailwind and the SDK tokens:
-
-```css
-@import "tailwindcss";
-@import "@morscherlab/mint-sdk/styles";
-```
+The CSS entry `src/style.css` imports Tailwind and the SDK tokens; see the [setup checklist](/sdk/frontend/#setup-checklist).
 
 ## 5. Use the Generated Client
 
@@ -377,15 +353,13 @@ const analysis = useAnalysisStore()
 </template>
 ```
 
-`useClient()` returns one typed method per endpoint, named after its `operation_id`. An `@endpoint` without `operation_id` gets the method name in lowerCamel case (`get_layout` becomes `getLayout`). The same file exports `useSettings()`, `useJobs(name, options)`, `upload`, `download`, `endpointUrl`, `useStream`, `contract`, `contractHash` and `apiPrefix`.
+`useClient()` returns one typed method per endpoint. For the method names, the other exports and the call shapes, see [Generated plugin clients](/sdk/frontend/composables#generated-plugin-clients). `/analyze` has only a JSON body, so its call is direct. For an endpoint with path or query parameters, run `mint docs contract` and use the call shape that it prints.
 
-For this endpoint, the generated call is direct because `/analyze` has only a JSON body. If an endpoint has path or query parameters, run `mint docs contract` and follow the call shape printed there.
+The full request path is: sidebar form submit → `form-submit` → `analysis.run(values)` → typed `client.analyze(body)` → Vite `/api` proxy → `/api/hello-standard/analyze` → Pydantic request validation → `AnalyzeResponse` → the result in `WorkspaceView`. Authentication and URL selection stay in the SDK client.
 
-The complete request path is: sidebar form submit → `form-submit` → `analysis.run(values)` → typed `client.analyze(body)` → Vite `/api` proxy → `/api/hello-standard/analyze` → Pydantic request validation → `AnalyzeResponse` → the result in `WorkspaceView`. Authentication and URL selection stay in the SDK client.
+`useRequest().run()` records the loading and error state and throws the error again. The example catches it after the visible error is set. For handling by status and a request ID, use `MintApiError`; see [Typed HTTP errors](/sdk/frontend/composables#typed-http-errors-in-1-2).
 
-`useRequest().run()` records loading/error state and rethrows; the example catches that rejection after the visible error has been populated. For status-specific handling and a request ID, use `MintApiError` as shown in [Composables](/sdk/frontend/composables).
-
-Do not edit `frontend/src/generated/*` by hand. Regenerate after backend route, schema, settings, or navigation changes.
+Do not edit `frontend/src/generated/*` by hand. Generate it again after a change to backend routes, schemas, settings or navigation.
 
 ### Add a backend operation without hand-writing a client
 
@@ -407,7 +381,7 @@ async def scale(self, request: ScaleRequest) -> ScaleResponse:
     return ScaleResponse(values=[value * request.factor for value in request.values])
 ```
 
-Regenerate from the plugin root:
+Generate the client again from the plugin root:
 
 ```bash
 mint sdk generate
@@ -415,7 +389,7 @@ mint docs contract
 mint sdk generate --check
 ```
 
-The workspace can now call `await client.scale({ values: [1, 2, 3], factor: 2 })` and receives a typed `{ values: number[] }` response. Keep this synchronous request for short calculations; use `@job` and the SDK job client for long-running analyses.
+The workspace can now call `await client.scale({ values: [1, 2, 3], factor: 2 })` and gets a typed `{ values: number[] }` response. Use a synchronous request for short calculations only. For long analyses, use `@job` and the SDK job client.
 
 Add one route check to `tests/test_plugin.py`:
 
@@ -450,13 +424,13 @@ Backend   http://127.0.0.1:8003/api/hello-standard
 Frontend  http://localhost:5175/hello-standard/
 ```
 
-Open the frontend URL and submit the form in the sidebar. The Vite dev server proxies `/api` to the backend URL that `mint dev` passes in `MINT_DEV_BACKEND_URL`, so the workspace can call `client.analyze()` without hard-coding a host.
-
-Keep the scaffold's `resolve.alias`/`resolve.dedupe` entries for Vue and Pinia: the SDK and plugin must use the same runtime instances. Keep Vite `base: '/hello-standard/'` aligned with the plugin route prefix so built assets resolve when installed. Add a route to `main.ts` for each further page of the workspace.
-
-For platform-specific work, continue with [Platform integration](/sdk/frontend/platform-integration). It covers `mint dev --platform`, real installed-plugin verification, authentication, experiment selection, design saves, and server file inputs.
+Open the frontend URL and submit the form in the sidebar. The Vite dev server proxies `/api` to the backend URL that `mint dev` passes in `MINT_DEV_BACKEND_URL`.
 
 > [Screenshot: hello-standard workspace with the Value field in the Parameters sidebar and the Result card in the main area]
+
+Keep the `resolve.alias` and `resolve.dedupe` entries for Vue and Pinia in the scaffold, so that the SDK and the plugin use the same runtime instances. Keep the Vite `base: '/hello-standard/'` equal to the plugin route prefix, so that the built assets resolve after install. Add a route to `main.ts` for each further page of the workspace.
+
+For authentication, experiment selection, design saves and server files, continue with [Platform integration](/sdk/frontend/platform-integration).
 
 ## 7. Build for Production
 
@@ -488,41 +462,14 @@ uv run mint build
 "frontend/dist" = "mint_plugin_hello_standard/frontend"
 ```
 
-That is why `mint build` can place the built workspace inside the `.mint` bundle.
+With this mapping, `mint build` puts the built workspace in the `.mint` bundle.
 
 ## 8. Verify and deploy
 
-Check the real install path in a disposable platform container (requires Docker):
-
-```bash
-mint verify
-```
-
-`mint verify` builds the bundle, boots the MINT platform image, installs the bundle through the normal upload path, restarts, and waits until the plugin loads.
-
-Then deploy to a test platform you administer:
-
-```bash
-mint platform auth login --url https://mint-test.example.org
-mint deploy --url https://mint-test.example.org
-```
-
-`mint deploy` builds the same bundle, uploads it, restarts the platform, confirms the restart by the new server `boot_id`, and exits 1 when the platform disabled the plugin. The restart requires the `platform.configure` permission; `--timeout` (default 180 s) covers the restart and the plugin load together. Use a test platform, not production.
-
-## Where You've Landed
-
-You now have a standard-mode plugin that:
-
-- Uses `@endpoint` methods for custom HTTP APIs
-- Renders a Vue 3 sidebar workspace with SDK components and a Pinia store
-- Calls the backend through the generated typed client
-- Runs backend tests and frontend type/test checks
-- Builds frontend assets into the plugin bundle
+Test the bundle in a disposable platform with `mint verify`, then install it on a test platform with `mint deploy`. See [Deploying and verifying a plugin](/sdk/operations/deploying).
 
 ## Next
 
-- [Component Library](/sdk/components/) - choose SDK UI pieces before writing custom controls
-- [Frontend → Composables](/sdk/frontend/composables) - platform-aware state and API helpers
-- [Frontend → Platform integration](/sdk/frontend/platform-integration) - experiment selection, auth, save/load, and server mounts
-- [Frontend → FormBuilder](/sdk/frontend/form-builder) - share controls across forms, sidebars, and settings
-- [Tutorial 3 - Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) - add plugin-owned database tables
+- [Component library](/sdk/components/): choose SDK UI parts before you write custom controls.
+- [FormBuilder](/sdk/frontend/form-builder): share controls across forms, sidebars and settings.
+- [Tutorial 3 - Design plugin with tables](/sdk/tutorials/design-plugin-with-tables): add plugin-owned database tables.

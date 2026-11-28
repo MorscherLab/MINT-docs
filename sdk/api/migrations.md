@@ -1,8 +1,8 @@
 # Migrations reference — @MINT_VERSION@
 
-`mint_sdk.migrations` exports the shared Alembic runtime. The legacy integer framework (`PluginMigration`, `MigrationOps`, `MigrationRunner`) is removed in MINT 1.4. `MigrationSpec` and `LegacyBaseline` are also exported from the `mint_sdk` package root. Source: [v@MINT_VERSION@ migrations package](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations).
+`mint_sdk.migrations` is the Alembic runtime for the tables that a plugin owns. `MigrationSpec` and `LegacyBaseline` are also exported from the `mint_sdk` package root. The legacy integer framework (`PluginMigration`, `MigrationOps`, `MigrationRunner`) does not exist since MINT 1.4. Source: [v@MINT_VERSION@ migrations package](https://github.com/MorscherLab/MINT/tree/v@MINT_VERSION@/packages/sdk-python/src/mint_sdk/migrations).
 
-The sqlmodel release that the `local-db` extra requires (0.0.47 or later) maps a plain `datetime` model field to a timezone-aware column and rejects naive values on write. A plugin table with `datetime` fields needs aware datetimes. To keep an existing naive column, type the field as `NaiveDatetime` or use `Field(sa_type=DateTime(timezone=False))`. Run `mint doctor --only db --database-url URL` to compare the models with the database.
+The `local-db` extra requires sqlmodel 0.0.47 or later. This release maps a plain `datetime` field to a timezone-aware column and refuses naive values on write. Write aware datetimes to such a field. To keep an existing naive column, type the field as `NaiveDatetime` or use `Field(sa_type=DateTime(timezone=False))`. Run `mint doctor --only db --database-url URL` to compare the models with the database.
 
 ## `MigrationSpec` and `LegacyBaseline`
 
@@ -38,7 +38,12 @@ class MigrationSpec:
 | `legacy` | Optional fixed baseline and synchronous validator for explicit adoption of an existing unversioned schema |
 | `managed_tables` | Additional owned table names used in scope filtering, particularly a shared `public` domain; not an ignore list or permission to skip DDL |
 
-`LegacyBaseline.from_plugin_history()` builds the baseline for a plugin moving off the legacy integer protocol. It adopts `revision` when the legacy history of `plugin_name` in `public.plugin_schema_migrations` on PostgreSQL or `_plugin_migrations` on SQLite holds exactly versions 1..`last_version`, all successful. No legacy history means a fresh install, which runs the baseline revision. An incomplete, failed or newer history raises `MigrationError`. The optional `validate` callable may raise for plugin-specific data checks; the runtime then compares the adopted schema with `MigrationSpec.models` before committing. `plugin_name` defaults to the name of the plugin that declares the spec, so a plugin passes only `revision` and `last_version`.
+`LegacyBaseline.from_plugin_history()` builds the baseline for a plugin that moves off the legacy integer protocol. Pass `revision` and `last_version`; `plugin_name` defaults to the declaring plugin. The rules:
+
+- The runtime adopts `revision` when the legacy history holds exactly versions 1..`last_version`, all successful. The history is in `public.plugin_schema_migrations` on PostgreSQL and `_plugin_migrations` on SQLite.
+- No legacy history means a fresh install: the runtime runs the baseline revision.
+- An incomplete, failed or newer history raises `MigrationError`.
+- The optional `validate` callable can raise for plugin-specific data checks. Then the runtime compares the adopted schema with `MigrationSpec.models` before the commit.
 
 Declare the spec in the plugin `Metadata`:
 
@@ -55,9 +60,11 @@ class Planner(Metadata):
     )
 ```
 
-`mint add migration NAME` scaffolds the declaration and the `db_revisions` package. A plugin that still defines `get_migrations_package()` does not load on a 1.4 platform: the loader keeps it disabled with a `migration_error`, `mint doctor` fails it, and standalone database setup raises `ConfigurationException`. `get_migration_spec()` and `get_shared_models()` are removed too: `Metadata.database` replaces them.
+`mint add migration NAME` scaffolds the declaration and the `db_revisions` package.
 
-The revision graph must be a single complete linear chain; the database head and recorded ancestor history must match it. Models cannot claim MINT's internal migration tables. Foreign references outside the domain can be represented as reference-only metadata stubs; this does not grant permission to mutate another domain. A reference to an undeclared table in the same owned domain is rejected.
+A plugin that still defines `get_migrations_package()` does not load. The platform loader keeps it disabled with a `migration_error`, `mint doctor` fails it, and standalone database setup raises `ConfigurationException`. `get_migration_spec()` and `get_shared_models()` are also removed: `Metadata.database` replaces them.
+
+The revision graph must be one complete linear chain. The database head and the recorded history must match it. A model cannot claim the internal migration tables of MINT. A reference to a table outside the domain can be a reference-only metadata stub; it gives no permission to change that domain. A reference to an undeclared table in the same domain is refused.
 
 ## Revision module shape
 
@@ -82,9 +89,9 @@ def downgrade(*, schema: str | None) -> None:
     raise NotImplementedError("Use a reviewed forward migration or restore a backup")
 ```
 
-`upgrade` is **synchronous**. MINT provides the connection and keyword `schema` through its managed Alembic environment. Bind every table/index operation to that schema. `checksum_files` files must exist inside the revision directory tree; their names and bytes participate in the checksum alongside the entire revision file.
+`upgrade` is synchronous. MINT gives it the connection and the keyword `schema`. Bind every table and index operation to that schema. Each file in `checksum_files` must be inside the revision directory tree. Its name and bytes go into the checksum, together with the whole revision file.
 
-Managed drop-table, drop-column, drop-index, and drop-constraint operations require `destructive = True`. Raw SQL is not a substitute for reviewing data-loss risk. Revision code may not commit, roll back, or start a separate host transaction. No runtime API below calls `downgrade()`.
+A drop of a table, column, index or constraint needs `destructive = True`. Raw SQL does not remove the need to review the data-loss risk. Revision code must not commit, roll back or start a separate transaction. No runtime function on this page calls `downgrade()`.
 
 ## Runtime functions
 
@@ -127,9 +134,9 @@ Use `owner="plugin:<canonical-plugin-id>"` and `schema=None` for standalone SQLi
 | `ensure_database_identity` | Claims/checks the database domain without inventing a migration revision; not a baseline adoption helper |
 | `migration_connection` | Locks and validates the physical domain; low-level host support, not a replacement for normal application sessions |
 
-`generate_revision(..., engine=None, autogenerate=False)` can author an empty source revision programmatically. The CLI exposes the database-backed autogenerated path as `mint add migration NAME --autogenerate --database-url URL`. CLI source checks additionally reject installed/site-packages revision locations. Do not invoke authoring functions during production startup.
+`generate_revision(..., engine=None, autogenerate=False)` writes an empty source revision. The CLI command for an autogenerated revision is `mint add migration NAME --autogenerate --database-url URL`; it refuses a revision package in an installed (site-packages) location. Do not call the authoring functions at production startup.
 
-Startup comparison in `run_migrations` rejects missing tables/columns and type incompatibility; `check_migrations` performs the fuller declarative comparison. A successful status inspection is not a full schema or data check.
+At startup, `run_migrations` refuses missing tables or columns and incompatible types. `check_migrations` does the full declarative comparison. A successful `inspect_migrations` is not a full schema or data check.
 
 ## `MigrationStatus`
 
@@ -144,7 +151,7 @@ class MigrationStatus:
     migration_error: str | None = None
 ```
 
-String revisions belong in `schema_revision` and `target_revision`. The integer `schema_version` field is removed with the legacy protocol; read `schema_revision` (the admin plugin list shows `migration_backend`, `schema_revision`, `target_revision`, `pending_migrations` and `migration_error`). Errors in runtime operations raise rather than returning a normal failure result. The platform catches startup errors and publishes failure status including `migration_error`.
+`schema_revision` and `target_revision` hold the string revisions. The integer `schema_version` is not used: read `schema_revision`. The admin plugin list shows `migration_backend`, `schema_revision`, `target_revision`, `pending_migrations` and `migration_error`. A runtime function raises on an error; it does not return a failure status. The platform catches startup errors and shows them in `migration_error`.
 
 ## Plugin database access
 
@@ -192,18 +199,21 @@ The check reports only missing model tables and columns; it does not compare typ
 
 ## Identity, history and locking
 
-Each database domain has `_mint_database_identity`, `alembic_version`, and `_mint_migration_history`. The owner is `plugin:<entry-point-name>`; history records applied/adopted revision checksums. A mismatched owner, unknown current revision, incomplete history, or edited applied file stops the operation. An older plugin cannot reopen a database containing a revision it does not package. Legacy/model-only startup also refuses a database with an active Alembic revision.
+Each database domain has the tables `_mint_database_identity`, `alembic_version` and `_mint_migration_history`. The owner is `plugin:<entry-point-name>`. The history records the checksum of each applied or adopted revision. These conditions stop the operation: a different owner, an unknown current revision, an incomplete history, or a changed applied file. An older plugin cannot open a database that has a revision that the plugin does not package. A startup without Alembic (legacy or model-only) also refuses a database with an Alembic revision.
 
-All pending revisions run inside the host's transaction. PostgreSQL uses advisory locks on the physical database/schema domain and the legacy plugin key; DDL lock waits are bounded to 30 seconds after the advisory locks are acquired. SQLite uses `BEGIN IMMEDIATE` with a 30-second busy timeout. During SQLite upgrades the runtime temporarily disables foreign-key enforcement for batch table replacement, checks foreign-key integrity before commit, and restores the connection setting. A migration failure rolls back the migration batch and its history changes.
+All pending revisions run in one host transaction. A failure rolls back the batch and its history rows.
+
+- PostgreSQL: advisory locks on the database/schema domain and on the legacy plugin key. After the advisory locks, a DDL lock wait is at most 30 seconds.
+- SQLite: `BEGIN IMMEDIATE` with a 30-second busy timeout. During an upgrade the runtime disables foreign-key enforcement for batch table replacement, checks foreign-key integrity before the commit, then restores the setting.
 
 ## Alembic errors and recovery
 
-The runtime uses `MigrationError` for invalid owner/scope, invalid revision graph, unknown stored revision, history/checksum mismatch, rejected baseline adoption, and incompatible model drift. Managed drops can raise `DestructiveMigrationError`; SQL/database errors and errors raised inside revision code can propagate directly.
+The runtime raises `MigrationError` for an invalid owner or scope, an invalid revision graph, an unknown stored revision, a history or checksum mismatch, a refused baseline adoption and incompatible model drift. A drop without `destructive = True` raises `DestructiveMigrationError`. Database errors and errors in revision code pass through unchanged.
 
-Recover with compatible immutable revision files, a reviewed forward repair, or tested backup restoration. Removing identity/history tables or manually stamping an unknown database bypasses the evidence that the runtime requires.
+To recover, restore the released revision files unchanged, add a reviewed forward repair revision, or restore a tested backup. Do not delete the identity or history tables, and do not stamp an unknown database by hand: the runtime needs that evidence.
 
 ## The platform's own revisions
 
-The platform applies its schema with the same runtime (`owner="platform"`, `schema="public"`). Its revisions live in `api/db_revisions/` of the MINT repository. Use `mint-platform db current|check|revision` in the platform checkout, not `mint db ... --target platform`. A database that has no `alembic_version` and still has the `schema_migrations` table of the removed integer runner is refused: upgrade through MINT 1.2.x (1.2.2 or later) first.
+The platform uses the same runtime for its own schema (`owner="platform"`, `schema="public"`). Its revisions are in `api/db_revisions/` of the MINT repository. Use `mint-platform db current|check|revision` in the platform checkout. The platform refuses a database that has no `alembic_version` and still has the `schema_migrations` table of the removed integer runner: upgrade through MINT 1.2.2 or a later 1.2.x first.
 
 See [Migrations](/sdk/concepts/migrations) for installation behavior, [Design plugin with tables](/sdk/tutorials/design-plugin-with-tables) for a complete plugin, and [Backfill migrations](/sdk/recipes/backfill-migration) for executable upgrade checks.

@@ -1,34 +1,34 @@
 # UI Tour
 
-Every major MINT screen, mapped to the controls users see in the current platform UI. Use this when you cannot find a setting or are not sure where a workflow starts.
+This page shows where each control is. Use it when you cannot find a setting or a workflow.
 
-> [Screenshot: full MINT window with regions labeled - top action bar, home dashboard, plugin launcher, main content, and account menu]
+> [Screenshot: home page with the top action bar, the status strip, the Experiments and Projects cards, the Plugins launcher and the open account menu labeled]
 
 ## Top action bar
 
-The top action bar appears on platform pages and SDK plugin shells. The exact controls depend on the page and on your permissions.
+The top action bar shows on platform pages and plugin pages. The controls depend on the page and on your permissions.
 
 | Element | What it does |
 |---------|--------------|
-| **MINT logo / platform name** | Returns to the home dashboard |
-| **Navigation / breadcrumb** | The pill navigation (**Home**, **Experiments** with **Experiments** and **Projects**, and **Instruments**) moves between platform pages. **Instruments** shows a red dot while an active instrument has an unacknowledged critical alert. Breadcrumbs lead back from record detail pages |
-| **Page selector** | On a plugin page with more than one page: the plugin name and the current page. Lists the plugin pages that you may open |
-| **Experiment** | On plugin pages that work on an experiment: the selected experiment. Select another one, save, or detach it |
-| **Jobs** | On plugin pages that run jobs: your latest job and its progress, or an idle **Jobs** button with a count of completed jobs. Opens the [jobs tray](#jobs-tray) |
-| **Getting started** | A chip with progress such as `1/2` while the checklist is open. Its **x** button hides the chip |
-| **Help** | Opens the [Getting started checklist, the tours, and **What's new**](#help-and-tours). A count on the button shows unread news |
-| **Theme toggle** | Switches the active light/dark/system theme for the shell |
-| **Settings** | On the home page: opens the settings window, which starts on [Appearance](#appearance) |
-| **Admin** | Opens the Admin workspace. Shown when your role can manage something: `users.manage`, `platform.configure`, `plugins.configure`, `plugins.install` or `notices.publish`. See [Users & roles](/admin/users-roles#system-roles) |
-| **Account menu** | Shows your name. Choose **Profile** to open **Your account**, **Send feedback** to [send a message to the lab admins](#send-feedback), or **Sign out** |
+| MINT logo | Opens the home dashboard |
+| Navigation | The pills **Home**, **Experiments** (with **Experiments** and **Projects**) and **Instruments** open the platform pages. **Instruments** shows a red dot while an active instrument has an unacknowledged critical alert. On a detail page, breadcrumbs lead back |
+| Page selector | On a plugin with more than one page: the plugin name and the current page. Lists the plugin pages that you may open |
+| Experiment | On a plugin page that works on an experiment: the selected experiment. Select another one, save, or detach it |
+| Jobs | On a plugin page that runs jobs: your latest job and its progress, or **Jobs** with the count of completed jobs. Opens the [jobs tray](#jobs-tray) |
+| Getting started | A chip with the progress, such as `1/2`, while the checklist is open. Its **x** button hides the chip |
+| Help | Opens the [checklist, the tours, and **What's new**](#help-and-tours). A count on the button shows unread news |
+| Theme toggle | Switches between light, dark and system theme |
+| Settings | On the home page only: opens the settings window on [Appearance](#appearance) |
+| Admin | Opens the Admin workspace. See [Permissions -> Admin panel](/reference/permissions#admin-panel) for who sees it |
+| Account menu | Shows your name. Choose **Profile** to open **Your account**, **Send feedback** to [send a message to the lab admins](#send-feedback), or **Sign out** |
 
 ## Help and tours
 
-MINT guides new users with two short tours and a checklist. All of them are per browser and per user.
+MINT has two short tours and a checklist for new users. MINT keeps their state per browser and per user.
 
-- **Tours.** The tour **The MINT top bar** starts once for every user. It shows the page pills, the account menu, and the **Help** button. The tour **Experiments** starts on your first visit to the Experiments page. Its step about creating an experiment shows only when you may create experiments.
-- **Getting started.** The checklist has two tasks: **Create an experiment** and **Create a project**. A task shows only when your role may do it. MINT marks a task done when you create the record, or at once when you already own an experiment or belong to a project. The **Open** link beside a task goes to the right page.
-- **Help button.** Click it to open the checklist, to play a tour again, to read **What's new**, and to hide or show the **Getting started** chip. Hide the chip with its **x** button. The checklist chip disappears when all tasks are done.
+- Tours: the tour **The MINT top bar** starts once for each user. It shows the page pills, the account menu and the **Help** button. The tour **Experiments** starts on your first visit to the Experiments page. Its step about creating an experiment shows only when you may create experiments.
+- Getting started: the checklist has two tasks, **Create an experiment** and **Create a project**. A task shows only when your role may do it. MINT marks a task done when you create the record. If you already own an experiment or belong to a project, the task is done at once. The **Open** link beside a task goes to the right page.
+- Help button: click it to open the checklist, play a tour again, read **What's new**, or hide or show the **Getting started** chip. The chip goes away when all tasks are done.
 
 > [Screenshot: Help panel with the Getting started checklist and the list of tours]
 
@@ -38,53 +38,68 @@ Click **Settings** on the home page. The **Appearance** tab has three settings. 
 
 | Setting | Options |
 |---------|---------|
-| **Theme** | **Light**, **Dark**, **System** |
-| **Color palette** | **Teal** (default), **Colour-blind safe**, **Purple**, **Ocean**, **Forest** |
-| **Density** | **Compact**, **Normal** (default), **Comfortable**. Sets the height of table rows, fields, and buttons. The preview in the window shows the effect |
+| Theme | **Light**, **Dark**, **System** |
+| Color palette | **Teal** (default), **Colour-blind safe**, **Purple**, **Ocean**, **Forest** |
+| Density | **Compact**, **Normal** (default), **Comfortable**. Sets the height of table rows, fields and buttons. The preview in the window shows the effect |
 
-The other pages have the theme toggle only. The settings apply to every platform page and to plugin pages.
+The settings apply to all platform pages and plugin pages. Other pages have only the theme toggle.
+
+> [Screenshot: Settings window on the Appearance tab with the theme, color palette and density options and the preview]
 
 ## Jobs tray
 
-A plugin page that runs jobs, such as a generated analysis plugin, shows a **Jobs** control in the top bar. The control shows the job that matters most to you, in this order: a job that needs your input, your first running job, a job that just finished (for 6 seconds), and the number of failed jobs that you have not seen. Without a job, it shows **Jobs** and the count of completed jobs.
+A plugin page that runs jobs, such as a generated analysis plugin, shows a **Jobs** control in the top bar. The control shows one item, in this order of priority:
 
-Click the control to open the tray under the top bar. The tray lists your jobs in two sections, **Active** and **Finished**. An active job has **Cancel**. A job that can be deleted has **Delete**. **Clear** in the **Finished** section removes all finished jobs. A plugin can make the tray ask for confirmation before **Cancel**, **Delete** and **Clear**. Press Escape to close the tray.
+1. A job that needs your input.
+2. Your first running job.
+3. A job that just finished, for 6 seconds.
+4. The number of failed jobs that you have not seen.
+
+Without a job, it shows **Jobs** and the count of completed jobs.
+
+Click the control to open the tray under the top bar. The tray lists your jobs in two sections, **Active** and **Finished**:
+
+- An active job has **Cancel**.
+- A job that can be deleted has **Delete**.
+- **Clear** in the **Finished** section removes all finished jobs.
+
+A plugin can make the tray ask for confirmation before **Cancel**, **Delete** and **Clear**. Press Escape to close the tray. The tray shows the jobs of that plugin only. MINT has no platform-wide jobs list.
 
 > [Screenshot: plugin page with the jobs tray open under the top bar]
 
 ## Send feedback
 
-Choose **Send feedback** in the account menu. Select **Bug**, **Idea**, or **Other**, write your message (at most 5000 characters), and click **Send**. MINT sends the page address (without query) and your browser version with the message. Admins read feedback in the audit log. You can send 10 messages per hour.
+Choose **Send feedback** in the account menu, select **Bug**, **Idea** or **Other**, write your message (at most 5000 characters), and click **Send**. For what admins receive, see [Audit log and feedback](/admin/platform-settings#audit-log-and-feedback).
 
 ## Home dashboard
 
-The landing page after logging in. The dashboard is built for quick triage:
+The home dashboard opens after you sign in. It shows what needs your attention.
 
 | Region | What it shows |
 |--------|---------------|
-| **Status strip** | Today's date, open items that need attention, and the lab notice board |
-| **Notice board** | The pinned or newest active notice, with an earlier-notices modal when history exists |
-| **Experiments** | Recently updated experiments with status and code; the **Mine** chip shows only your own |
-| **Projects** | Recently updated projects with experiment counts and project status; the **Mine** chip shows only your own |
-| **Instruments** | Live status of active instruments, errors and offline first. Shown with `instruments.view` when at least one instrument is active. See [Instruments](/guide/instruments#instruments-on-home) |
-| **Plugins** | Searchable grid/list of enabled plugins by display name or plugin ID, with per-user pinning and entry-point links |
+| Status strip | Today's date, the open items that need you (**Needs you**), and the lab notice board |
+| Notice board | The pinned or newest active notice. When there are earlier notices, a window lists them |
+| Experiments | Recently updated experiments with status and code. The **Mine** chip shows only your own |
+| Projects | Recently updated projects with experiment counts and status. The **Mine** chip shows only your own |
+| Instruments | Live status of active instruments, errors and offline first. Shows with `instruments.view` when at least one instrument is active. See [Instruments](/guide/instruments#instruments-on-home) |
+| Plugins | The enabled plugins that your role may open, as a grid or list. Search by display name or plugin ID, and pin the plugins that you use most |
 
-Admins who can manage notices see a shortcut from the notice board to **Admin -> Lab content -> Notices**.
+Admins who can manage notices see a link from the notice board to **Admin -> Lab content -> Notices**.
 
-Plugins appear under the display name their authors declare, or under the plugin ID if there is none. The plugin page, the experiment page, and the settings list use the same name. The Home settings window opens on [**Appearance**](#appearance). Its **Plugins** tab, under **Platform** in the side rail, lists the installed plugins you can open.
+A plugin shows under the display name from its author, or under its plugin ID when there is none. The plugin page, the experiment page and the settings list use the same name. In the settings window, the **Plugins** tab under **Platform** lists the installed plugins that you can open.
 
-> [Screenshot: home dashboard with status strip, notice board, recent records, and plugin launcher labeled]
+> [Screenshot: home dashboard with the status strip, the notice board, the Experiments and Projects cards, and the Plugins launcher labeled]
 
 ## Sign-in pages
 
 | Page | What it does |
 |------|--------------|
-| `/login` | Password, passkey and (when enabled) SWITCH edu-ID sign-in. A lab that requires a second factor then shows **Verify it's you** or **Set up a passkey**. An account that waits for an admin shows **Waiting for approval** |
-| `/register` | Self-registration; sends you to `/login` when an admin has turned registration off |
-| `/setup` | First-run setup wizard (database, first admin account) shown until setup completes |
+| `/login` | Sign-in with password, passkey or SWITCH edu-ID. Then the second-factor step, if your lab requires it. See [Access -> Sign in](/guide/access#sign-in) |
+| `/register` | Self-registration. Sends you to `/login` when an admin turned registration off |
+| `/setup` | First-run setup wizard for the database and the first admin account. Shows until setup is complete |
 | `/device` | Approve a sign-in code that the `mint` CLI shows. See [AI Assistants and API Access](/guide/ai-and-api#sign-in-the-mint-cli) |
 
-MINT does not support mobile browsers: on a phone it shows **Desktop browser required** instead of the app. The `/device` page and the sign-in page that leads to it also work on a phone.
+MINT does not support mobile browsers. On a phone, it shows **Desktop browser required**. The `/device` page and the sign-in page before it work on a phone.
 
 ## Projects and Experiments lists
 
@@ -92,32 +107,11 @@ MINT does not support mobile browsers: on a phone it shows **Desktop browser req
 
 ## Project page
 
-Single project record view:
-
-| Region | Contents |
-|--------|----------|
-| **Header** | Project name, status, description, edit action, and **New experiment** |
-| **Rollup chips** | Counts for all experiments, experiments with design data, and experiments without design data; click to filter the table |
-| **Experiments table** | Code, name, type, status, design completeness, and created date |
-| **Metadata rail** | Project dates, members, tags, and admin-only destructive actions |
-
-> [Screenshot: project page with rollup chips and experiments table]
+The project page has a header, rollup chips, an experiments table and a metadata rail. See [Projects -> Project page](/guide/projects#project-page).
 
 ## Experiment detail page
 
-Single experiment record view:
-
-| Region | Contents |
-|--------|----------|
-| **Header** | Experiment code (or **+ Assign number**), title, status stepper, people avatars when realtime updates are on, edit/cancel/reactivate actions, and an **Open in plugin** action when the design plugin of the experiment has a page |
-| **Design data** | Grouped design fields, sample rows, JSON/CSV export, and fallback full-document viewer. A live design plugin shows its form here. Tabs of the design plugin's panels follow the **Design** tab |
-| **Analysis artifacts** | Outputs grouped by producing plugin, with status, artifact key, result keys, open/download/edit/archive actions, and a show-archived toggle. Tabs of plugin panels follow the **Artifacts** tab |
-| **Instrument records** | With `instruments.view`: instrument history rows that name this experiment |
-| **Metadata rail** | Type, project, timeline, creator, parent link, data lineage, collaborators, tags, and delete action |
-
-The status control in the header drives writability. See [Experiments -> Lifecycle](/guide/experiments#lifecycle).
-
-> [Screenshot: experiment detail page with the Analysis artifacts card open]
+The experiment page has a header with the status, the **Design data** card, the **Analysis artifacts** card and a metadata rail. See [Experiments -> Design and analysis on the detail page](/guide/experiments#design-and-analysis-on-the-detail-page).
 
 ## Your account
 
@@ -125,36 +119,36 @@ Open the account menu in the top action bar and choose **Profile**.
 
 | Section | Contains |
 |---------|----------|
-| **Profile** | First name, last name, display shortname, email, and read-only username |
-| **Password** | Current password, new password (at least 8 characters, at most 72 bytes), confirmation, and the password-change action. Changing it keeps you signed in here and signs out your other sessions |
-| **Security** | Passkeys and SWITCH edu-ID linking, when those auth features are enabled. When your lab requires a second factor, MINT keeps your last passkey: you cannot delete it |
-| **AI & API** | MCP URL for AI assistants, and your personal access tokens. See [AI Assistants and API Access](/guide/ai-and-api) |
+| Profile | First name, last name, short name, email, and the read-only username |
+| Password | Change your password. See [Access -> Change your password](/guide/access#change-your-password) |
+| Security | Passkeys, the authenticator app and SWITCH edu-ID, when your lab turned them on. See [Access -> Second factor](/guide/access#second-factor) |
+| AI & API | The MCP URL for AI assistants, and your personal access tokens. See [AI Assistants and API Access](/guide/ai-and-api) |
 
-The account modal is for identity, sign-in, and access-token settings; **Log out** sits at the bottom of its side rail. Shell appearance is controlled by the theme toggle in the top action bar and by **Settings** on the home page.
+**Log out** is at the bottom of the side rail of the window.
 
 > [Screenshot: Your account modal with Profile, Password, Security, and AI & API sections]
 
 ## Admin workspace
 
-Open **Admin** from the top action bar or go to `/admin`. Users only see sections allowed by their platform permissions.
+Click **Admin** in the top action bar, or go to `/admin`. You see only the sections that your permissions allow.
 
 | Group | Section | Contains |
 |-------|---------|----------|
-| **People & access** | **Users** | Account list, role assignment, disable / re-enable, password reset, and passkey reset |
-| **People & access** | **Roles** | Built-in role presets and custom-role editor |
-| **People & access** | **Access tokens** | Every user's personal access tokens, with revoke |
-| **People & access** | **Service tokens** | Tokens for instrument daemons that report to a plugin, with revoke |
-| **Plugins** | **Installed** | Installed plugins (display name; the second line adds the plugin ID when it is different), runtime state, access control, update, and uninstall actions |
-| **Plugins** | **Registry** | Marketplace catalog, install (admins only), refresh, compatibility, and update badges |
-| **Plugins** | **Libraries** | Reference files that plugins read. See [Libraries](/admin/libraries) |
-| **Lab content** | **Experiment types** | Experiment type registration and platform-owned design metadata |
-| **Lab content** | **Notices** | Publish, pin, archive, restore, and delete home-dashboard notices |
-| **System** | **Configuration** | Platform, auth, database, storage, access, marketplace, notification (email, Teams, Slack, Apple Push), and observability settings |
-| **System** | **Notifications** | Teams and Slack channels. See [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels) |
-| **System** | **Updates** | Platform and plugin updates, and the update settings. See [Updates](/admin/updates) |
-| **System** | **Server** | Runtime health, platform version, update status, and plugin process information |
-| **System** | **Logs** | Structured platform logs and health diagnostics |
-| **System** | **Terminal** | Optional container/process shell and persisted startup script; hidden unless enabled and permitted |
+| People & access | Users | Account list, role assignment, disable / re-enable, password reset, and passkey reset |
+| People & access | Roles | Built-in role presets and custom-role editor |
+| People & access | Access tokens | Every user's personal access tokens, with revoke |
+| People & access | Service tokens | Tokens for instrument daemons that report to a plugin, with revoke |
+| Plugins | Installed | Installed plugins (display name; the second line adds the plugin ID when it is different), runtime state, access control, update, and uninstall actions |
+| Plugins | Registry | Marketplace catalog, install (admins only), refresh, compatibility, and update badges |
+| Plugins | Libraries | Reference files that plugins read. See [Libraries](/admin/libraries) |
+| Lab content | Experiment types | Experiment type registration and platform-owned design metadata |
+| Lab content | Notices | Publish, pin, archive, restore, and delete home-dashboard notices |
+| System | Configuration | Platform, auth, database, storage, access, marketplace, notification (email, Teams, Slack, Apple Push), and observability settings |
+| System | Notifications | Teams and Slack channels. See [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels) |
+| System | Updates | Platform and plugin updates, and the update settings. See [Updates](/admin/updates) |
+| System | Server | Runtime health, platform version, update status, and plugin process information |
+| System | Logs | Structured platform logs and health diagnostics |
+| System | Terminal | Optional shell in the server process and a saved startup script. Hidden unless turned on and permitted. See [Permissions -> Admin terminal](/reference/permissions#admin-terminal) |
 
 The admin navigation rail shows the running version and API health in its footer.
 
@@ -162,30 +156,14 @@ The admin navigation rail shows the running version and API health in its footer
 
 ## Plugin views
 
-Each installed plugin renders inside the platform shell at its plugin route. The shell keeps the platform identity, navigation, theme, and account controls; the plugin owns the main content.
+Each plugin shows inside the platform shell. The shell keeps the top action bar. The plugin owns the main content.
 
-| Region | Convention |
-|--------|------------|
-| Top of plugin content | Plugin-owned title, breadcrumb, tabs, or step indicator |
-| Main panel | Plugin UI, generated form, workspace, chart, table, or custom Vue view |
-| Right sidebar (optional) | Per-plugin parameters, details, or compact controls |
-| Bottom or inline actions (optional) | Run, save, export, upload, or open artifact actions |
+A plugin page usually has a title or tabs at the top, the main panel, an optional right sidebar for parameters, and actions such as **Run** or **Export**. The top bar shows the [page selector](#top-action-bar) and the [jobs tray](#jobs-tray). The address keeps the selected experiment (`experiment_id`).
 
-Plugin pages that run jobs, such as generated analysis plugins, show the [jobs tray](#jobs-tray) from the top bar. The tray shows the jobs of that plugin only; MINT has no platform-wide jobs list. The plugin top bar also lists the plugin's pages in a page selector, and it keeps the selected experiment in the address (`experiment_id`).
+## Reload notice, shortcuts and notifications
 
-Plugins should use the `AppLayout`, `PluginWorkspaceView`, `AppTopBar`, and related components from `@morscherlab/mint-sdk`. See [Frontend SDK](/sdk/frontend/).
+After an update of the platform, open tabs show a notice with a reload action. A plugin page shows the same notice when a newer plugin version is installed.
 
-## Notes on shortcuts and notifications
+MINT has no global keyboard shortcuts. Menus, tables and windows use the standard browser keys.
 
-After the platform is updated, open tabs show a notice with a reload action so the page picks up the new version. The same notice appears on a plugin page when a newer plugin version is installed.
-
-Current MINT releases rely on standard browser and component keyboard behavior for focus, menus, tables, and modal dismissal. Do not assume global shortcut overlays are available unless your deployment or plugin adds them.
-
-Notification delivery (email and push) is configured by your admin, and plugin features can publish notification events through the platform. The platform shell does not show a notification bell. See [Notifications and iOS push](/guide/notifications).
-
-## Next
-
--> [Permissions](/reference/permissions) - what each role can see and do
--> [Troubleshooting](/reference/troubleshooting) - when things do not work
--> [FAQ](/reference/faq) - quick answers
--> [Glossary](/reference/glossary) - terms used across MINT
+MINT has no notification bell. See [Notifications and iOS push](/guide/notifications).

@@ -8,7 +8,7 @@ description: "Strip above a form that someone else changed while it held unsaved
 
 # StaleFormBanner
 
-Strip above a form that someone else changed while it held unsaved edits.
+Use `StaleFormBanner` above a form that someone else changed while it held unsaved edits.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

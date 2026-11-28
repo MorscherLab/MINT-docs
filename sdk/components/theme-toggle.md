@@ -1,14 +1,14 @@
 ---
 aside: false
 title: ThemeToggle
-description: "ThemeToggle is a feedback component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Icon button that switches between light and dark mode."
 ---
 
 <p class="mint-component-library__eyebrow">Feedback</p>
 
 # ThemeToggle
 
-ThemeToggle is a feedback component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `ThemeToggle` to switch between light and dark mode. `AppTopBar` always shows one.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

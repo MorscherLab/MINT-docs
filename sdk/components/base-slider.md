@@ -1,14 +1,14 @@
 ---
 aside: false
 title: BaseSlider
-description: "BaseSlider is a forms component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Range slider with a filled track, value label, color stops and thresholds."
 ---
 
 <p class="mint-component-library__eyebrow">Forms</p>
 
 # BaseSlider
 
-BaseSlider is a forms component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `BaseSlider` to set a number in a range by dragging. Color stops, thresholds and end labels make it a threshold slider.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

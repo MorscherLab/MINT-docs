@@ -8,7 +8,7 @@ description: "Avatar stack of the other people on a presence topic, with a list 
 
 # PresenceAvatars
 
-Avatar stack of the other people on a presence topic, with a list of each activity.
+Use `PresenceAvatars` to show who else is on a presence topic. A click lists each person and activity.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

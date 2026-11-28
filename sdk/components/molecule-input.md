@@ -1,14 +1,14 @@
 ---
 aside: false
 title: MoleculeInput
-description: "MoleculeInput is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends."
+description: "Chemical structure editor (JSME) that emits a SMILES string."
 ---
 
 <p class="mint-component-library__eyebrow">Lab widgets</p>
 
 # MoleculeInput
 
-MoleculeInput is a lab widgets component exported by @morscherlab/mint-sdk for plugin frontends.
+Use `MoleculeInput` to let the user draw or edit a chemical structure. The value is a SMILES string.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>

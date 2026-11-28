@@ -8,7 +8,7 @@ description: "Inline status, warning, error, and success messages for plugin scr
 
 # AlertBox
 
-Inline status, warning, error, and success messages for plugin screens.
+Use `AlertBox` to show an info, success, warning or error message inside a page.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
@@ -26,7 +26,7 @@ import { AlertBox } from "@morscherlab/mint-sdk"
 ## Basic Usage
 
 ```vue
-<AlertBox type="warning" title="Review required">
+<AlertBox tone="warning" title="Review required">
   Three samples need QC approval before publishing.
 </AlertBox>
 ```
