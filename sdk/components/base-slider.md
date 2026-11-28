@@ -12,7 +12,7 @@ BaseSlider is a forms component exported by @morscherlab/mint-sdk for plugin fro
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseSlider.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/BaseSlider.vue">Source</a>
 </div>
 
 <demo vue="./demos/BaseSlider.vue" title="BaseSlider" description="A slider with a value label. Drag the handle to change the model value." />
@@ -26,7 +26,7 @@ import { BaseSlider } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseSlider.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/BaseSlider.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -49,7 +49,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SliderColorStop `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseSlider.vue#L8) | See the linked SDK type definition. |
+| [` SliderColorStop `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/BaseSlider.vue#L8) | See the linked SDK type definition. |
 
 ### Events
 

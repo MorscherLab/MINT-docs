@@ -12,7 +12,7 @@ Themed select control with option objects, placeholder, and v-model support.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseSelect.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/BaseSelect.vue">Source</a>
 </div>
 
 <demo vue="./demos/BaseSelect.vue" title="BaseSelect" description="A select with three options. Choose an option to change the model value." />
@@ -23,15 +23,23 @@ Themed select control with option objects, placeholder, and v-model support.
 import { BaseSelect } from "@morscherlab/mint-sdk"
 ```
 
+## Typed value
+
+`BaseSelect` is generic over the option value type and over `multiple`. `v-model` and `update:modelValue` carry the type of `options` (an array with `multiple`). `InstanceType<typeof BaseSelect>` does not resolve; use `ComponentExposed` from `vue-component-type-helpers`.
+
+```vue
+<BaseSelect v-model="polarity" :options="[{ value: 'pos', label: 'Positive' }, { value: 'neg', label: 'Negative' }]" searchable />
+```
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/BaseSelect.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/BaseSelect.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
-| ` modelValue ` | ` (M extends true ? OptionPrimitive[] : OptionPrimitive) \| null ` | No | ` null ` | The selected value; an array with multiple. |
-| ` options ` | ` SelectOptionInput[] ` | Yes | — | — |
+| ` modelValue ` | ` (M extends true ? T[] : T) \| null ` | No | ` null ` | The selected value; an array with multiple. |
+| ` options ` | ` SelectOptionInput<T>[] ` | Yes | — | — |
 | ` multiple ` | ` M ` | No | ` undefined ` | Bind an array and pick several options (chip field + checkbox listbox). |
 | ` searchable ` | ` boolean ` | No | ` false ` | Single selection in a listbox with a search field. Ignored with multiple. |
 | ` max ` | ` number ` | No | ` undefined ` | Most options a multiple select accepts. |
@@ -50,14 +58,13 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` OptionPrimitive `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L98) | See the linked SDK type definition. |
-| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L117) | See the linked SDK type definition. |
+| [` SelectOptionInput `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L118) | See the linked SDK type definition. |
 
 ### Events
 
 | Event | Payload | Description |
 |---|---|---|
-| ` update:modelValue ` | ` value: M extends true ? OptionPrimitive[] : OptionPrimitive ` | — |
+| ` update:modelValue ` | ` value: M extends true ? T[] : T ` | — |
 
 ### Slots
 

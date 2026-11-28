@@ -12,7 +12,7 @@ SampleSelector is a lab widgets component exported by @morscherlab/mint-sdk for 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SampleSelector.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/SampleSelector.vue">Source</a>
 </div>
 
 <demo vue="./demos/SampleSelector.vue" title="SampleSelector" description="Select samples from a list and sort them into colored groups. Click samples to change the selection." />
@@ -22,6 +22,8 @@ SampleSelector is a lab widgets component exported by @morscherlab/mint-sdk for 
 ```ts
 import { SampleSelector } from "@morscherlab/mint-sdk/lab"
 ```
+
+The component has no border, radius or background of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. In the card it runs to the card edges.
 
 ## Group separator
 
@@ -34,7 +36,7 @@ import { SampleSelector } from "@morscherlab/mint-sdk/lab"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SampleSelector.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/SampleSelector.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -57,7 +59,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SampleGroup `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentLabTypes.ts#L255) | See the linked SDK type definition. |
+| [` SampleGroup `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L262) | See the linked SDK type definition. |
 
 ### Events
 

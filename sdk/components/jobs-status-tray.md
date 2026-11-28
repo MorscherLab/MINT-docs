@@ -12,7 +12,7 @@ Floating, source-driven job status tray for plugin and platform workflows.
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/JobsStatusTray.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/JobsStatusTray.vue">Source</a>
 </div>
 
 ::: info Needs the platform
@@ -29,7 +29,8 @@ import { JobsStatusTray } from "@morscherlab/mint-sdk/data"
 
 ```vue
 <script setup lang="ts">
-import { JobsStatusTray, useJobCenter } from "@morscherlab/mint-sdk/data"
+import { JobsStatusTray } from "@morscherlab/mint-sdk/data"
+import { useJobCenter } from "@morscherlab/mint-sdk/runtime"
 
 const center = useJobCenter()
 </script>
@@ -42,7 +43,7 @@ const center = useJobCenter()
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/JobsStatusTray.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/JobsStatusTray.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -57,8 +58,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` UseJobCenterReturn `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/composables/useJobCenter.ts#L184) | See the linked SDK type definition. |
-| [` ConfirmAction `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/JobsStatusTray.vue#L35) | See the linked SDK type definition. |
+| [` UseJobCenterReturn `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/composables/useJobCenter.ts#L174) | See the linked SDK type definition. |
+| [` ConfirmAction `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/JobsStatusTray.vue#L35) | See the linked SDK type definition. |
 
 ### Events
 

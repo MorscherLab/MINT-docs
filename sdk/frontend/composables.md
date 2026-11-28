@@ -9,7 +9,6 @@ Each row names the entry that exports the composable. Import from that entry; se
 ::: details Common composables (click to expand)
 | Composable | Entry | What it returns | When to reach for it |
 |------------|-------|-----------------|----------------------|
-| `useApi` | `runtime` | Axios-based API wrapper that rejects with `MintApiError` | Platform routes outside the plugin contract |
 | `useTheme` | root | Theme state + toggle | Light/dark switcher |
 | `useToast` | root | Toast dispatcher | User feedback |
 | `usePlatform` | root | Integration state, plugin, user, theme, feature flags, `isAdmin`, `can(access)` | Plugins mounted inside the platform shell |
@@ -17,6 +16,7 @@ Each row names the entry that exports the composable. Import from that entry; se
 | `useRequest` | root | Request loading/error/timestamps and cancellation | Stateful request feedback |
 | `providePluginIdentity` | root | Seeds the standalone name, subtitle, and icon of `AppTopBar` | Once in `main.ts` |
 | `useForm` | `runtime` | Reactive form state with validation rules | Manual form management |
+| `preloadFormFieldTypes` | `runtime` | A promise that loads the `path`, `file`, `molecule`, `formula` and `sequence` field components | Tests that find such a field right after mount |
 | `useFormBuilder` | `runtime` | Schema-driven form runtime | The `FormBuilder` component (rare to use directly) |
 | `defineControlModel` | root | Typed compact control model | Generate `FormBuilder`, `SettingsModal`, `AppSidebar`, and top-bar settings from one model |
 | `defineControls`, `useControlSchema`, `useControlWorkspace` | `runtime` | Derived form/sidebar/topbar/component bindings | Custom generated workspaces |
@@ -31,6 +31,8 @@ Each row names the entry that exports the composable. Import from that entry; se
 | `useProtocolTemplates` | `lab` | Lab-protocol template engine | Step-by-step protocol UIs |
 | `useExperimentSelector` | `data` | Picker UI + reactive selected experiment | Experiment dropdowns |
 | `useExperimentData` | `data` | Reactive exported experiment data payload | Live experiment view |
+| `useExperimentNumber` | `data` | The experiment number: `code`, `next`, `check(seq)`, `assign()` | Pages that assign or check an experiment code |
+| `useLiveDesign` | `data` | The fields and save state of a live design | Editing a live design; feeds `LiveDesignForm` |
 | `useArtifacts` | `data` | Analysis artifacts of an experiment (list, detail, archive, restore) | Result lists |
 | `useAppExperiment` | `data` | App-level experiment provide/inject | Plugin pages that need the active experiment |
 | `useVersionedSave` | `data` | Optimistic-concurrency save with `If-Match` | Forms on a versioned entity |
@@ -45,6 +47,7 @@ Each row names the entry that exports the composable. Import from that entry; se
 | `resizedLeadingPanelWidth`, `resizedTrailingPanelWidth`, `resizedVerticalSplitPercent` | `shell` | Bounded dimension calculations | Apply pointer deltas to widths or vertical splits |
 | `useListSelection`, `useSelectionLimit`, `useExpansionSet`, `useSortedItems` | `shell` | Selection, expansion, and sort state | Tables, lists, trees |
 | `useEventListener`, `useDebouncedWatch`, `useFocusTrap`, `useRovingFocus`, `useListReorder`, `useMenuKeyboard` | `shell` | Headless interaction helpers | Custom menus, dialogs, and reorderable lists |
+| `useApi` | `runtime` | Deprecated request client. MINT 2.0 removes it | Do not use in new code; see [`useApi`](#useapi) |
 :::
 
 The 1.3 composable names that 1.4 renamed or removed are in the [migration guide](/sdk/operations/migrate-1.3-to-1.4). [Removed and renamed composables](/sdk/api/frontend#deprecated-composables) lists them with their replacements.
@@ -53,27 +56,21 @@ The 1.3 composable names that 1.4 renamed or removed are in the [migration guide
 
 ### `useApi`
 
-An Axios wrapper that reads the SDK settings store for the API base URL and adds the stored bearer token when one is available. The default API base is `/api`, so request paths are relative to that base. Generated clients use it; plugin code calls it directly only for platform routes outside the plugin contract.
+`useApi()` is deprecated, and MINT 2.0 removes it. `mint doctor` shows each import as a "Deprecated SDK APIs" warning, and `mint doctor --strict` counts it. Use these in its place:
 
-```ts
-import type { ExperimentSummary } from '@morscherlab/mint-sdk'
-import { useApi } from '@morscherlab/mint-sdk/runtime'
+| Call | Use |
+|------|-----|
+| A route of your plugin | The generated `useClient()` (built on `createClient`) |
+| The experiment number | [`useExperimentNumber`](#useexperimentnumber) |
+| Other platform data | The SDK composable for that data, for example `useExperiment`, `useArtifacts` or `useExperimentData`. Platform routes without a composable have no public client: open an issue |
+| An external, non-MINT HTTP API | `fetch` |
 
-const api = useApi()
+The SDK sends its requests with `fetch` (and `XMLHttpRequest` only for upload or download progress). It does not depend on `axios`. Query strings, bodies, response data and the `MintApiError` errors are as before. For code that still calls `useApi()`, these points differ from axios:
 
-// A platform endpoint; path is relative to /api.
-const experiment = await api.get<ExperimentSummary>('/experiments/42')
-```
-
-The full return shape is `{ client, get, post, put, patch, delete, upload, download, buildUrl, buildWsUrl }`. `client` is the underlying Axios instance.
-
-`api` automatically:
-
-- Adds the stored bearer token unless `withAuth: false` is set
-- Uses the configured API base URL and request timeout from `useSettingsStore`
-- Sets JSON headers by default and lets Axios set multipart boundaries for `upload()`
-
-For plugin-scoped calls, prefer the generated client from `frontend/src/generated/mint-plugin.ts` after running `mint sdk generate`. It uses the plugin contract, route prefix, and platform context to build the right URLs.
+1. `axios` is not installed with the SDK. A plugin that imports `axios` declares it in its own `package.json`. A config typed as `AxiosRequestConfig` does not type-check as a `useApi()` config.
+2. `useApi().client` is not an axios instance. It has `request`, `get`, `delete`, `head`, `options`, `post`, `put`, `patch`, `defaults` and `interceptors` (`use`, `eject`, `clear`). It has no `create`, `getUri`, `postForm` or call signature. `defaults.headers` has no `common` or per-method entries. In an interceptor, `config.headers` is a plain object.
+3. A `FormData` body is always sent as `multipart/form-data`.
+4. `cancelToken`, `xsrfCookieName`, `xsrfHeaderName`, `withXSRFToken`, `auth`, `transformRequest` and `transformResponse` have no effect. Use `signal` to cancel. `responseType` `'document'` and `'stream'` give text.
 
 The session token is read-only for the SDK. The platform signs the user in and writes the session; the SDK never writes or removes the stored token.
 
@@ -110,7 +107,7 @@ Use `endpointUrl(name, payload)` when you need diagnostics or a link preview wit
 
 ### Typed HTTP errors {#typed-http-errors-in-1-2}
 
-Generated clients and `useApi()` normalize every HTTP failure to `MintApiError`. Read `status`, `body`, or `detail` of the error, not an Axios `error.response`. Network failures can still be ordinary errors, so keep a fallback:
+Generated clients normalize every HTTP failure to `MintApiError`. Read `status`, `code` or `details` of the error. There is no `error.response`. Network failures can still be ordinary errors, so keep a fallback:
 
 ```ts
 import { ref } from 'vue'
@@ -282,6 +279,50 @@ The selected experiment is `selectedExperiment` (not `selected`); the search inp
 
 For plugins mounted on an experiment-specific view, use `useExperiment()`. It gives the experiment record, and `id` when you only need the current id.
 
+### `useExperimentNumber`
+
+`useExperimentNumber(experimentId, { experimentType? })` from `@morscherlab/mint-sdk/data` reads, checks and assigns the experiment number (the code, for example `LCM-EXP-011`).
+
+```ts
+import { useExperiment } from '@morscherlab/mint-sdk'
+import { useExperimentNumber } from '@morscherlab/mint-sdk/data'
+
+const experiment = useExperiment()
+const number = useExperimentNumber(experiment.id)
+
+await number.refresh()                 // number.next.value?.preview, for example "LCM-EXP-012"
+const check = await number.check(15)   // { available, code, experiment } or null
+const code = await number.assign()     // the next free number; assign({ seq: 15 }) picks one
+```
+
+- `code` is the assigned code, or `null`. `next` holds the preview of the next free number.
+- The platform never assigns by itself. When the experiment has a code, `assign()` returns it.
+- A failed call resolves to `null` and sets `error` (a `MintApiError`). A call that succeeds clears it.
+- Only the newest preview and the newest check are kept. An answer that arrives after the experiment id or type changed is dropped.
+- `experimentType` must be the stored type of the experiment. Without it, the composable reads the type from the SDK experiment store. While the type is unknown, `check()` sets `error.code` to `experiment.type_unknown`.
+- Outside the platform, each call sets `error.code` to `platform.unavailable` and sends no request.
+
+### `useLiveDesign`
+
+`useLiveDesign(experimentId, pluginId, options?)` from `@morscherlab/mint-sdk/data` edits the design data of a live design (`Design(live=True)`) field by field. [LiveDesignForm](/sdk/components/live-design-form) draws a form from its result.
+
+- It saves the edits with `PATCH /api/experiments/{id}/data/{plugin_id}` 1 s after the last edit or on `blur`. At most one PATCH (64 fields) is in flight.
+- It returns `status`, `error`, `retryAt`, `schema`, `fields`, `activity` and the functions `setValue`, `focus`, `blur`, `discard`, `flush` and `retry`.
+- `status` is `loading`, `clean`, `dirty`, `saving`, `offline`, `rejected`, `readonly`, `not_live` or `error`.
+- Each entry of `fields` has `value`, `state` (`clean`, `dirty`, `saving` or `rejected`), `error`, `lastChange`, `editors`, `lockedBy` and `missingRequired`.
+- A remote change replaces a `clean` field. A `dirty`, `saving` or `rejected` field keeps its value. `discard(field)` drops a local edit and shows the newest server value.
+- A field that another user edits is locked: `lockedBy` names that user, and `setValue` and `focus` do nothing on it.
+- On a network error or a 502, 503 or 504, `status` is `offline`. The composable tries again 5 times after 1, 2, 4, 8 and 16 s; `retryAt` gives the next time.
+- On `pagehide`, it sends the unsaved edits at once with `fetch(..., { keepalive: true })`.
+
+| Option | Use |
+|--------|-----|
+| `readonly` | True when the user may not edit the design. No PATCH is sent |
+| `userId` | The signed-in user. Default: the SDK session user. Without a user id, no field is locked |
+| `realtime` | False while the platform `realtime` feature flag is off: no remote changes, presence or locks |
+| `viewers` | The viewers of `experiment:{id}`, when the host sends the presence itself |
+| `hasDesignData` | False when the experiment has no design data: the first read sends no request |
+
 ### `useExperimentData`
 
 Reactive view of one experiment's exported design/analysis display payload.
@@ -382,7 +423,7 @@ const { viewers, count } = usePresence(
 - A platform event carries no entity data. Refetch the entity over REST. `event.type` is the audit action of a committed write, such as `experiment.update`, or `resync`. A plugin event has the type `"<plugin>.<event>"` and a JSON `payload` (16 KiB at most).
 - `resync` goes to every caller each time the stream opens (the first open, each reconnect with a backoff from 1 s to 30 s, and each reopen for a changed topic union) and when the platform finds that the tab fell behind. On `resync`, refetch.
 - `useRealtime` handlers do not receive `presence.changed`. Only `usePresence` receives it, so a refetch handler does not run when a viewer joins or leaves.
-- `usePresence(topic, activity?)` returns `{ viewers, count, connected, stop }`. `viewers` holds at most 20 `{ user_id, activity }` entries, `editing` first, and includes the current user. `count` includes the viewers beyond the 20. `activity` is `viewing`, `viewing_design`, `viewing_results`, or `editing` (`project:` topics take only `viewing` and `editing`). The label goes to `POST /api/presence/activity` when the call starts on an open stream, at each open, and at each change; `stop` sets it back to `viewing`. `editing` is a hint, not a lock. While the stream is closed, `viewers` is empty.
+- `usePresence(topic, activity?)` returns `{ viewers, count, connected, stop }`. `viewers` holds at most 20 `{ user_id, activity }` entries, `editing` first, and includes the current user. `count` includes the viewers beyond the 20. `activity` is `viewing`, `viewing_design`, `viewing_results`, `editing`, or `editing:<field>` for one top-level design field (`project:` topics take only `viewing` and `editing`). A user with several browser tabs shows the strongest label: `editing:<field>`, then `editing`, then another label, then `viewing`. A viewer whose role cannot see the design plugin gets `editing:<field>` as `editing`. [`useLiveDesign`](#uselivedesign) locks a field on `editing:<field>`; see [Live design forms](/sdk/recipes/live-design). The label goes to `POST /api/presence/activity` when the call starts on an open stream, at each open, and at each change; `stop` sets it back to `viewing`. `editing` is a hint, not a lock. While the stream is closed, `viewers` is empty.
 - `PresenceAvatars` (`runtime`) shows the other people on a topic. Give it `people` (`{ id, name, activity }`), `selfId`, and `count`. It leaves out the current user, shows `max` avatars (default 4), and then `+N`. With nobody else on the topic, it renders nothing.
 
 ### `useVersionedSave`
@@ -545,7 +586,7 @@ import { PlotlyChart } from '@morscherlab/mint-sdk/lab'
 
 The component lazily imports Plotly, updates with `Plotly.react`, tracks theme and container size, and purges on unmount. It applies `mintPlotlyTemplate()` by default (your `layout` keys still win) and re-reads it on every theme change. Set `empty` explicitly when there is no result, and keep axis labels/units in the supplied layout.
 
-`active` pauses render/resize work for hidden tabs; `height` accepts pixels or a CSS height. Pass `plotly` only when the plugin owns a compatible custom build. Set `clickEvents` to receive `plotly-click` with a `PlotMouseEvent`. Use `variant="frame"` in a bounded workbench panel and the `header`, `toolbar`, `subhead`, `legend`, and `footer` slots for surrounding UI. See [PlotlyChart](/sdk/components/plotly-chart) for the full example; use [ChartContainer](/sdk/components/chart-container) for another rendering library.
+Declare `plotly.js-dist-min` in the plugin frontend; see [Charts need Plotly](/sdk/frontend/#charts-need-plotly). `active` pauses render/resize work for hidden tabs; `height` accepts pixels or a CSS height. Pass `plotly` only when the plugin owns a compatible custom build. Set `clickEvents` to receive `plotly-click` with a `PlotMouseEvent`. Use `variant="frame"` in a bounded workbench panel and the `header`, `toolbar`, `subhead`, `legend`, and `footer` slots for surrounding UI. See [PlotlyChart](/sdk/components/plotly-chart) for the full example; use [ChartContainer](/sdk/components/chart-container) for another rendering library.
 
 For a chart you render with Plotly directly, `mintPlotlyTemplate(element?)` (from `@morscherlab/mint-sdk/lab`) returns a Plotly `Template` resolved from the MINT tokens: the `--mint-sample-1…8` colorway, `--font-sans` body text, `--font-mono` ticks, `--border-light` grid, and a card-style hover label. Pass it as `layout: { template: mintPlotlyTemplate() }`; call it again after a theme change. Also pass `showSendToCloud: false` in the config; see [Plotly 4 builds and types](/sdk/components/plotly-chart#plotly-4-builds-and-types).
 
@@ -565,7 +606,7 @@ Preserve abort signals and explicit refresh flags in custom transports. Decode o
 
 - All composables use Vue 3 Composition API. Call them inside `<script setup>` or `setup()` only.
 - Most composables return `Ref` or `ComputedRef` — destructure but keep the references reactive.
-- The composables that hit the network (`useApi`, generated plugin clients, `useExperimentData`, `useExperimentSelector`) send the session token. Do not write your own `fetch` calls.
+- The composables that hit the network (generated plugin clients, `useExperimentData`, `useExperimentSelector`, `useExperimentNumber`, `useLiveDesign`) send the session token. Do not write your own `fetch` calls to MINT routes.
 - Prefer public package imports (the package root or the documented subpaths). `mint doctor` flags a root import of a name that moved to a subpath, the removed 1.3 names, direct private SDK subpaths, and raw plugin API `fetch('/api/...')` calls.
 
 ## Related

@@ -12,7 +12,7 @@ ProtocolStepEditor is a lab widgets component exported by @morscherlab/mint-sdk 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ProtocolStepEditor.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ProtocolStepEditor.vue">Source</a>
 </div>
 
 <demo vue="./demos/ProtocolStepEditor.vue" title="ProtocolStepEditor" description="An editor for one protocol step. Change the name, duration and parameters of the step." />
@@ -23,10 +23,12 @@ ProtocolStepEditor is a lab widgets component exported by @morscherlab/mint-sdk 
 import { ProtocolStepEditor } from "@morscherlab/mint-sdk/lab"
 ```
 
+The component has no border, radius or background of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. In the card it runs to the card edges.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ProtocolStepEditor.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ProtocolStepEditor.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -44,8 +46,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ProtocolStep `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentLabTypes.ts#L238) | See the linked SDK type definition. |
-| [` StepTemplate `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/composables/protocolTemplateCatalog.ts#L18) | See the linked SDK type definition. |
+| [` ProtocolStep `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/componentLabTypes.ts#L245) | See the linked SDK type definition. |
+| [` StepTemplate `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/composables/protocolTemplateCatalog.ts#L18) | See the linked SDK type definition. |
 
 ### Events
 

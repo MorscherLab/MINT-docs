@@ -12,7 +12,7 @@ Searchable, sortable, selectable table for dense experiment and analysis results
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/DataFrame.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/DataFrame.vue">Source</a>
 </div>
 
 <demo vue="./demos/DataFrame.vue" title="DataFrame" description="Sortable results table with search and row selection. Sort columns, resize them, and select rows." />
@@ -25,41 +25,51 @@ import { DataFrame } from "@morscherlab/mint-sdk"
 
 ## Basic Usage
 
+Build the structure with `defineDataFrame()` in `<script setup>` and pass it as `spec`. Bind the state with `v-model`.
+
 ```vue
-<DataFrame
-  :columns="columns"
-  :data="rows"
-  row-key="id"
-  searchable
-  sortable
-  resizable
-  :column-widths="columnWidths"
-  sticky-header
-  deletable
-  delete-label="Remove row"
-  @update:column-widths="columnWidths = $event"
-  @delete-row="removeRow"
-/>
+<script setup lang="ts">
+import { ref } from 'vue'
+import { DataFrame, defineDataFrame } from '@morscherlab/mint-sdk'
+
+const table = defineDataFrame({
+  rowKey: 'id',
+  columns: [
+    { key: 'sample', label: 'Sample', sortable: true },
+    { key: 'intensity', label: 'Intensity', align: 'right', sortable: true },
+  ],
+  searchable: true,
+  resizable: true,
+  deletable: true,
+  deleteLabel: 'Remove row',
+  stickyHeader: true,
+})
+const columnWidths = ref<Record<string, number>>({})
+</script>
+
+<template>
+  <SectionCard title="Peaks">
+    <DataFrame :spec="table" :data="rows" v-model:column-widths="columnWidths" @delete-row="removeRow" />
+  </SectionCard>
+</template>
 ```
 
-## Newer Table Controls
+## Table controls
 
-`DataFrame` can now handle two common analysis-table editing tasks without custom table chrome:
-
-| Prop / event | Use |
-|--------------|-----|
+| Spec option / event | Use |
+|---------------------|-----|
 | `resizable` | Adds drag handles on column headers |
-| `columnWidths` / `update:columnWidths` | Control column widths in px when you want to persist user changes |
+| `v-model:column-widths` | Column widths in px, when you want to keep user changes |
 | `deletable` | Adds a trailing delete action column |
 | `deleteLabel` | Tooltip and accessible label for the delete action |
 | `delete-row` | Emits the row object and row index after the delete action |
 
-Leave `columnWidths` unset for uncontrolled resizing inside the table. Pass it with `v-model:column-widths` when you want to store widths in plugin settings.
+Leave `columnWidths` unbound for resizing inside the table only. Bind it when you want to store widths in plugin settings. Without `bordered`, the table has no frame of its own: put it in a [SectionCard](/sdk/components/section-card#content-in-a-card).
 
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/DataFrame.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/DataFrame.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -79,8 +89,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` DataFrameSpec `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L496) | See the linked SDK type definition. |
-| [` SortState `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L452) | See the linked SDK type definition. |
+| [` DataFrameSpec `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L492) | See the linked SDK type definition. |
+| [` SortState `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L448) | See the linked SDK type definition. |
 
 ### Events
 

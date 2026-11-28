@@ -12,7 +12,7 @@ description: "ChartContainer is a data display component exported by @morscherla
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ChartContainer.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ChartContainer.vue">Source</a>
 </div>
 
 <demo vue="./demos/ChartContainer.vue" title="ChartContainer" description="Chart frame with a toolbar button and a legend. Use it to wrap any chart content." />
@@ -27,7 +27,7 @@ import { ChartContainer } from "@morscherlab/mint-sdk/lab"
 
 ```vue
 <script setup lang="ts">
-import { ChartContainer } from '@morscherlab/mint-sdk'
+import { ChartContainer } from '@morscherlab/mint-sdk/lab'
 </script>
 
 <template>
@@ -45,7 +45,7 @@ import { ChartContainer } from '@morscherlab/mint-sdk'
 </style>
 ```
 
-The default `card` variant has a border and rounded corners. `frame` fills a parent with a definite height; give your chart renderer an appropriate height too. Both variants share one header: a one-line title and description above a hairline.
+Neither variant draws a border, radius or background of its own: put the chart in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. With no data, the body shows an `EmptyState` with a chart icon; `emptyText`, `emptyHint` and the `#empty` slot change it. `frame` fills a parent with a definite height; give your chart renderer an appropriate height too. Both variants share one header: a one-line title and description above a hairline.
 
 Pass `legendItems` (`{ label, color, hidden? }[]`) to list series as clickable items in the header; a click emits `legend-toggle` with the item index, and your renderer applies the change. This component does not resize or dispose an external chart library for you.
 
@@ -64,7 +64,7 @@ When `loading` is true the normal body slot is not rendered. Initialize custom r
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ChartContainer.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ChartContainer.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -83,7 +83,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ChartLegendItem `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L392) | See the linked SDK type definition. |
+| [` ChartLegendItem `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L388) | See the linked SDK type definition. |
 
 ### Events
 

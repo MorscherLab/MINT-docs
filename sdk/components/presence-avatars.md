@@ -12,7 +12,7 @@ Avatar stack of the other people on a presence topic, with a list of each activi
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PresenceAvatars.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/PresenceAvatars.vue">Source</a>
 </div>
 
 <demo vue="./demos/PresenceAvatars.vue" title="PresenceAvatars" description="Avatars of six people, three shown. Click them to list each person and activity." />
@@ -30,7 +30,7 @@ Pass `usePresence().viewers` with a display name for each person as `people`. Pa
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/PresenceAvatars.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/PresenceAvatars.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -46,7 +46,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` PresencePerson `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/utils/presenceAvatars.ts#L4) | See the linked SDK type definition. |
+| [` PresencePerson `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/utils/presenceAvatars.ts#L4) | See the linked SDK type definition. |
 
 ### Events
 

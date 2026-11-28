@@ -12,7 +12,7 @@ Skeleton is a feedback component exported by @morscherlab/mint-sdk for plugin fr
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/Skeleton.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/Skeleton.vue">Source</a>
 </div>
 
 <demo vue="./demos/Skeleton.vue" title="Skeleton" description="Loading placeholders in circular, text, and rounded shapes. Use them to see how a loading layout looks." />
@@ -26,7 +26,7 @@ import { Skeleton } from "@morscherlab/mint-sdk"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/Skeleton.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/Skeleton.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|

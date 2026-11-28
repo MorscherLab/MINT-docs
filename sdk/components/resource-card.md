@@ -12,7 +12,7 @@ Card displaying a lab resource with availability status, specs, tags, and a book
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ResourceCard.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ResourceCard.vue">Source</a>
 </div>
 
 <demo vue="./demos/ResourceCard.vue" title="ResourceCard" description="A card for a shared instrument. It shows status, location, specifications and tags." />
@@ -26,7 +26,7 @@ import { ResourceCard } from "@morscherlab/mint-sdk/lab"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ResourceCard.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ResourceCard.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -49,8 +49,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ResourceStatus `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L140) | ` 'available' \| 'in-use' \| 'maintenance' \| 'offline' ` |
-| [` ResourceSpec `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L142) | See the linked SDK type definition. |
+| [` ResourceStatus `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L143) | ` 'available' \| 'in-use' \| 'maintenance' \| 'offline' ` |
+| [` ResourceSpec `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/componentWorkflowTypes.ts#L145) | See the linked SDK type definition. |
 
 ### Events
 

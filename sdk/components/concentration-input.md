@@ -12,7 +12,7 @@ ConcentrationInput is a forms component exported by @morscherlab/mint-sdk for pl
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ConcentrationInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ConcentrationInput.vue">Source</a>
 </div>
 
 <demo vue="./demos/ConcentrationInput.vue" title="ConcentrationInput" description="Value and unit input with a molecular weight. Change the value or the unit to convert the concentration." />
@@ -26,7 +26,7 @@ import { ConcentrationInput } from "@morscherlab/mint-sdk/lab"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/ConcentrationInput.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/ConcentrationInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -47,8 +47,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` ConcentrationValue `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/composables/useConcentrationUnits.ts#L9) | See the linked SDK type definition. |
-| [` ConcentrationUnit `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/composables/useConcentrationUnits.ts#L7) | See the linked SDK type definition. |
+| [` ConcentrationValue `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/composables/useConcentrationUnits.ts#L9) | See the linked SDK type definition. |
+| [` ConcentrationUnit `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/composables/useConcentrationUnits.ts#L7) | See the linked SDK type definition. |
 
 ### Events
 

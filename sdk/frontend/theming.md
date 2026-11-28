@@ -6,7 +6,7 @@ The SDK ships with light/dark theme support, five accent palettes, density setti
 
 The settings modal of the top bar holds the theme choice: Light, Dark, or System. Plugins:
 
-- **Inherit automatically** when they use the current scaffold's `<PluginWorkspaceView>` / `<AppContainer>` wrapper, or another SDK shell such as `<AppLayout>`, together with design tokens
+- **Inherit automatically** when they use the current scaffold's `<PluginWorkspaceView>` shell, or another SDK shell such as `<AppLayout>`, together with design tokens
 - **Should not maintain a separate theme switcher** — the platform owns it
 
 Programmatic access via `useTheme`:

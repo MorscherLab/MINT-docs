@@ -12,7 +12,7 @@ DoseCalculator is a lab widgets component exported by @morscherlab/mint-sdk for 
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/DoseCalculator.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/DoseCalculator.vue">Source</a>
 </div>
 
 <demo vue="./demos/DoseCalculator.vue" title="DoseCalculator" description="Dose calculator for four target wells. Enter the concentrations to calculate the volumes." />
@@ -23,10 +23,12 @@ DoseCalculator is a lab widgets component exported by @morscherlab/mint-sdk for 
 import { DoseCalculator } from "@morscherlab/mint-sdk/lab"
 ```
 
+The component has no border, radius or background of its own. Put it in a [SectionCard](/sdk/components/section-card#content-in-a-card), which draws the frame. In the card it runs to the card edges.
+
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/DoseCalculator.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/DoseCalculator.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -41,7 +43,7 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` CalculatorMode `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/DoseCalculator.vue#L25) | See the linked SDK type definition. |
+| [` CalculatorMode `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/DoseCalculator.vue#L24) | See the linked SDK type definition. |
 
 ### Events
 

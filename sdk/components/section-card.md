@@ -12,7 +12,7 @@ One-card page region from the MINT 1.1 card system: header strip, hairline-separ
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SectionCard.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/SectionCard.vue">Source</a>
 </div>
 
 <demo vue="./demos/SectionCard.vue" title="SectionCard" description="A card with a header, run count and action button. Use it to group one page region." />
@@ -30,9 +30,31 @@ import { SectionCard } from "@morscherlab/mint-sdk"
   <template #actions>
     <BaseButton size="sm" variant="ghost">Export</BaseButton>
   </template>
-  <DataFrame :columns="columns" :data="rows" row-key="id" />
+  <DataFrame :spec="table" :data="rows" />
 </SectionCard>
 ```
+
+## Content in a card
+
+Content components have no border, radius or background of their own. The card draws the frame. Put a content component straight into a `SectionCard`; a component placed straight on a page has no frame.
+
+```vue
+<SectionCard title="Plate layout">
+  <PlateEditor v-model:active-rack="activeId" :spec="plateSpec" :model-value="racks" />
+</SectionCard>
+```
+
+Content tells the card how it sits with the `data-mint-bleed` attribute on its root element. The card reads only this attribute.
+
+| `data-mint-bleed` | Components | In the card |
+|-------------------|------------|-------------|
+| `inset` | `FormBuilder`, `ProgressBar`, `SequenceProgressBar`, `BatchProgressList`, `AuditTrail`, `Calendar` | Keeps the text inset of the card |
+| `edge` | `DataFrame`, `MetadataSheet`, `ChartContainer` (and `PlotlyChart`), `PlateEditor`, `SampleSelector`, `ScheduleCalendar`, `DoseCalculator`, `ProtocolStepEditor` | Runs to the edges of the card |
+| `strip` | `AlertBox`, `EmptyState variant="inline"` | A full-width band whose text starts on the card inset. `--mint-strip-bg` tints it |
+
+Edge and strip content get one hairline where other content sits next to them. In a card with `fill`, each `edge` child gets the height that is left and never shrinks below its content (the card body scrolls). `MetadataSheet` shrinks to the height that is left and scrolls its own rows.
+
+Your own component can opt in: set `data-mint-bleed="inset"`, `"edge"` or `"strip"` on its root element. Do not put a card in a card: the `mint lint` rule `nested-card` reports it.
 
 ## Collapsible card
 
@@ -51,7 +73,7 @@ The header, the rows and the footer start on one text inset, `--mint-section-car
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/SectionCard.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/SectionCard.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -71,8 +93,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` SectionCardAccent `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L128) | See the linked SDK type definition. |
-| [` SectionCardDivider `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/types/components.ts#L137) | ` 'strong' \| 'light' ` |
+| [` SectionCardAccent `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L130) | ` 'primary' \| 'experiment' \| 'project' \| 'success' \| 'error' \| 'warning' \| 'info' ` |
+| [` SectionCardDivider `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/types/components.ts#L132) | ` 'strong' \| 'light' ` |
 
 ### Events
 

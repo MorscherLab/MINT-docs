@@ -8,11 +8,11 @@ SDK 1.4 splits the public surface into entry points. The package root (`@morsche
 
 | Entry point | Contents |
 |-------------|----------|
-| `@morscherlab/mint-sdk` | The base components (`BaseButton`, `BaseInput`, `BaseSelect`, `BaseCheckbox`, `BaseRadioGroup`, `BaseSlider`, `BaseTabs`, `BaseModal`, `SegmentedControl`, `BasePill`, `Calendar`, `DataFrame`, `FormField`, `DatePicker`, `NumberInput`, `FileUploader`, `AlertBox`, `AppToastContainer`, `ActionMenu`, `ThemeToggle`, `CollapsibleCard`, `PluginWorkspaceView`, `AppContainer`, `PluginIcon`, `Skeleton`, `LoadingSpinner`, `Divider`, `ProgressBar`, `Avatar`, `EmptyState`, `Breadcrumb`, `Tooltip`, `ConfirmDialog`, `SettingsModal`, `FormBuilder`, `SectionCard`), `MINTSdk`, the composables `useTheme`, `useToast`, `usePlatform`, `useExperiment`, `useRequest`, `defineControlModel`, `providePluginIdentity`, the stores, the API error types and the types |
-| `@morscherlab/mint-sdk/lab` | `WellPlate`, `PlateEditor`, `SampleSelector`, `PlotlyChart`, `ChartContainer`, `MoleculeInput`, `ConcentrationInput`, `DoseCalculator`, `SequenceProgressBar`, `InstrumentStateBadge`, `InstrumentStatusPanels`, scheduling components, the `time`, `dose` and `formula` helpers, `defineWellPlate`, `definePlateEditor` and the lab composables (`useRackEditor`, `useReagentSeries`, `useConcentrationUnits` and similar) |
+| `@morscherlab/mint-sdk` | The base components (`BaseButton`, `BaseInput`, `BaseSelect`, `BaseCheckbox`, `BaseRadioGroup`, `BaseSlider`, `BaseTabs`, `BaseModal`, `SegmentedControl`, `BasePill`, `Calendar`, `DataFrame`, `FormField`, `DatePicker`, `NumberInput`, `FileUploader`, `AlertBox`, `AppToastContainer`, `ActionMenu`, `ThemeToggle`, `CollapsibleCard`, `PluginWorkspaceView`, `AppContainer`, `PluginIcon`, `Skeleton`, `LoadingSpinner`, `Divider`, `ProgressBar`, `Avatar`, `EmptyState`, `Breadcrumb`, `Tooltip`, `ConfirmDialog`, `SettingsModal`, `FormBuilder`, `SectionCard`, `SplitButton`), `MINTSdk`, the composables `useTheme`, `useToast`, `usePlatform`, `useExperiment`, `useRequest`, `defineControlModel`, `providePluginIdentity`, the stores, the API error types and the types |
+| `@morscherlab/mint-sdk/lab` | `WellPlate`, `PlateEditor`, `SampleSelector`, `PlotlyChart`, `ChartContainer`, `MoleculeInput`, `ConcentrationInput`, `DoseCalculator`, `SequenceProgressBar`, `InstrumentStateBadge`, `InstrumentStatusPanels`, `PanelSections`, `MoleculeView`, scheduling components, the `time`, `dose` and `formula` helpers, `defineWellPlate`, `definePlateEditor` and the lab composables (`useRackEditor`, `useReagentSeries`, `useConcentrationUnits` and similar) |
 | `@morscherlab/mint-sdk/shell` | `AppTopBar`, `AppSidebar`, `AppLayout`, `LayoutResizeHandle`, the keyboard and focus helpers, selection and sort primitives, `usePluginWorkspace` and the onboarding API (`defineOnboarding`, `useOnboarding`) |
-| `@morscherlab/mint-sdk/data` | `ExperimentSelectorModal`, `ArtifactSelectorModal`, `ArtifactSaveDialog`, `ExperimentPopover`, `ExperimentCodeBadge`, `FilePicker`, `AuditTrail`, `BatchProgressList`, `JobsStatusTray`, `TagsInput`, `SecretInput`, `VersionConflictDialog`, `StaleFormBanner`, `useVersionedSave`, `useExperimentData`, `useArtifacts`, `experimentStatus`, `pluginSecret` |
-| `@morscherlab/mint-sdk/runtime` | `GeneratedPluginView` and the generated-UI runtime, `RuntimeUpdateNotice`, the realtime API (`useRealtime`, `usePresence`, `PresenceAvatars`), the HTTP client helpers that generated clients use (`createClient`, `useApi`, `useJobsEndpoint`, `useJobCenter`), `useForm`, `useFormBuilder` and the control-schema helpers |
+| `@morscherlab/mint-sdk/data` | `ExperimentSelectorModal`, `ArtifactSelectorModal`, `ArtifactSaveDialog`, `ExperimentPopover`, `ExperimentCodeBadge`, `FilePicker`, `AuditTrail`, `BatchProgressList`, `JobsStatusTray`, `TagsInput`, `SecretInput`, `VersionConflictDialog`, `StaleFormBanner`, `LiveDesignForm`, `useVersionedSave`, `useExperimentData`, `useArtifacts`, `useExperimentNumber`, `useLiveDesign`, `experimentStatus`, `pluginSecret` |
+| `@morscherlab/mint-sdk/runtime` | `GeneratedPluginView` and the generated-UI runtime, `RuntimeUpdateNotice`, the realtime API (`useRealtime`, `usePresence`, `PresenceAvatars`), the HTTP client helpers that generated clients use (`createClient`, `useJobsEndpoint`, `useJobCenter`; the deprecated `useApi`), `useForm`, `useFormBuilder`, `preloadFormFieldTypes` and the control-schema helpers |
 | `@morscherlab/mint-sdk/stores`, `/permissions`, `/types` | Pinia stores, permission helpers and types |
 | `@morscherlab/mint-sdk/host` | Platform-only entry. Plugins do not import it |
 | `@morscherlab/mint-sdk/styles` | The SDK style bundle |
@@ -62,7 +62,7 @@ The entry column names the import path (`root` is `@morscherlab/mint-sdk`; the o
 | `useRequest` | root | `isLoading`, errors, timestamps, cancellation | Tracks request feedback and protects shared state from stale completions (was `useRequestSyncState`) |
 | `defineControlModel` | root | compact control model | Generate forms, settings, sidebars and workspaces from one model |
 | `downloadBlob` | root | Blob download helper | Save a `Blob` as a file |
-| `useApi` | `/runtime` | typed fetch helper | Auth-aware API calls |
+| `useApi` | `/runtime` | request client | Deprecated; see [Deprecated in 1.6](#deprecated-in-1-6) |
 | `createClient` | `/runtime` | contract-aware plugin API runtime | Generated plugin clients |
 | `buildEndpointUrl`, `resolvePluginBaseUrl` | `/runtime` | URL helpers | Link previews and diagnostics that match generated client calls |
 | `uploadEndpoint`, `downloadEndpoint` | `/runtime` | multipart / Blob helpers | Generated upload and download endpoint wrappers |
@@ -73,6 +73,7 @@ The entry column names the import path (`root` is `@morscherlab/mint-sdk`; the o
 | `useRealtime`, `usePresence` | `/runtime` | realtime subscription; viewers of a topic | Platform events and presence. They need the platform `realtime` feature flag |
 | `createGeneratedAnalysisTransport` | `/runtime` | generated-workspace transport | Experimental runtime behind the SDK-managed generated analysis UI |
 | `useForm`, `useFormBuilder` | `/runtime` | reactive form state; schema-driven form runtime | Manual forms and the `FormBuilder` component |
+| `preloadFormFieldTypes` | `/runtime` | `Promise<void>` | Load the `path`, `file`, `molecule`, `formula` and `sequence` field components before a test finds them |
 | `defineControls`, `useControlSchema`, `useControlWorkspace`, `defineControlComponentBindings` | `/runtime` | control schemas and derived bindings | Lower-level control-driven layouts |
 | `useRackEditor` | `/lab` | rack state, undo/redo, `plateEditorListeners` | Hold the plates of a `PlateEditor` |
 | `useConcentrationUnits` | `/lab` | concentration math | µM / mg/mL / % conversions |
@@ -96,7 +97,9 @@ The entry column names the import path (`root` is `@morscherlab/mint-sdk`; the o
 | `useVersionedSave` | `/data` | save with a version check | Send `If-Match` with a save and show `VersionConflictDialog` or `StaleFormBanner` on a conflict |
 | `useExperimentSamples` | `/data` | design data and derived samples | Feed `SampleSelector`-style UIs from an experiment |
 | `useExperimentSelector` | `/data` | reactive experiment picker | Experiment dropdowns |
-| `useExperimentData` | `/data` | reactive experiment view | Live design and analysis data |
+| `useExperimentData` | `/data` | reactive experiment view | Design and analysis data of an experiment |
+| `useExperimentNumber` | `/data` | `code`, `next`, `check(seq)`, `assign()` | Read, check and assign the experiment number (for example `LCM-EXP-011`) |
+| `useLiveDesign` | `/data` | `status`, `fields`, `setValue`, `focus`, `blur`, `discard`, `flush`, `retry` | Edit a live design field by field; feeds `LiveDesignForm` |
 | `useAppExperiment` | `/data` | provide / inject pattern | Plugin-tree-wide active experiment |
 | `useFileImport` | `/data` | delimited file parser state | CSV/TSV import flows |
 | `useTextSearch` | `/data` | client-side search | Filterable lists and tables |
@@ -104,6 +107,20 @@ The entry column names the import path (`root` is `@morscherlab/mint-sdk`; the o
 | `usePlatformFilePickerAdapter` | `/data` | authenticated `PickerAdapter` | Connects `FilePicker` to platform mounts, optionally scoped by `rootLocation` |
 | `createFilePickerAdapter` | `/data` | transport-backed `PickerAdapter` | Shared navigation and search for plugin-owned mount APIs |
 | `encodePlatformPickerPath`, `decodePlatformPickerPath` | `/data` | opaque picker identity conversion | Convert between picker paths and mount-relative backend references |
+
+### Deprecated in 1.6 {#deprecated-in-1-6}
+
+MINT 2.0 removes these exports. They still work in 1.x. For the upgrade steps, see [Migrate from 1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6#frontend-changes). `mint doctor` shows each import of one as a "Deprecated SDK APIs" warning with its replacement, and `mint doctor --strict` counts it.
+
+| Export | Entry | Replacement |
+|--------|-------|-------------|
+| `useApi` | `/runtime` | The generated `useClient()` (`createClient`) for plugin routes; `useExperimentNumber` for experiment numbers; the SDK composable for other platform data; `fetch` for an external, non-MINT HTTP API. See [useApi](/sdk/frontend/composables#useapi) |
+| `ApiClientOptions`, `UseApiReturn` | `/runtime` | None; they go with `useApi` |
+| `MintApiErrorEnvelope` | root | None. SDK requests throw a `MintApiError`: read `error.code`, `error.requestId` and `error.details` |
+| `SettingsAudience`, `SettingsAudienceInput` | root | `AccessAudience`, `AccessAudienceInput` |
+| `AvatarSize`, `CollapsibleState`, `ContainerDirection`, `DividerSpacing`, `EmptyStateSize`, `FileUploaderMode`, `FormFieldProps`, `ProgressSize`, `SpinnerSize`, `TooltipPosition` | root | None (component prop unions and helpers) |
+| `ScheduleEventCreateContext`, `ScheduleEventUpdateContext`, `ScheduleSlotContext` | root | None (schedule callbacks) |
+| `ArtifactSaveMode`, `JobStreamData`, `WellExtendedData` | root | None (data shapes) |
 
 ### Removed and renamed composables {#deprecated-composables}
 
@@ -187,11 +204,7 @@ Flat parameter fields are also accepted for compatibility on mixed endpoints. A 
 ## HTTP error types
 
 ```ts
-import {
-  MintApiError,
-  mintApiErrorFromResponse,
-  type MintApiErrorEnvelope,
-} from '@morscherlab/mint-sdk'
+import { MintApiError, mintApiErrorFromResponse } from '@morscherlab/mint-sdk'
 import { AuthenticationRequiredError } from '@morscherlab/mint-sdk/runtime'
 ```
 
@@ -202,7 +215,7 @@ import { AuthenticationRequiredError } from '@morscherlab/mint-sdk/runtime'
 | `details` | Structured error details |
 | `detail`, `body`, `cause` | Legacy detail, original response, underlying error |
 
-Generated plugin clients and `useApi()` reject a failed response with a `MintApiError`. `usePlatform().can(access)` answers the plugin access levels. `AuthenticationRequiredError` extends `MintApiError` for an invalid authenticated session (401). Keep a fallback for network errors that have no HTTP response. See [error handling example](/sdk/frontend/composables).
+Generated plugin clients (`createClient`) reject a failed response with a `MintApiError`. `usePlatform().can(access)` answers the plugin access levels. `AuthenticationRequiredError` extends `MintApiError` for an invalid authenticated session (401). Keep a fallback for network errors that have no HTTP response. See [error handling example](/sdk/frontend/composables).
 
 ## Exported types
 
@@ -219,7 +232,6 @@ import type {
   AccessControlled,
 } from '@morscherlab/mint-sdk'
 import type {
-  ApiClientOptions,            // useApi
   ValidationRule,              // useForm
   FieldRules,
   FieldState,
@@ -251,9 +263,10 @@ Instrument types include `InstrumentBadgeState`, `InstrumentLiveStatus`, `Instru
 ## Notes
 
 - Examples use Vue 3 Composition API and `<script setup lang="ts">`; call lifecycle-aware composables inside component setup.
-- Import each component by name from its entry. Do not call `app.use(MINTSdk)`: a global install registers every component, so the whole SDK stays in the first-load bundle (in 1.5.5, named imports in its place cut the first load by 37 percent in Large File Downloader and MS Planner). `MINTSdk` still exists for compatibility. `PlotlyChart` loads its Plotly runtime on mount. See [PlotlyChart](/sdk/components/plotly-chart#plotly-4-builds-and-types) for Plotly setup.
+- Import each component by name from its entry. Do not call `app.use(MINTSdk)`: a global install registers every component, so the whole SDK stays in the first-load bundle. `MINTSdk` still exists for compatibility. `PlotlyChart` loads its Plotly runtime on mount; a plugin that renders a chart declares `plotly.js-dist-min` itself. See [Charts need Plotly](/sdk/frontend/#charts-need-plotly).
+- The SDK has no `axios` dependency. Requests go through `fetch`. A plugin that imports `axios` declares it in its own `package.json`.
 - Current plugin scaffolds import Tailwind v4 and the SDK style bundle from `frontend/src/style.css`: `@import "tailwindcss";` then `@import "@morscherlab/mint-sdk/styles";`. Keep the SDK import unlayered so Tailwind preflight cannot outrank SDK component styles. See [Frontend → Design tokens](/sdk/frontend/design-tokens).
-- For plugin-scoped API calls, prefer `useClient()` from `frontend/src/generated/mint-plugin.ts`; use raw `useApi()` for platform APIs outside the plugin contract.
+- For plugin-scoped API calls, use `useClient()` from `frontend/src/generated/mint-plugin.ts`. `useApi()` is deprecated.
 - With auth enabled, plugin routes need a Bearer credential; the platform does not read the session cookie there. Do not call them with a plain `<a href>` link or a `fetch` without a Bearer: the platform answers 401. Use the generated client, the generated `download()`, or `downloadEndpoint()`.
 - Dropdown, menu, and picker panels share the `.mint-popover` class hooks (menu rows use `.mint-menu-item`). Style those instead of `.mint-action-menu__panel` or `.mint-searchable-select__panel`; the old class aliases are removed in 1.4.
 - `mint doctor` flags legacy `usePluginApi()`, private SDK subpath imports, direct frontend composable file subpaths, raw plugin API `fetch('/api/...')` calls, and the removed `AppSidebar` `variant` prop (in `.vue` files and in agent docs such as `CLAUDE.md` / `AGENTS.md`), together with every removed or renamed component, prop and import of the 1.4 tables above.

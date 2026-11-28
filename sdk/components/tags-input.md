@@ -12,7 +12,7 @@ TagsInput is a forms component exported by @morscherlab/mint-sdk for plugin fron
 
 <div class="mint-component-reference__actions">
   <a class="mint-showcase-button" href="#props">Props</a>
-  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/TagsInput.vue">Source</a>
+  <a class="mint-showcase-button mint-showcase-button--primary" href="https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/TagsInput.vue">Source</a>
 </div>
 
 <demo vue="./demos/TagsInput.vue" title="TagsInput" description="A tag field with suggestions. Type a tag or pick a suggestion to add it to the list." />
@@ -26,7 +26,7 @@ import { TagsInput } from "@morscherlab/mint-sdk/data"
 <!-- sdk-props:start -->
 ## Props
 
-MINT SDK **1.5.5**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/TagsInput.vue).
+MINT SDK **1.6.1**. [Component source](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/TagsInput.vue).
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -47,8 +47,8 @@ Defaults are the values that vue-component-meta resolves from the source; object
 
 | Type | Definition / accepted values |
 |---|---|
-| [` TagSuggestion `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/TagsInput.vue#L8) | See the linked SDK type definition. |
-| [` TagCategory `](https://github.com/MorscherLab/MINT/blob/v1.5.5/packages/sdk-frontend/src/components/TagsInput.vue#L13) | See the linked SDK type definition. |
+| [` TagSuggestion `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/TagsInput.vue#L9) | See the linked SDK type definition. |
+| [` TagCategory `](https://github.com/MorscherLab/MINT/blob/v1.6.1/packages/sdk-frontend/src/components/TagsInput.vue#L14) | See the linked SDK type definition. |
 
 ### Events
 
