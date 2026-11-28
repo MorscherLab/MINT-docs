@@ -37,7 +37,7 @@ docker compose -f deploy/docker/docker-compose.yml up -d --build --wait
 docker compose -f deploy/docker/docker-compose.yml logs -f app
 ```
 
-The Compose file builds `deploy/docker/Dockerfile` (based on `python:3.14-slim`), starts PostgreSQL 17, and keeps the database in the `mint-postgres-data` volume. Platform config, objects, plugin state and the uv wheel cache (`UV_CACHE_DIR=/app/data/cache/uv`) live in the repository's `data/` directory, mounted at `/app/data`. Keeping the cache on the volume lets a rebuilt image restore plugins from their [dependency lock](/admin/plugins#plugin-dependency-lock) without downloading them again.
+The Compose file builds `deploy/docker/Dockerfile`. Its first stage builds the frontend with pnpm on a pinned Node.js image, from the lockfile. The runtime stage is based on `python:3.14-slim`. The Compose file also starts PostgreSQL 17 and keeps the database in the `mint-postgres-data` volume. Platform config, objects, plugin state and the uv wheel cache (`UV_CACHE_DIR=/app/data/cache/uv`) live in the repository's `data/` directory, mounted at `/app/data`. Keeping the cache on the volume lets a rebuilt image restore plugins from their [dependency lock](/admin/plugins#plugin-dependency-lock) without downloading them again.
 
 The Compose file also sets `MINT_RESTART_SUPERVISED=1`: the `app` service has `restart: unless-stopped`, so Docker starts MINT again after a restart that MINT requests itself. This is what allows [scheduled updates](/admin/updates#scheduled-updates).
 
@@ -126,12 +126,16 @@ docker compose -f deploy/docker/docker-compose.yml up -d --build --no-deps app
 docker compose -f deploy/docker/docker-compose.yml logs -f app
 ```
 
-You can also apply a release from **Admin -> Platform -> Updates** without rebuilding; the container installs the release's `mint-platform-<version>.tar.gz` runtime bundle (see [Updates](/admin/updates)).
+You can also apply a release from **Admin -> System -> Updates** without rebuilding; the container installs the release's `mint-platform-<version>.tar.gz` runtime bundle (see [Updates](/admin/updates)).
 
 ::: warning Upgrading from MINT 1.3
-A 1.3 container cannot update itself to 1.4, because the runtime bundle protocol is now 3. Back up the database. Then check out the 1.4 tag and rebuild as above. If your Compose file pins an image (`mint:1.3`, `mint:1.3.12` or a digest), change it to `ghcr.io/morscherlab/mint:1.4` or `:@` and run `docker compose pull && docker compose up -d`. A Compose file or orchestrator that overrides the command with `mint daemon` must use `uv run --no-sync mint-platform serve --platform-dir /app --port 8000`. See [Updates](/admin/updates#upgrading-from-mint-1-3).
+A 1.3 container cannot update itself to 1.4, because the runtime bundle protocol is now 3. Back up the database. Then check out the 1.4 tag and rebuild as above. If your Compose file pins an image (`mint:1.3`, `mint:1.3.12` or a digest), change it to `ghcr.io/morscherlab/mint:1.4` and run `docker compose pull && docker compose up -d`. A Compose file or orchestrator that overrides the command with `mint daemon` must use `uv run --no-sync mint-platform serve --platform-dir /app --port 8000`. See [Updates](/admin/updates#upgrading-from-mint-1-3).
 
 A 1.4 container can update itself to 1.5, because the runtime bundle protocol is still 3. An in-app update replaces the Python packages only. The 1.5 image has Debian security updates and no system `pip`, so change the Compose image to `ghcr.io/morscherlab/mint:1.5` and run `docker compose pull && docker compose up -d`. In the new image, use `uv pip` in the admin terminal. See [Updates](/admin/updates#upgrading-from-mint-1-4).
+:::
+
+::: warning Upgrading from MINT 1.5
+A 1.5 container can update itself to 1.6, because the runtime bundle protocol is still 3 and the runtime stage of the image does not change. The in-app update puts 1.6 into the container, not into the image. A container that you create again from a 1.5 image starts 1.5 code on the 1.6 database, and it does not start. After the update, change the Compose image to `ghcr.io/morscherlab/mint:1.6`. If you build the image from this repository, check out the 1.6 release tag before the next `docker compose up --build`. See [Updates](/admin/updates#upgrading-from-mint-1-5).
 :::
 
 To roll back, check out the previous tag and rebuild `app`. Platform migrations are forward-only, so restore the matching database backup when the newer release applied migrations.
@@ -150,7 +154,7 @@ Use this only when you intentionally want recreated containers to move to the la
 
 ### Optional Admin terminal
 
-`MINT_ADMIN_TERMINAL_ENABLED` controls **Admin -> Platform -> Terminal**. It is off by default because commands run inside the container as the MINT process user. When enabled, admins with `platform.configure` can open a short-lived terminal session and save commands to `/app/data/admin-terminal/startup.sh`; the Docker entrypoint runs that executable script on future container starts. Keep this disabled unless your deployment needs runtime maintenance from the web UI.
+`MINT_ADMIN_TERMINAL_ENABLED` controls **Admin -> System -> Terminal**. It is off by default because commands run inside the container as the MINT process user. When enabled, admins with `platform.configure` can open a short-lived terminal session and save commands to `/app/data/admin-terminal/startup.sh`; the Docker entrypoint runs that executable script on future container starts. Keep this disabled unless your deployment needs runtime maintenance from the web UI.
 
 ## Backups
 
@@ -170,6 +174,7 @@ Run both before any major upgrade and on a regular schedule. The plugin lock his
 | Container exits immediately | `docker compose -f deploy/docker/docker-compose.yml logs app` for the trace. Most often: bad config or unreachable Postgres. |
 | `connection refused` to Postgres | The `depends_on.condition: service_healthy` should prevent this - check `docker compose -f deploy/docker/docker-compose.yml ps` and the Postgres healthcheck output. |
 | Platform migration fails on startup | Container exits non-zero. Check the log line and restore the matching database backup if needed. |
+| After an in-app update to 1.6 and a new container, the log says `Unknown database revision platform_object_cleanup_kind` | The new container runs the 1.5 image on the 1.6 database. Change the Compose image to `ghcr.io/morscherlab/mint:1.6`, or check out the 1.6 tag and rebuild. See [Upgrading from MINT 1.5](/admin/updates#upgrading-from-mint-1-5). |
 | Plugin migration fails | MINT keeps running and that plugin stays disabled; the error shows in **Admin -> Plugins -> Installed**. Fix the plugin release and redeploy. |
 | 502 from the reverse proxy | Container not running, or the proxy is targeting the wrong host/port. `curl -I http://127.0.0.1:8001/api/health` from the host. For database and plugin readiness, see [Server health](/admin/platform-settings#server-health). |
 | Disk fills up unexpectedly | Runtime data under the repository `data/` directory grew, often from plugin uploads, cached bundles, or the uv wheel cache in `data/cache/uv`. Add monitoring; consider moving the bind mount to a larger disk. |

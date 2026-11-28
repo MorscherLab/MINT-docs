@@ -2,7 +2,7 @@
 
 MINT sends a short message when something needs your attention. Your admin chooses the channels: email, a Microsoft Teams or Slack channel, and push messages to the MINT iOS app. The web app has no notification bell.
 
-This page describes what you receive on your phone. Admins: set up Apple Push in **Admin -> Platform -> Configuration**, in the **Apple Push** group. There you choose the relay or direct transport and the topic, and click **Send test push**.
+This page describes what you receive on your phone. Admins: set up Apple Push in **Admin -> System -> Configuration**, in the **Apple Push** group. There you choose the relay or direct transport and the topic, and click **Send test push**.
 
 ## What you receive
 
@@ -39,7 +39,7 @@ MINT also stops sending to a phone when Apple reports that its device token is n
 
 ## For plugin authors
 
-A plugin can send a message to named Teams or Slack channels. The admin sets up the channels in **Admin -> Platform -> Notifications**; see [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels).
+A plugin can send a message to named Teams or Slack channels. The admin sets up the channels in **Admin -> System -> Notifications**; see [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels).
 
 - `await context.notification_channels()` returns the channel names and the default of each service, never the webhook URLs. A service that is not set up has no names. It raises `UnavailableException` when the context cannot reach the platform, for example in standalone mode.
 - `await context.enqueue_notifications(function_id=..., channels=..., events=..., channel_names={"teams": {"lab-a"}}, on_behalf_of=user_id)` sends events to those channels. Without `channel_names`, a service reaches its default channel. An unknown name is refused with `notifications.unknown_channel` (400). Declare the channels in `Metadata.notifications` when you do not use `@notify`.

@@ -2,7 +2,7 @@
 
 MINT's update story has two related checks: the **platform** runtime and the **plugins** installed on top of it. A platform update carries the matching `mint-sdk`, so there is no separate SDK update inside the platform. Platform updates are checked from GitHub releases; marketplace plugin updates are checked from the configured registry.
 
-> [Screenshot: Admin -> Platform -> Updates showing the status strip, the Available updates table and the Update settings card]
+> [Screenshot: Admin -> System -> Updates showing the status strip, the Available updates table and the Update settings card]
 
 Keep the platform, Python SDK and frontend SDK on matching releases; plugins retain their own
 package versions and are distributed as `.mint` bundles. Read the
@@ -11,7 +11,7 @@ package versions and are distributed as `.mint` bundles. Read the
 
 ## The Updates page
 
-**Admin -> Platform -> Updates** is the one page for platform and plugin updates. The page needs `plugins.view` and either `platform.configure` or `plugins.install`. The rail item shows the number of available updates.
+**Admin -> System -> Updates** is the one page for platform and plugin updates. The page needs `plugins.view` and either `platform.configure` or `plugins.install`. The rail item shows the number of available updates.
 
 | Part | What it shows |
 |------|---------------|
@@ -23,7 +23,7 @@ The page reads the last check result without a call to GitHub. Before the first 
 
 **Admin -> Plugins -> Installed** shows a link with the number of available updates, and an **Update** button on each plugin card. **Admin -> Plugins -> Advanced** holds only the private package indexes.
 
-> [Screenshot: Admin -> Platform -> Updates with one platform update and two plugin updates available]
+> [Screenshot: Admin -> System -> Updates with one platform update and two plugin updates available]
 
 ## Platform updates
 
@@ -73,6 +73,16 @@ A plugin pins `mint-sdk` to a range. A plugin built for SDK 1.4 or later declare
 2. Review the list in the **Update to MINT `<version>`** dialog, then click **Update**.
 3. The listed plugin releases switch together with the platform at the next restart. MINT records each switch as `plugin.upgrade` in the audit log.
 4. A plugin with no compatible release is listed under **Plugins without a compatible release**. To continue, select **Disable these plugins until a compatible release is installed**. The plugin stays disabled until you install a compatible release.
+
+With the CLI, `mint platform update apply` shows the paired plugin releases and the plugins that the update disables, and asks. With `--yes` or `--json`, it does not ask. Confirm the plugin changes with flags:
+
+```bash
+mint platform update apply --yes --pair-all --disable <package> --disable <other-package>
+```
+
+- `--pair-all` accepts every plugin release that the platform pairs with the update.
+- `--disable PACKAGE` accepts that the update disables this plugin. Give one flag for each plugin.
+- A plugin that you do not name is never disabled. Without the necessary flags, the command stops with exit code 1 and names the flags. With `--json`, the answer has `pairing_required: true` and the flags in `confirm_with`.
 
 Installs from a Git checkout are not covered by this flow.
 
@@ -196,13 +206,52 @@ Back up the database before you upgrade. Database revisions run at startup and c
 3. **Plugins.** A plugin built for SDK 1.4 with the range `mint-sdk>=1.4.0,<2.0` stays enabled. Check **Admin -> Plugins -> Installed** after the first start.
 4. **Realtime stream.** It is on by default now. Open pages refetch after the writes of other users. The platform must run as one worker. Set `realtimeEnabled` to `false` to turn it off. See [`realtimeEnabled`](/admin/configuration#realtimeenabled).
 5. **Second factor.** An authenticator app (TOTP) is off until you set `auth.enableTotp`. See [Authentication -> Authenticator app](/admin/authentication#authenticator-app-totp).
-6. **Updates page.** The update controls moved to **Admin -> Platform -> Updates**. See [The Updates page](#the-updates-page).
+6. **Updates page.** The update controls moved to **Admin -> System -> Updates**. See [The Updates page](#the-updates-page).
 7. **Teams and Slack.** A single `webhookUrl` becomes the channel `default`. See [Notifications](/admin/platform-settings#teams-and-slack-channels) and [`notifications`](/admin/configuration#notifications).
 8. **Roles.** The new permission `notifications.broadcast` goes to the Admin role. Give it to other roles that send notifications to other people. See [Permissions](/reference/permissions#notifications-2).
 
+## Upgrading from MINT 1.5
+
+Update from 1.5.x or 1.4.x directly. There is no intermediate release.
+
+### Before the update
+
+1. **Back up the database and the data directory.** Two Alembic revisions run at the first 1.6 start. `platform_after_save_index` adds a partial index on `plugin_events`. `platform_object_cleanup_kind` adds the `kind` column to the object cleanup journal. Neither revision drops data. For Docker, see [Backups](/admin/install-docker#backups).
+2. **Turn off platform pre-releases.** The update applies the newest release that the update settings admit. With **Platform pre-releases** on (`updates.includePrereleases`) in the **Update settings** card, that is the newest pre-release, not the newest stable 1.6 release. Leave it off for this update.
+3. **Check the plugins.** A plugin built for SDK 1.4 or 1.5 with the range `mint-sdk>=1.x,<2.0` loads unchanged. A plugin whose own requirements do not resolve against the 1.6 platform lock is disabled at the first 1.6 start (see [After the update](#after-the-update)). Ask the plugin authors for 1.6 releases before you update. Plugin authors: see [Migrate from 1.5 to 1.6](/sdk/operations/migrate-1.5-to-1.6).
+4. **Check the worker count.** The platform must run as one worker. Startup refuses more than one.
+
+### Apply the update
+
+1. Open **Admin -> System -> Updates** and click **Update platform**. With the CLI, run `mint platform update apply`.
+2. When the update needs plugin changes, the platform pairs plugin releases or disables plugins. Confirm them in the dialog, or with `--pair-all` and `--disable PACKAGE` in the CLI. See [Plugins that exclude the new platform version](#plugins-that-exclude-the-new-platform-version).
+3. Restart MINT when asked, or run `mint platform restart`.
+
+**Docker.** The runtime bundle protocol is still 3, so a 1.5 container can update itself in the app. The in-app update puts 1.6 into the container, not into the image. A container that you create again from a 1.5 image starts 1.5 code on the 1.6 database, and it does not start. After the update, set the image in the Compose file to `ghcr.io/morscherlab/mint:1.6`. If you build the image from the repository, check out the 1.6 release tag before the next build. See [Install with Docker](/admin/install-docker#upgrades).
+
+### After the update
+
+- **Plugins.** Open **Admin -> Plugins -> Installed**. A plugin that the platform disabled shows the reason. There are two causes:
+  - A `mint-sdk` range that excludes 1.6, such as `mint-sdk<1.6`. The plugin stays disabled until you install a release that admits 1.6.
+  - A cap below a new platform floor, such as `sqlalchemy<2.1`. The 1.6 platform lock has SQLAlchemy 2.1, FastAPI 0.163 and Starlette 1.10.
+- **Plugin locks.** A plugin lock from before the upgrade cannot be applied on 1.6. `mint platform plugin rollback` refuses a lock of another platform release. Only the locks made after the upgrade can be used.
+- **Error codes.** Many refusals have a specific error `code` in place of the generic code of the HTTP status. The HTTP status does not change. A script that compares `code` with a generic code, such as `resource.not_found`, must use the new code or the HTTP status. See [Error codes](/reference/error-codes).
+- **Sessions.** An admin password reset ends every session of the user. The session checks no longer count in the sign-in rate limit. See [Rate limiting](/admin/authentication#rate-limiting).
+- **Admin panel.** The admin navigation has four groups: **People & access**, **Plugins**, **Lab content** and **System**. The admin panel opens only for roles that can manage something; `users.view` and `platform.view_logs` alone no longer open it. See [Users & roles](/admin/users-roles#system-roles).
+- **Browsers.** The platform frontend supports Chrome 116, Edge 116, Firefox 124 and Safari 17.4 or newer. See [Supported browsers](/guide/access#supported-browsers).
+- **Deleted experiments.** An experiment delete now removes its stored objects from the object store. The objects of experiments deleted before 1.6 stay in the object store.
+
+### Go back to 1.5
+
+There is no way back without the backup. After the first 1.6 start, a 1.5 release refuses the database with `Unknown database revision platform_object_cleanup_kind`, and no command runs a downgrade. To go back:
+
+1. Stop the platform.
+2. Restore the database dump that you made before the update.
+3. Start the 1.5 release with the data directory from before the update.
+
 ## Plugin updates
 
-Plugin updates are listed in **Available updates** on **Admin -> Platform -> Updates**. **Admin -> Plugins -> Installed** keeps an **Update** button on each plugin card that has an update, and **Admin -> Plugins -> Registry** shows the registry versions.
+Plugin updates are listed in **Available updates** on **Admin -> System -> Updates**. **Admin -> Plugins -> Installed** keeps an **Update** button on each plugin card that has an update, and **Admin -> Plugins -> Registry** shows the registry versions.
 
 > [Screenshot: installed plugin card with the Update ready badge]
 

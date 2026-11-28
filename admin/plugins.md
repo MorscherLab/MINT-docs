@@ -244,9 +244,17 @@ If a migration fails, the plugin shows **Migration failed**, stays disabled, nev
 
 ## Update settings
 
-The **Update settings** card on **Admin -> Platform -> Updates** edits the `updates` section of `config.json`: scheduled updates, the daily update time, the update scope (platform, plugins), background checks, the check interval, the platform repository and platform pre-releases. It needs `platform.configure`. **Admin -> Plugins -> Advanced** keeps only the private package indexes and needs `plugins.configure`. The controls for private package indexes (`PUT /api/plugins/config/extra-index-urls`), the update sources (`PUT|DELETE /api/updates/sources/{package}`) and the **Plugin pre-releases** toggle need `plugins.install`, because they change where plugin code comes from. A role with `plugins.configure` but not `plugins.install` (for example a Plugin operator) gets 403. These writes are audited (`plugins.extra_index_urls_update` with values redacted, `updates.source_update`, `updates.source_delete`). See [Updates](/admin/updates) for what each setting does.
+The **Update settings** card on **Admin -> System -> Updates** edits the `updates` section of `config.json`: scheduled updates, the daily update time, the update scope (platform, plugins), background checks, the check interval, the platform repository and platform pre-releases. It needs `platform.configure`. **Admin -> Plugins -> Advanced** keeps only the private package indexes and needs `plugins.configure`. The controls for private package indexes (`PUT /api/plugins/config/extra-index-urls`), the update sources (`PUT|DELETE /api/updates/sources/{package}`) and the **Plugin pre-releases** toggle need `plugins.install`, because they change where plugin code comes from. A role with `plugins.configure` but not `plugins.install` (for example a Plugin operator) gets 403. These writes are audited (`plugins.extra_index_urls_update` with values redacted, `updates.source_update`, `updates.source_delete`). See [Updates](/admin/updates) for what each setting does.
 
-> [Screenshot: Admin -> Platform -> Updates -> Update settings with Scheduled updates, Daily update time and Update scope]
+The release list of a GitHub plugin source comes from `GET /api/updates/releases` (`plugins.install`). When GitHub answers 401 or 404, the list shows 400 `update_source.repository_inaccessible` with the cause:
+
+| Message | Cause | Fix |
+|---------|-------|-----|
+| GitHub rejected the configured token | The GitHub token expired or was revoked | Replace the token in the update settings |
+| GitHub repository `<owner>/<repo>` does not exist, or the configured GitHub token cannot read it | The repository name is wrong, or the token has no access to the private repository | Correct the repository, or give the token read access |
+| GitHub repository `<owner>/<repo>` does not exist, or it is private | No token is set, and the repository is wrong or private | Correct the repository, or set `updates.githubToken` (`MINT_UPDATES__GITHUB_TOKEN`) |
+
+> [Screenshot: Admin -> System -> Updates -> Update settings with Scheduled updates, Daily update time and Update scope]
 
 ## Uninstall modes
 

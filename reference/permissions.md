@@ -42,7 +42,7 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 | Permission | What it grants |
 |------------|----------------|
 | `plugins.view` | See installed plugins and their metadata |
-| `plugins.use` | Invoke plugin routes (run analyses, fill design forms, etc.) |
+| `plugins.use` | Invoke plugin routes (run analyses, fill design forms, etc.), open plugin panels on the experiment page, and edit a live design form |
 | `plugins.configure` | Change plugin settings, call plugin endpoints, jobs and MCP tools with `access="configure"`, and read the plugin lock history. Replaces the former plugin-administrator role |
 | `plugins.install` | Install / uninstall / upgrade plugins, register external and Docker runtimes, roll back the [plugin dependency lock](/admin/plugins#plugin-dependency-lock), and change where plugin code comes from (private package indexes, update sources, the Prereleases toggle) |
 
@@ -89,8 +89,12 @@ The authoritative list lives at [`api/permissions.py`](https://github.com/Morsch
 
 | Permission | What it grants |
 |------------|----------------|
-| `platform.configure` | Modify admin settings (SMTP, push, marketplace registry, observability, auth, audit and instrument history retention), edit update settings and scheduled updates, apply platform updates, and use **Admin -> Platform -> Terminal** when enabled. Turning authentication off or dev mode on additionally requires the `admin` role |
+| `platform.configure` | Modify admin settings (SMTP, push, marketplace registry, observability, auth, audit and instrument history retention), edit update settings and scheduled updates, apply platform updates, and use **Admin -> System -> Terminal** when enabled. Turning authentication off or dev mode on additionally requires the `admin` role |
 | `platform.view_logs` | View structured logs and read the `GET /api/health/ready` readiness report |
+
+### Admin panel
+
+The **Admin** entry and the admin panel open only for a role that holds one of `users.manage`, `platform.configure`, `plugins.configure`, `plugins.install` or `notices.publish`. `GET /api/auth/config` serves this list. `users.view` and `platform.view_logs` alone do not open the admin panel, so the built-in Member and Viewer roles do not see it. In the panel, each section needs its own permission.
 
 ## System roles → permissions
 
@@ -134,7 +138,7 @@ Tabular form:
 
 ## Custom roles
 
-Admins can build custom roles by composing any subset of the 25 permissions above.
+Admins can build custom roles by composing any subset of the 27 permissions above.
 
 On upgrade to MINT 1.3, every existing role, custom roles included, received `instruments.view`, and the `admin` role also received `instruments.edit`. Roles created afterwards get neither automatically. On upgrade to MINT 1.4, the Member role lost `plugins.configure`; other roles keep their grants. Custom roles appear alongside the built-in three when assigning a user's system role. A role also has a project scope and a plugin access list (`all` or selected plugins; any other stored value grants no plugin). The slug of a role matches `^[a-z0-9][a-z0-9_-]*$`; only the exact slug `admin` is an administrator.
 
@@ -197,7 +201,7 @@ An unknown level counts as `admin`. See [Users & Roles → Plugin access levels]
 
 ## Admin terminal
 
-**Admin -> Platform -> Terminal** is not a separate permission. It is available only when both conditions are true:
+**Admin -> System -> Terminal** is not a separate permission. It is available only when both conditions are true:
 
 - `adminTerminalEnabled` is enabled in platform config or via `MINT_ADMIN_TERMINAL_ENABLED=true`
 - The user has `platform.configure`

@@ -1,6 +1,6 @@
 # Platform settings
 
-The **Admin -> Platform** group holds the lab-wide settings that are not tied to one plugin. Each section appears only to users with the permission shown.
+The **Admin -> Lab content** and **Admin -> System** groups hold the lab-wide settings that are not tied to one plugin. Each section appears only to users with the permission shown.
 
 | Section | Permission | Use it to |
 |---------|------------|-----------|
@@ -19,7 +19,7 @@ The **Admin -> Platform** group holds the lab-wide settings that are not tied to
 
 Experiment types are the only source of the **Type** list in the new-experiment form. Plugins do not create them. Create a type before users need it.
 
-Open **Admin -> Platform -> Experiment types** and add a type:
+Open **Admin -> Lab content -> Experiment types** and add a type:
 
 | Field | Rules |
 |-------|-------|
@@ -36,7 +36,7 @@ The value decides the experiment code prefix. A slug with underscores uses the f
 
 ## Notices
 
-Notices appear on the home page notice board for every signed-in user. In **Admin -> Platform -> Notices**, a user with `notices.publish` can post, edit, and delete notices.
+Notices appear on the home page notice board for every signed-in user. In **Admin -> Lab content -> Notices**, a user with `notices.publish` can post, edit, and delete notices.
 
 | Field | Notes |
 |-------|-------|
@@ -49,7 +49,7 @@ Notices appear on the home page notice board for every signed-in user. In **Admi
 
 ## Notifications
 
-Plugins publish events; MINT delivers them. Configure delivery in **Admin -> Platform -> Configuration** under the notification settings:
+Plugins publish events; MINT delivers them. Configure delivery in **Admin -> System -> Configuration** under the notification settings:
 
 | Channel | Settings |
 |---------|----------|
@@ -68,7 +68,7 @@ Email for important events goes to the event's owner and to every active user wh
 
 Teams and Slack each hold a list of named channels. A channel is a name and a write-only webhook URL. MINT stores the URL encrypted, and the panel never shows it again. A name uses lowercase letters, digits and hyphens. A webhook URL must be an absolute `https://` URL.
 
-In **Admin -> Platform -> Notifications**, the **Teams channels** and **Slack channels** groups work like this:
+In **Admin -> System -> Notifications**, the **Teams channels** and **Slack channels** groups work like this:
 
 1. Switch on **Teams delivery** (or **Slack delivery**) and click **Save**.
 2. Under **Add channel**, enter a name and the webhook URL, then click **Add**. The first channel of a service becomes its default.
@@ -91,13 +91,13 @@ The routes need `platform.configure` and are audited as `config.update`:
 | `POST .../channels/{name}/default` | Make the channel the default |
 | `POST .../channels/{name}/test` | Send a test message to the channel. `POST .../{teams\|slack}/test` tests the default channel |
 
-A plugin reads the channel names, never the URLs. A plugin chooses channels per message. See [Notifications -> For plugin authors](/guide/notifications#for-plugin-authors). A message that goes to another person or to a Teams or Slack channel needs a sender with the permission `notifications.broadcast`. The Admin role has it. Give it to other roles in **Admin -> People -> Roles**. See [Permissions](/reference/permissions#notifications-2).
+A plugin reads the channel names, never the URLs. A plugin chooses channels per message. See [Notifications -> For plugin authors](/guide/notifications#for-plugin-authors). A message that goes to another person or to a Teams or Slack channel needs a sender with the permission `notifications.broadcast`. The Admin role has it. Give it to other roles in **Admin -> People & access -> Roles**. See [Permissions](/reference/permissions#notifications-2).
 
 ## Push notifications
 
 MINT sends push notifications to the MINT iOS app through Apple Push (APNs). The phone registers its device with a write-scoped [personal access token](/admin/authentication#personal-access-tokens); a session token gets 403. Administrators see all devices at `GET /api/admin/push-devices` (`users.manage`).
 
-Set up Apple Push in **Admin -> Platform -> Configuration -> Notifications -> Apple Push** (`platform.configure`):
+Set up Apple Push in **Admin -> System -> Configuration -> Notifications -> Apple Push** (`platform.configure`):
 
 | Setting | Meaning |
 |---------|---------|
@@ -129,7 +129,7 @@ A feed URL works without signing in, so treat it as a secret. Rotate it from the
 
 ## Server health
 
-**Admin -> Platform -> Server** shows the platform version, database, caches, background operations, and the **Plugin processes** card for isolated plugins.
+**Admin -> System -> Server** shows the platform version, database, caches, background operations, and the **Plugin processes** card for isolated plugins.
 
 For monitoring, MINT exposes two endpoints:
 
@@ -144,7 +144,7 @@ The startup log has one `Startup phase '...' took` line for each phase and a `St
 
 ## Logs and audit log
 
-**Admin -> Platform -> Logs** (`platform.view_logs`) shows the platform log, including tracebacks from plugin jobs. Users with `platform.configure` set the log level in **Configuration**. File logging is set with `logging.fileEnabled` and `logging.filePath`.
+**Admin -> System -> Logs** (`platform.view_logs`) shows the platform log, including tracebacks from plugin jobs. Users with `platform.configure` set the log level in **Configuration**. File logging is set with `logging.fileEnabled` and `logging.filePath`.
 
 MINT also keeps an audit log in the database: sign-ins (`auth.login_success`, `auth.login_failure`), registrations, and changes to projects, experiments, experiment types, notices, roles, settings and plugins. Plugin writes to experiments are recorded too (`experiment.create`, `experiment.update`, `experiment.status_change`, `experiment.delete`, `experiment.design_data_save`), with the user who caused them as the actor. Every write to `config.json` through the admin panel or the API is recorded; secret values are redacted. Other recorded actions include `platform.update`, `plugin.install`, `plugin.upload`, `plugin.upgrade`, `plugin.uninstall`, `terminal.session_start` and `analysis.artifact_*`. There is no audit page in the UI. Read it with the API, using a token from a user with `platform.view_logs`:
 

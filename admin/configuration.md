@@ -63,7 +63,7 @@ When `true`:
 - Passkey login is disabled
 - The configured PostgreSQL connection is kept; if `DB_USERNAME` / `DB_PASSWORD` are unset, dev mode falls back to `mint` / `mint`
 
-Only users with the `admin` role can turn dev mode on through **Admin -> Platform -> Configuration**; `platform.configure` alone is refused.
+Only users with the `admin` role can turn dev mode on through **Admin -> System -> Configuration**; `platform.configure` alone is refused.
 
 ::: warning Never expose dev mode
 Dev mode is for local development and evaluation only. Never enable it on a host reachable from the network.
@@ -163,7 +163,7 @@ See [Security settings](#security-settings) for how these behave.
 
 ## Security settings
 
-- **Self-registration.** With `auth.allowRegistration: false`, `POST /api/users/register` returns 403 and the `/register` page sends visitors to `/login`. Switch it under **Admin -> Platform -> Configuration -> Authentication -> Registration**, in `config.json`, or with `MINT_AUTH__ALLOW_REGISTRATION=false`.
+- **Self-registration.** With `auth.allowRegistration: false`, `POST /api/users/register` returns 403 and the `/register` page sends visitors to `/login`. Switch it under **Admin -> System -> Configuration -> Authentication -> Registration**, in `config.json`, or with `MINT_AUTH__ALLOW_REGISTRATION=false`.
 - **Passwords.** Every password (registration, self-service change, admin create, update and reset) must be at least 8 characters and at most 72 bytes when UTF-8 encoded. Other lengths are rejected with 422.
 - **Account lockout.** After `auth.failedLoginLimit` failed password logins, the account is locked for `auth.loginLockoutMinutes`.
 - **Rate limit.** `/api/auth` (passkey routes included), `/api/setup`, `/api/users/register` and `PUT /api/users/me` allow 20 requests per 60 seconds per client IP, then return 429. `/mcp` has its own bucket of 240 per 60 seconds, and `/oauth` one of 60.
@@ -296,9 +296,9 @@ retry state, and recipient policy.
 }
 ```
 
-A config with one legacy `webhookUrl` (or `MINT_NOTIFICATIONS__TEAMS__WEBHOOK_URL`) is read as the channel `default`. Manage the channels in **Admin -> Platform -> Notifications**, not in the file: the panel stores each URL encrypted. See [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels).
+A config with one legacy `webhookUrl` (or `MINT_NOTIFICATIONS__TEAMS__WEBHOOK_URL`) is read as the channel `default`. Manage the channels in **Admin -> System -> Notifications**, not in the file: the panel stores each URL encrypted. See [Teams and Slack channels](/admin/platform-settings#teams-and-slack-channels).
 
-Only enable an integration when its required host/webhook fields are set. For `apns`, the `relay` transport needs `relayUrl` (HTTPS; a URL with no path gets `/v1/push`) and `relayKey`, and the `direct` transport needs `teamId`, `keyId` and the `.p8` key as `privateKey`. MINT stores the keys encrypted, and the admin API shows only whether they are set. Set them in **Admin -> Platform -> Configuration -> Notifications -> Apple Push**; see [Push notifications](/admin/platform-settings#push-notifications).
+Only enable an integration when its required host/webhook fields are set. For `apns`, the `relay` transport needs `relayUrl` (HTTPS; a URL with no path gets `/v1/push`) and `relayKey`, and the `direct` transport needs `teamId`, `keyId` and the `.p8` key as `privateKey`. MINT stores the keys encrypted, and the admin API shows only whether they are set. Set them in **Admin -> System -> Configuration -> Notifications -> Apple Push**; see [Push notifications](/admin/platform-settings#push-notifications).
 
 ## `audit`
 
@@ -306,7 +306,7 @@ Only enable an integration when its required host/webhook fields are set. For `a
 |-----|---------|-------------|
 | `retentionDays` | `0` | Days to keep audit events (`0`–`36500`). `0` keeps every event |
 
-With `retentionDays` above 0, a daily job deletes older audit events and records each purge as an `audit.purge` event. Edit it under **Admin -> Platform -> Configuration -> Audit log**, or set `MINT_AUDIT__RETENTION_DAYS`.
+With `retentionDays` above 0, a daily job deletes older audit events and records each purge as an `audit.purge` event. Edit it under **Admin -> System -> Configuration -> Audit log**, or set `MINT_AUDIT__RETENTION_DAYS`.
 
 ## `instruments`
 
@@ -315,7 +315,7 @@ With `retentionDays` above 0, a daily job deletes older audit events and records
 | `historyRetentionDays` | `0` | Days to keep rows of the instrument status history (`0`–`36500`). `0` keeps every row |
 | `alertWindowHours` | `72` | Hours that an unacknowledged critical alert keeps an instrument critical (`0`–`87600`). `0` turns the window off |
 
-With `historyRetentionDays` above 0, a daily job deletes older rows and records each purge as an `instrument_history.purge` event. Edit it under **Admin -> Platform -> Configuration -> Instruments**, or set `MINT_INSTRUMENTS__HISTORY_RETENTION_DAYS`.
+With `historyRetentionDays` above 0, a daily job deletes older rows and records each purge as an `instrument_history.purge` event. Edit it under **Admin -> System -> Configuration -> Instruments**, or set `MINT_INSTRUMENTS__HISTORY_RETENTION_DAYS`.
 
 The alert window limits how long an old alert counts. The platform reads an instrument as critical only while its newest unacknowledged critical alert is inside the window. The reporting plugin sends the time of that alert as `latest_critical_at`; a report without it keeps its critical flag. An old alert that nobody acknowledged then no longer lights the **Instruments** badge for ever. The alerts card on the instrument page lists the alerts of the same window. Set the window with `instruments.alertWindowHours` in `config.json` or `MINT_INSTRUMENTS__ALERT_WINDOW_HOURS`. The panel has no field for it. Value `0` turns the window off, and an unacknowledged critical alert then counts until someone acknowledges it.
 
@@ -380,6 +380,8 @@ When it is on, signed-in browsers keep one `text/event-stream` connection to `GE
 
 When `observability.enabled` is `false`, instrumentation is a no-op.
 
+With `observability.enabled`, each HTTP request gets a span with `url.path` and `url.query`. These URLs get no span, metric or log record, because they carry a secret: calendar feeds, `/api/users/me/push-devices/…`, `/api/auth/device/…` and `/api/auth/sso/…`. To exclude more URLs, set `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS` or `OTEL_PYTHON_EXCLUDED_URLS` to comma-separated regular expressions. MINT matches them against `scheme://host/path`. An invalid pattern stops the start. `FASTAPI_OTEL_AUTO_CONFIGURE` has no effect: the `observability` section sets the exporter.
+
 ## `access`
 
 | Key | Default | Description |
@@ -392,7 +394,7 @@ When `observability.enabled` is `false`, instrumentation is a no-op.
 { "adminTerminalEnabled": false }
 ```
 
-When enabled, users with `platform.configure` can use **Admin -> Platform -> Terminal** to open a short-lived shell inside the running MINT container/process and maintain a persisted startup script under `server.dataPath/admin-terminal/startup.sh`. Keep this off by default; it is intended for tightly controlled server administration, not routine plugin use.
+When enabled, users with `platform.configure` can use **Admin -> System -> Terminal** to open a short-lived shell inside the running MINT container/process and maintain a persisted startup script under `server.dataPath/admin-terminal/startup.sh`. Keep this off by default; it is intended for tightly controlled server administration, not routine plugin use.
 
 ## `corsOrigins`
 
@@ -462,7 +464,7 @@ The configured `server.dataPath` (default `./data`) holds platform runtime state
 | `plugins/<plugin>/venv/` | Isolated plugin virtual environments when subprocess isolation is used |
 | `plugins/<plugin>/config.json` | Legacy per-plugin settings fallback |
 | `logs/mint.log` | Log file when `logging.fileEnabled` is true (default `logging.filePath`) |
-| `admin-terminal/startup.sh` | Optional startup script managed by **Admin -> Platform -> Terminal** |
+| `admin-terminal/startup.sh` | Optional startup script managed by **Admin -> System -> Terminal** |
 | `cache/uv/` | Docker only: uv wheel cache (`UV_CACHE_DIR=/app/data/cache/uv`), used to restore plugins from their locks after an image rebuild |
 
 Removing `marketplace/` is safe; it regenerates on demand. Removing `plugins/locks/history/` discards plugin rollback points; do not remove the rest of `plugins/locks/`.

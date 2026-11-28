@@ -2,7 +2,7 @@
 
 The **Instruments** page shows the live status of the lab's shared equipment: mass spectrometers, LC systems, and anything else plugins and people refer to. Each instrument is listed once for the whole platform, so every plugin uses the same names.
 
-> [Screenshot: Instruments page in List view with filter chips and grouped rows]
+> [Screenshot: Instruments page in Table view with filter chips and grouped rows]
 
 ## Navigate to instruments
 
@@ -21,13 +21,13 @@ Every platform page has the same pill navigation: **Home**, **Experiments** (a m
 
 The page groups the instruments in this order: **Needs attention** (errors and offline instruments), **Running**, **Available**, **Not reporting yet**, and **Inactive**. Running instruments are sorted by their ETA.
 
-In **List** view, each row shows the state, the instrument, its current run, the progress, the ETA, and the last report. In **Board** view, each instrument is a tile with the same data. Use the **List** and **Board** buttons to switch. Your browser remembers your choice.
+In **Table** view, each row shows the state, the instrument, its current run, the progress, the ETA, and the last report. In **Cards** view, each instrument is a tile with the same data. Use the **Table** and **Cards** icon buttons to switch. Your browser remembers your choice.
 
 The page refreshes by itself every 15 seconds.
 
 If the directory is empty, the page shows **No instruments yet**. Users with `instruments.edit` see a **New instrument** button. Other users see a note to ask an instrument editor to add equipment.
 
-> [Screenshot: Instruments page in Board view]
+> [Screenshot: Instruments page in Cards view]
 
 ## Open one instrument
 

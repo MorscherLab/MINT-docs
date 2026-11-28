@@ -2,13 +2,13 @@
 
 MINT controls access with a **system role** per user plus project membership. The system role decides which actions a user may take anywhere in the platform. Project membership records who works on a project and, in restricted visibility mode, which experiments a user can see. Roles combine 27 permissions in 11 groups; admins can build custom roles from them.
 
-> [Screenshot: Admin -> People -> Roles page with the Admin / Member / Viewer presets and a custom role]
+> [Screenshot: Admin -> People & access -> Roles page with the Admin / Member / Viewer presets and a custom role]
 
 ## Accounts
 
 People get an account by self-registration (on by default, controlled by `auth.allowRegistration`) or from an admin with `mint platform admin user create`. A self-registered account is **inactive** until an administrator activates it; the person sees "Waiting for approval" at sign-in. Activate it from the Users list (see [Waiting for approval](/reference/troubleshooting#waiting-for-approval)). See [Authentication → Accounts and registration](/admin/authentication#accounts-and-registration).
 
-**Admin -> People -> Users** (needs `users.view`) lists accounts. With `users.manage` you can edit a user, change the role, reset the password, reset the passkeys (see [Recovery](/admin/authentication#recovery)), deactivate, reactivate, or delete. MINT refuses an action on your own account (delete, deactivate, password reset, passkey reset, role change) with 400. It refuses to delete, deactivate or demote the last active administrator with 409.
+**Admin -> People & access -> Users** (needs `users.view`) lists accounts. With `users.manage` you can edit a user, change the role, reset the password, reset the passkeys (see [Recovery](/admin/authentication#recovery)), deactivate, reactivate, or delete. MINT refuses an action on your own account (delete, deactivate, password reset, passkey reset, role change) with 400. It refuses to delete, deactivate or demote the last active administrator with 409.
 
 ## System roles
 
@@ -20,15 +20,15 @@ Three roles ship out of the box:
 | **Member** (default for new accounts) | All `projects.*` and `experiments.*`; `instruments.view`; `plugins.view`, `plugins.use`; `users.view`; `platform.view_logs`; `filesystem.browse` |
 | **Viewer** | `projects.view`, `experiments.view`, `instruments.view`, `plugins.view`, `plugins.use`, `users.view` |
 
-Member does not have `plugins.configure`, because that permission gives the plugin `configure` access level (see [Plugin access levels](#plugin-access-levels)). The 1.4 upgrade removed it from the Member role; other roles keep their grants. Members open the admin panel through `users.view` and `platform.view_logs`. They do not see **Admin -> Plugins**, which needs `plugins.configure` or `plugins.install`.
+Member does not have `plugins.configure`, because that permission gives the plugin `configure` access level (see [Plugin access levels](#plugin-access-levels)). The 1.4 upgrade removed it from the Member role; other roles keep their grants. The admin panel opens only for a role that holds one of `users.manage`, `platform.configure`, `plugins.configure`, `plugins.install` or `notices.publish`. Member and Viewer hold none of them, so they do not see the **Admin** entry. `users.view` and `platform.view_logs` alone do not open the admin panel.
 
-Every user has exactly one system role. Change it on **Admin -> People -> Users**.
+Every user has exactly one system role. Change it on **Admin -> People & access -> Users**.
 
 The 1.3 upgrade gave every existing role, custom roles included, `instruments.view`, and gave the Admin role `instruments.edit`. Roles created later get neither automatically. Grant `instruments.edit` to the roles that maintain the [instrument directory](/guide/instruments).
 
 ## Custom roles
 
-**Admin -> People -> Roles** (needs `users.manage`) edits roles. Besides the permission toggles, each role has:
+**Admin -> People & access -> Roles** (needs `users.manage`) edits roles. Besides the permission toggles, each role has:
 
 | Setting | Options | Effect |
 |---------|---------|--------|
@@ -65,7 +65,7 @@ Do not use project membership instead of system roles. A user still needs `exper
 
 > [Screenshot: project Team card listing members and their project roles]
 
-## The 25 permissions
+## The 27 permissions
 
 Permissions are `resource.action` strings. The backend checks them on every route; the role editor shows them as grouped toggles.
 

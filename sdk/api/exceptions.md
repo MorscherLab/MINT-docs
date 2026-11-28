@@ -292,6 +292,8 @@ The HTTP envelope wraps the Python exception's fields and adds transport context
 
 `X-Request-ID` carries the same request ID. Treat `details` as client-visible data, not a private logging channel. The frontend and Python client can inspect `code`, `status`, and `request_id` without parsing prose.
 
+The platform routes use the same envelope with their own codes, such as `user.not_found` or `auth.session_required`. See [Error codes](/reference/error-codes).
+
 ## Notes
 
 - Use SDK exception classes for structured application failures; use `HTTPException` when an explicit HTTP status is appropriate.
@@ -302,4 +304,5 @@ The HTTP envelope wraps the Python exception's fields and adds transport context
 ## Related
 
 - [Recipes → Error handling](/sdk/recipes/error-handling) — patterns and anti-patterns
+- [Error codes](/reference/error-codes) — the codes of the platform routes
 - [Workflow → Updates](/admin/updates) — auto-issue reporting (User Manual track)

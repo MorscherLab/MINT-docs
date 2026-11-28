@@ -4,7 +4,7 @@ The library store holds large, read-only reference files that plugins use: spect
 
 Use the store for files that are too large for a plugin wheel and that many plugins can share. Plugin authors: see [Use a reference library](/sdk/recipes/libraries).
 
-> [Screenshot: Admin -> Platform -> Libraries listing two libraries with versions, states and the Promote, Retire and Delete actions]
+> [Screenshot: Admin -> Plugins -> Libraries listing two libraries with versions, states and the Promote, Retire and Delete actions]
 
 ## Where the files live
 
@@ -55,7 +55,7 @@ A failed import, a shutdown or a crash returns the source to `incoming/`. MINT n
 
 Publishing never moves the latest version. Only a promote does. Without `--promote`, the new version stays unused until you promote it.
 
-Open **Admin -> Platform -> Libraries** and click **Promote** on a published version, or run `mint libraries promote platform/gnps 2024.1`. MINT hashes the files again. It makes the version the latest only when the hash still matches the import (409 `library.integrity` otherwise). A library has at most one latest version.
+Open **Admin -> Plugins -> Libraries** and click **Promote** on a published version, or run `mint libraries promote platform/gnps 2024.1`. MINT hashes the files again. It makes the version the latest only when the hash still matches the import (409 `library.integrity` otherwise). A library has at most one latest version.
 
 ## Retire, restore and delete
 

@@ -8,6 +8,19 @@ If your lab operates a MINT server, no local installation is required. Access th
 
 The Morscher Lab default URL is [mint.morscherlab.org](https://mint.morscherlab.org). Other deployments use site-specific URLs; consult your lab administrator if the address is not known.
 
+## Supported browsers
+
+Use a desktop browser of one of these releases or newer:
+
+| Browser | Oldest supported release |
+|---------|--------------------------|
+| Chrome | 116 |
+| Edge | 116 |
+| Firefox | 124 |
+| Safari | 17.4 |
+
+MINT is built for these releases and has no polyfills. In an older browser, a request can fail with a `TypeError`. On a phone, MINT shows **Desktop browser required**; see [UI tour](/guide/ui-tour#sign-in-pages).
+
 ## Log in
 
 The login page offers up to three ways in, depending on how your admin set up MINT:
@@ -26,9 +39,9 @@ If your lab requires a second factor, a password or edu-ID sign-in is followed b
 
 Until you finish this step, the sign-in is valid for 10 minutes only. A direct passkey sign-in counts as both factors, so it asks for nothing more. A code works once, and a wrong code counts like a wrong password toward the lockout.
 
-You can add or remove a passkey or the authenticator app in **Your account -> Security**. While the second factor is required, you cannot remove your last one. MINT has no recovery codes. If you lose every passkey or your authenticator app, ask an admin to reset them in **Admin -> People -> Users**; the reset removes your passkeys and your authenticator app and signs you out everywhere. See [Authentication -> Recovery](/admin/authentication#recovery). Personal access tokens and the MCP server do not use the second factor.
+You can add or remove a passkey or the authenticator app in **Your account -> Security**. While the second factor is required, you cannot remove your last one. MINT has no recovery codes. If you lose every passkey or your authenticator app, ask an admin to reset them in **Admin -> People & access -> Users**; the reset removes your passkeys and your authenticator app and signs you out everywhere. See [Authentication -> Recovery](/admin/authentication#recovery). Personal access tokens and the MCP server do not use the second factor.
 
-If you enter the right password for an account that an admin has not activated yet, MINT shows **Waiting for approval** instead of a password error. Ask an admin to activate the account in **Admin -> People -> Users**. Waiting does not count toward the lockout.
+If you enter the right password for an account that an admin has not activated yet, MINT shows **Waiting for approval** instead of a password error. Ask an admin to activate the account in **Admin -> People & access -> Users**. Waiting does not count toward the lockout.
 
 After five failed password attempts, the account is locked for 15 minutes by default.
 

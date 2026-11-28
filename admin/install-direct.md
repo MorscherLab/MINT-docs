@@ -24,6 +24,7 @@ Both result in identical platform behavior; choose based on your operations pref
 | **Disk** | ~2 GB for MINT + room for plugin venvs and uploaded artifacts |
 | **RAM** | 4 GB minimum, 8 GB recommended once plugins are installed |
 | **Reverse proxy** | Required for production: nginx, Caddy, or Traefik to terminate TLS |
+| **Browsers** | Users need Chrome 116, Edge 116, Firefox 124, Safari 17.4 or newer. See [Supported browsers](/guide/access#supported-browsers) |
 
 ::: tip PostgreSQL is required
 MINT 1.2 uses PostgreSQL for every platform deployment. The SDK still supports SQLite for a plugin running standalone, but that local database is not a MINT platform backend.
@@ -175,7 +176,7 @@ See [Reverse proxy](/admin/reverse-proxy) and [First-run setup](/admin/first-run
 
 ## Upgrades
 
-Take a database backup, then apply the new release from **Admin -> Platform -> Updates** (see [Updates](/admin/updates)). On this install path MINT downloads the release's runtime bundle into `/opt/mint` and asks for a restart:
+Take a database backup, then apply the new release from **Admin -> System -> Updates** (see [Updates](/admin/updates)). On this install path MINT downloads the release's runtime bundle into `/opt/mint` and asks for a restart:
 
 ```bash
 sudo systemctl restart mint
