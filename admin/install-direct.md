@@ -150,7 +150,7 @@ If a platform migration fails, MINT logs the error and exits with a non-zero sta
    sudo systemctl status mint
    ```
 
-When MINT requests its own restart, it exits with status 0. `Restart=always` makes systemd start it again. To allow [scheduled updates](/admin/updates#scheduled-updates), also add `Environment=MINT_RESTART_SUPERVISED=1` to the unit. As an alternative, `mint-platform daemon install-service` writes a user-level unit that sets `MINT_DAEMON=1`.
+When MINT requests its own restart, it exits with status 0. `Restart=always` makes systemd start it again. To allow [scheduled updates](/admin/updates#scheduled-updates), also add `Environment=MINT_RESTART_SUPERVISED=1` to the unit. As an alternative, `mint-platform daemon install-service` writes a user-level unit with `Restart=always` that sets `MINT_DAEMON=1`.
 
 ::: warning Bind to 127.0.0.1, not 0.0.0.0
 `mint-platform serve` serves plain HTTP and does not terminate TLS. Bind it to `127.0.0.1` and put a reverse proxy in front. It trusts forwarded headers only from `127.0.0.1` and `::1`. See [Trusted proxies](/admin/reverse-proxy#trusted-proxies).

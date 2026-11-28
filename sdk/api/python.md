@@ -159,7 +159,7 @@ saved = await self.context.design.save(experiment_id, {"samples": []})
 saved = await self.context.design.save(experiment_id, data, expected_version=experiment.version)
 ```
 
-`design.save(experiment_id, data, *, version=None, expected_version=None)` stores one design record for the calling plugin. `version` defaults to `Design.version`. With a stale `expected_version`, it raises `VersionConflictException` (412); without it, the last write wins.
+`design.save(experiment_id, data, *, version=None, expected_version=None)` stores one design record for the calling plugin. `version` defaults to `Design.version`. With `expected_version`, the save succeeds only while the experiment is still at that `Experiment.version`; otherwise it raises `VersionConflictException` (412). Without it, the last write wins.
 
 ```python
 await self.artifacts.save(experiment_id, {"peaks": rows}, "peaks")                  # replace=True

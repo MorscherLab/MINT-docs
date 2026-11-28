@@ -27,7 +27,7 @@ MINT has three system roles: Admin, Member (the default for new accounts) and Vi
 
 - Member does not have `plugins.configure`, because that permission gives the plugin `configure` access level. See [Plugin access levels](#plugin-access-levels).
 - Member and Viewer do not see the **Admin** entry. See [Admin panel](/reference/permissions#admin-panel).
-- A new role does not get `instruments.edit` automatically. Grant it to the roles that maintain the [instrument directory](/guide/instruments).
+- A new role gets neither `instruments.view` nor `instruments.edit` automatically. Grant it to the roles that maintain the [instrument directory](/guide/instruments).
 
 To change the role of a user, open **Admin -> People & access -> Users**, click **⋮** in the user's row and choose the role in the role list of the action row.
 

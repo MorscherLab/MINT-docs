@@ -185,6 +185,8 @@ The client cannot write artifacts. The producing plugin writes them; see [Writin
 
 `client.objects` has `list`, `put_bytes`, `put_file`, `get_bytes`, `get_ref`, `download_file`, `exists` and `delete`. Each call takes an experiment ID and an explicit `plugin_id`. The calls use the permissions of the signed-in user, not of the plugin. An uploaded object does not create an analysis artifact.
 
+Earlier releases had flat methods (`get_data`, `save_data`, `delete_data`, `get_data_tree`, `get_data_summary`, `export_data`, `get_results`, `get_result`, `save_result`, `delete_result`). They are removed; use `client.experiments.data` and `client.experiments.analysis`.
+
 ## Errors
 
 The client raises `APIError`, or a subclass, for each non-2xx response. It reads the [error envelope](/reference/error-codes#the-error-envelope):

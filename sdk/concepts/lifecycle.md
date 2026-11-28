@@ -206,7 +206,7 @@ async def validate_design(self, event: BeforeExperimentSave) -> None:
 
 For platform design saves, `event.data` is `{ "plugin_id": ..., "data": ... }`, not the inner design payload. Typed events also give `experiment_id` and, when present, `experiment`, `request_id` and `actor`. Do not expect the optional fields on every host path.
 
-`experiment.before_save` blocks the save and fails closed. Return `None` to allow the save. Raise `EventVetoException` to refuse it (422). These conditions also refuse the save:
+`experiment.before_save` blocks the save and fails closed. The platform sends it to each plugin that declares it, one at a time; the writing plugin does not get it. A plugin process has 5 seconds to answer. Return `None` to allow the save. Raise `EventVetoException` to refuse it (422). These conditions also refuse the save:
 
 - The handler fails, also in an in-process plugin.
 - The handler returns a value other than `None`.

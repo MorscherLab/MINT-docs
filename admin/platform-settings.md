@@ -156,12 +156,13 @@ A feed URL works without sign-in, so keep it secret. If it leaks, rotate it in t
 
 ![Server section with the Database, Plugin processes and Background activity cards](/screenshots/admin/platform-settings-server.webp)
 
-For monitoring, MINT has two endpoints:
+For monitoring, MINT has these endpoints:
 
 | Endpoint | Access | Returns |
 |----------|--------|---------|
 | `GET /api/health` | Public | Liveness: `status`, `version` and `boot_id`. No database access. `boot_id` changes at each process start, so a new value confirms a restart |
 | `GET /api/health/ready` | `platform.view_logs`, or `Authorization: Bearer <token>` | Readiness: PostgreSQL and object-storage reachability, connection-pool statistics, and the plugin inventory with the SDK version and API compatibility of each plugin. Returns 503 when the database check fails |
+| `GET /api/admin/object-cleanup` | `platform.view_logs` | The object-cleanup queue. An experiment delete writes one cleanup job for each stored object, and a background worker deletes the objects after the commit, so the delete does not wait for the storage |
 
 To let an external monitor read the readiness report without a user account, set `server.healthReadyToken` (`MINT_SERVER__HEALTH_READY_TOKEN`). The `HEALTHCHECK` of the Docker image probes `/api/health`.
 

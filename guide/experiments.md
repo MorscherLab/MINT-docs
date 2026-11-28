@@ -226,7 +226,7 @@ The deletion removes:
 
 - The experiment record and its design data.
 - The analysis artifact records.
-- The stored files of the experiment in the object store. MINT deletes them in the background. A file that another experiment uses stays.
+- The stored files of the experiment in the object store. MINT deletes them in the background, after the delete is committed ([cleanup queue](/admin/platform-settings#server-health)). A file that another experiment uses stays.
 
 Child experiments stay and lose their link to the parent. You can delete an experiment that has a number. The confirmation names the number and tells you that files on the lab storage keep it. The audit log records the deleted number.
 

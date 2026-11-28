@@ -245,7 +245,7 @@ The Docker startup update is not a `config.json` key. The container environment 
 
 ## `notifications`
 
-Plugins publish typed events and admin messages. MINT does the delivery, the retries and the recipient policy. Configure the channels in the admin panel; see [Notifications](/admin/platform-settings#notifications).
+MINT delivers the typed events that plugins publish (`@notify`) and the messages of admins. MINT does the delivery, the retries and the recipient policy. Configure the channels in the admin panel; see [Notifications](/admin/platform-settings#notifications).
 
 | Section | Main keys |
 |---------|-----------|

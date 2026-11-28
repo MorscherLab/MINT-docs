@@ -83,6 +83,7 @@ uv run pytest
 | `@mcp_prompt`, `@mcp_resource`, `mint_sdk.mcp_tools` | `@prompt`, `@resource`, `mint_sdk.mcp` |
 | `call_tool(..., experiments=)`, `ctx.report_progress(...)` | `call_tool(..., platform=)`, `ctx.report(...)` |
 | `@health_check`, `PluginHealth`, `HealthStatus` | `@health`, `Health` |
+| `on_before_experiment_save()` and the other lifecycle overrides, `check_health()` | `@on("experiment.before_save")` and the other `@on` events, `@health` |
 | `@on_event(name)`, `@on_config_change(fields=)`, `ConfigChange` | `@on(name)`, `@on("settings", fields=)`, `SettingsChange` |
 | `LifecycleHookResult` in `experiment.before_save` | Return `None` to allow; raise `EventVetoException` to refuse |
 | `self.load_design`, `self.save_design`, `self.delete_design` | `self.design.get`, `self.design.save`, `self.design.delete` |
@@ -269,13 +270,14 @@ About 160 composables, helpers and types keep a deprecated root export in 1.4. I
 | `IconButton` | `BaseButton :icon label` (add `variant="ghost"`) |
 | `BaseTextarea` | `BaseInput type="textarea"` |
 | `UnitInput` | `NumberInput :units v-model:unit` |
-| `SearchableSelect`, `MultiSelect` | `BaseSelect searchable`, `BaseSelect multiple` (`max`) |
+| `SearchableSelect`, `MultiSelect` (`maxSelections`) | `BaseSelect searchable`, `BaseSelect multiple` (`max`) |
 | `BaseToggle` | `BaseCheckbox type="switch"` |
 | `StatusIndicator` | `BasePill tone dot` |
 | `TimePicker`, `DateTimePicker` | `DatePicker type="time"`, `DatePicker type="datetime"` |
 | `ControlWorkspaceView` | `PluginWorkspaceView` with `spec.sidebar.controls` |
 | `FormActions` | `defineControlModel({ actions })` |
 | `SmartGroupModal`, `SmartGroupFieldRecipe`, `SmartGroupManual`, `GroupAssigner`, `AutoGroupModal`, `useGroupAssignment`, `useAutoGroup` | [`SampleSelector`](/sdk/components/sample-selector) |
+| `extractSamplesFromDesignData` | `SampleSelector`; read sample rows with `unwrapExperimentDesignData()` (`/data`) |
 | `DoseDesignWorkspaceView` | `PluginWorkspaceView` with `spec.sidebar.controls` |
 | `BioTemplateRenderer`, the `BioTemplate*` workspace views, `useBioTemplate*`, `useTemplateCollection` | None |
 | `ReagentList`, `ReagentEditor`, `ExperimentTimeline`, `SampleLegend`, `FitPanel` | None |

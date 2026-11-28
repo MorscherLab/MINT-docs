@@ -33,7 +33,7 @@ This site has no registered passkey and no edu-ID, so the image shows only the p
 
 ### Create an account
 
-If the sign-in page shows **No account yet? Create one**, you can register yourself. New accounts get the Member role. An admin must activate your account before you can sign in. Until then, the right password shows **Waiting for approval**. If the link is missing, ask your admin to create an account for you. For the password rules and activation, see [Authentication -> Accounts and registration](/admin/authentication#accounts-and-registration).
+If the sign-in page shows **No account yet? Create one**, you can register yourself. New accounts get the Member role. An admin must activate your account before you can sign in. Until then, the right password shows **Waiting for approval**. This does not count toward the lockout. If the link is missing, ask your admin to create an account for you. For the password rules and activation, see [Authentication -> Accounts and registration](/admin/authentication#accounts-and-registration).
 
 ### Second factor
 

@@ -129,7 +129,7 @@ Continue with [First-run setup](/admin/first-run).
 
 You can also apply a release in **Admin -> System -> Updates** without a rebuild. The container then installs the runtime bundle of the release. See [Updates](/admin/updates).
 
-For the Docker steps of each release upgrade (1.3 to 1.4, 1.4 to 1.5, 1.5 to 1.6), see [Updates](/admin/updates#upgrading-from-mint-1-5). In short: after an in-app update to a new minor release, set the Compose image to that release, for example `ghcr.io/morscherlab/mint:1.6`. A Compose file that overrides the command with `mint daemon` must use `uv run --no-sync mint-platform serve --platform-dir /app --port 8000`.
+For the Docker steps of each release upgrade, see Updates: [1.3 to 1.4](/admin/updates#upgrading-from-mint-1-3), [1.4 to 1.5](/admin/updates#upgrading-from-mint-1-4) and [1.5 to 1.6](/admin/updates#upgrading-from-mint-1-5). In short: from 1.4 on, after an in-app update to a new minor release, set the Compose image to that release, for example `ghcr.io/morscherlab/mint:1.6`. A Compose file that overrides the command with `mint daemon` must use `uv run --no-sync mint-platform serve --platform-dir /app --port 8000`.
 
 To roll back, check out the previous tag and rebuild `app`. Platform migrations go forward only, so restore the matching database backup if the newer release applied migrations.
 

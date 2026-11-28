@@ -164,6 +164,6 @@ A plugin page usually has a title or tabs at the top, the main panel, an optiona
 
 After an update of the platform, open tabs show a notice with a reload action. A plugin page shows the same notice when a newer plugin version is installed.
 
-MINT has no global keyboard shortcuts. Menus, tables and windows use the standard browser keys.
+The platform has no global keyboard shortcuts; a plugin can add its own. Menus, tables and windows use the standard browser keys.
 
 MINT has no notification bell. See [Notifications and iOS push](/guide/notifications).
